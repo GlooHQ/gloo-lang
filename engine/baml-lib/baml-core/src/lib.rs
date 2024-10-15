@@ -15,19 +15,15 @@ use internal_baml_diagnostics::{DatamodelError, Diagnostics, SourceFile, Span};
 mod common;
 pub mod configuration;
 pub mod ir;
-mod lockfile;
+// mod lockfile;
 mod validate;
 
 use self::validate::generator_loader;
-
-pub use lockfile::LockfileVersion;
 
 pub use crate::{
     common::{PreviewFeature, PreviewFeatures, ALL_PREVIEW_FEATURES},
     configuration::Configuration,
 };
-
-pub use lockfile::LockFileWrapper;
 
 pub struct ValidatedSchema {
     pub db: internal_baml_parser_database::ParserDatabase,
@@ -74,7 +70,7 @@ pub fn validate(root_path: &PathBuf, files: Vec<SourceFile>) -> ValidatedSchema 
         };
     }
 
-    let (configuration, diag) = validate_configuration(root_path, db.ast());
+    let (configuration, diag) = validate_config_impl(root_path, db.ast());
     diagnostics.push(diag);
 
     if diagnostics.has_errors() {
@@ -107,13 +103,13 @@ pub fn validate(root_path: &PathBuf, files: Vec<SourceFile>) -> ValidatedSchema 
 }
 
 /// Loads all configuration blocks from a datamodel using the built-in source definitions.
-pub fn parse_configuration(
+pub fn validate_single_file(
     root_path: &PathBuf,
     main_schema: &SourceFile,
 ) -> Result<(Configuration, Diagnostics), Diagnostics> {
     let (ast, mut diagnostics) = internal_baml_schema_ast::parse_schema(root_path, main_schema)?;
 
-    let (out, diag) = validate_configuration(root_path, &ast);
+    let (out, diag) = validate_config_impl(root_path, &ast);
     diagnostics.push(diag);
 
     if out.generators.is_empty() {
@@ -134,7 +130,7 @@ pub fn parse_configuration(
     Ok((out, diagnostics))
 }
 
-fn validate_configuration(
+fn validate_config_impl(
     root_path: &PathBuf,
     schema_ast: &ast::SchemaAst,
     // skip_lock_file_validation: bool,
@@ -142,33 +138,28 @@ fn validate_configuration(
     let mut diagnostics = Diagnostics::new(root_path.clone());
     let generators = generator_loader::load_generators_from_ast(schema_ast, &mut diagnostics);
 
-    let lock_files = generators
-        .iter()
-        .filter_map(
-            |gen| match lockfile::LockFileWrapper::from_generator(&gen) {
-                Ok(lock_file) => {
-                    if let Ok(prev) =
-                        lockfile::LockFileWrapper::from_path(gen.output_dir().join("baml.lock"))
-                    {
-                        lock_file.validate(&prev, &mut diagnostics);
-                    }
-                    Some((gen.clone(), lock_file))
-                }
-                Err(err) => {
-                    diagnostics.push_error(DatamodelError::new_validation_error(
-                        &format!("Failed to create lock file: {}", err),
-                        gen.span.clone(),
-                    ));
-                    None
-                }
-            },
-        )
-        .collect();
+    // let lock_files = generators
+    //     .iter()
+    //     .filter_map(
+    //         |gen| match lockfile::LockFileWrapper::from_generator(&gen) {
+    //             Ok(lock_file) => {
+    //                 if let Ok(prev) =
+    //                     lockfile::LockFileWrapper::from_path(gen.output_dir().join("baml.lock"))
+    //                 {
+    //                     lock_file.validate(&prev, &mut diagnostics);
+    //                 }
+    //                 Some((gen.clone(), lock_file))
+    //             }
+    //             Err(err) => {
+    //                 diagnostics.push_error(DatamodelError::new_validation_error(
+    //                     &format!("Failed to create lock file: {}", err),
+    //                     gen.span.clone(),
+    //                 ));
+    //                 None
+    //             }
+    //         },
+    //     )
+    //     .collect();
 
-    (
-        Configuration {
-            generators: lock_files,
-        },
-        diagnostics,
-    )
+    (Configuration { generators }, diagnostics)
 }

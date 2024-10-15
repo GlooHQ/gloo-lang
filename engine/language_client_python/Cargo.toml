@@ -18,6 +18,7 @@ unused_variables = "deny"
 
 [dependencies]
 anyhow.workspace = true
+baml-cli.workspace = true
 baml-types.workspace = true
 baml-runtime = { path = "../baml-runtime", default-features = false, features = [
   "internal",

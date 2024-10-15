@@ -891,7 +891,7 @@ impl WasmRuntime {
         Ok(self
             .runtime
             // convert the input_files into HashMap(PathBuf, string)
-            .run_generators(
+            .run_codegen(
                 &input_files
                     .iter()
                     .map(|(k, v)| (PathBuf::from(k), v.clone()))
@@ -1050,12 +1050,8 @@ impl WasmRuntime {
     #[wasm_bindgen]
     pub fn list_generators(&self) -> Vec<WasmGeneratorConfig> {
         self.runtime
-            .internal()
-            .ir()
-            .configuration()
-            .generators
-            .iter()
-            .map(|(generator, _)| WasmGeneratorConfig {
+            .codegen_generators()
+            .map(|generator| WasmGeneratorConfig {
                 output_type: generator.output_type.clone().to_string(),
                 version: generator.version.clone(),
                 span: WasmSpan {
