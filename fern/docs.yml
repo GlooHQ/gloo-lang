@@ -37,7 +37,7 @@ tabs:
   changelog:
     display-name: Changelog
     icon: fa-regular fa-history
-
+    slug: changelog
 navigation:
   - tab: home
     layout:
@@ -146,11 +146,14 @@ navigation:
             path: 01-guide/05-baml-advanced/prompt-caching.mdx
       - section: Observability
         contents:
-          - page: Track outputs and usage
+          - page: Tracking Usage
             icon: fa-regular fa-bar-chart
-            path: 01-guide/05-baml-advanced/prompt-caching.mdx
+            path: 01-guide/07-observability/studio.mdx
       - section: Prompt Engineering
         contents:
+          - page: Reduce Hallucinations
+            icon: fa-regular fa-person-fairy
+            path: 01-guide/06-prompt-engineering/hallucinations.mdx
           - page: Chat
             icon: fa-regular fa-comments
             path: 01-guide/06-prompt-engineering/chat-history.mdx
@@ -199,7 +202,7 @@ navigation:
             icon: fa-regular fa-file-pdf
             path: 01-guide/introduction.mdx
           - page: Web scraping with Selenium
-            icon: fa-regular fa-server
+            icon: fa-regular fa-globe
             path: 01-guide/introduction.mdx
       - section: Typescript
         icon: fa-brands fa-js
@@ -217,7 +220,7 @@ navigation:
             icon: fa-regular fa-file-pdf
             path: 01-guide/introduction.mdx
           - page: Web scraping with Playwright
-            icon: fa-regular fa-server
+            icon: fa-regular fa-globe
             path: 01-guide/introduction.mdx
       - section: Ruby
         icon: fa-solid fa-gem
@@ -350,7 +353,7 @@ navigation:
           - page: "openai-generic: TogetherAI"
             path: 03-reference/baml/clients/providers/together.mdx
           - page: "openai-generic: Unify AI"
-            path: 03-reference/baml/clients/providers/together.mdx
+            path: 03-reference/baml/clients/providers/unify.mdx
           - page: "openai-generic: vLLM"
             path: 03-reference/baml/clients/providers/vllm.mdx
       - section: Client Strategies
@@ -365,21 +368,21 @@ navigation:
       - section: Prompt Syntax
         contents:
           - page: What is jinja?
-            path: 01-guide/introduction.mdx
+            path: 03-reference/baml/prompt-syntax/what-is-jinja.mdx
           - page: "ctx.output_format"
-            path: 01-guide/introduction.mdx
+            path: 03-reference/baml/prompt-syntax/output-format.mdx
           - page: "ctx.client"
-            path: 01-guide/introduction.mdx
+            path: 03-reference/baml/prompt-syntax/ctx.mdx
           - page: "_.role"
-            path: 01-guide/introduction.mdx
+            path: 03-reference/baml/prompt-syntax/role.mdx
           - page: Variables
-            path: 01-guide/introduction.mdx
+            path: 03-reference/baml/prompt-syntax/variables.mdx
           - page: Conditionals
-            path: 01-guide/introduction.mdx
+            path: 03-reference/baml/prompt-syntax/conditionals.mdx
           - page: Loops
-            path: 01-guide/introduction.mdx
-          - page: Advanced
-            path: 01-guide/introduction.mdx
+            path: 03-reference/baml/prompt-syntax/loops.mdx
+          # - page: Advanced
+          #   path: 01-guide/introduction.mdx
 
       # - section: "baml_client: Python"
       #   contents:
@@ -436,7 +439,7 @@ navigation:
     layout:
       - page: Changelog
         icon: fa-regular fa-history
-        path: 01-guide/introduction.mdx
+        path: pages/changelog.mdx
 
   # - tab: paid-tooling
   #   layout:
