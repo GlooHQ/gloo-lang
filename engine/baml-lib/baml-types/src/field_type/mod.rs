@@ -209,6 +209,8 @@ impl FieldType {
     ///
     /// For examples of pairs of types and their subtyping relationship, see
     /// this module's test suite.
+    ///
+    /// Consider renaming this to `is_assignable_to`.
     pub fn is_subtype_of(&self, other: &FieldType) -> bool {
         if self == other {
             true
@@ -219,6 +221,8 @@ impl FieldType {
                 }
             }
             match (self, other) {
+                (FieldType::Primitive(TypeValue::Null), FieldType::Optional(_)) => true,
+
                 // Handle types that nest other types.
                 (FieldType::List(self_item), FieldType::List(other_item)) => {
                     self_item.is_subtype_of(other_item)
