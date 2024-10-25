@@ -21,6 +21,7 @@ import { config } from 'dotenv'
 import { BamlLogEvent, BamlRuntime } from '@boundaryml/baml/native'
 import { AsyncLocalStorage } from 'async_hooks'
 import { DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME, resetBamlEnvVars } from '../baml_client/globals'
+import exp from 'constants'
 config()
 
 describe('Integ tests', () => {
@@ -35,6 +36,11 @@ describe('Integ tests', () => {
       expect(res).toContain('a')
       expect(res).toContain('b')
       expect(res).toContain('c')
+    })
+
+    it('return literal union', async () => {
+      const res = await b.LiteralUnionsTest('a')
+      expect(res == 1 || res == true || res == 'string output').toBeTruthy()
     })
 
     it('single class', async () => {
@@ -80,6 +86,21 @@ describe('Integ tests', () => {
       expect(res).toContain('3566')
     })
 
+    it('single literal int', async () => {
+      const res = await b.TestNamedArgsLiteralInt(1)
+      expect(res).toContain('1')
+    })
+
+    it('single literal bool', async () => {
+      const res = await b.TestNamedArgsLiteralBool(true)
+      expect(res).toContain('true')
+    })
+
+    it('single literal string', async () => {
+      const res = await b.TestNamedArgsLiteralString('My String')
+      expect(res).toContain('My String')
+    })
+
     it('single optional string', async () => {
       // TODO fix the fact it's required.
       const res = await b.FnNamedArgsSingleStringOptional()
@@ -103,8 +124,20 @@ describe('Integ tests', () => {
 
   it('should work for all outputs', async () => {
     const a = 'a' // dummy
-    let res = await b.FnOutputBool(a)
-    expect(res).toEqual(true)
+    let bool = await b.FnOutputBool(a)
+    expect(bool).toEqual(true)
+
+    let int = await b.FnOutputInt(a)
+    expect(int).toEqual(5)
+
+    let literal_integer = await b.FnOutputLiteralInt(a)
+    expect(literal_integer).toEqual(5)
+
+    let literal_bool = await b.FnOutputLiteralBool(a)
+    expect(literal_bool).toEqual(false)
+
+    let literal_string = await b.FnOutputLiteralString(a)
+    expect(literal_string).toEqual('example output')
 
     const list = await b.FnOutputClassList(a)
     expect(list.length).toBeGreaterThan(0)
@@ -689,27 +722,26 @@ describe('Integ tests', () => {
     expect(res).not.toContain('tiger')
   })
 
- it("should use aliases when serializing input objects - enums", async () => {
-   const res = await b.AliasedInputEnum(AliasedEnum.KEY_ONE)
-   expect(res).toContain("tiger")
- })
+  it('should use aliases when serializing input objects - enums', async () => {
+    const res = await b.AliasedInputEnum(AliasedEnum.KEY_ONE)
+    expect(res).toContain('tiger')
+  })
 
- it("should use aliases when serializing input objects - lists", async () => {
-   const res = await b.AliasedInputList([AliasedEnum.KEY_ONE, AliasedEnum.KEY_TWO])
-   expect(res).toContain("tiger")
- })
+  it('should use aliases when serializing input objects - lists', async () => {
+    const res = await b.AliasedInputList([AliasedEnum.KEY_ONE, AliasedEnum.KEY_TWO])
+    expect(res).toContain('tiger')
+  })
 
- it("constraints: should handle checks in return types", async() => {
-   const res = await b.PredictAge("Greg")
-   expect(res.certainty.checks.unreasonably_certain.status).toBe("failed")
- })
+  it('constraints: should handle checks in return types', async () => {
+    const res = await b.PredictAge('Greg')
+    expect(res.certainty.checks.unreasonably_certain.status).toBe('failed')
+  })
 
- it("constraints: should handle checks in returned unions", async() => {
-   const res = await b.ExtractContactInfo("Reach me at 111-222-3333, or robert@boundaryml.com if needed")
-   expect(res.primary.value.checks.valid_phone_number.status).toBe("succeeded")
-   expect(res.secondary?.value.checks.valid_email.status).toBe("succeeded")
- })
-
+  it('constraints: should handle checks in returned unions', async () => {
+    const res = await b.ExtractContactInfo('Reach me at 111-222-3333, or robert@boundaryml.com if needed')
+    expect(res.primary.value.checks.valid_phone_number.status).toBe('succeeded')
+    expect(res.secondary?.value.checks.valid_email.status).toBe('succeeded')
+  })
 })
 
 interface MyInterface {

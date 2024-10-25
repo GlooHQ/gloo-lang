@@ -40,8 +40,6 @@ import asyncio
 import random
 
 
-
-
 @pytest.mark.asyncio
 async def test_env_vars_reset():
     env_vars = {
@@ -99,6 +97,11 @@ class TestAllInputs:
     async def test_single_string_list(self):
         res = await b.TestFnNamedArgsSingleStringList(["a", "b", "c"])
         assert "a" in res and "b" in res and "c" in res
+
+    @pytest.mark.asyncio
+    async def test_return_literal_union(self):
+        res = await b.LiteralUnionsTest("a")
+        assert res == 1 or res == True or res == "string output"
 
     @pytest.mark.asyncio
     async def test_constraints(self):
@@ -179,6 +182,21 @@ class TestAllInputs:
         assert "3566" in res
 
     @pytest.mark.asyncio
+    async def test_single_literal_int(self):
+        res = await b.TestNamedArgsLiteralInt(1)
+        assert "1" in res
+
+    @pytest.mark.asyncio
+    async def test_single_literal_bool(self):
+        res = await b.TestNamedArgsLiteralBool(True)
+        assert "true" in res
+
+    @pytest.mark.asyncio
+    async def test_single_literal_string(self):
+        res = await b.TestNamedArgsLiteralString("My String")
+        assert "My String" in res
+
+    @pytest.mark.asyncio
     async def test_single_map_string_to_string(self):
         res = await b.TestFnNamedArgsSingleMapStringToString(
             {"lorem": "ipsum", "dolor": "sit"}
@@ -217,6 +235,18 @@ async def test_should_work_for_all_outputs():
     a = "a"  # dummy
     res = await b.FnOutputBool(a)
     assert res == True
+
+    integer = await b.FnOutputInt(a)
+    assert integer == 5
+
+    literal_integer = await b.FnOutputLiteralInt(a)
+    assert literal_integer == 5
+
+    literal_bool = await b.FnOutputLiteralBool(a)
+    assert literal_bool == False
+
+    literal_string = await b.FnOutputLiteralString(a)
+    assert literal_string == "example output"
 
     list = await b.FnOutputClassList(a)
     assert len(list) > 0
@@ -304,12 +334,14 @@ async def test_works_with_fallbacks():
     res = await b.TestFallbackClient()
     assert len(res) > 0, "Expected non-empty result but got empty."
 
+
 @pytest.mark.asyncio
 async def test_works_with_failing_azure_fallback():
     with pytest.raises(Exception) as e:
         res = await b.TestSingleFallbackClient()
         assert len(res) > 0, "Expected non-empty result but got empty."
     assert "Either base_url or" in str(e)
+
 
 @pytest.mark.asyncio
 async def test_claude():

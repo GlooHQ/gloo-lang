@@ -1017,6 +1017,106 @@ export class BamlAsyncClient {
     }
   }
   
+  async FnOutputInt(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<number> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "FnOutputInt",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as number
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async FnOutputLiteralBool(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<false> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "FnOutputLiteralBool",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as false
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async FnOutputLiteralInt(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<5> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "FnOutputLiteralInt",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as 5
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async FnOutputLiteralString(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<"example output"> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "FnOutputLiteralString",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as "example output"
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   async FnOutputStringList(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -1182,6 +1282,31 @@ export class BamlAsyncClient {
         __baml_options__?.clientRegistry,
       )
       return raw.parsed() as SearchParams
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async LiteralUnionsTest(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<1 | true | "string output"> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "LiteralUnionsTest",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as 1 | true | "string output"
     } catch (error: any) {
       const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
@@ -2226,6 +2351,81 @@ export class BamlAsyncClient {
         "TestMulticlassNamedArgs",
         {
           "myArg": myArg,"myArg2": myArg2
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async TestNamedArgsLiteralBool(
+      myBool: true,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "TestNamedArgsLiteralBool",
+        {
+          "myBool": myBool
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async TestNamedArgsLiteralInt(
+      myInt: 1,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "TestNamedArgsLiteralInt",
+        {
+          "myInt": myInt
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async TestNamedArgsLiteralString(
+      myString: "My String",
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "TestNamedArgsLiteralString",
+        {
+          "myString": myString
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3760,6 +3960,138 @@ class BamlStreamClient {
     }
   }
   
+  FnOutputInt(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<number>, number> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "FnOutputInt",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<number>, number>(
+        raw,
+        (a): a is RecursivePartialNull<number> => a,
+        (a): a is number => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  FnOutputLiteralBool(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<false>, false> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "FnOutputLiteralBool",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<false>, false>(
+        raw,
+        (a): a is RecursivePartialNull<false> => a,
+        (a): a is false => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  FnOutputLiteralInt(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<5>, 5> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "FnOutputLiteralInt",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<5>, 5>(
+        raw,
+        (a): a is RecursivePartialNull<5> => a,
+        (a): a is 5 => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  FnOutputLiteralString(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<"example output">, "example output"> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "FnOutputLiteralString",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<"example output">, "example output">(
+        raw,
+        (a): a is RecursivePartialNull<"example output"> => a,
+        (a): a is "example output" => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
   FnOutputStringList(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -3977,6 +4309,39 @@ class BamlStreamClient {
         raw,
         (a): a is RecursivePartialNull<SearchParams> => a,
         (a): a is SearchParams => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  LiteralUnionsTest(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<1 | true | "string output">, 1 | true | "string output"> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "LiteralUnionsTest",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<1 | true | "string output">, 1 | true | "string output">(
+        raw,
+        (a): a is RecursivePartialNull<1 | true | "string output"> => a,
+        (a): a is 1 | true | "string output" => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
@@ -5353,6 +5718,105 @@ class BamlStreamClient {
         "TestMulticlassNamedArgs",
         {
           "myArg": myArg,"myArg2": myArg2
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<string>, string>(
+        raw,
+        (a): a is RecursivePartialNull<string> => a,
+        (a): a is string => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  TestNamedArgsLiteralBool(
+      myBool: true,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<string>, string> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "TestNamedArgsLiteralBool",
+        {
+          "myBool": myBool
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<string>, string>(
+        raw,
+        (a): a is RecursivePartialNull<string> => a,
+        (a): a is string => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  TestNamedArgsLiteralInt(
+      myInt: 1,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<string>, string> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "TestNamedArgsLiteralInt",
+        {
+          "myInt": myInt
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<string>, string>(
+        raw,
+        (a): a is RecursivePartialNull<string> => a,
+        (a): a is string => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  TestNamedArgsLiteralString(
+      myString: "My String",
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<string>, string> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "TestNamedArgsLiteralString",
+        {
+          "myString": myString
         },
         undefined,
         this.ctx_manager.cloneContext(),

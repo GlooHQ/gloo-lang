@@ -1017,6 +1017,106 @@ export class BamlSyncClient {
     }
   }
   
+  FnOutputInt(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): number {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "FnOutputInt",
+      {
+        "input": input
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as number
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  FnOutputLiteralBool(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): false {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "FnOutputLiteralBool",
+      {
+        "input": input
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as false
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  FnOutputLiteralInt(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): 5 {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "FnOutputLiteralInt",
+      {
+        "input": input
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as 5
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  FnOutputLiteralString(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): "example output" {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "FnOutputLiteralString",
+      {
+        "input": input
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as "example output"
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   FnOutputStringList(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -1182,6 +1282,31 @@ export class BamlSyncClient {
       __baml_options__?.clientRegistry,
     )
     return raw.parsed() as SearchParams
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  LiteralUnionsTest(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): 1 | true | "string output" {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "LiteralUnionsTest",
+      {
+        "input": input
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as 1 | true | "string output"
     } catch (error: any) {
       const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
@@ -2226,6 +2351,81 @@ export class BamlSyncClient {
       "TestMulticlassNamedArgs",
       {
         "myArg": myArg,"myArg2": myArg2
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  TestNamedArgsLiteralBool(
+      myBool: true,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): string {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "TestNamedArgsLiteralBool",
+      {
+        "myBool": myBool
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  TestNamedArgsLiteralInt(
+      myInt: 1,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): string {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "TestNamedArgsLiteralInt",
+      {
+        "myInt": myInt
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  TestNamedArgsLiteralString(
+      myString: "My String",
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): string {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "TestNamedArgsLiteralString",
+      {
+        "myString": myString
       },
       this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),

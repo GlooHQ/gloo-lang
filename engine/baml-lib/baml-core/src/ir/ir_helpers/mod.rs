@@ -11,7 +11,7 @@ use crate::{
     },
 };
 use anyhow::{Context, Result};
-use baml_types::{BamlMap, BamlValue, BamlValueWithMeta, FieldType, TypeValue};
+use baml_types::{BamlMap, BamlValue, BamlValueWithMeta, FieldType, LiteralValue, TypeValue};
 pub use to_baml_arg::ArgCoercer;
 
 use super::repr;
@@ -198,15 +198,18 @@ impl IRHelper for IntermediateRepr {
         match (value, unconstrained_type) {
 
             (BamlValue::String(s), FieldType::Primitive(TypeValue::String)) => Ok(BamlValueWithMeta::String(s, field_type)),
+            (BamlValue::String(s), FieldType::Literal(LiteralValue::String(l))) if s == *l => Ok(BamlValueWithMeta::String(s, field_type)),
             (BamlValue::String(_), _) => anyhow::bail!("Could not unify Strinig with {:?}", field_type),
 
             (BamlValue::Int(i), FieldType::Primitive(TypeValue::Int)) => Ok(BamlValueWithMeta::Int(i, field_type)),
+            (BamlValue::Int(i), FieldType::Literal(LiteralValue::Int(l))) if i == *l => Ok(BamlValueWithMeta::Int(i, field_type)),
             (BamlValue::Int(_), _) => anyhow::bail!("Could not unify Int with {:?}", field_type),
 
             (BamlValue::Float(f), FieldType::Primitive(TypeValue::Float)) => Ok(BamlValueWithMeta::Float(f, field_type)),
             (BamlValue::Float(_), _) => anyhow::bail!("Could not unify Float with {:?}", field_type),
 
             (BamlValue::Bool(b), FieldType::Primitive(TypeValue::Bool)) => Ok(BamlValueWithMeta::Bool(b, field_type)),
+            (BamlValue::Bool(b), FieldType::Literal(LiteralValue::Bool(l))) if b == *l => Ok(BamlValueWithMeta::Bool(b, field_type)),
             (BamlValue::Bool(_), _) => anyhow::bail!("Could not unify Bool with {:?}", field_type),
 
             (BamlValue::Null, FieldType::Primitive(TypeValue::Null)) => Ok(BamlValueWithMeta::Null(field_type)),

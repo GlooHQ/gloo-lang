@@ -12,6 +12,15 @@ describe "ruby<->baml integration tests" do
     res = b.TestFnNamedArgsSingleBool(myBool: true)
     assert_equal res, "true"
 
+    res = b.TestNamedArgsLiteralInt(myInt: 1)
+    assert_includes res, "1"
+
+    res = b.TestNamedArgsLiteralBool(myBool: true)
+    assert_includes res, true
+
+    res = b.TestNamedArgsLiteralString(myString: "My String")
+    assert_includes res, "My String"
+
     res = b.TestFnNamedArgsSingleStringList(myArg: ["a", "b", "c"])
     assert_includes res, "a"
     assert_includes res, "b"
@@ -67,6 +76,18 @@ describe "ruby<->baml integration tests" do
   it "works with all outputs" do
     res = b.FnOutputBool(input: "a")
     assert_equal true, res
+
+    integer = b.FnOutputInt(input: "a")
+    assert_equal integer, 5
+
+    literal_integer = b.FnOutputLiteralInt(input: "a")
+    assert_equal literal_integer, 5
+    
+    literal_bool = b.FnOutputLiteralBool(input: "a")
+    assert_equal literal_bool, false
+
+    literal_string = b.FnOutputLiteralString(input: "a")
+    assert_equal literal_string, "example output"
 
     list = b.FnOutputClassList(input: "a")
     assert list.size > 0

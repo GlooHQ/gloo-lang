@@ -4,7 +4,7 @@ mod python_language_features;
 use std::path::PathBuf;
 
 use anyhow::Result;
-use generate_types::type_name_for_checks;
+use generate_types::{to_python_literal, type_name_for_checks};
 use indexmap::IndexMap;
 use internal_baml_core::{
     configuration::GeneratorDefaultClientMode,
@@ -163,7 +163,9 @@ impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for PythonClient 
                             args: f
                                 .inputs()
                                 .iter()
-                                .map(|(name, r#type)| (name.to_string(), r#type.to_type_ref(ir, false)))
+                                .map(|(name, r#type)| {
+                                    (name.to_string(), r#type.to_type_ref(ir, false))
+                                })
                                 .collect(),
                         })
                     })
@@ -198,11 +200,15 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                     format!("types.{name}")
                 }
             }
-            FieldType::Literal(value) => format!("Literal[{}]", value),
+            FieldType::Literal(value) => to_python_literal(value),
             FieldType::Class(name) => format!("types.{name}"),
             FieldType::List(inner) => format!("List[{}]", inner.to_type_ref(ir, with_checked)),
             FieldType::Map(key, value) => {
-                format!("Dict[{}, {}]", key.to_type_ref(ir, with_checked), value.to_type_ref(ir, with_checked))
+                format!(
+                    "Dict[{}, {}]",
+                    key.to_type_ref(ir, with_checked),
+                    value.to_type_ref(ir, with_checked)
+                )
             }
             FieldType::Primitive(r#type) => r#type.to_python(),
             FieldType::Union(inner) => format!(
@@ -221,18 +227,16 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
-            FieldType::Optional(inner) => format!("Optional[{}]", inner.to_type_ref(ir, with_checked)),
-            FieldType::Constrained{base, ..} => {
-                match field_type_attributes(self) {
-                    Some(checks) => {
-                        let base_type_ref = base.to_type_ref(ir, with_checked);
-                        let checks_type_ref = type_name_for_checks(&checks);
-                        format!("baml_py.Checked[{base_type_ref},types.{checks_type_ref}]")
-                    }
-                    None => {
-                        base.to_type_ref(ir, with_checked)
-                    }
+            FieldType::Optional(inner) => {
+                format!("Optional[{}]", inner.to_type_ref(ir, with_checked))
+            }
+            FieldType::Constrained { base, .. } => match field_type_attributes(self) {
+                Some(checks) => {
+                    let base_type_ref = base.to_type_ref(ir, with_checked);
+                    let checks_type_ref = type_name_for_checks(&checks);
+                    format!("baml_py.Checked[{base_type_ref},types.{checks_type_ref}]")
                 }
+                None => base.to_type_ref(ir, with_checked),
             },
         }
     }
@@ -251,8 +255,10 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 }
             }
             FieldType::Class(name) => format!("partial_types.{name}"),
-            FieldType::Literal(value) => format!("Literal[{}]", value),
-            FieldType::List(inner) => format!("List[{}]", inner.to_partial_type_ref(ir, with_checked)),
+            FieldType::Literal(value) => to_python_literal(value),
+            FieldType::List(inner) => {
+                format!("List[{}]", inner.to_partial_type_ref(ir, with_checked))
+            }
             FieldType::Map(key, value) => {
                 format!(
                     "Dict[{}, {}]",
@@ -278,17 +284,13 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                     .join(", ")
             ),
             FieldType::Optional(inner) => inner.to_partial_type_ref(ir, with_checked),
-            FieldType::Constrained{base, ..} => {
-                match field_type_attributes(self) {
-                    Some(checks) => {
-                        let base_type_ref = base.to_partial_type_ref(ir, with_checked);
-                        let checks_type_ref = type_name_for_checks(&checks);
-                        format!("baml_py.Checked[{base_type_ref},types.{checks_type_ref}]")
-                    }
-                    None => {
-                        base.to_partial_type_ref(ir, with_checked)
-                    }
+            FieldType::Constrained { base, .. } => match field_type_attributes(self) {
+                Some(checks) => {
+                    let base_type_ref = base.to_partial_type_ref(ir, with_checked);
+                    let checks_type_ref = type_name_for_checks(&checks);
+                    format!("baml_py.Checked[{base_type_ref},types.{checks_type_ref}]")
                 }
+                None => base.to_partial_type_ref(ir, with_checked),
             },
         }
     }

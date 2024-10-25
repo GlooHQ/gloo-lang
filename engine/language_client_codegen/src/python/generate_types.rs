@@ -1,5 +1,6 @@
 use anyhow::Result;
-use itertools::{Itertools, join};
+use baml_types::LiteralValue;
+use itertools::Itertools;
 use std::borrow::Cow;
 
 use crate::{field_type_attributes, type_check_attributes, TypeCheckAttributes};
@@ -13,7 +14,7 @@ use internal_baml_core::ir::{
 #[template(path = "types.py.j2", escape = "none")]
 pub(crate) struct PythonTypes<'ir> {
     enums: Vec<PythonEnum<'ir>>,
-    classes: Vec<PythonClass<'ir>>
+    classes: Vec<PythonClass<'ir>>,
 }
 
 #[derive(askama::Template)]
@@ -70,8 +71,7 @@ impl<'ir> TryFrom<(&'ir IntermediateRepr, &'_ crate::GeneratorArgs)> for TypeBui
     fn try_from(
         (ir, _): (&'ir IntermediateRepr, &'_ crate::GeneratorArgs),
     ) -> Result<TypeBuilder<'ir>> {
-        let checks_classes =
-            type_check_attributes(ir)
+        let checks_classes = type_check_attributes(ir)
             .into_iter()
             .map(|checks| type_def_for_checks(checks))
             .collect::<Vec<_>>();
@@ -169,16 +169,42 @@ pub fn add_default_value(node: &FieldType, type_str: &String) -> String {
 }
 
 pub fn type_name_for_checks(checks: &TypeCheckAttributes) -> String {
-    let check_names = checks.0.iter().map(|check| format!("\"{check}\"")).sorted().join(", ");
+    let check_names = checks
+        .0
+        .iter()
+        .map(|check| format!("\"{check}\""))
+        .sorted()
+        .join(", ");
+
     format!["Literal[{check_names}]"]
 }
 
 fn type_def_for_checks(checks: TypeCheckAttributes) -> PythonClass<'static> {
     PythonClass {
         name: Cow::Owned(type_name_for_checks(&checks)),
-        fields: checks.0.into_iter().map(|check_name| (Cow::Owned(check_name), "baml_py.Check".to_string())).collect(),
-        dynamic: false
+        fields: checks
+            .0
+            .into_iter()
+            .map(|check_name| (Cow::Owned(check_name), "baml_py.Check".to_string()))
+            .collect(),
+        dynamic: false,
     }
+}
+
+/// Returns the Python `Literal` representation of `self`.
+pub fn to_python_literal(literal: &LiteralValue) -> String {
+    // Python bools are a little special...
+    let value = match literal {
+        LiteralValue::Bool(bool) => String::from(match *bool {
+            true => "True",
+            false => "False",
+        }),
+
+        // Rest of types match the fmt::Display impl.
+        other => other.to_string(),
+    };
+
+    format!("Literal[{value}]")
 }
 
 trait ToTypeReferenceInTypeDefinition {
@@ -200,7 +226,7 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
                     format!("\"{name}\"")
                 }
             }
-            FieldType::Literal(value) => format!("Literal[{}]", value),
+            FieldType::Literal(value) => to_python_literal(value),
             FieldType::Class(name) => format!("\"{name}\""),
             FieldType::List(inner) => format!("List[{}]", inner.to_type_ref(ir)),
             FieldType::Map(key, value) => {
@@ -224,17 +250,13 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
                     .join(", ")
             ),
             FieldType::Optional(inner) => format!("Optional[{}]", inner.to_type_ref(ir)),
-            FieldType::Constrained{base, ..} => {
-                match field_type_attributes(self) {
-                    Some(checks) => {
-                        let base_type_ref = base.to_type_ref(ir);
-                        let checks_type_ref = type_name_for_checks(&checks);
-                        format!("baml_py.Checked[{base_type_ref},{checks_type_ref}]")
-                    }
-                    None => {
-                        base.to_type_ref(ir)
-                    }
+            FieldType::Constrained { base, .. } => match field_type_attributes(self) {
+                Some(checks) => {
+                    let base_type_ref = base.to_type_ref(ir);
+                    let checks_type_ref = type_name_for_checks(&checks);
+                    format!("baml_py.Checked[{base_type_ref},{checks_type_ref}]")
                 }
+                None => base.to_type_ref(ir),
             },
         }
     }
@@ -259,7 +281,7 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
                     format!("Optional[types.{name}]")
                 }
             }
-            FieldType::Literal(value) => format!("Literal[{}]", value),
+            FieldType::Literal(value) => to_python_literal(value),
             FieldType::List(inner) => format!("List[{}]", inner.to_partial_type_ref(ir, true)),
             FieldType::Map(key, value) => {
                 format!(
@@ -286,7 +308,7 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
                     .join(", ")
             ),
             FieldType::Optional(inner) => inner.to_partial_type_ref(ir, false),
-            FieldType::Constrained{base,..} => {
+            FieldType::Constrained { base, .. } => {
                 let base_type_ref = base.to_partial_type_ref(ir, false);
                 match field_type_attributes(self) {
                     Some(checks) => {
@@ -294,9 +316,9 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
                         let checks_type_ref = type_name_for_checks(&checks);
                         format!("baml_py.Checked[{base_type_ref},{checks_type_ref}]")
                     }
-                    None => base_type_ref
+                    None => base_type_ref,
                 }
-            },
+            }
         }
     }
 }
