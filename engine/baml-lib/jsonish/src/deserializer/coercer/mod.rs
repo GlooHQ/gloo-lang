@@ -9,8 +9,6 @@ mod field_type;
 mod ir_ref;
 mod match_string;
 
-use std::f32::consts::E;
-
 use anyhow::Result;
 
 use baml_types::{BamlValue, Constraint, JinjaExpression};
@@ -233,26 +231,13 @@ pub trait DefaultValue {
 pub fn run_user_checks(
     baml_value: &BamlValue,
     type_: &FieldType,
-) -> Result<Vec<(String, JinjaExpression, bool)>> {
+) -> Result<Vec<(Constraint, bool)>> {
     match type_ {
         FieldType::Constrained { constraints, .. } => constraints
             .iter()
             .map(|constraint| {
                 let result = evaluate_predicate(baml_value, &constraint.expression)?;
-
-                match constraint.level {
-                    baml_types::ConstraintLevel::Check => Ok((
-                        match constraint.label {
-                            Some(ref label) => label.clone(),
-                            None => return Err(anyhow::anyhow!("Check must have a label")),
-                        },
-                        constraint.expression.clone(),
-                        result,
-                    )),
-                    baml_types::ConstraintLevel::Assert => {
-                        Err(anyhow::anyhow!("Asserts are not supported in this context"))
-                    }
-                }
+                Ok((constraint.clone(), result))
             })
             .collect::<Result<Vec<_>>>(),
         _ => Ok(vec![]),
