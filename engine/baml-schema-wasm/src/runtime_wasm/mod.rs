@@ -55,6 +55,8 @@ pub fn on_wasm_init() {
             const LOG_LEVEL: log::Level = log::Level::Warn;
         }
     };
+    // This line is required if we want to see normal log::info! messages in JS console logs.
+    wasm_logger::init(wasm_logger::Config::new(LOG_LEVEL));
     match console_log::init_with_level(LOG_LEVEL) {
         Ok(_) => web_sys::console::log_1(
             &format!("Initialized BAML runtime logging as log::{}", LOG_LEVEL).into(),
@@ -140,6 +142,7 @@ impl WasmDiagnosticError {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
+#[derive(Debug)]
 pub struct WasmError {
     #[wasm_bindgen(readonly)]
     pub r#type: String,
@@ -282,7 +285,7 @@ pub struct WasmRuntime {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmFunction {
     #[wasm_bindgen(readonly)]
     pub name: String,
@@ -297,7 +300,7 @@ pub struct WasmFunction {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmSpan {
     #[wasm_bindgen(readonly)]
     pub file_path: String,
@@ -312,7 +315,7 @@ pub struct WasmSpan {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmGeneratorConfig {
     #[wasm_bindgen(readonly)]
     pub output_type: String,
@@ -348,7 +351,7 @@ impl Default for WasmSpan {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmParentFunction {
     #[wasm_bindgen(readonly)]
     pub start: usize,
@@ -359,7 +362,7 @@ pub struct WasmParentFunction {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmTestCase {
     #[wasm_bindgen(readonly)]
     pub name: String,
@@ -374,7 +377,7 @@ pub struct WasmTestCase {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmParam {
     #[wasm_bindgen(readonly)]
     pub name: String,
@@ -783,7 +786,9 @@ fn get_dummy_value(
             Some(format!("({},)", dummy))
         }
         baml_runtime::FieldType::Optional(_) => None,
-        baml_runtime::FieldType::Constrained{ base, .. } => get_dummy_value(indent, allow_multiline, t)
+        baml_runtime::FieldType::Constrained { base, .. } => {
+            get_dummy_value(indent, allow_multiline, base)
+        }
     }
 }
 

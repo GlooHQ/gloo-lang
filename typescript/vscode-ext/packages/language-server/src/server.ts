@@ -80,7 +80,9 @@ export function startServer(options?: LSOptions): void {
       switch (params.type) {
         case 'runtime_updated':
           // console.log(`runtime_updated today! ${Object.keys(params.files).length}: ${Object.entries(params.files).length}`)
-          connection.sendRequest('runtime_updated', params)
+          connection.sendRequest('runtime_updated', params).catch((e) => {
+            console.error('Error sending runtime_updated: ' + e)
+          })
           break
         case 'diagnostic':
           params.errors.forEach(([uri, diagnostics]) => {

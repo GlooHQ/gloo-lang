@@ -167,7 +167,7 @@ class Project {
           .map(([path, content]) => [URI.file(path).toString(), content]),
       )
       const diagnostics = this.wasmProject.diagnostics(this.current_runtime)
-      this.onSuccess(this.wasmProject.diagnostics(this.current_runtime), fileMap)
+      this.onSuccess(diagnostics, fileMap)
     }
   }
 
@@ -622,7 +622,11 @@ class BamlProjectManager {
     await this.wrapAsync(async () => {
       for (const project of this.projects.values()) {
         project.requestDiagnostics()
-        this.notifier({ type: 'runtime_updated', root_path: project.rootPath(), files: project.files() })
+        if (project.runtime()) {
+          this.notifier({ type: 'runtime_updated', root_path: project.rootPath(), files: project.files() })
+        } else {
+          console.log('undefined runtime')
+        }
       }
     })
   }
