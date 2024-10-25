@@ -487,6 +487,18 @@ mod tests {
     }
 
     #[test]
+    fn distribute_media() {
+        let ir = mk_ir();
+        let v = BamlValue::Media(BamlMedia{
+            media_type: BamlMediaType::Audio,
+            mime_type: None,
+            content: BamlMediaContent::Base64(MediaBase64{base64: "abcd=".to_string()}),
+        });
+        let t = FieldType::Primitive(TypeValue::Media(BamlMediaType::Audio));
+        let _value_with_meta = ir.distribute_type(v, t).unwrap();
+    }
+
+    #[test]
     fn distribute_media_union() {
         let ir = mk_ir();
         let field_type = FieldType::Union(vec![

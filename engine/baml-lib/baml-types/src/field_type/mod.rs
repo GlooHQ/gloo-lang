@@ -395,4 +395,10 @@ mod tests {
         ])));
         assert!(x.is_subtype_of(&y));
     }
+
+    #[test]
+    fn subtype_media() {
+        let x = FieldType::Primitive(TypeValue::Media(BamlMediaType::Audio));
+        assert!(x.is_subtype_of(&x));
+    }
 }
