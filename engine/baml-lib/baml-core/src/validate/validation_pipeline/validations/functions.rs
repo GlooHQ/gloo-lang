@@ -1,4 +1,4 @@
-use crate::{validate::validation_pipeline::context::Context};
+use crate::validate::validation_pipeline::context::Context;
 
 use either::Either;
 use internal_baml_diagnostics::{DatamodelError, DatamodelWarning, Span};
@@ -14,7 +14,9 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
         .map(|c| c.name().to_string())
         .collect::<Vec<_>>();
 
-    let mut defined_types = internal_baml_jinja_types::PredefinedTypes::default();
+    let mut defined_types = internal_baml_jinja_types::PredefinedTypes::default(
+        internal_baml_jinja_types::JinjaContext::Prompt,
+    );
     ctx.db.walk_classes().for_each(|t| {
         t.add_to_types(&mut defined_types);
     });
@@ -49,11 +51,31 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
             Ok(_) => {}
             Err(e) => {
                 let pspan = prompt.span();
-                if let Some(_e) = e.parsing_errors {
-                    // ctx.push_error(DatamodelError::new_validation_error(
-                    //     &format!("Error parsing jinja template: {}", e),
-                    //     e.line(),
-                    // ))
+                if let Some(e) = e.parsing_errors {
+                    let range = match e.range() {
+                        Some(range) => range,
+                        None => {
+                            ctx.push_error(DatamodelError::new_validation_error(
+                                &format!("Error parsing jinja template: {}", e),
+                                pspan.clone(),
+                            ));
+                            continue;
+                        }
+                    };
+
+                    let start_offset = pspan.start + range.start;
+                    let end_offset = pspan.start + range.end;
+
+                    let span = Span::new(
+                        pspan.file.clone(),
+                        start_offset as usize,
+                        end_offset as usize,
+                    );
+
+                    ctx.push_error(DatamodelError::new_validation_error(
+                        &format!("Error parsing jinja template: {}", e),
+                        span,
+                    ))
                 } else {
                     e.errors.iter().for_each(|t| {
                         let span = t.span();
@@ -83,9 +105,11 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
 
             let span = field_type.span().clone();
             if has_checks_nested(ctx, field_type) {
-                ctx.push_error(DatamodelError::new_validation_error("Types with checks are not allowed as function parameters.", span));
+                ctx.push_error(DatamodelError::new_validation_error(
+                    "Types with checks are not allowed as function parameters.",
+                    span,
+                ));
             }
-
         }
 
         // Ensure the client is correct.
@@ -149,10 +173,30 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
             Err(e) => {
                 let pspan = prompt.span();
                 if let Some(e) = e.parsing_errors {
-                    // ctx.push_error(DatamodelError::new_validation_error(
-                    //     &format!("Error parsing jinja template: {}", e),
-                    //     // e.,
-                    // ))
+                    let range = match e.range() {
+                        Some(range) => range,
+                        None => {
+                            ctx.push_error(DatamodelError::new_validation_error(
+                                &format!("Error parsing jinja template: {}", e),
+                                pspan.clone(),
+                            ));
+                            continue;
+                        }
+                    };
+
+                    let start_offset = pspan.start + range.start;
+                    let end_offset = pspan.start + range.end;
+
+                    let span = Span::new(
+                        pspan.file.clone(),
+                        start_offset as usize,
+                        end_offset as usize,
+                    );
+
+                    ctx.push_error(DatamodelError::new_validation_error(
+                        &format!("Error parsing jinja template: {}", e),
+                        span,
+                    ))
                 } else {
                     e.errors.iter().for_each(|t| {
                         let span = t.span();
@@ -179,15 +223,18 @@ fn has_checks_nested(ctx: &Context<'_>, field_type: &FieldType) -> bool {
     }
 
     match field_type {
-        FieldType::Symbol(_, id, ..) => {
-            match ctx.db.find_type(id) {
-                Some(Either::Left(class_walker)) => {
-                    let mut fields = class_walker.static_fields();
-                    fields.any(|field| field.ast_field().expr.as_ref().map_or(false, |ft| has_checks_nested(ctx, &ft)))
-                }
-                ,
-                _ => false,
+        FieldType::Symbol(_, id, ..) => match ctx.db.find_type(id) {
+            Some(Either::Left(class_walker)) => {
+                let mut fields = class_walker.static_fields();
+                fields.any(|field| {
+                    field
+                        .ast_field()
+                        .expr
+                        .as_ref()
+                        .map_or(false, |ft| has_checks_nested(ctx, &ft))
+                })
             }
+            _ => false,
         },
 
         FieldType::Primitive(..) => false,
@@ -195,7 +242,8 @@ fn has_checks_nested(ctx: &Context<'_>, field_type: &FieldType) -> bool {
         FieldType::Literal(..) => false,
         FieldType::Tuple(_, children, ..) => children.iter().any(|ft| has_checks_nested(ctx, ft)),
         FieldType::List(_, child, ..) => has_checks_nested(ctx, child),
-        FieldType::Map(_, kv, ..) =>
-            has_checks_nested(ctx, &kv.as_ref().0) || has_checks_nested(ctx, &kv.as_ref().1),
+        FieldType::Map(_, kv, ..) => {
+            has_checks_nested(ctx, &kv.as_ref().0) || has_checks_nested(ctx, &kv.as_ref().1)
+        }
     }
 }

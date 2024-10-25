@@ -5,7 +5,9 @@ use crate::validate::validation_pipeline::context::Context;
 use internal_baml_diagnostics::DatamodelError;
 
 pub(super) fn validate(ctx: &mut Context<'_>) {
-    let mut defined_types = internal_baml_jinja_types::PredefinedTypes::default();
+    let mut defined_types = internal_baml_jinja_types::PredefinedTypes::default(
+        internal_baml_jinja_types::JinjaContext::Prompt,
+    );
 
     for cls in ctx.db.walk_classes() {
         for c in cls.static_fields() {

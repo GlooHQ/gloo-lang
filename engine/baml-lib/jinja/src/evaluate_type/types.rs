@@ -168,6 +168,11 @@ pub struct PredefinedTypes {
     errors: Vec<TypeError>,
 }
 
+pub enum JinjaContext {
+    Prompt,
+    Parsing,
+}
+
 impl PredefinedTypes {
     pub fn variable_names(&self) -> Vec<String> {
         self.variables
@@ -186,7 +191,7 @@ impl PredefinedTypes {
             .collect()
     }
 
-    pub fn default() -> Self {
+    pub fn default(context: JinjaContext) -> Self {
         Self {
             functions: HashMap::from([
                 (
@@ -262,10 +267,13 @@ impl PredefinedTypes {
                     ]),
                 ),
             ]),
-            variables: HashMap::from([
-                ("ctx".into(), Type::ClassRef("baml::Context".into())),
-                ("_".into(), Type::ClassRef("baml::BuiltIn".into())),
-            ]),
+            variables: match context {
+                JinjaContext::Prompt => HashMap::from([
+                    ("ctx".into(), Type::ClassRef("baml::Context".into())),
+                    ("_".into(), Type::ClassRef("baml::BuiltIn".into())),
+                ]),
+                JinjaContext::Parsing => Default::default(),
+            },
             scopes: Vec::new(),
             errors: Vec::new(),
         }

@@ -3,6 +3,7 @@ use minijinja::machinery::parse_expr;
 use crate::evaluate_type::{
     expr::evaluate_type,
     types::{PredefinedTypes, Type},
+    JinjaContext,
 };
 
 macro_rules! assert_evaluates_to {
@@ -44,19 +45,19 @@ macro_rules! assert_fails_to {
 
 #[test]
 fn test_evaluate_number() {
-    let types = PredefinedTypes::default();
+    let types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_eq!(assert_evaluates_to!("1.1 + 1", &types), Type::Number);
 }
 
 #[test]
 fn test_evaluate_bool() {
-    let types = PredefinedTypes::default();
+    let types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_eq!(assert_evaluates_to!("not 1.1", &types), Type::Bool);
 }
 
 #[test]
 fn test_evaluate_string() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_eq!(
         assert_fails_to!("ok ~ 1.1", &types),
         vec!["Variable `ok` does not exist. Did you mean one of these: `_`, `ctx`?"]
@@ -67,7 +68,7 @@ fn test_evaluate_string() {
 
 #[test]
 fn test_evaluate_setting() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_eq!(
         assert_fails_to!("bar.f.g", &types),
         vec!["Variable `bar` does not exist. Did you mean one of these: `_`, `ctx`?"]
@@ -89,7 +90,7 @@ fn test_evaluate_setting() {
 
 #[test]
 fn test_ifexpr() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_eq!(
         assert_evaluates_to!("1 if true else 2", &types),
         Type::Number
@@ -116,7 +117,7 @@ fn test_ifexpr() {
 
 #[test]
 fn test_eval() {
-    let types = PredefinedTypes::default();
+    let types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_eq!(assert_evaluates_to!("1 + 1", &types), Type::Number);
     assert_eq!(assert_evaluates_to!("1 - 1", &types), Type::Number);
     assert_eq!(assert_evaluates_to!("1 * 1", &types), Type::Number);
@@ -136,7 +137,7 @@ fn test_eval() {
 
 #[test]
 fn test_call_function() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_function("SomeFunc", Type::Float, vec![("arg".into(), Type::Bool)]);
 
     assert_eq!(assert_evaluates_to!("SomeFunc(true)", &types), Type::Float);
@@ -204,7 +205,7 @@ fn test_call_function() {
 
 #[test]
 fn test_output_format() {
-    let types = PredefinedTypes::default();
+    let types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_eq!(
         assert_evaluates_to!("ctx.output_format(prefix='hi')", &types),
         Type::String
