@@ -206,7 +206,7 @@ impl IRHelper for IntermediateRepr {
             {
                 Ok(BamlValueWithMeta::String(s, field_type))
             }
-            BamlValue::String(_) => anyhow::bail!("Could not unify Strinig with {:?}", field_type),
+            BamlValue::String(_) => anyhow::bail!("Could not unify String with {:?}", field_type),
 
             BamlValue::Int(i)
                 if FieldType::Primitive(TypeValue::Int).is_subtype_of(&field_type) =>
