@@ -666,8 +666,13 @@ class BamlProjectManager {
     })
   }
 
-  getProjectById(id: URI): Project {
-    return this.get_project(uriToRootPath(id))
+  getProjectById(id: URI): Project | undefined {
+    try {
+      return this.get_project(uriToRootPath(id))
+    } catch (e) {
+      console.error(`Error getting project by id: ${e}`)
+      return undefined
+    }
   }
 }
 

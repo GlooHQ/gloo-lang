@@ -113,8 +113,13 @@ export function startServer(options?: LSOptions): void {
     }
   })
 
-  console.log = connection.console.log.bind(connection.console)
-  console.error = connection.console.error.bind(connection.console)
+  // hellovai 🤷‍♂️: I have no idea why remove this prevents Output Panel
+  // from not showing up. But it does still keep logs, so I guess this works.
+  // Adding the snippets back in, will make the Output Panel will show up in
+  // a very annoying way whenever we have syntax errors in the BAML files.
+  //
+  // console.log = connection.console.log.bind(connection.console)
+  // console.error = connection.console.error.bind(connection.console)
 
   console.log('Starting Baml Language Server...')
 
@@ -343,7 +348,6 @@ export function startServer(options?: LSOptions): void {
 
   documents.onDidChangeContent(async (change: { document: TextDocument }) => {
     const textDocument = change.document
-
     await bamlProjectManager.upsert_file(URI.parse(textDocument.uri), textDocument.getText())
   })
 
@@ -360,6 +364,9 @@ export function startServer(options?: LSOptions): void {
     }
 
     const proj = bamlProjectManager.getProjectById(documentUri)
+    if (!proj) {
+      return
+    }
 
     try {
       const error = proj.checkVersionOnSave()
@@ -447,6 +454,9 @@ export function startServer(options?: LSOptions): void {
         const splitWord = completionWord.split('{{')
         completionWord = splitWord[splitWord.length - 1]
         const proj = bamlProjectManager.getProjectById(URI.parse(doc.uri))
+        if (!proj) {
+          return undefined
+        }
         const res = proj.verifyCompletionRequest(doc, params.position)
         if (res) {
           if (completionWord === '_.') {
