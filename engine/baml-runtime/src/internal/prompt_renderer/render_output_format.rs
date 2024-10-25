@@ -18,8 +18,13 @@ pub fn render_output_format(
     ctx: &RuntimeContext,
     output: &FieldType,
 ) -> Result<OutputFormatContent> {
-    let (enums, classes) = relevant_data_models(ir, output, ctx)?;
-    return Ok(OutputFormatContent::new(enums, classes, output.clone()));
+    let (enums, classes, recursive_classes) = relevant_data_models(ir, output, ctx)?;
+
+    return Ok(OutputFormatContent::target(output.clone())
+        .enums(enums)
+        .classes(classes)
+        .recursive_classes(recursive_classes)
+        .build());
 }
 
 enum OverridableValue<T> {
@@ -194,14 +199,19 @@ fn find_enum_value(
     Ok(Some((name, desc)))
 }
 
+// TODO: This function is "almost" a duplicate of `relevant_dat_models` at
+// baml-lib/jsonish/src/tests/mod.rs
+//
+// Should be refactored.
 fn relevant_data_models<'a>(
     ir: &'a IntermediateRepr,
     output: &'a FieldType,
     ctx: &RuntimeContext,
-) -> Result<(Vec<Enum>, Vec<Class>)> {
+) -> Result<(Vec<Enum>, Vec<Class>, HashSet<String>)> {
     let mut checked_types = HashSet::new();
     let mut enums = Vec::new();
     let mut classes = Vec::new();
+    let mut recursive_classes = HashSet::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     while let Some(output) = start.pop() {
@@ -227,7 +237,7 @@ fn relevant_data_models<'a>(
                         .into_iter()
                         .map(|value| {
                             let meta = find_enum_value(enm, &value, &walker, &overrides, ctx)?;
-                            Ok(meta.map(|m| m))
+                            Ok(meta)
                         })
                         .filter_map(|v| v.transpose())
                         .collect::<Result<Vec<_>>>()?;
@@ -327,10 +337,28 @@ fn relevant_data_models<'a>(
                         }
                     }
 
+                    // TODO: O(n) algorithm. Maybe a Merge-Find Set can optimize
+                    // this to O(log n) or something like that
+                    // (maybe, IDK though ¯\_(ツ)_/¯)
+                    //
+                    // Also there's a lot of cloning in this process of going
+                    // from Parser DB to IR to Jinja Output Format, not only
+                    // with recursive classes but also the rest of models.
+                    // There's room for optimization here.
+                    //
+                    // Also take a look at the TODO on top of this function.
+                    for cycle in ir.finite_recursive_cycles() {
+                        if cycle.contains(cls) {
+                            recursive_classes.extend(cycle.iter().map(ToOwned::to_owned));
+                        }
+                    }
+
                     classes.push(Class {
                         name: Name::new_with_alias(cls.to_string(), alias.value()),
                         fields,
                     });
+                } else {
+                    recursive_classes.insert(cls.to_owned());
                 }
             }
             FieldType::Primitive(_) => {}
@@ -338,7 +366,7 @@ fn relevant_data_models<'a>(
         }
     }
 
-    Ok((enums, classes))
+    Ok((enums, classes, recursive_classes))
 }
 
 #[cfg(test)]

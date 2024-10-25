@@ -115,6 +115,20 @@ impl minijinja::value::Object for OutputFormat {
             None
         };
 
+        let hoisted_class_prefix = if kwargs.has("hoisted_class_prefix") {
+            match kwargs.get::<String>("always_hoist_enums") {
+                Ok(hoisted_class_prefix) => Some(hoisted_class_prefix),
+                Err(e) => {
+                    return Err(Error::new(
+                        ErrorKind::SyntaxError,
+                        format!("Invalid value for hoisted_class_prefix (expected string): {e}"),
+                    ))
+                }
+            }
+        } else {
+            None
+        };
+
         let map_style = if kwargs.has("map_style") {
             match kwargs
                 .get::<String>("map_style")
@@ -159,6 +173,7 @@ impl minijinja::value::Object for OutputFormat {
             enum_value_prefix,
             always_hoist_enums,
             map_style,
+            hoisted_class_prefix,
         ))?;
 
         match content {

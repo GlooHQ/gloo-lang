@@ -33,21 +33,23 @@ mod coerce_expression;
 mod context;
 mod interner;
 mod names;
+mod tarjan;
 mod types;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub use coerce_expression::{coerce, coerce_array, coerce_opt};
 use either::Either;
 pub use internal_baml_schema_ast::ast;
-use internal_baml_schema_ast::ast::{SchemaAst, WithIdentifier, WithName, WithSpan};
+use internal_baml_schema_ast::ast::SchemaAst;
+pub use tarjan::Tarjan;
 pub use types::{
     Attributes, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType, PromptAst,
     PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType,
 };
 
 use self::{context::Context, interner::StringId, types::Types};
-use internal_baml_diagnostics::{DatamodelError, DatamodelWarning, Diagnostics};
+use internal_baml_diagnostics::{DatamodelError, Diagnostics};
 use names::Names;
 
 /// ParserDatabase is a container for a Schema AST, together with information
@@ -135,7 +137,41 @@ impl ParserDatabase {
         // The validation pipeline runs before this code. Check
         // baml-lib/baml-core/src/lib.rs
         //
-        // So we won't check cycles again.
+        // Here we'll just rebuild the cycles because the validation pipeline
+        // does not consider optional dependencies as part of the graph to allow
+        // finite rucursive types to pass the validation. But we need the cycles
+        // in order to render the LLM prompt correctly.
+        //
+        // TODO: Check if it's possible to build all the cycles considering
+        // optional dependencies as part of the graph but detecting such
+        // cycles with finite recursion during validation. That would optimize
+        // away one of the calls to the Tarjan's algorithm, which is linear,
+        // O(|V| + |E|), but still, if we can avoid the second call that would
+        // be great. Additionally, refactor `class_dependencies` to be the same
+        // type as the one expected by Tarjan::components, IDs that point to IDs
+        // instead of strings (class names). That requires less conversions when
+        // working with the graph. Once the work is done, IDs can be converted
+        // to names where needed.
+        let cycles = Tarjan::components(&HashMap::from_iter(
+            self.types.class_dependencies.iter().map(|(id, deps)| {
+                let deps =
+                    HashSet::from_iter(deps.iter().filter_map(
+                        |dep| match self.find_type_by_str(dep) {
+                            Some(Either::Left(cls)) => Some(cls.id),
+                            Some(Either::Right(_)) => None,
+                            None => panic!("Unknown class `{dep}`"),
+                        },
+                    ));
+                (*id, deps)
+            }),
+        ));
+
+        // Inject finite cycles into parser DB. This will then be passed into
+        // the IR and then into the Jinja output format.
+        self.types.finite_recursive_cycles = cycles
+            .into_iter()
+            .map(|cycle| cycle.into_iter().collect())
+            .collect();
 
         // Additionally ensure the same thing for functions, but since we've already handled classes,
         // this should be trivial.

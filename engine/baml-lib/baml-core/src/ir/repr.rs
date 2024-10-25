@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use baml_types::FieldType;
 use either::Either;
 use indexmap::IndexMap;
@@ -26,6 +26,8 @@ use crate::Configuration;
 pub struct IntermediateRepr {
     enums: Vec<Node<Enum>>,
     classes: Vec<Node<Class>>,
+    /// Strongly connected components of the dependency graph (finite cycles).
+    finite_recursive_cycles: Vec<HashSet<String>>,
     functions: Vec<Node<Function>>,
     clients: Vec<Node<Client>>,
     retry_policies: Vec<Node<RetryPolicy>>,
@@ -49,6 +51,7 @@ impl IntermediateRepr {
         IntermediateRepr {
             enums: vec![],
             classes: vec![],
+            finite_recursive_cycles: vec![],
             functions: vec![],
             clients: vec![],
             retry_policies: vec![],
@@ -69,6 +72,14 @@ impl IntermediateRepr {
             .flat_map(|c| c.elem.options.iter())
             .flat_map(|(_, expr)| expr.required_env_vars())
             .collect::<HashSet<&str>>()
+    }
+
+    /// Returns a list of all the recursive cycles in the IR.
+    ///
+    /// Each cycle is represented as a set of strings, where each string is the
+    /// name of a class.
+    pub fn finite_recursive_cycles(&self) -> &[HashSet<String>] {
+        &self.finite_recursive_cycles
     }
 
     pub fn walk_enums<'a>(&'a self) -> impl ExactSizeIterator<Item = Walker<'a, &'a Node<Enum>>> {
@@ -138,6 +149,15 @@ impl IntermediateRepr {
                 .walk_classes()
                 .map(|e| e.node(db))
                 .collect::<Result<Vec<_>>>()?,
+            finite_recursive_cycles: db
+                .finite_recursive_cycles()
+                .iter()
+                .map(|ids| {
+                    ids.iter()
+                        .map(|id| db.ast()[*id].name().to_string())
+                        .collect()
+                })
+                .collect(),
             functions: db
                 .walk_functions()
                 .map(|e| e.node(db))

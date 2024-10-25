@@ -1,7 +1,7 @@
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 use anyhow::Result;
-use baml_types::{FieldType, LiteralValue, TypeValue};
+use baml_types::{FieldType, TypeValue};
 use indexmap::{IndexMap, IndexSet};
 
 #[derive(Debug)]
@@ -52,7 +52,66 @@ pub struct Class {
 pub struct OutputFormatContent {
     enums: Arc<IndexMap<String, Enum>>,
     classes: Arc<IndexMap<String, Class>>,
+    recursive_classes: Arc<IndexSet<String>>,
     target: FieldType,
+}
+
+/// Builder for [`OutputFormatContent`].
+pub struct Builder {
+    enums: Vec<Enum>,
+    classes: Vec<Class>,
+    recursive_classes: HashSet<String>,
+    target: FieldType,
+}
+
+impl Builder {
+    pub fn new(target: FieldType) -> Self {
+        Self {
+            enums: vec![],
+            classes: vec![],
+            recursive_classes: HashSet::new(),
+            target,
+        }
+    }
+
+    pub fn enums(mut self, enums: Vec<Enum>) -> Self {
+        self.enums = enums;
+        self
+    }
+
+    pub fn classes(mut self, classes: Vec<Class>) -> Self {
+        self.classes = classes;
+        self
+    }
+
+    pub fn recursive_classes(mut self, recursive_classes: HashSet<String>) -> Self {
+        self.recursive_classes = recursive_classes;
+        self
+    }
+
+    pub fn target(mut self, target: FieldType) -> Self {
+        self.target = target;
+        self
+    }
+
+    pub fn build(self) -> OutputFormatContent {
+        OutputFormatContent {
+            enums: Arc::new(
+                self.enums
+                    .into_iter()
+                    .map(|e| (e.name.name.clone(), e))
+                    .collect(),
+            ),
+            classes: Arc::new(
+                self.classes
+                    .into_iter()
+                    .map(|c| (c.name.name.clone(), c))
+                    .collect(),
+            ),
+            recursive_classes: Arc::new(self.recursive_classes.into_iter().collect()),
+            target: self.target,
+        }
+    }
 }
 
 enum RenderSetting<T> {
@@ -80,6 +139,7 @@ pub(crate) struct RenderOptions {
     prefix: RenderSetting<String>,
     pub(crate) or_splitter: String,
     enum_value_prefix: RenderSetting<String>,
+    hoisted_class_prefix: String,
     always_hoist_enums: RenderSetting<bool>,
     map_style: MapStyle,
 }
@@ -88,8 +148,9 @@ impl Default for RenderOptions {
     fn default() -> Self {
         Self {
             prefix: RenderSetting::Auto,
-            or_splitter: " or ".to_string(),
+            or_splitter: Self::DEFAULT_OR_SPLITTER.to_string(),
             enum_value_prefix: RenderSetting::Auto,
+            hoisted_class_prefix: Self::DEFAULT_HOISTED_CLASS_PREFIX.to_string(),
             always_hoist_enums: RenderSetting::Auto,
             map_style: MapStyle::TypeParameters,
         }
@@ -97,24 +158,30 @@ impl Default for RenderOptions {
 }
 
 impl RenderOptions {
+    const DEFAULT_OR_SPLITTER: &'static str = " or ";
+    const DEFAULT_HOISTED_CLASS_PREFIX: &'static str = "";
+
     pub(crate) fn new(
         prefix: Option<Option<String>>,
         or_splitter: Option<String>,
         enum_value_prefix: Option<Option<String>>,
         always_hoist_enums: Option<bool>,
         map_style: Option<MapStyle>,
+        hoisted_class_prefix: Option<String>,
     ) -> Self {
         Self {
             prefix: prefix.map_or(RenderSetting::Auto, |p| {
                 p.map_or(RenderSetting::Never, RenderSetting::Always)
             }),
-            or_splitter: or_splitter.unwrap_or(" or ".to_string()),
+            or_splitter: or_splitter.unwrap_or(Self::DEFAULT_OR_SPLITTER.to_string()),
             enum_value_prefix: enum_value_prefix.map_or(RenderSetting::Auto, |p| {
                 p.map_or(RenderSetting::Never, RenderSetting::Always)
             }),
             always_hoist_enums: always_hoist_enums
                 .map_or(RenderSetting::Auto, RenderSetting::Always),
             map_style: map_style.unwrap_or(MapStyle::TypeParameters),
+            hoisted_class_prefix: hoisted_class_prefix
+                .unwrap_or(Self::DEFAULT_HOISTED_CLASS_PREFIX.to_string()),
         }
     }
 }
@@ -205,25 +272,12 @@ impl<'s> std::fmt::Display for MapRender<'s> {
 
 struct RenderState {
     hoisted_enums: IndexSet<String>,
+    hoisted_classes: IndexSet<String>,
 }
 
 impl OutputFormatContent {
-    pub fn new(enums: Vec<Enum>, classes: Vec<Class>, target: FieldType) -> Self {
-        Self {
-            enums: Arc::new(
-                enums
-                    .into_iter()
-                    .map(|e| (e.name.name.clone(), e))
-                    .collect(),
-            ),
-            classes: Arc::new(
-                classes
-                    .into_iter()
-                    .map(|c| (c.name.name.clone(), c))
-                    .collect(),
-            ),
-            target,
-        }
+    pub fn target(target: FieldType) -> Builder {
+        Builder::new(target)
     }
 
     fn prefix<'a>(&self, options: &'a RenderOptions) -> Option<&'a str> {
@@ -235,7 +289,13 @@ impl OutputFormatContent {
                 FieldType::Primitive(_) => Some("Answer as a: "),
                 FieldType::Literal(_) => Some("Answer using this specific value:\n"),
                 FieldType::Enum(_) => Some("Answer with any of the categories:\n"),
-                FieldType::Class(_) => Some("Answer in JSON using this schema:\n"),
+                // TODO: Func returns &str we can't format!, do something to
+                // avoid duplicating the string.
+                FieldType::Class(cls) => Some(if self.recursive_classes.contains(cls) {
+                    "Answer in JSON using this schema: "
+                } else {
+                    "Answer in JSON using this schema:\n"
+                }),
                 FieldType::List(_) => Some("Answer with a JSON Array using this schema:\n"),
                 FieldType::Union(_) => Some("Answer in JSON using any of these schemas:\n"),
                 FieldType::Optional(_) => Some("Answer in JSON using this schema:\n"),
@@ -282,16 +342,12 @@ impl OutputFormatContent {
                     ))
                 }
             },
-            FieldType::Literal(v) => match v {
-                LiteralValue::String(s) => format!("\"{}\"", s),
-                LiteralValue::Int(i) => i.to_string(),
-                LiteralValue::Bool(b) => b.to_string(),
-            },
+            FieldType::Literal(v) => v.to_string(),
             FieldType::Enum(e) => {
                 let Some(enm) = self.enums.get(e) else {
                     return Err(minijinja::Error::new(
                         minijinja::ErrorKind::BadSerialization,
-                        format!("Enum {} not found", e),
+                        format!("Enum {e} not found"),
                     ));
                 };
 
@@ -317,20 +373,65 @@ impl OutputFormatContent {
                 let Some(class) = self.classes.get(cls) else {
                     return Err(minijinja::Error::new(
                         minijinja::ErrorKind::BadSerialization,
-                        format!("Class {} not found", cls),
+                        format!("Class {cls} not found"),
                     ));
                 };
+
+                // Hoist recursive classes.
+                //
+                // TODO: Some cloning in this function again, check
+                // baml-lib/jsonish/src/tests/mod.rs
+                // there's room for optimization.
+                if render_state.hoisted_classes.len() < self.recursive_classes.len() {
+                    for recursive_class in self.recursive_classes.iter() {
+                        render_state.hoisted_classes.insert(recursive_class.clone());
+                    }
+                }
 
                 ClassRender {
                     name: class.name.rendered_name().to_string(),
                     values: class
                         .fields
                         .iter()
-                        .map(|(n, t, d)| {
+                        .map(|(name, field_type, description)| {
+                            let mut maybe_nested_recursive_class = None;
+
+                            match field_type {
+                                // TODO: Don't panic, return err, this should not
+                                // happen anyway.
+                                FieldType::Class(nested_class)
+                                    if self.recursive_classes.contains(nested_class) =>
+                                {
+                                    panic!("Infinite recursive cycle detected for class '{nested_class}'")
+                                }
+
+                                FieldType::Optional(boxed_field_type) => {
+                                    if let FieldType::Class(nested_class) =
+                                        boxed_field_type.as_ref()
+                                    {
+                                        if self.recursive_classes.contains(nested_class) {
+                                            maybe_nested_recursive_class = Some(nested_class);
+                                        }
+                                    }
+                                }
+
+                                _ => {}
+                            }
+
+                            // Terminate recursion. There's no other way to
+                            // refer to a recursive class other than by name,
+                            // and all recursive classes are hoisted so they'll
+                            // be handled at a later stage.
+                            let r#type = if let Some(nested_class) = maybe_nested_recursive_class {
+                                format!("{nested_class}{}null", options.or_splitter)
+                            } else {
+                                self.inner_type_render(options, field_type, render_state, false)?
+                            };
+
                             Ok(ClassFieldRender {
-                                name: n.rendered_name().to_string(),
-                                r#type: self.inner_type_render(options, t, render_state, false)?,
-                                description: d.clone(),
+                                name: name.rendered_name().to_string(),
+                                description: description.clone(),
+                                r#type,
                             })
                         })
                         .collect::<Result<_, minijinja::Error>>()?,
@@ -365,7 +466,7 @@ impl OutputFormatContent {
                 if inner.is_optional() {
                     inner_str
                 } else {
-                    format!("{}{}null", inner_str, &options.or_splitter)
+                    format!("{inner_str}{}null", options.or_splitter)
                 }
             }
             FieldType::Tuple(_) => {
@@ -391,9 +492,10 @@ impl OutputFormatContent {
 
         let mut render_state = RenderState {
             hoisted_enums: IndexSet::new(),
+            hoisted_classes: IndexSet::new(),
         };
 
-        let message = match &self.target {
+        let mut message = match &self.target {
             FieldType::Primitive(TypeValue::String) if prefix.is_none() => None,
             FieldType::Enum(e) => {
                 let Some(enm) = self.enums.get(e) else {
@@ -408,6 +510,14 @@ impl OutputFormatContent {
             _ => Some(self.inner_type_render(&options, &self.target, &mut render_state, false)?),
         };
 
+        // Top level recursive classes will just use their name instead of the
+        // entire schema which should already be hoisted.
+        if let FieldType::Class(class) = &self.target {
+            if self.recursive_classes.contains(class) {
+                message = Some(class.to_owned());
+            }
+        }
+
         let enum_definitions = render_state
             .hoisted_enums
             .iter()
@@ -417,48 +527,52 @@ impl OutputFormatContent {
             })
             .collect::<Vec<_>>();
 
-        match (prefix, message) {
-            (Some(prefix), Some(message)) => {
-                if enum_definitions.len() > 0 {
-                    Ok(Some(format!(
-                        "{}\n\n{}{}",
-                        enum_definitions.join("\n\n"),
-                        prefix,
-                        message,
-                    )))
-                } else {
-                    Ok(Some(format!("{}{}", prefix, message)))
-                }
-            }
-            (None, Some(message)) => {
-                if enum_definitions.len() > 0 {
-                    Ok(Some(format!(
-                        "{}\n\n{}",
-                        enum_definitions.join("\n\n"),
-                        message
-                    )))
-                } else {
-                    Ok(Some(message))
-                }
-            }
-            (Some(prefix), None) => {
-                if enum_definitions.len() > 0 {
-                    Ok(Some(format!(
-                        "{}\n\n{}",
-                        prefix,
-                        enum_definitions.join("\n\n")
-                    )))
-                } else {
-                    Ok(Some(prefix.to_string()))
-                }
-            }
-            (None, None) => {
-                if enum_definitions.len() > 0 {
-                    Ok(Some(enum_definitions.join("\n\n")))
-                } else {
-                    Ok(None)
-                }
-            }
+        // Yeah we love the borrow checker...
+        let hoisted_classes = std::mem::replace(&mut render_state.hoisted_classes, IndexSet::new());
+
+        let mut class_definitions = Vec::new();
+
+        for class_name in hoisted_classes {
+            let schema = self.inner_type_render(
+                &options,
+                &FieldType::Class(class_name.to_owned()),
+                &mut render_state,
+                false,
+            )?;
+
+            // TODO: Prefix (type, interface, class, etc...) grab from &options.
+            class_definitions.push(format!("{class_name} {schema}"));
+        }
+
+        let mut output = String::new();
+
+        if enum_definitions.len() > 0 {
+            output.push_str(&enum_definitions.join("\n\n"));
+            output.push_str("\n\n");
+        }
+
+        if class_definitions.len() > 0 {
+            output.push_str(&class_definitions.join("\n"));
+            output.push_str("\n\n");
+        }
+
+        if let Some(p) = prefix {
+            output.push_str(p);
+        }
+
+        if let Some(m) = message {
+            output.push_str(&m);
+        }
+
+        // Trim end.
+        while let Some('\n') = output.chars().last() {
+            output.pop();
+        }
+
+        if output.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(output))
         }
     }
 }
@@ -466,15 +580,14 @@ impl OutputFormatContent {
 #[cfg(test)]
 impl OutputFormatContent {
     pub fn new_array() -> Self {
-        Self::new(
-            vec![],
-            vec![],
-            FieldType::List(Box::new(FieldType::Primitive(TypeValue::String))),
-        )
+        Self::target(FieldType::List(Box::new(FieldType::Primitive(
+            TypeValue::String,
+        ))))
+        .build()
     }
 
     pub fn new_string() -> Self {
-        Self::new(vec![], vec![], FieldType::Primitive(TypeValue::String))
+        Self::target(FieldType::Primitive(TypeValue::String)).build()
     }
 }
 
@@ -515,31 +628,30 @@ mod tests {
 
     #[test]
     fn test_render_enum() {
-        let mut enums = vec![];
-        enums.push(Enum {
+        let enums = vec![Enum {
             name: Name::new("Color".to_string()),
             values: vec![
                 (Name::new("Red".to_string()), None),
                 (Name::new("Green".to_string()), None),
                 (Name::new("Blue".to_string()), None),
             ],
-        });
+        }];
 
-        let content = OutputFormatContent::new(enums, vec![], FieldType::Enum("Color".to_string()));
+        let content = OutputFormatContent::target(FieldType::Enum("Color".to_string()))
+            .enums(enums)
+            .build();
         let rendered = content.render(RenderOptions::default()).unwrap();
         assert_eq!(
             rendered,
-            Some(
+            Some(String::from(
                 "Answer with any of the categories:\nColor\n----\n- Red\n- Green\n- Blue"
-                    .to_string()
-            )
+            ))
         );
     }
 
     #[test]
     fn test_render_class() {
-        let mut classes = vec![];
-        classes.push(Class {
+        let classes = vec![Class {
             name: Name::new("Person".to_string()),
             fields: vec![
                 (
@@ -553,24 +665,23 @@ mod tests {
                     Some("The person's age".to_string()),
                 ),
             ],
-        });
+        }];
 
-        let content =
-            OutputFormatContent::new(vec![], classes, FieldType::Class("Person".to_string()));
+        let content = OutputFormatContent::target(FieldType::Class("Person".to_string()))
+            .classes(classes)
+            .build();
         let rendered = content.render(RenderOptions::default()).unwrap();
         assert_eq!(
             rendered,
-            Some(
+            Some(String::from(
                 "Answer in JSON using this schema:\n{\n  // The person's name\n  name: string,\n  // The person's age\n  age: int,\n}"
-                    .to_string()
-            )
+            ))
         );
     }
 
     #[test]
     fn test_render_class_with_multiline_descriptions() {
-        let mut classes = vec![];
-        classes.push(Class {
+        let classes = vec![Class {
             name: Name::new("Education".to_string()),
             fields: vec![
                 (
@@ -589,17 +700,104 @@ mod tests {
                     None,
                 ),
             ],
-        });
+        }];
 
-        let content =
-            OutputFormatContent::new(vec![], classes, FieldType::Class("Education".to_string()));
+        let content = OutputFormatContent::target(FieldType::Class("Education".to_string()))
+            .classes(classes)
+            .build();
         let rendered = content.render(RenderOptions::default()).unwrap();
         assert_eq!(
             rendered,
-            Some(
+            Some(String::from(
                 "Answer in JSON using this schema:\n{\n  // 111\n  //   \n  school: string or null,\n  // 2222222\n  degree: string,\n  year: int,\n}"
-                    .to_string()
-            )
+            ))
+        );
+    }
+
+    #[test]
+    fn test_render_top_level_simple_recursive_class() {
+        let classes = vec![Class {
+            name: Name::new("Node".to_string()),
+            fields: vec![
+                (
+                    Name::new("data".to_string()),
+                    FieldType::Primitive(TypeValue::Int),
+                    None,
+                ),
+                (
+                    Name::new("next".to_string()),
+                    FieldType::Optional(Box::new(FieldType::Class("Node".to_string()))),
+                    None,
+                ),
+            ],
+        }];
+
+        let content = OutputFormatContent::target(FieldType::Class("Node".to_string()))
+            .classes(classes)
+            .recursive_classes(HashSet::from_iter(["Node".to_string()]))
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+        assert_eq!(
+            rendered,
+            Some(String::from(
+r#"Node {
+  data: int,
+  next: Node or null,
+}
+
+Answer in JSON using this schema: Node"#
+            ))
+        );
+    }
+
+    #[test]
+    fn test_render_nested_simple_recursive_class() {
+        let classes = vec![
+            Class {
+                name: Name::new("Node".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("next".to_string()),
+                        FieldType::Optional(Box::new(FieldType::Class("Node".to_string()))),
+                        None,
+                    ),
+                ],
+            },
+            Class {
+                name: Name::new("LinkedList".to_string()),
+                fields: vec![
+                    (
+                        Name::new("head".to_string()),
+                        FieldType::Optional(Box::new(FieldType::Class("Node".to_string()))),
+                        None,
+                    ),
+                    (Name::new("len".to_string()), FieldType::int(), None),
+                ],
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Class("LinkedList".to_string()))
+            .classes(classes)
+            .recursive_classes(HashSet::from_iter(["Node".to_string()]))
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+        assert_eq!(
+            rendered,
+            Some(String::from(
+r#"Node {
+  data: int,
+  next: Node or null,
+}
+
+Answer in JSON using this schema:
+{
+  head: Node or null,
+  len: int,
+}"#
+            ))
         );
     }
 }
