@@ -1,6 +1,7 @@
 use crate::evaluate_type::{
     stmt::get_variable_types,
     types::{PredefinedTypes, Type},
+    JinjaContext,
 };
 
 macro_rules! assert_evaluates_to {
@@ -51,7 +52,7 @@ macro_rules! assert_fails_to {
 
 #[test]
 fn evaluate_undefined() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_fails_to!(
         r#"
         {{ prompt }}
@@ -63,7 +64,7 @@ fn evaluate_undefined() {
 
 #[test]
 fn evaluate_number() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_evaluates_to!(
         r#"
         {%- set prompt = 1.1 + 1 -%}
@@ -75,7 +76,7 @@ fn evaluate_number() {
 
 #[test]
 fn evaluate_bool() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_evaluates_to!(
         r#"
         {%- set prompt = false -%}
@@ -87,7 +88,7 @@ fn evaluate_bool() {
 
 #[test]
 fn evaluate_string() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_evaluates_to!(
         r#"
         {%- set prompt = "hello" -%}
@@ -99,7 +100,7 @@ fn evaluate_string() {
 
 #[test]
 fn evaluate_pre_vars() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_variable("prompt", Type::Bool);
     assert_evaluates_to!(
         r#"
@@ -111,7 +112,7 @@ fn evaluate_pre_vars() {
 
 #[test]
 fn function_call() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_variable("prompt", Type::Bool);
     assert_fails_to!(
         r#"
@@ -124,7 +125,7 @@ fn function_call() {
 
 #[test]
 fn function_call_1() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_function("prompt", Type::Bool, vec![]);
     assert_evaluates_to!(
         r#"
@@ -136,7 +137,7 @@ fn function_call_1() {
 
 #[test]
 fn function_call_2() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_function("prompt", Type::Bool, vec![("arg".into(), Type::String)]);
     assert_fails_to!(
         r#"
@@ -151,7 +152,7 @@ fn function_call_2() {
 
 #[test]
 fn function_call_3() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_function("prompt", Type::Bool, vec![("arg".into(), Type::String)]);
     types.add_variable("items", Type::List(Box::new(Type::String)));
     assert_evaluates_to!(
@@ -177,7 +178,7 @@ fn function_call_3() {
 
 #[test]
 fn function_call_4() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_function("prompt", Type::Bool, vec![("arg".into(), Type::String)]);
     types.add_variable(
         "dict_item",
@@ -199,7 +200,7 @@ fn function_call_4() {
 
 #[test]
 fn loop_builtin() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_variable("items", Type::List(Box::new(Type::String)));
     assert_fails_to!(
         r#"
@@ -213,7 +214,7 @@ fn loop_builtin() {
         vec!["class jinja::loop (loop) does not have a property 'a'",]
     );
 
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_variable("items", Type::List(Box::new(Type::String)));
     assert_evaluates_to!(
         r#"
@@ -229,7 +230,7 @@ fn loop_builtin() {
 
 #[test]
 fn if_else() {
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_variable("prompt", Type::String);
     types.add_function("Foo", Type::Bool, vec![("arg".into(), Type::String)]);
     assert_fails_to!(
@@ -248,7 +249,7 @@ fn if_else() {
             vec!["Function 'Foo' expects argument 'arg' to be of type string, but got (undefined | number | string)"]
         );
 
-    let mut types = PredefinedTypes::default();
+    let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_variable("prompt", Type::String);
     types.add_function("Foo", Type::Bool, vec![("arg".into(), Type::String)]);
     assert_evaluates_to!(
