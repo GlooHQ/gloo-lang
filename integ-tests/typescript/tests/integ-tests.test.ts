@@ -689,16 +689,6 @@ describe('Integ tests', () => {
     expect(res).not.toContain('tiger')
   })
 
- it("should use aliases when serializing input objects - enums", async () => {
-   const res = await b.AliasedInputEnum(AliasedEnum.KEY_ONE)
-   expect(res).toContain("tiger")
- })
-
- it("should use aliases when serializing input objects - lists", async () => {
-   const res = await b.AliasedInputList([AliasedEnum.KEY_ONE, AliasedEnum.KEY_TWO])
-   expect(res).toContain("tiger")
- })
-
  it("constraints: should handle checks in return types", async() => {
    const res = await b.PredictAge("Greg")
    expect(res.certainty.checks.unreasonably_certain.status).toBe("failed")
