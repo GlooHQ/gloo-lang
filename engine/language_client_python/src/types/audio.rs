@@ -22,7 +22,7 @@ impl BamlAudioPy {
     fn from_base64(media_type: String, base64: String) -> Self {
         BamlAudioPy {
             inner: baml_types::BamlMedia::base64(
-                baml_types::BamlMediaType::Image,
+                baml_types::BamlMediaType::Audio,
                 base64,
                 Some(media_type),
             ),

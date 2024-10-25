@@ -47,6 +47,9 @@ module Baml
     class InnerClass2 < T::Struct; end
     class InputClass < T::Struct; end
     class InputClassNested < T::Struct; end
+    class LiteralClassHello < T::Struct; end
+    class LiteralClassOne < T::Struct; end
+    class LiteralClassTwo < T::Struct; end
     class MalformedConstraints < T::Struct; end
     class MalformedConstraints2 < T::Struct; end
     class Martian < T::Struct; end
@@ -472,6 +475,42 @@ module Baml
         super(
           key: props[:key],
           nested: props[:nested],
+        )
+
+        @props = props
+      end
+    end
+    class LiteralClassHello < T::Struct
+      include Baml::Sorbet::Struct
+      const :prop, T.nilable(String)
+
+      def initialize(props)
+        super(
+          prop: props[:prop],
+        )
+
+        @props = props
+      end
+    end
+    class LiteralClassOne < T::Struct
+      include Baml::Sorbet::Struct
+      const :prop, T.nilable(String)
+
+      def initialize(props)
+        super(
+          prop: props[:prop],
+        )
+
+        @props = props
+      end
+    end
+    class LiteralClassTwo < T::Struct
+      include Baml::Sorbet::Struct
+      const :prop, T.nilable(String)
+
+      def initialize(props)
+        super(
+          prop: props[:prop],
         )
 
         @props = props

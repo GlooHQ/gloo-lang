@@ -28,6 +28,8 @@ from ..baml_client.types import (
     OriginalB,
     StringToClassEntry,
     MalformedConstraints2,
+    LiteralClassHello,
+    LiteralClassOne
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -195,6 +197,16 @@ class TestAllInputs:
     async def test_single_literal_string(self):
         res = await b.TestNamedArgsLiteralString("My String")
         assert "My String" in res
+
+    @pytest.mark.asyncio
+    async def test_class_with_literal_prop(self):
+        res = await b.FnLiteralInputOutput(input=LiteralClassHello(prop="hello"))
+        assert isinstance(res, LiteralClassHello)
+
+    @pytest.mark.asyncio
+    async def test_literal_classs_with_literal_union_prop(self):
+        res = await b.FnLiteralUnionClassInputOutput(input=LiteralClassOne(prop="one"))
+        assert isinstance(res, LiteralClassOne)
 
     @pytest.mark.asyncio
     async def test_single_map_string_to_string(self):

@@ -299,6 +299,21 @@ export interface InputClassNested {
   
 }
 
+export interface LiteralClassHello {
+  prop: "hello"
+  
+}
+
+export interface LiteralClassOne {
+  prop: "one"
+  
+}
+
+export interface LiteralClassTwo {
+  prop: "two"
+  
+}
+
 export interface MalformedConstraints {
   foo: Checked<number,"foo_check">
   

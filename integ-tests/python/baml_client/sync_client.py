@@ -805,6 +805,52 @@ class BamlSyncClient:
       )
       return cast(types.EnumOutput, raw.cast_to(types, types))
     
+    def FnLiteralClassInputOutput(
+        self,
+        input: types.LiteralClassHello,
+        baml_options: BamlCallOptions = {},
+    ) -> types.LiteralClassHello:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "FnLiteralClassInputOutput",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.LiteralClassHello, raw.cast_to(types, types))
+    
+    def FnLiteralUnionClassInputOutput(
+        self,
+        input: Union[types.LiteralClassOne, types.LiteralClassTwo],
+        baml_options: BamlCallOptions = {},
+    ) -> Union[types.LiteralClassOne, types.LiteralClassTwo]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "FnLiteralUnionClassInputOutput",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Union[types.LiteralClassOne, types.LiteralClassTwo], raw.cast_to(types, types))
+    
     def FnNamedArgsSingleStringOptional(
         self,
         myString: Optional[str],
@@ -3463,6 +3509,66 @@ class BamlStreamClient:
         raw,
         lambda x: cast(Optional[types.EnumOutput], x.cast_to(types, partial_types)),
         lambda x: cast(types.EnumOutput, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def FnLiteralClassInputOutput(
+        self,
+        input: types.LiteralClassHello,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.LiteralClassHello, types.LiteralClassHello]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "FnLiteralClassInputOutput",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[partial_types.LiteralClassHello, types.LiteralClassHello](
+        raw,
+        lambda x: cast(partial_types.LiteralClassHello, x.cast_to(types, partial_types)),
+        lambda x: cast(types.LiteralClassHello, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def FnLiteralUnionClassInputOutput(
+        self,
+        input: Union[types.LiteralClassOne, types.LiteralClassTwo],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Optional[Union[partial_types.LiteralClassOne, partial_types.LiteralClassTwo]], Union[types.LiteralClassOne, types.LiteralClassTwo]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "FnLiteralUnionClassInputOutput",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Optional[Union[partial_types.LiteralClassOne, partial_types.LiteralClassTwo]], Union[types.LiteralClassOne, types.LiteralClassTwo]](
+        raw,
+        lambda x: cast(Optional[Union[partial_types.LiteralClassOne, partial_types.LiteralClassTwo]], x.cast_to(types, partial_types)),
+        lambda x: cast(Union[types.LiteralClassOne, types.LiteralClassTwo], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

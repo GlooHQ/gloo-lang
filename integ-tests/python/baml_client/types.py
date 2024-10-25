@@ -302,6 +302,21 @@ class InputClassNested(BaseModel):
     key: str
     nested: "InputClass"
 
+class LiteralClassHello(BaseModel):
+    
+    
+    prop: Literal["hello"]
+
+class LiteralClassOne(BaseModel):
+    
+    
+    prop: Literal["one"]
+
+class LiteralClassTwo(BaseModel):
+    
+    
+    prop: Literal["two"]
+
 class MalformedConstraints(BaseModel):
     
     
