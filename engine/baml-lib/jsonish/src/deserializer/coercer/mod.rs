@@ -9,12 +9,14 @@ mod field_type;
 mod ir_ref;
 mod match_string;
 
+use std::f32::consts::E;
+
 use anyhow::Result;
 
-use baml_types::{BamlValue, Constraint};
+use baml_types::{BamlValue, Constraint, JinjaExpression};
 use internal_baml_jinja::types::OutputFormatContent;
 
-use internal_baml_core::ir::{FieldType, jinja_helpers::evaluate_predicate};
+use internal_baml_core::ir::{jinja_helpers::evaluate_predicate, FieldType};
 
 use super::types::BamlValueWithFlags;
 
@@ -231,14 +233,28 @@ pub trait DefaultValue {
 pub fn run_user_checks(
     baml_value: &BamlValue,
     type_: &FieldType,
-) -> Result<Vec<(Constraint, bool)>> {
+) -> Result<Vec<(String, JinjaExpression, bool)>> {
     match type_ {
-        FieldType::Constrained { constraints, .. } => {
-            constraints.iter().map(|constraint| {
+        FieldType::Constrained { constraints, .. } => constraints
+            .iter()
+            .map(|constraint| {
                 let result = evaluate_predicate(baml_value, &constraint.expression)?;
-                Ok((constraint.clone(), result))
-            }).collect::<Result<Vec<_>>>()
-        }
+
+                match constraint.level {
+                    baml_types::ConstraintLevel::Check => Ok((
+                        match constraint.label {
+                            Some(ref label) => label.clone(),
+                            None => return Err(anyhow::anyhow!("Check must have a label")),
+                        },
+                        constraint.expression.clone(),
+                        result,
+                    )),
+                    baml_types::ConstraintLevel::Assert => {
+                        Err(anyhow::anyhow!("Asserts are not supported in this context"))
+                    }
+                }
+            })
+            .collect::<Result<Vec<_>>>(),
         _ => Ok(vec![]),
     }
 }
