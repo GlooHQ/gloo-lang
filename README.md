@@ -342,7 +342,7 @@ HQ in Seattle, WA
 
 P.S. We're hiring for software engineers. [Email us](founders@boundaryml.com) or reach out on [discord](https://discord.gg/ENtBB6kkXH)!
 
-<div align="left" align-items: left;">
+<div align="left" style="align-items: left;">
         <a href="#top">
             <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
         </a>
