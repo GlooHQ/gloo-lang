@@ -58,7 +58,10 @@ impl WithScore for Flag {
             Flag::FirstMatch(_, _) => 1,
             // No penalty for picking an option from a union
             Flag::UnionMatch(_, _) => 0,
-            Flag::StrMatchOneFromMany(i) => i.into_iter().map(|(i, _)| *i as i32).sum::<i32>(),
+            Flag::StrMatchOneFromMany(values) => values
+                .into_iter()
+                .map(|(_, count)| *count as i32)
+                .sum::<i32>(),
             Flag::StringToBool(_) => 1,
             Flag::StringToNull(_) => 1,
             Flag::StringToChar(_) => 1,

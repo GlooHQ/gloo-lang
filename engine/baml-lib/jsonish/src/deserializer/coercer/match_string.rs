@@ -205,7 +205,7 @@ fn string_match_strategy<'c>(
         let ties: Vec<_> = variant_counts
             .iter()
             .filter(|(_, count)| *count == max_count)
-            .map(|(variant, count)| (*count, variant.to_string()))
+            .map(|(variant, count)| (variant.to_string(), *count))
             .collect();
 
         // If there are multiple matches, add a flag
