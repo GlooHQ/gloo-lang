@@ -188,7 +188,7 @@ To rebuild the playground UI:
 2. `pnpm build`
 3. Close and open the playground in your “Debug mode VSCode window”
 
-## Testing [prompfiddle.com](http://prompfiddle.com)
+## Testing [promptfiddle.com](http://promptfiddle.com)
 
 This is useful if you want to iterate faster on the Extension UI, since it supports hot-reloading.
 
