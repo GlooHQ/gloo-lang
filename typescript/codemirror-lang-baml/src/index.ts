@@ -20,7 +20,7 @@ import { parser } from './syntax.grammar'
 export const BAMLLanguage = LRLanguage.define({
   parser: parser.configure({
     wrap: parseMixed((node) => {
-      if (node.name !== 'PromptExprContents') {
+      if (node.name !== 'PromptExprContents' && node.name !== 'JinjaExpr') {
         return null
       }
 
@@ -101,6 +101,8 @@ export const BAMLLanguage = LRLanguage.define({
 const exampleCompletion = BAMLLanguage.data.of({
   autocomplete: [
     snippetCompletion('@alias(#"${one}"#)', { label: '@alias' }),
+    snippetCompletion('@assert({{ this }})', { label: '@assert' }),
+    snippetCompletion('@check(custom_check_name, {{ this }})', { label: '@check' }),
     snippetCompletion('@description(#"${}"#)', { label: '@description' }),
     snippetCompletion('class ${ClassName} {\n  ${property string}\n}', { label: 'class' }),
     snippetCompletion('enum ${EnumName} {\n  ${ONE}\n  ${TWO}\n}', { label: 'enum' }),
