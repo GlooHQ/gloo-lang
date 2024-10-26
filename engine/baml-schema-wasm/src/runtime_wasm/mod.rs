@@ -556,9 +556,10 @@ fn flatten_checks(value: &BamlValueWithFlags) -> (serde_json::Value, usize) {
             (J::Object(values), counts.iter().sum())
         }
         BamlValueWithFlags::Null(_) => (J::Null, 0),
-        BamlValueWithFlags::Media(_) => {
-            unimplemented!("BAML does not support returning media types to users")
-        }
+        BamlValueWithFlags::Media(_) => (
+            serde_json::Value::String("media type not supported".to_string()),
+            0,
+        ),
     };
 
     let check_count = checks.len() + sub_check_count;
