@@ -26,7 +26,7 @@ class Contact {
         setHasClosedIntroToChecksDialog(true)
       }}
     >
-      <DialogContent className=' min-h-[550px] max-h-[550px] w-[960px] overflow-y-auto bg-vscode-editorWidget-background flex flex-col border-vscode-textSeparator-foreground overflow-x-clip'>
+      <DialogContent className=' min-h-[550px] max-h-[550px] overflow-y-auto bg-vscode-editorWidget-background flex flex-col border-vscode-textSeparator-foreground overflow-x-clip'>
         <DialogHeader className='flex flex-row gap-x-4 items-end'>
           <DialogTitle className='font-semibold'>Introduction to Checks</DialogTitle>
         </DialogHeader>
