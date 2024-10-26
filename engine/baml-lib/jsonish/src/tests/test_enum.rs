@@ -281,3 +281,15 @@ This indicates that there is no relevant tax return form type present on the pag
     FieldType::Enum("TaxReturnFormType".to_string()).as_optional(),
     null
 );
+
+test_failing_deserializer!(
+    test_ambiguous_substring_enum,
+    r#"
+        enum Car {
+            A @alias("car")
+            B @alias("car-2")
+        }
+    "#,
+    "The answer is not car or car-2!",
+    FieldType::Enum("Car".to_string())
+);
