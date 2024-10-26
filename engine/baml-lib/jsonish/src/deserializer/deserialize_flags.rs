@@ -1,5 +1,5 @@
 use super::{coercer::ParsingError, types::BamlValueWithFlags};
-use baml_types::Constraint;
+use baml_types::{Constraint, ConstraintLevel, JinjaExpression};
 
 #[derive(Debug, Clone)]
 pub enum Flag {
@@ -44,8 +44,8 @@ pub enum Flag {
     // X -> Object convertions.
     NoFields(Option<crate::jsonish::Value>),
 
-    // Constraint results.
-    ConstraintResults(Vec<(Constraint, bool)>),
+    /// Constraint results (only contains checks)
+    ConstraintResults(Vec<(String, JinjaExpression, bool)>),
 }
 
 #[derive(Clone)]
@@ -99,13 +99,16 @@ impl DeserializerConditions {
             .collect::<Vec<_>>()
     }
 
-    pub fn constraint_results(&self) -> Vec<(Constraint, bool)> {
-        self.flags.iter().filter_map(|flag| match flag {
-            Flag::ConstraintResults(cs) => Some(cs.clone()),
-            _ => None,
-        }).flatten().collect()
+    pub fn constraint_results(&self) -> Vec<(String, JinjaExpression, bool)> {
+        self.flags
+            .iter()
+            .filter_map(|flag| match flag {
+                Flag::ConstraintResults(cs) => Some(cs.clone()),
+                _ => None,
+            })
+            .flatten()
+            .collect()
     }
-
 }
 
 impl std::fmt::Debug for DeserializerConditions {
@@ -243,10 +246,13 @@ impl std::fmt::Display for Flag {
                 }
             }
             Flag::ConstraintResults(cs) => {
-                for (Constraint{ label, level, expression }, succeeded) in cs.iter() {
-                    let msg = label.as_ref().unwrap_or(&expression.0);
+                for (label, _, succeeded) in cs.iter() {
                     let f_result = if *succeeded { "Succeeded" } else { "Failed" };
-                    writeln!(f, "{level:?} {msg} {f_result}")?;
+                    writeln!(
+                        f,
+                        "{level:?} {label} {f_result}",
+                        level = ConstraintLevel::Check
+                    )?;
                 }
             }
         }

@@ -233,7 +233,7 @@ export interface Email {
 }
 
 export interface EmailAddress {
-  value: Checked<string,"valid_email">
+  value: string
   
 }
 
@@ -296,6 +296,21 @@ export interface InputClass {
 export interface InputClassNested {
   key: string
   nested: InputClass
+  
+}
+
+export interface LiteralClassHello {
+  prop: "hello"
+  
+}
+
+export interface LiteralClassOne {
+  prop: "one"
+  
+}
+
+export interface LiteralClassTwo {
+  prop: "two"
   
 }
 
@@ -373,7 +388,7 @@ export interface Person {
 }
 
 export interface PhoneNumber {
-  value: Checked<string,"valid_phone_number">
+  value: string
   
 }
 

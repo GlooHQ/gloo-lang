@@ -200,7 +200,6 @@ case "$_path" in
       command="${command} && BAML_LOG=${BAML_LOG}  infisical run -- pnpm test tests/integ-tests.test.ts"
     fi
     if [ "$_watch_mode" -eq 1 ]; then
-        #--verbose \
       npx nodemon \
         --delay 1.5 \
         --ext py,pyi,rs,j2,toml,test.ts \
@@ -263,9 +262,9 @@ case "$_path" in
         --ignore 'out/**' \
         --ignore 'baml-schema-wasm/web/**' \
         --ignore 'baml-schema-wasm/nodejs/**' \
-        --exec 'pnpm build; date'
+        --exec 'npx turbo build --force; date'
     else
-      pnpm build
+      npx turbo build --force
       date
     fi
     ;;

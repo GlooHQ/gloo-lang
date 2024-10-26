@@ -11,7 +11,7 @@ pub mod traits;
 
 use anyhow::Result;
 
-use baml_types::{BamlValueWithMeta, Constraint, ConstraintLevel, ResponseCheck};
+use baml_types::{BamlValueWithMeta, JinjaExpression, ResponseCheck};
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::RenderedPrompt;
 use jsonish::BamlValueWithFlags;
@@ -27,27 +27,20 @@ pub type ResponseBamlValue = BamlValueWithMeta<Vec<ResponseCheck>>;
 
 /// Validate a parsed value, checking asserts and checks.
 pub fn parsed_value_to_response(baml_value: &BamlValueWithFlags) -> Result<ResponseBamlValue> {
-    let baml_value_with_meta: BamlValueWithMeta<Vec<(Constraint, bool)>> = baml_value.clone().into();
-    let first_failing_assert: Option<Constraint> = baml_value_with_meta
-        .iter()
-        .map(|v| v.meta())
-        .flatten()
-        .filter_map(|(c @ Constraint { level, .. }, succeeded)| {
-            if !succeeded && level == &ConstraintLevel::Assert {
-                Some(c.clone())
-            } else {
-                None
-            }
-        })
-        .next();
-    match first_failing_assert {
-        Some(err) => Err(anyhow::anyhow!("Failed assertion: {:?}", err)),
-        None => Ok(baml_value_with_meta.map_meta(|cs| {
-            cs.into_iter()
-                .filter_map(|res| ResponseCheck::from_check_result(res.clone()))
-                .collect()
-        })),
-    }
+    let baml_value_with_meta: BamlValueWithMeta<Vec<(String, JinjaExpression, bool)>> =
+        baml_value.clone().into();
+    Ok(baml_value_with_meta.map_meta(|cs| {
+        cs.iter()
+            .map(|(label, expr, result)| {
+                let status = (if *result { "succeeded" } else { "failed" }).to_string();
+                ResponseCheck {
+                    name: label.clone(),
+                    expression: expr.0.clone(),
+                    status,
+                }
+            })
+            .collect()
+    }))
 }
 
 #[derive(Clone, Copy, PartialEq)]

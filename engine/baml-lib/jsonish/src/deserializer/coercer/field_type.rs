@@ -1,5 +1,5 @@
 use anyhow::Result;
-use baml_types::BamlMap;
+use baml_types::{BamlMap, Constraint, ConstraintLevel};
 use internal_baml_core::{ir::FieldType, ir::TypeValue};
 
 use crate::deserializer::{
@@ -86,19 +86,68 @@ impl TypeCoercer for FieldType {
                 FieldType::Tuple(_) => Err(ctx.error_internal("Tuple not supported")),
                 FieldType::Constrained { base, .. } => {
                     let mut coerced_value = base.coerce(ctx, base, value)?;
-                    let constraint_results =
-                        run_user_checks(&coerced_value.clone().into(), &self).map_err(
-                            |e| ParsingError {
-                                reason: format!("Failed to evaluate constraints: {:?}", e),
-                                scope: ctx.scope.clone(),
-                                causes: Vec::new(),
-                            },
-                        )?;
-                    coerced_value.add_flag(Flag::ConstraintResults(constraint_results));
+                    let constraint_results = run_user_checks(&coerced_value.clone().into(), &self)
+                        .map_err(|e| ParsingError {
+                            reason: format!("Failed to evaluate constraints: {:?}", e),
+                            scope: ctx.scope.clone(),
+                            causes: Vec::new(),
+                        })?;
+                    validate_asserts(&constraint_results)?;
+                    let check_results = constraint_results
+                        .into_iter()
+                        .filter_map(|(maybe_check, result)| {
+                            maybe_check
+                                .as_check()
+                                .map(|(label, expr)| (label, expr, result))
+                        })
+                        .collect();
+                    coerced_value.add_flag(Flag::ConstraintResults(check_results));
                     Ok(coerced_value)
                 }
             },
         }
+    }
+}
+
+fn validate_asserts(constraints: &Vec<(Constraint, bool)>) -> Result<(), ParsingError> {
+    let failing_asserts = constraints
+        .iter()
+        .filter_map(
+            |(
+                Constraint {
+                    level,
+                    expression,
+                    label,
+                },
+                result,
+            )| {
+                if !result && ConstraintLevel::Assert == *level {
+                    Some((label, expression))
+                } else {
+                    None
+                }
+            },
+        )
+        .collect::<Vec<_>>();
+    let causes = failing_asserts
+        .into_iter()
+        .map(|(label, expr)| ParsingError {
+            causes: vec![],
+            reason: format!(
+                "Failed: {}{}",
+                label.as_ref().map_or("".to_string(), |l| format!("{} ", l)),
+                expr.0
+            ),
+            scope: vec![],
+        }).collect::<Vec<_>>();
+    if causes.len() > 0 {
+        Err(ParsingError {
+            causes: vec![],
+            reason: "Assertions failed.".to_string(),
+            scope: vec![],
+        })
+    } else {
+        Ok(())
     }
 }
 

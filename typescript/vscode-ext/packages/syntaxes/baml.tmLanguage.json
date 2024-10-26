@@ -326,6 +326,33 @@
     "block_attribute": {
       "patterns": [
         {
+          "begin": "(@{1,2}(?:check|assert))\\(([^,]+)?\\s*,\\s*()",
+          "beginCaptures": {
+            "1": { "name": "entity.name.function.attribute" },
+            "2": { "name": "variable.parameter.checkName" },
+            "3": { "name": "punctuation.definition.template-expression.begin" }
+          },
+          "end": "()\\)",
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.template-expression.end" }
+          },
+          "contentName": "string.quoted.block.thing",
+          "patterns": [{ "include": "source.baml-jinja" }]
+        },
+        {
+          "begin": "(@{1,2}assert)\\(",
+          "beginCaptures": {
+            "1": { "name": "entity.name.function.attribute.assert" },
+            "2": { "name": "punctuation.definition.template-expression.begin" }
+          },
+          "end": "()\\)",
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.template-expression.end" }
+          },
+          "contentName": "string.quoted.block.thing",
+          "patterns": [{ "include": "source.baml-jinja" }]
+        },
+        {
           "begin": "(@{1,2}\\w+)\\(#\"",
           "beginCaptures": {
             "1": { "name": "entity.name.function.attribute" }

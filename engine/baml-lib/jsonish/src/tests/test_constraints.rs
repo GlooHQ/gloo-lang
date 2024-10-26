@@ -16,7 +16,7 @@ test_deserializer_with_expected_score!(
     CLASS_FOO_INT_STRING,
     r#"{"age": 11, "name": "Greg"}"#,
     FieldType::Class("Foo".to_string()),
-    5
+    0
 );
 
 test_deserializer_with_expected_score!(
@@ -24,23 +24,21 @@ test_deserializer_with_expected_score!(
     CLASS_FOO_INT_STRING,
     r#"{"age": 21, "name": "Grog"}"#,
     FieldType::Class("Foo".to_string()),
-    10
+    0
 );
 
-test_deserializer_with_expected_score!(
+test_failing_deserializer!(
     test_class_failing_assert,
     CLASS_FOO_INT_STRING,
     r#"{"age": -1, "name": "Sam"}"#,
-    FieldType::Class("Foo".to_string()),
-    50
+    FieldType::Class("Foo".to_string())
 );
 
-test_deserializer_with_expected_score!(
+test_failing_deserializer!(
     test_class_multiple_failing_asserts,
     CLASS_FOO_INT_STRING,
     r#"{"age": -1, "name": ""}"#,
-    FieldType::Class("Foo".to_string()),
-    100
+    FieldType::Class("Foo".to_string())
 );
 
 const UNION_WITH_CHECKS: &str = r#"
@@ -71,15 +69,14 @@ test_deserializer_with_expected_score!(
     UNION_WITH_CHECKS,
     r#"{"bar": 15, "things":[]}"#,
     FieldType::Class("Either".to_string()),
-    7
+    2
 );
 
-test_deserializer_with_expected_score!(
+test_failing_deserializer!(
     test_union_decision_in_list,
     UNION_WITH_CHECKS,
     r#"{"bar": 1, "things":[{"bar": 25}, {"bar": 35}, {"bar": 15}, {"bar": 15}]}"#,
-    FieldType::Class("Either".to_string()),
-    62
+    FieldType::Class("Either".to_string())
 );
 
 const MAP_WITH_CHECKS: &str = r#"
@@ -101,7 +98,7 @@ test_deserializer_with_expected_score!(
     MAP_WITH_CHECKS,
     r#"{"foo": {"hello": 11, "there":13}}"#,
     FieldType::Class("Foo".to_string()),
-    6
+    1
 );
 
 const NESTED_CLASS_CONSTRAINTS: &str = r#"
@@ -119,7 +116,7 @@ test_deserializer_with_expected_score!(
     NESTED_CLASS_CONSTRAINTS,
     r#"{"inner": {"value": 15}}"#,
     FieldType::Class("Outer".to_string()),
-    5
+    0
 );
 
 const MISSPELLED_CONSTRAINT: &str = r#"

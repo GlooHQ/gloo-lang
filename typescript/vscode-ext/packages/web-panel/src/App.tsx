@@ -9,6 +9,7 @@ import { Separator } from './components/ui/separator'
 import FunctionPanel from './shared/FunctionPanel'
 import { ViewSelector } from './shared/Selectors'
 import SettingsDialog, { ShowSettingsButton, showSettingsAtom } from './shared/SettingsDialog'
+import IntroToChecksDialog from './shared/IntroToChecksDialog'
 import CustomErrorBoundary from './utils/ErrorFallback'
 import 'jotai-devtools/styles.css'
 import { Snippets } from './shared/Snippets'
@@ -32,6 +33,7 @@ function App() {
               <FunctionPanel />
             </div>
             <SettingsDialog />
+            <IntroToChecksDialog />
           </AppStateProvider>{' '}
         </EventListener>
       </Suspense>

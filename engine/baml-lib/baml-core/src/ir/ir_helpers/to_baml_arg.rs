@@ -1,5 +1,6 @@
 use baml_types::{
-    BamlMap, BamlValue, BamlValueWithMeta, Constraint, ConstraintLevel, FieldType, LiteralValue, TypeValue
+    BamlMap, BamlValue, BamlValueWithMeta, Constraint, ConstraintLevel, FieldType, LiteralValue,
+    TypeValue,
 };
 use core::result::Result;
 use std::path::PathBuf;
@@ -311,12 +312,12 @@ impl ArgCoercer {
                         let result = self.coerce_arg(ir, option, value, &mut scope);
                         if !scope.has_errors() {
                             if first_good_result.is_err() {
-                            first_good_result = result
+                                first_good_result = result
                             }
                         }
                     }
                 }
-                if first_good_result.is_err(){
+                if first_good_result.is_err() {
                     scope.push_error(format!("Expected one of {:?}, got `{}`", options, value));
                     Err(())
                 } else {
@@ -342,18 +343,20 @@ impl ArgCoercer {
             }
         }?;
 
-
-        let search_for_failures_result = first_failing_assert_nested(ir, &value, field_type).map_err(|e| {
-            scope.push_error(format!("Failed to evaluate assert: {:?}", e));
-            ()
-        })?;
+        let search_for_failures_result = first_failing_assert_nested(ir, &value, field_type)
+            .map_err(|e| {
+                scope.push_error(format!("Failed to evaluate assert: {:?}", e));
+                ()
+            })?;
         match search_for_failures_result {
-            Some(Constraint {label, expression, ..}) => {
+            Some(Constraint {
+                label, expression, ..
+            }) => {
                 let msg = label.as_ref().unwrap_or(&expression.0);
                 scope.push_error(format!("Failed assert: {msg}"));
-                Ok(value)
+                Err(())
             }
-            None => Ok(value)
+            None => Ok(value),
         }
     }
 }
@@ -363,31 +366,78 @@ impl ArgCoercer {
 fn first_failing_assert_nested<'a>(
     ir: &'a IntermediateRepr,
     baml_value: &BamlValue,
-    field_type: &'a FieldType
+    field_type: &'a FieldType,
 ) -> anyhow::Result<Option<Constraint>> {
     let value_with_types = ir.distribute_type(baml_value.clone(), field_type.clone())?;
     let first_failure = value_with_types
         .iter()
         .map(|value_node| {
             let (_, constraints) = value_node.meta().distribute_constraints();
-            constraints.into_iter().filter_map(|c| {
-                let constraint = c.clone();
-                let baml_value: BamlValue = value_node.into();
-                let result = evaluate_predicate(&&baml_value, &c.expression).map_err(|e| {
-                    anyhow::anyhow!(format!("Error evaluating constraint: {:?}", e))
-                });
-                match result {
-                    Ok(false) => if c.level == ConstraintLevel::Assert {Some(Ok(constraint))} else { None },
-                    Ok(true) => None,
-                    Err(e) => Some(Err(e))
-
-                }
-            })
-            .collect::<Vec<_>>()
+            constraints
+                .into_iter()
+                .filter_map(|c| {
+                    let constraint = c.clone();
+                    let baml_value: BamlValue = value_node.into();
+                    let result = evaluate_predicate(&&baml_value, &c.expression).map_err(|e| {
+                        anyhow::anyhow!(format!("Error evaluating constraint: {:?}", e))
+                    });
+                    match result {
+                        Ok(false) => {
+                            if c.level == ConstraintLevel::Assert {
+                                Some(Ok(constraint))
+                            } else {
+                                None
+                            }
+                        }
+                        Ok(true) => None,
+                        Err(e) => Some(Err(e)),
+                    }
+                })
+                .collect::<Vec<_>>()
         })
         .map(|x| x.into_iter())
         .flatten()
         .next();
     first_failure.transpose()
+}
 
+#[cfg(test)]
+mod tests {
+    use baml_types::JinjaExpression;
+
+    use crate::ir::repr::make_test_ir;
+
+    use super::*;
+
+    #[test]
+    fn test_malformed_check_in_argument() {
+        let ir = make_test_ir(
+            r##"
+            client<llm> GPT4 {
+              provider openai
+              options {
+                model gpt-4o
+                api_key env.OPENAI_API_KEY
+              }
+            }
+            function Foo(a: int @assert(malformed, {{ this.length() > 0 }})) -> int {
+              client GPT4
+              prompt #""#
+            }
+            "##,
+        )
+        .unwrap();
+        let value = BamlValue::Int(1);
+        let type_ = FieldType::Constrained {
+            base: Box::new(FieldType::Primitive(TypeValue::Int)),
+            constraints: vec![Constraint {
+                level: ConstraintLevel::Assert,
+                expression: JinjaExpression("this.length() > 0".to_string()),
+                label: Some("foo".to_string()),
+            }],
+        };
+        let arg_coercer = ArgCoercer { span_path: None, allow_implicit_cast_to_string: true };
+        let res =  arg_coercer.coerce_arg(&ir, &type_, &value, &mut ScopeStack::new());
+        assert!(res.is_err());
+    }
 }
