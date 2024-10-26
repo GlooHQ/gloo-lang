@@ -164,7 +164,6 @@ fn string_match_strategy<'c>(
             Ordering::Equal => b.1.cmp(&a.1), // Longer first
             Ordering::Less => Ordering::Less,
             Ordering::Greater => Ordering::Greater,
-            other => other,
         }
     });
 
