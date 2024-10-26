@@ -16,7 +16,7 @@ describe "ruby<->baml integration tests" do
     assert_includes res, "1"
 
     res = b.TestNamedArgsLiteralBool(myBool: true)
-    assert_includes res, true
+    assert_includes res, "true"
 
     res = b.TestNamedArgsLiteralString(myString: "My String")
     assert_includes res, "My String"
