@@ -142,6 +142,8 @@ fn string_match_strategy<'c>(
         }
     }
 
+    // (start_index, end_index, valid_name, variant)
+    // TODO: Consider using a struct with named fields instead of a 4-tuple.
     let mut all_matches: Vec<(usize, usize, &'c str, &'c str)> = Vec::new();
 
     // Look for substrings of valid values
@@ -154,6 +156,7 @@ fn string_match_strategy<'c>(
         }
     }
 
+    // No substring match at all for any variant, early return.
     if all_matches.is_empty() {
         return None;
     }
@@ -162,8 +165,7 @@ fn string_match_strategy<'c>(
     all_matches.sort_by(|a, b| {
         match a.0.cmp(&b.0) {
             Ordering::Equal => b.1.cmp(&a.1), // Longer first
-            Ordering::Less => Ordering::Less,
-            Ordering::Greater => Ordering::Greater,
+            ordering => ordering, // Less or Greater stays the same
         }
     });
 
@@ -179,7 +181,8 @@ fn string_match_strategy<'c>(
         }
     }
 
-    // Count occurrences of each variant in non-overlapping matches
+    // Count occurrences of each variant in non-overlapping matches.
+    // (count, variant)
     let mut variant_counts: Vec<(usize, &'c str)> = Vec::new();
     for (_, _, _, variant) in &filtered_matches {
         // Increment count if variant already exists
