@@ -444,7 +444,7 @@ module Baml
     end
     class EmailAddress < T::Struct
       include Baml::Sorbet::Struct
-      const :value, Baml::Checked[String]
+      const :value, String
 
       def initialize(props)
         super(
@@ -800,7 +800,7 @@ module Baml
     end
     class PhoneNumber < T::Struct
       include Baml::Sorbet::Struct
-      const :value, Baml::Checked[String]
+      const :value, String
 
       def initialize(props)
         super(

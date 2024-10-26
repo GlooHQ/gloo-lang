@@ -233,7 +233,7 @@ export interface Email {
 }
 
 export interface EmailAddress {
-  value: Checked<string,"valid_email">
+  value: string
   
 }
 
@@ -388,7 +388,7 @@ export interface Person {
 }
 
 export interface PhoneNumber {
-  value: Checked<string,"valid_phone_number">
+  value: string
   
 }
 

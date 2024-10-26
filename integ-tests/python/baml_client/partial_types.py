@@ -142,7 +142,7 @@ class Email(BaseModel):
 class EmailAddress(BaseModel):
     
     
-    value: baml_py.Checked[Optional[str],Literal["valid_email"]]
+    value: Optional[str] = None
 
 class Event(BaseModel):
     
@@ -297,7 +297,7 @@ class Person(BaseModel):
 class PhoneNumber(BaseModel):
     
     
-    value: baml_py.Checked[Optional[str],Literal["valid_phone_number"]]
+    value: Optional[str] = None
 
 class Quantity(BaseModel):
     

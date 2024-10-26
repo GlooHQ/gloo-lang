@@ -112,21 +112,11 @@ class TestAllInputs:
 
     @pytest.mark.asyncio
     async def test_constraint_union_variant_checking(self):
-        res = await b.ExtractContactInfo("Reach me at 123-456-7890")
+        res = await b.ExtractContactInfo("Reach me at help@boundaryml.com, or 111-222-3333 if needed.")
         assert res.primary.value is not None
-        assert res.primary.value.checks["valid_phone_number"].status == "succeeded"
-
-        res = await b.ExtractContactInfo("Reach me at help@boundaryml.com")
-        assert res.primary.value is not None
-        assert res.primary.value.checks["valid_phone_number"].status == "failed"
-        assert res.secondary is None
-
-        res = await b.ExtractContactInfo(
-            "Reach me at help@boundaryml.com, or 111-222-3333 if needed."
-        )
-        assert res.primary.value is not None
-        assert res.primary.value.checks["valid_phone_number"].status == "failed"
-        assert res.secondary.value.checks["valid_phone_number"].status == "succeeded"
+        assert res.primary.value == "help@boundaryml.com"
+        assert res.secondary.value is not None
+        assert res.secondary.value == "111-222-3333"
 
     @pytest.mark.asyncio
     async def test_return_malformed_constraint(self):

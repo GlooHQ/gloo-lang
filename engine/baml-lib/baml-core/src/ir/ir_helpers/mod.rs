@@ -426,7 +426,7 @@ pub fn infer_type<'a>(value: &'a BamlValue) -> Option<FieldType> {
 mod tests {
     use super::*;
     use baml_types::{
-        BamlMedia, BamlMediaContent, BamlMediaType, BamlValue, FieldType, MediaBase64, TypeValue,
+        BamlMedia, BamlMediaContent, BamlMediaType, BamlValue, Constraint, ConstraintLevel, FieldType, JinjaExpression, MediaBase64, TypeValue
     };
     use repr::make_test_ir;
 
@@ -664,5 +664,30 @@ mod tests {
 
         let head = nodes.next().unwrap();
         assert_eq!(head.meta(), &map_type);
+    }
+
+    #[test]
+    fn test_malformed_check_in_argument() {
+        let ir = make_test_ir(
+            r##"
+            client<llm> GPT4 {
+              provider openai
+              options {
+                model gpt-4o
+                api_key env.OPENAI_API_KEY
+              }
+            }
+            function Foo(a: int @assert(malformed, {{ this.length() > 0 }})) -> int {
+              client GPT4
+              prompt #""#
+            }
+            "##,
+        )
+        .unwrap();
+        let function = ir.find_function("Foo").unwrap();
+        let params = vec![("a".to_string(), BamlValue::Int(1))].into_iter().collect();
+        let arg_coercer = ArgCoercer { span_path: None, allow_implicit_cast_to_string: true };
+        let res = ir.check_function_params(&function, &params, arg_coercer);
+        assert!(res.is_ok());
     }
 }

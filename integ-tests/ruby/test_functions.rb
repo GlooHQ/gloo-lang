@@ -312,8 +312,11 @@ describe "ruby<->baml integration tests" do
 
   it "uses constraints for unions" do
     res = b.ExtractContactInfo(document: "reach me at 888-888-8888, or try to email hello@boundaryml.com")
-    assert_equal res['primary']['value'].value, "888-888-8888"
-    print(res['primary']['value'].checks)
-    assert_equal res['primary']['value'].checks[:valid_phone_number].status, "succeeded"
+    assert_equal res['primary']['value'], "888-888-8888"
+  end
+
+  it "uses constraints" do
+    res = b.PredictAge(name: "Greg")
+    assert_equal res["certainty"].checks[:unreasonably_certain].status, "failed"
   end
 end

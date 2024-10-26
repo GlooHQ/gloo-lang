@@ -139,7 +139,7 @@ fn validate_asserts(constraints: &Vec<(Constraint, bool)>) -> Result<(), Parsing
                 expr.0
             ),
             scope: vec![],
-        });
+        }).collect::<Vec<_>>();
     if causes.len() > 0 {
         Err(ParsingError {
             causes: vec![],

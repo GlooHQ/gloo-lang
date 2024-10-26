@@ -328,7 +328,7 @@ module Baml
     end
     class EmailAddress < T::Struct
       include Baml::Sorbet::Struct
-      const :value, Baml::Checked[T.nilable(String)]
+      const :value, T.nilable(String)
 
       def initialize(props)
         super(
@@ -684,7 +684,7 @@ module Baml
     end
     class PhoneNumber < T::Struct
       include Baml::Sorbet::Struct
-      const :value, Baml::Checked[T.nilable(String)]
+      const :value, T.nilable(String)
 
       def initialize(props)
         super(
