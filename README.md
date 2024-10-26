@@ -1,7 +1,7 @@
-<a href="https://boundaryml.com?utm_source=github" target="_blank" rel="noopener noreferrer" id="top">
+<a href="https://boundaryml.com?utm_source=github" target="_blank" rel="noopener noreferrer">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/baml-lamb-white.png">
-    <img src="docs/assets/baml-lamb-white.png" height="64">
+    <img src="docs/assets/baml-lamb-white.png" height="64" id="top">
   </picture>
   
 </a>
