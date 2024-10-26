@@ -688,6 +688,6 @@ mod tests {
         let params = vec![("a".to_string(), BamlValue::Int(1))].into_iter().collect();
         let arg_coercer = ArgCoercer { span_path: None, allow_implicit_cast_to_string: true };
         let res = ir.check_function_params(&function, &params, arg_coercer);
-        assert!(res.is_ok());
+        assert!(res.is_err());
     }
 }

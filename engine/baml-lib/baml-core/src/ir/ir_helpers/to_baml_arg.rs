@@ -420,7 +420,7 @@ mod tests {
                 api_key env.OPENAI_API_KEY
               }
             }
-            function Foo(a: int @check(malformed, {{ this.length() > 0 }})) -> int {
+            function Foo(a: int @assert(malformed, {{ this.length() > 0 }})) -> int {
               client GPT4
               prompt #""#
             }
