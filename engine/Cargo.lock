@@ -917,6 +917,7 @@ dependencies = [
  "internal-baml-codegen",
  "internal-baml-core",
  "js-sys",
+ "jsonish",
  "log",
  "serde",
  "serde-wasm-bindgen 0.4.5",
