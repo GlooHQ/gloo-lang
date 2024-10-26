@@ -742,12 +742,6 @@ describe('Integ tests', () => {
     expect(res.primary.value.checks.valid_phone_number.status).toBe('succeeded')
     expect(res.secondary?.value.checks.valid_email.status).toBe('succeeded')
   })
-
-  it('constraints: should handle checks in returned unions', async () => {
-    const res = await b.ExtractContactInfo('Reach me at 111-222-3333, or robert@boundaryml.com if needed')
-    expect(res.primary.value.checks.valid_phone_number.status).toBe('succeeded')
-    expect(res.secondary?.value.checks.valid_email.status).toBe('succeeded')
-  })
 })
 
 interface MyInterface {
