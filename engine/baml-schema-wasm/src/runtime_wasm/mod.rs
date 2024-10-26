@@ -511,12 +511,9 @@ fn flatten_checks(value: &BamlValueWithFlags) -> (serde_json::Value, usize) {
         .flat_map(|f| match f {
             Flag::ConstraintResults(c) => c
                 .iter()
-                .map(|(c, b)| {
+                .map(|(label, _expr, b)| {
                     (
-                        match c.label.as_ref() {
-                            Some(label) => label.clone(),
-                            None => "<unnamed>".to_string(),
-                        },
+                        label.clone(),
                         *b,
                     )
                 })
