@@ -2,7 +2,7 @@
 //!
 //! Used mostly for matching enum variants or literal strings.
 
-use std::cmp::Ordering;
+use std::{cmp::Ordering, collections::HashMap};
 
 use anyhow::Result;
 use baml_types::FieldType;
@@ -165,7 +165,7 @@ fn string_match_strategy<'c>(
     all_matches.sort_by(|a, b| {
         match a.0.cmp(&b.0) {
             Ordering::Equal => b.1.cmp(&a.1), // Longer first
-            ordering => ordering, // Less or Greater stays the same
+            ordering => ordering,             // Less or Greater stays the same
         }
     });
 
@@ -183,30 +183,29 @@ fn string_match_strategy<'c>(
 
     // Count occurrences of each variant in non-overlapping matches.
     // (count, variant)
-    let mut variant_counts: Vec<(usize, &'c str)> = Vec::new();
+    let mut variant_counts = HashMap::<&'c str, usize>::new();
     for (_, _, _, variant) in &filtered_matches {
-        // Increment count if variant already exists
-        if let Some(entry) = variant_counts.iter_mut().find(|(_, v)| v == variant) {
-            entry.0 += 1;
+        if let Some(count) = variant_counts.get_mut(*variant) {
+            // Increment count if variant already exists.
+            *count += 1;
         } else {
-            // Add new variant
-            variant_counts.push((1, variant));
+            // Add new variant.
+            variant_counts.insert(variant, 1);
         }
     }
 
-    // Sort by count
-    variant_counts.sort_by(|a, b| b.0.cmp(&a.0));
-
     // Return the best match if there is one
-    if let Some((count, candidate)) = variant_counts.first() {
+    if let Some((best_match, max_count)) = variant_counts
+        .iter()
+        .max_by(|(_, count_a), (_, count_b)| count_a.cmp(count_b))
+    {
         flags.add_flag(Flag::SubstringMatch(value_str.into()));
 
         // Find all variants with the same count
-        let max_count = count;
         let ties: Vec<_> = variant_counts
             .iter()
-            .filter(|(c, _)| c == max_count)
-            .map(|(count, variant)| (*count as usize, variant.to_string()))
+            .filter(|(_, count)| *count == max_count)
+            .map(|(variant, count)| (*count, variant.to_string()))
             .collect();
 
         // If there are multiple matches, add a flag
@@ -214,7 +213,7 @@ fn string_match_strategy<'c>(
             flags.add_flag(Flag::StrMatchOneFromMany(ties));
         }
 
-        return Some(candidate);
+        return Some(best_match);
     }
 
     // No match found.
