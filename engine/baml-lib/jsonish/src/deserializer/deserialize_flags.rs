@@ -1,4 +1,5 @@
 use super::{coercer::ParsingError, types::BamlValueWithFlags};
+use baml_types::{Constraint, ConstraintLevel, JinjaExpression};
 
 #[derive(Debug, Clone)]
 pub enum Flag {
@@ -26,7 +27,8 @@ pub enum Flag {
     FirstMatch(usize, Vec<Result<BamlValueWithFlags, ParsingError>>),
     UnionMatch(usize, Vec<Result<BamlValueWithFlags, ParsingError>>),
 
-    StrMatchOneFromMany(Vec<(usize, String)>),
+    /// `[(value, count)]`
+    StrMatchOneFromMany(Vec<(String, usize)>),
 
     DefaultFromNoValue,
     DefaultButHadValue(crate::jsonish::Value),
@@ -42,6 +44,9 @@ pub enum Flag {
 
     // X -> Object convertions.
     NoFields(Option<crate::jsonish::Value>),
+
+    /// Constraint results (only contains checks)
+    ConstraintResults(Vec<(String, JinjaExpression, bool)>),
 }
 
 #[derive(Clone)]
@@ -90,8 +95,20 @@ impl DeserializerConditions {
                 Flag::NoFields(_) => None,
                 Flag::UnionMatch(_idx, _) => None,
                 Flag::DefaultButHadUnparseableValue(e) => Some(e.clone()),
+                Flag::ConstraintResults(_) => None,
             })
             .collect::<Vec<_>>()
+    }
+
+    pub fn constraint_results(&self) -> Vec<(String, JinjaExpression, bool)> {
+        self.flags
+            .iter()
+            .filter_map(|flag| match flag {
+                Flag::ConstraintResults(cs) => Some(cs.clone()),
+                _ => None,
+            })
+            .flatten()
+            .collect()
     }
 }
 
@@ -161,8 +178,8 @@ impl std::fmt::Display for Flag {
             }
             Flag::StrMatchOneFromMany(values) => {
                 write!(f, "Enum one from many: ")?;
-                for (idx, value) in values {
-                    writeln!(f, "Item {}: {}", idx, value)?;
+                for (value, count) in values {
+                    writeln!(f, "Item {value}: {count}")?;
                 }
             }
             Flag::DefaultButHadUnparseableValue(value) => {
@@ -227,6 +244,16 @@ impl std::fmt::Display for Flag {
                     writeln!(f, "{:#?}", value)?;
                 } else {
                     writeln!(f, "<empty>")?;
+                }
+            }
+            Flag::ConstraintResults(cs) => {
+                for (label, _, succeeded) in cs.iter() {
+                    let f_result = if *succeeded { "Succeeded" } else { "Failed" };
+                    writeln!(
+                        f,
+                        "{level:?} {label} {f_result}",
+                        level = ConstraintLevel::Check
+                    )?;
                 }
             }
         }

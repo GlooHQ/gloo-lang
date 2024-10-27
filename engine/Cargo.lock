@@ -773,7 +773,7 @@ dependencies = [
 
 [[package]]
 name = "baml-lib"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "base64 0.13.1",
  "dissimilar",
@@ -810,7 +810,7 @@ dependencies = [
 
 [[package]]
 name = "baml-runtime"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "ambassador",
  "anyhow",
@@ -900,7 +900,7 @@ dependencies = [
 
 [[package]]
 name = "baml-schema-build"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "anyhow",
  "baml-runtime",
@@ -917,6 +917,7 @@ dependencies = [
  "internal-baml-codegen",
  "internal-baml-core",
  "js-sys",
+ "jsonish",
  "log",
  "serde",
  "serde-wasm-bindgen 0.4.5",
@@ -935,7 +936,7 @@ dependencies = [
 
 [[package]]
 name = "baml-types"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -2332,7 +2333,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-codegen"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2344,6 +2345,7 @@ dependencies = [
  "env_logger",
  "indexmap 2.2.6",
  "internal-baml-core",
+ "itertools 0.13.0",
  "log",
  "pathdiff",
  "semver",
@@ -2356,7 +2358,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-core"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2374,7 +2376,9 @@ dependencies = [
  "internal-baml-parser-database",
  "internal-baml-prompt-parser",
  "internal-baml-schema-ast",
+ "itertools 0.13.0",
  "log",
+ "minijinja",
  "rayon",
  "regex",
  "semver",
@@ -2389,7 +2393,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-diagnostics"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "anyhow",
  "colored",
@@ -2402,7 +2406,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-jinja"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2423,7 +2427,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-jinja-types"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2433,6 +2437,7 @@ dependencies = [
  "indexmap 2.2.6",
  "log",
  "minijinja",
+ "regex",
  "serde",
  "serde_json",
  "strsim 0.11.1",
@@ -2441,7 +2446,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-parser-database"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2463,7 +2468,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-prompt-parser"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "internal-baml-diagnostics",
  "internal-baml-schema-ast",
@@ -2475,7 +2480,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-schema-ast"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "baml-types",
  "either",
@@ -2530,6 +2535,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2552,7 +2566,7 @@ checksum = "9dbbfed4e59ba9750e15ba154fdfd9329cee16ff3df539c2666b70f58cc32105"
 
 [[package]]
 name = "jsonish"
-version = "0.62.0"
+version = "0.63.0"
 dependencies = [
  "anyhow",
  "assert-json-diff",

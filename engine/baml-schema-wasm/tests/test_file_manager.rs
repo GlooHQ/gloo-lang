@@ -1,3 +1,5 @@
+// Run from the baml-schema-wasm folder with:
+// wasm-pack test --node
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
@@ -17,13 +19,7 @@ mod tests {
     /// Sample BAML content for testing.
     fn sample_baml_content() -> String {
         r##"
-        generator lang_python {
-            language python
-            project_root "../"
-            test_command "poetry run pytest"
-            install_command "poetry add baml@latest"
-            package_version_command "poetry show baml"
-        }
+        
         
         class Email {
             subject string
@@ -136,6 +132,43 @@ mod tests {
 
         let current_runtime = project.runtime(env_vars_js).map_err(JsValue::from).unwrap();
         let diagnostics = project.diagnostics(&current_runtime);
+
+        assert!(diagnostics.errors().is_empty());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_diagnostics_no_errors_2() {
+        wasm_logger::init(wasm_logger::Config::new(log::Level::Info));
+        let sample_baml_content = r##"
+function PredictAgeBare(inp: string @assert(big_enough, {{this|length > 1}}) ) -> int  {
+  client "openai/gpt-4o"
+  prompt #"
+    Using your understanding of the historical popularity
+    of names, predict the age of a person with the name
+    {{ inp }} in years. Also predict their genus and
+    species. It's Homo sapiens (with exactly that spelling).
+
+    {{ctx.output_format}}
+  "#
+}
+
+        "##;
+        let mut files = HashMap::new();
+        files.insert("error.baml".to_string(), sample_baml_content.to_string());
+        let files_js = to_value(&files).unwrap();
+        let project = WasmProject::new("baml_src", files_js)
+            .map_err(JsValue::from)
+            .unwrap();
+
+        let env_vars = [("OPENAI_API_KEY", "12345")]
+            .iter()
+            .cloned()
+            .collect::<HashMap<_, _>>();
+        let env_vars_js = to_value(&env_vars).unwrap();
+
+        let current_runtime = project.runtime(env_vars_js).map_err(JsValue::from).unwrap();
+        let diagnostics = project.diagnostics(&current_runtime);
+        current_runtime.list_functions();
 
         assert!(diagnostics.errors().is_empty());
     }

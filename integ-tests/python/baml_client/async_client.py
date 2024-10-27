@@ -555,6 +555,52 @@ class BamlAsyncClient:
       )
       return cast(str, raw.cast_to(types, types))
     
+    async def ExtractContactInfo(
+        self,
+        document: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.ContactInfo:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "ExtractContactInfo",
+        {
+          "document": document,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.ContactInfo, raw.cast_to(types, types))
+    
+    async def ExtractHobby(
+        self,
+        text: str,
+        baml_options: BamlCallOptions = {},
+    ) -> List[Union[types.Hobby, str]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "ExtractHobby",
+        {
+          "text": text,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(List[Union[types.Hobby, str]], raw.cast_to(types, types))
+    
     async def ExtractNames(
         self,
         input: str,
@@ -762,6 +808,52 @@ class BamlAsyncClient:
       )
       return cast(types.EnumOutput, raw.cast_to(types, types))
     
+    async def FnLiteralClassInputOutput(
+        self,
+        input: types.LiteralClassHello,
+        baml_options: BamlCallOptions = {},
+    ) -> types.LiteralClassHello:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "FnLiteralClassInputOutput",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.LiteralClassHello, raw.cast_to(types, types))
+    
+    async def FnLiteralUnionClassInputOutput(
+        self,
+        input: Union[types.LiteralClassOne, types.LiteralClassTwo],
+        baml_options: BamlCallOptions = {},
+    ) -> Union[types.LiteralClassOne, types.LiteralClassTwo]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "FnLiteralUnionClassInputOutput",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Union[types.LiteralClassOne, types.LiteralClassTwo], raw.cast_to(types, types))
+    
     async def FnNamedArgsSingleStringOptional(
         self,
         myString: Optional[str],
@@ -899,6 +991,98 @@ class BamlAsyncClient:
         __cr__,
       )
       return cast(types.TestClassWithEnum, raw.cast_to(types, types))
+    
+    async def FnOutputInt(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> int:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "FnOutputInt",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(int, raw.cast_to(types, types))
+    
+    async def FnOutputLiteralBool(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> Literal[False]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "FnOutputLiteralBool",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Literal[False], raw.cast_to(types, types))
+    
+    async def FnOutputLiteralInt(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> Literal[5]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "FnOutputLiteralInt",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Literal[5], raw.cast_to(types, types))
+    
+    async def FnOutputLiteralString(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> Literal["example output"]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "FnOutputLiteralString",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Literal["example output"], raw.cast_to(types, types))
     
     async def FnOutputStringList(
         self,
@@ -1061,6 +1245,29 @@ class BamlAsyncClient:
       )
       return cast(types.SearchParams, raw.cast_to(types, types))
     
+    async def LiteralUnionsTest(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> Union[Literal[1], Literal[True], Literal["string output"]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "LiteralUnionsTest",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Union[Literal[1], Literal[True], Literal["string output"]], raw.cast_to(types, types))
+    
     async def MyFunc(
         self,
         input: str,
@@ -1106,6 +1313,52 @@ class BamlAsyncClient:
         __cr__,
       )
       return cast(List[Optional[types.OptionalTest_ReturnType]], raw.cast_to(types, types))
+    
+    async def PredictAge(
+        self,
+        name: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.FooAny:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "PredictAge",
+        {
+          "name": name,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.FooAny, raw.cast_to(types, types))
+    
+    async def PredictAgeBare(
+        self,
+        inp: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.Checked[int,types.Literal["too_big"]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "PredictAgeBare",
+        {
+          "inp": inp,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(baml_py.Checked[int,types.Literal["too_big"]], raw.cast_to(types, types))
     
     async def PromptTestClaude(
         self,
@@ -1268,6 +1521,52 @@ class BamlAsyncClient:
       )
       return cast(str, raw.cast_to(types, types))
     
+    async def ReturnFailingAssert(
+        self,
+        inp: int,
+        baml_options: BamlCallOptions = {},
+    ) -> int:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "ReturnFailingAssert",
+        {
+          "inp": inp,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(int, raw.cast_to(types, types))
+    
+    async def ReturnMalformedConstraints(
+        self,
+        a: int,
+        baml_options: BamlCallOptions = {},
+    ) -> types.MalformedConstraints:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "ReturnMalformedConstraints",
+        {
+          "a": a,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.MalformedConstraints, raw.cast_to(types, types))
+    
     async def SchemaDescriptions(
         self,
         input: str,
@@ -1313,6 +1612,29 @@ class BamlAsyncClient:
         __cr__,
       )
       return cast(types.BigNumbers, raw.cast_to(types, types))
+    
+    async def StreamFailingAssertion(
+        self,
+        theme: str,length: int,
+        baml_options: BamlCallOptions = {},
+    ) -> types.TwoStoriesOneTitle:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "StreamFailingAssertion",
+        {
+          "theme": theme,"length": length,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.TwoStoriesOneTitle, raw.cast_to(types, types))
     
     async def StreamOneBigNumber(
         self,
@@ -1912,6 +2234,75 @@ class BamlAsyncClient:
       )
       return cast(str, raw.cast_to(types, types))
     
+    async def TestNamedArgsLiteralBool(
+        self,
+        myBool: Literal[True],
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestNamedArgsLiteralBool",
+        {
+          "myBool": myBool,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types))
+    
+    async def TestNamedArgsLiteralInt(
+        self,
+        myInt: Literal[1],
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestNamedArgsLiteralInt",
+        {
+          "myInt": myInt,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types))
+    
+    async def TestNamedArgsLiteralString(
+        self,
+        myString: Literal["My String"],
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestNamedArgsLiteralString",
+        {
+          "myString": myString,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types))
+    
     async def TestOllama(
         self,
         input: str,
@@ -2095,6 +2486,29 @@ class BamlAsyncClient:
         __cr__,
       )
       return cast(types.UnionTest_ReturnType, raw.cast_to(types, types))
+    
+    async def UseMalformedConstraints(
+        self,
+        a: types.MalformedConstraints2,
+        baml_options: BamlCallOptions = {},
+    ) -> int:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "UseMalformedConstraints",
+        {
+          "a": a,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(int, raw.cast_to(types, types))
     
 
 
@@ -2768,6 +3182,66 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def ExtractContactInfo(
+        self,
+        document: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.ContactInfo, types.ContactInfo]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "ExtractContactInfo",
+        {
+          "document": document,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.ContactInfo, types.ContactInfo](
+        raw,
+        lambda x: cast(partial_types.ContactInfo, x.cast_to(types, partial_types)),
+        lambda x: cast(types.ContactInfo, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def ExtractHobby(
+        self,
+        text: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[List[Optional[Union[types.Hobby, str]]], List[Union[types.Hobby, str]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "ExtractHobby",
+        {
+          "text": text,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[List[Optional[Union[types.Hobby, str]]], List[Union[types.Hobby, str]]](
+        raw,
+        lambda x: cast(List[Optional[Union[types.Hobby, str]]], x.cast_to(types, partial_types)),
+        lambda x: cast(List[Union[types.Hobby, str]], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def ExtractNames(
         self,
         input: str,
@@ -3040,6 +3514,66 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def FnLiteralClassInputOutput(
+        self,
+        input: types.LiteralClassHello,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.LiteralClassHello, types.LiteralClassHello]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "FnLiteralClassInputOutput",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.LiteralClassHello, types.LiteralClassHello](
+        raw,
+        lambda x: cast(partial_types.LiteralClassHello, x.cast_to(types, partial_types)),
+        lambda x: cast(types.LiteralClassHello, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def FnLiteralUnionClassInputOutput(
+        self,
+        input: Union[types.LiteralClassOne, types.LiteralClassTwo],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[Union[partial_types.LiteralClassOne, partial_types.LiteralClassTwo]], Union[types.LiteralClassOne, types.LiteralClassTwo]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "FnLiteralUnionClassInputOutput",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[Union[partial_types.LiteralClassOne, partial_types.LiteralClassTwo]], Union[types.LiteralClassOne, types.LiteralClassTwo]](
+        raw,
+        lambda x: cast(Optional[Union[partial_types.LiteralClassOne, partial_types.LiteralClassTwo]], x.cast_to(types, partial_types)),
+        lambda x: cast(Union[types.LiteralClassOne, types.LiteralClassTwo], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def FnNamedArgsSingleStringOptional(
         self,
         myString: Optional[str],
@@ -3217,6 +3751,126 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.TestClassWithEnum, x.cast_to(types, partial_types)),
         lambda x: cast(types.TestClassWithEnum, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def FnOutputInt(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[int], int]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "FnOutputInt",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[int], int](
+        raw,
+        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
+        lambda x: cast(int, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def FnOutputLiteralBool(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Literal[False], Literal[False]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "FnOutputLiteralBool",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Literal[False], Literal[False]](
+        raw,
+        lambda x: cast(Literal[False], x.cast_to(types, partial_types)),
+        lambda x: cast(Literal[False], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def FnOutputLiteralInt(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Literal[5], Literal[5]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "FnOutputLiteralInt",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Literal[5], Literal[5]](
+        raw,
+        lambda x: cast(Literal[5], x.cast_to(types, partial_types)),
+        lambda x: cast(Literal[5], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def FnOutputLiteralString(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Literal["example output"], Literal["example output"]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "FnOutputLiteralString",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Literal["example output"], Literal["example output"]](
+        raw,
+        lambda x: cast(Literal["example output"], x.cast_to(types, partial_types)),
+        lambda x: cast(Literal["example output"], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -3430,6 +4084,36 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def LiteralUnionsTest(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[Union[Literal[1], Literal[True], Literal["string output"]]], Union[Literal[1], Literal[True], Literal["string output"]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "LiteralUnionsTest",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[Union[Literal[1], Literal[True], Literal["string output"]]], Union[Literal[1], Literal[True], Literal["string output"]]](
+        raw,
+        lambda x: cast(Optional[Union[Literal[1], Literal[True], Literal["string output"]]], x.cast_to(types, partial_types)),
+        lambda x: cast(Union[Literal[1], Literal[True], Literal["string output"]], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def MyFunc(
         self,
         input: str,
@@ -3487,6 +4171,66 @@ class BamlStreamClient:
         raw,
         lambda x: cast(List[partial_types.OptionalTest_ReturnType], x.cast_to(types, partial_types)),
         lambda x: cast(List[Optional[types.OptionalTest_ReturnType]], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def PredictAge(
+        self,
+        name: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.FooAny, types.FooAny]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "PredictAge",
+        {
+          "name": name,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.FooAny, types.FooAny](
+        raw,
+        lambda x: cast(partial_types.FooAny, x.cast_to(types, partial_types)),
+        lambda x: cast(types.FooAny, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def PredictAgeBare(
+        self,
+        inp: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[baml_py.Checked[Optional[int],types.Literal["too_big"]], baml_py.Checked[int,types.Literal["too_big"]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "PredictAgeBare",
+        {
+          "inp": inp,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[baml_py.Checked[Optional[int],types.Literal["too_big"]], baml_py.Checked[int,types.Literal["too_big"]]](
+        raw,
+        lambda x: cast(baml_py.Checked[Optional[int],types.Literal["too_big"]], x.cast_to(types, partial_types)),
+        lambda x: cast(baml_py.Checked[int,types.Literal["too_big"]], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -3700,6 +4444,66 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def ReturnFailingAssert(
+        self,
+        inp: int,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[int], int]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "ReturnFailingAssert",
+        {
+          "inp": inp,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[int], int](
+        raw,
+        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
+        lambda x: cast(int, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def ReturnMalformedConstraints(
+        self,
+        a: int,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.MalformedConstraints, types.MalformedConstraints]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "ReturnMalformedConstraints",
+        {
+          "a": a,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.MalformedConstraints, types.MalformedConstraints](
+        raw,
+        lambda x: cast(partial_types.MalformedConstraints, x.cast_to(types, partial_types)),
+        lambda x: cast(types.MalformedConstraints, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def SchemaDescriptions(
         self,
         input: str,
@@ -3757,6 +4561,37 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.BigNumbers, x.cast_to(types, partial_types)),
         lambda x: cast(types.BigNumbers, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def StreamFailingAssertion(
+        self,
+        theme: str,length: int,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.TwoStoriesOneTitle, types.TwoStoriesOneTitle]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "StreamFailingAssertion",
+        {
+          "theme": theme,
+          "length": length,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.TwoStoriesOneTitle, types.TwoStoriesOneTitle](
+        raw,
+        lambda x: cast(partial_types.TwoStoriesOneTitle, x.cast_to(types, partial_types)),
+        lambda x: cast(types.TwoStoriesOneTitle, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -4542,6 +5377,96 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def TestNamedArgsLiteralBool(
+        self,
+        myBool: Literal[True],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestNamedArgsLiteralBool",
+        {
+          "myBool": myBool,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
+        lambda x: cast(str, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestNamedArgsLiteralInt(
+        self,
+        myInt: Literal[1],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestNamedArgsLiteralInt",
+        {
+          "myInt": myInt,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
+        lambda x: cast(str, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestNamedArgsLiteralString(
+        self,
+        myString: Literal["My String"],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestNamedArgsLiteralString",
+        {
+          "myString": myString,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
+        lambda x: cast(str, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def TestOllama(
         self,
         input: str,
@@ -4776,6 +5701,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.UnionTest_ReturnType, x.cast_to(types, partial_types)),
         lambda x: cast(types.UnionTest_ReturnType, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def UseMalformedConstraints(
+        self,
+        a: types.MalformedConstraints2,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[int], int]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "UseMalformedConstraints",
+        {
+          "a": a,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[int], int](
+        raw,
+        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
+        lambda x: cast(int, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

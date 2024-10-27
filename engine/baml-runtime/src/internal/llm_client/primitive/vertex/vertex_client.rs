@@ -137,10 +137,16 @@ fn resolve_properties(
                 ctx.env.get("GOOGLE_APPLICATION_CREDENTIALS_CONTENT"),
             ) {
                 (Some(path), _) => ServiceAccountDetails::FilePath(path.to_string()),
-                (_, Some(creds_content)) => ServiceAccountDetails::Json(
-                    serde_json::from_str(&creds_content)
-                        .context("Failed to parse credentials_content as a JSON object")?,
-                ),
+                (_, Some(creds_content)) => match serde_json::from_str(&creds_content) {
+                    Ok(service_account_creds) => ServiceAccountDetails::Json(service_account_creds),
+                    Err(e) => {
+                        // TODO: this error should get percolated up, but right now propagating an error here blows up
+                        // the playground, so for now we should just silently fail. The real fix is to translate client
+                        // construction failure into diagnostics or defer those errors to runtime.
+                        log::warn!("Failed to parse GOOGLE_APPLICATION_CREDENTIALS_CONTENT as a JSON object: {}", e);
+                        ServiceAccountDetails::None
+                    }
+                },
                 _ => ServiceAccountDetails::None,
             },
         }

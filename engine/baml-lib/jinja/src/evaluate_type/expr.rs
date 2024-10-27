@@ -200,6 +200,7 @@ fn tracker_visit_expr<'a>(
                 "max",
                 "min",
                 "pprint",
+                "regex_match",
                 "reject",
                 "rejectattr",
                 "replace",
@@ -276,6 +277,7 @@ fn tracker_visit_expr<'a>(
                 "max" => Type::Unknown,
                 "min" => Type::Unknown,
                 "pprint" => Type::Unknown,
+                "regex_match" => Type::Bool,
                 "reject" => Type::Unknown,
                 "rejectattr" => Type::Unknown,
                 "replace" => Type::String,
@@ -408,10 +410,7 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
     }
 }
 
-pub(super) fn evaluate_type(
-    expr: &ast::Expr,
-    types: &PredefinedTypes,
-) -> Result<Type, Vec<TypeError>> {
+pub fn evaluate_type(expr: &ast::Expr, types: &PredefinedTypes) -> Result<Type, Vec<TypeError>> {
     let mut state = ScopeTracker::new();
     let result = tracker_visit_expr(expr, &mut state, types);
 

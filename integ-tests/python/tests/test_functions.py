@@ -20,12 +20,18 @@ from ..baml_client.globals import (
 from ..baml_client import partial_types
 from ..baml_client.types import (
     DynInputOutput,
+    Hobby,
+    FooAny,
     NamedArgsSingleEnumList,
     NamedArgsSingleClass,
     Nested,
     OriginalB,
     StringToClassEntry,
+    MalformedConstraints2,
+    LiteralClassHello,
+    LiteralClassOne,
 )
+import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
 from ..baml_client.type_builder import TypeBuilder
 from ..baml_client import reset_baml_env_vars
@@ -34,8 +40,6 @@ import datetime
 import concurrent.futures
 import asyncio
 import random
-
-
 
 
 @pytest.mark.asyncio
@@ -97,6 +101,39 @@ class TestAllInputs:
         assert "a" in res and "b" in res and "c" in res
 
     @pytest.mark.asyncio
+    async def test_return_literal_union(self):
+        res = await b.LiteralUnionsTest("a")
+        assert res == 1 or res == True or res == "string output"
+
+    @pytest.mark.asyncio
+    async def test_constraints(self):
+        res = await b.PredictAge("Greg")
+        assert res.certainty.checks["unreasonably_certain"].status == "failed"
+
+    @pytest.mark.asyncio
+    async def test_constraint_union_variant_checking(self):
+        res = await b.ExtractContactInfo("Reach me at help@boundaryml.com, or 111-222-3333 if needed.")
+        assert res.primary.value is not None
+        assert res.primary.value == "help@boundaryml.com"
+        assert res.secondary.value is not None
+        assert res.secondary.value == "111-222-3333"
+
+    @pytest.mark.asyncio
+    async def test_return_malformed_constraint(self):
+        with pytest.raises(errors.BamlError) as e:
+            res = await b.ReturnMalformedConstraints(1)
+            assert res.foo.value == 2
+            assert res.foo.checks["foo_check"].status == "failed"
+        assert "Failed to coerce value" in str(e)
+
+    @pytest.mark.asyncio
+    async def test_use_malformed_constraint(self):
+        with pytest.raises(errors.BamlError) as e:
+            res = await b.UseMalformedConstraints(MalformedConstraints2(foo=2))
+            assert res == 3
+        assert "object has no method named length" in str(e)
+
+    @pytest.mark.asyncio
     async def test_single_class(self):
         res = await b.TestFnNamedArgsSingleClass(
             myArg=NamedArgsSingleClass(
@@ -139,6 +176,31 @@ class TestAllInputs:
         assert "3566" in res
 
     @pytest.mark.asyncio
+    async def test_single_literal_int(self):
+        res = await b.TestNamedArgsLiteralInt(1)
+        assert "1" in res
+
+    @pytest.mark.asyncio
+    async def test_single_literal_bool(self):
+        res = await b.TestNamedArgsLiteralBool(True)
+        assert "true" in res
+
+    @pytest.mark.asyncio
+    async def test_single_literal_string(self):
+        res = await b.TestNamedArgsLiteralString("My String")
+        assert "My String" in res
+
+    @pytest.mark.asyncio
+    async def test_class_with_literal_prop(self):
+        res = await b.FnLiteralClassInputOutput(input=LiteralClassHello(prop="hello"))
+        assert isinstance(res, LiteralClassHello)
+
+    @pytest.mark.asyncio
+    async def test_literal_classs_with_literal_union_prop(self):
+        res = await b.FnLiteralUnionClassInputOutput(input=LiteralClassOne(prop="one"))
+        assert isinstance(res, LiteralClassOne)
+
+    @pytest.mark.asyncio
     async def test_single_map_string_to_string(self):
         res = await b.TestFnNamedArgsSingleMapStringToString(
             {"lorem": "ipsum", "dolor": "sit"}
@@ -177,6 +239,18 @@ async def test_should_work_for_all_outputs():
     a = "a"  # dummy
     res = await b.FnOutputBool(a)
     assert res == True
+
+    integer = await b.FnOutputInt(a)
+    assert integer == 5
+
+    literal_integer = await b.FnOutputLiteralInt(a)
+    assert literal_integer == 5
+
+    literal_bool = await b.FnOutputLiteralBool(a)
+    assert literal_bool == False
+
+    literal_string = await b.FnOutputLiteralString(a)
+    assert literal_string == "example output"
 
     list = await b.FnOutputClassList(a)
     assert len(list) > 0
@@ -264,12 +338,14 @@ async def test_works_with_fallbacks():
     res = await b.TestFallbackClient()
     assert len(res) > 0, "Expected non-empty result but got empty."
 
+
 @pytest.mark.asyncio
 async def test_works_with_failing_azure_fallback():
     with pytest.raises(Exception) as e:
         res = await b.TestSingleFallbackClient()
         assert len(res) > 0, "Expected non-empty result but got empty."
     assert "Either base_url or" in str(e)
+
 
 @pytest.mark.asyncio
 async def test_claude():
@@ -790,7 +866,7 @@ async def test_dynamic_inputs_list2():
 
 
 @pytest.mark.asyncio
-async def test_dynamic_types_enum():
+async def test_dynamic_types_new_enum():
     tb = TypeBuilder()
     field_enum = tb.add_enum("Animal")
     animals = ["giraffe", "elephant", "lion"]
@@ -804,10 +880,29 @@ async def test_dynamic_types_enum():
     assert len(res) > 0
     assert res[0].animalLiked == "GIRAFFE", res[0]
 
+
+@pytest.mark.asyncio
+async def test_dynamic_types_existing_enum():
+    tb = TypeBuilder()
+    tb.Hobby.add_value("Golfing")
+    res = await b.ExtractHobby(
+        "My name is Harrison. My hair is black and I'm 6 feet tall. golf and music are my favorite!.",
+        {"tb": tb},
+    )
+    assert len(res) > 0
+    assert "Golfing" in res, res
+    assert Hobby.MUSIC in res, res
+
+
 @pytest.mark.asyncio
 async def test_dynamic_literals():
     tb = TypeBuilder()
-    animals = tb.union([tb.literal_string(animal.upper()) for animal in ["giraffe", "elephant", "lion"]])
+    animals = tb.union(
+        [
+            tb.literal_string(animal.upper())
+            for animal in ["giraffe", "elephant", "lion"]
+        ]
+    )
     tb.Person.add_property("animalLiked", animals)
     res = await b.ExtractPeople(
         "My name is Harrison. My hair is black and I'm 6 feet tall. I'm pretty good around the hoop. I like giraffes.",
@@ -1079,8 +1174,6 @@ async def test_descriptions():
         "donkey kong"
     )  # Assuming this returns a Pydantic model
 
-
-
     # Check Schema values
     assert res.prop1 == "one"
 
@@ -1142,9 +1235,9 @@ async def test_arg_exceptions():
 
     with pytest.raises(errors.BamlInvalidArgumentError):
         _ = await b.TestCaching(
-            111, # type: ignore -- intentionally passing an int instead of a string
-            ".."
-        ) 
+            111,  # type: ignore -- intentionally passing an int instead of a string
+            "..",
+        )
 
     with pytest.raises(errors.BamlClientError):
         cr = baml_py.ClientRegistry()
@@ -1197,6 +1290,7 @@ async def test_baml_validation_error_format():
             raise e
     assert "Failed to parse" in str(excinfo)
 
+
 @pytest.mark.asyncio
 async def test_no_stream_big_integer():
     stream = b.stream.StreamOneBigNumber(digits=12)
@@ -1206,6 +1300,7 @@ async def test_no_stream_big_integer():
     res = await stream.get_final_response()
     for msg in msgs:
         assert True if msg is None else msg == res
+
 
 @pytest.mark.asyncio
 async def test_no_stream_object_with_numbers():
@@ -1221,9 +1316,10 @@ async def test_no_stream_object_with_numbers():
         assert True if msg.a is None else msg.a == res.a
         assert True if msg.b is None else msg.b == res.b
 
+
 @pytest.mark.asyncio
 async def test_no_stream_compound_object():
-    stream = b.stream.StreamingCompoundNumbers(digits = 12, yapping=False)
+    stream = b.stream.StreamingCompoundNumbers(digits=12, yapping=False)
     msgs: List[partial_types.CompoundBigNumbers] = []
     async for msg in stream:
         msgs.append(msg)
@@ -1232,16 +1328,17 @@ async def test_no_stream_compound_object():
         if msg.big is not None:
             assert True if msg.big.a is None else msg.big.a == res.big.a
             assert True if msg.big.b is None else msg.big.b == res.big.b
-        for (msgEntry, resEntry) in zip(msg.big_nums, res.big_nums):
+        for msgEntry, resEntry in zip(msg.big_nums, res.big_nums):
             assert True if msgEntry.a is None else msgEntry.a == resEntry.a
             assert True if msgEntry.b is None else msgEntry.b == resEntry.b
         if msg.another is not None:
             assert True if msg.another.a is None else msg.another.a == res.another.a
             assert True if msg.another.b is None else msg.another.b == res.another.b
 
+
 @pytest.mark.asyncio
 async def test_no_stream_compound_object_with_yapping():
-    stream = b.stream.StreamingCompoundNumbers(digits = 12, yapping=True)
+    stream = b.stream.StreamingCompoundNumbers(digits=12, yapping=True)
     msgs: List[partial_types.CompoundBigNumbers] = []
     async for msg in stream:
         msgs.append(msg)
@@ -1250,7 +1347,7 @@ async def test_no_stream_compound_object_with_yapping():
         if msg.big is not None:
             assert True if msg.big.a is None else msg.big.a == res.big.a
             assert True if msg.big.b is None else msg.big.b == res.big.b
-        for (msgEntry, resEntry) in zip(msg.big_nums, res.big_nums):
+        for msgEntry, resEntry in zip(msg.big_nums, res.big_nums):
             assert True if msgEntry.a is None else msgEntry.a == resEntry.a
             assert True if msgEntry.b is None else msgEntry.b == resEntry.b
         if msg.another is not None:
@@ -1264,3 +1361,27 @@ async def test_differing_unions():
     tb.OriginalB.add_property("value2", tb.string())
     res = await b.DifferentiateUnions({"tb": tb})
     assert isinstance(res, OriginalB)
+
+
+@pytest.mark.asyncio
+async def test_return_failing_assert():
+    with pytest.raises(errors.BamlValidationError):
+        msg = await b.ReturnFailingAssert(1)
+
+
+@pytest.mark.asyncio
+async def test_parameter_failing_assert():
+    with pytest.raises(errors.BamlInvalidArgumentError):
+        msg = await b.ReturnFailingAssert(100)
+        assert msg == 103
+
+
+@pytest.mark.asyncio
+async def test_failing_assert_can_stream():
+    stream = b.stream.StreamFailingAssertion("Yoshimi battles the pink robots", 300)
+    async for msg in stream:
+        print(msg.story_a)
+        print(msg.story_b)
+    with pytest.raises(errors.BamlValidationError):
+        final = await stream.get_final_response()
+        assert "Yoshimi" in final.story_a

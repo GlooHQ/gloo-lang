@@ -170,6 +170,12 @@ class CompoundBigNumbers(BaseModel):
     big_nums: List["BigNumbers"]
     another: "BigNumbers"
 
+class ContactInfo(BaseModel):
+    
+    
+    primary: Union["PhoneNumber", "EmailAddress"]
+    secondary: Union["PhoneNumber", "EmailAddress", None]
+
 class CustomTaskResult(BaseModel):
     
     
@@ -208,6 +214,11 @@ class DynamicOutput(BaseModel):
     model_config = ConfigDict(extra='allow')
     
 
+class Earthling(BaseModel):
+    
+    
+    age: baml_py.Checked[int,Literal["earth_aged", "no_infants"]]
+
 class Education(BaseModel):
     
     
@@ -223,6 +234,11 @@ class Email(BaseModel):
     subject: str
     body: str
     from_address: str
+
+class EmailAddress(BaseModel):
+    
+    
+    value: str
 
 class Event(BaseModel):
     
@@ -245,6 +261,13 @@ class FlightConfirmation(BaseModel):
     departureTime: str
     arrivalTime: str
     seatNumber: str
+
+class FooAny(BaseModel):
+    
+    
+    planetary_age: Union["Martian", "Earthling"]
+    certainty: baml_py.Checked[int,Literal["unreasonably_certain"]]
+    species: baml_py.Checked[str,Literal["regex_bad", "regex_good", "trivial"]]
 
 class GroceryReceipt(BaseModel):
     
@@ -278,6 +301,36 @@ class InputClassNested(BaseModel):
     
     key: str
     nested: "InputClass"
+
+class LiteralClassHello(BaseModel):
+    
+    
+    prop: Literal["hello"]
+
+class LiteralClassOne(BaseModel):
+    
+    
+    prop: Literal["one"]
+
+class LiteralClassTwo(BaseModel):
+    
+    
+    prop: Literal["two"]
+
+class MalformedConstraints(BaseModel):
+    
+    
+    foo: baml_py.Checked[int,Literal["foo_check"]]
+
+class MalformedConstraints2(BaseModel):
+    
+    
+    foo: int
+
+class Martian(BaseModel):
+    
+    
+    age: baml_py.Checked[int,Literal["young_enough"]]
 
 class NamedArgsSingleClass(BaseModel):
     
@@ -336,6 +389,11 @@ class Person(BaseModel):
     
     name: Optional[str] = None
     hair_color: Optional[Union["Color", str]] = None
+
+class PhoneNumber(BaseModel):
+    
+    
+    value: str
 
 class Quantity(BaseModel):
     
@@ -438,6 +496,13 @@ class TestOutputClass(BaseModel):
     
     prop1: str
     prop2: int
+
+class TwoStoriesOneTitle(BaseModel):
+    
+    
+    title: str
+    story_a: str
+    story_b: str
 
 class UnionTest_ReturnType(BaseModel):
     

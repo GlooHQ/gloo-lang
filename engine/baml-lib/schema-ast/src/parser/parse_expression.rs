@@ -4,6 +4,7 @@ use super::{
     Rule,
 };
 use crate::{assert_correct_parser, ast::*, unreachable_rule};
+use baml_types::JinjaExpression;
 use internal_baml_diagnostics::Diagnostics;
 
 pub(crate) fn parse_expression(
@@ -17,6 +18,7 @@ pub(crate) fn parse_expression(
         Rule::string_literal => Some(parse_string_literal(first_child, diagnostics)),
         Rule::map_expression => Some(parse_map(first_child, diagnostics)),
         Rule::array_expression => Some(parse_array(first_child, diagnostics)),
+        Rule::jinja_expression => Some(parse_jinja_expression(first_child, diagnostics)),
 
         Rule::identifier => Some(Expression::Identifier(parse_identifier(
             first_child,
@@ -245,10 +247,49 @@ fn unescape_string(val: &str) -> String {
     result
 }
 
+/// Parse a `JinjaExpression` from raw source. Escape backslashes,
+/// because we want the user's backslash intent to be preserved in
+/// the string backing the `JinjaExpression`. In other words, control
+/// sequences like `\n` are intended to be forwarded to the Jinja
+/// processing engine, not to break a Jinja Expression into two lines,
+/// therefor the backing string should be contain "\\n".
+pub fn parse_jinja_expression(token: Pair<'_>, diagnostics: &mut Diagnostics) -> Expression {
+    assert_correct_parser!(token, Rule::jinja_expression);
+    let value = token
+        .into_inner()
+        .map(|token| match token.as_rule() {
+            Rule::jinja_body => {
+                let mut inner_text = String::new();
+                for c in token.as_str().chars() {
+                    match c {
+                        // When encountering a single backslash, produce two backslashes.
+                        '\\' => inner_text.push_str("\\\\"),
+                        // Otherwise, just copy the character.
+                        _ => inner_text.push(c),
+                    }
+                }
+                return Expression::JinjaExpressionValue(
+                    JinjaExpression(inner_text),
+                    diagnostics.span(token.as_span()),
+                );
+            }
+            _ => unreachable_rule!(token, Rule::jinja_expression),
+        })
+        .next();
+
+    if let Some(value) = value {
+        value
+    } else {
+        unreachable!("Encountered impossible jinja expression during parsing")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::{BAMLParser, Rule};
-    use pest::{consumes_to, parses_to};
+    use super::*;
+    use internal_baml_diagnostics::{Diagnostics, SourceFile};
+    use pest::{consumes_to, parses_to, Parser};
 
     #[test]
     fn array_trailing_comma() {
@@ -286,5 +327,24 @@ mod tests {
                 ])
             ])]
         };
+    }
+
+    #[test]
+    fn test_parse_jinja_expression() {
+        let input = "{{ 1 + 1 }}";
+        let root_path = "test_file.baml";
+        let source = SourceFile::new_static(root_path.into(), input);
+        let mut diagnostics = Diagnostics::new(root_path.into());
+        diagnostics.set_source(&source);
+
+        let pair = BAMLParser::parse(Rule::jinja_expression, input)
+            .unwrap()
+            .next()
+            .unwrap();
+        let expr = parse_jinja_expression(pair, &mut diagnostics);
+        match expr {
+            Expression::JinjaExpressionValue(JinjaExpression(s), _) => assert_eq!(s, "1 + 1"),
+            _ => panic!("Expected JinjaExpression, got {:?}", expr),
+        }
     }
 }

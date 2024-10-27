@@ -247,3 +247,33 @@ test_deserializer!(
     ]
   }
 );
+
+const CONTACT_INFO: &str = r#"
+class PhoneNumber {
+  value string @check(valid_phone_number, {{this|regex_match("\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}")}})
+}
+
+class EmailAddress {
+  value string @check(valid_email, {{this|regex_match("^[_]*([a-z0-9]+(\.|_*)?)+@([a-z][a-z0-9-]+(\.|-*\.))+[a-z]{2,6}$")}})
+}
+
+class ContactInfo {
+  primary PhoneNumber | EmailAddress
+}
+"#;
+
+test_deserializer!(
+  test_phone_number_regex,
+  CONTACT_INFO,
+  r#"{"primary": {"value": "908-797-8281"}}"#,
+  FieldType::Class("ContactInfo".to_string()),
+  {"primary": {"value": "908-797-8281"}}
+);
+
+test_deserializer!(
+  test_email_regex,
+  CONTACT_INFO,
+  r#"{"primary": {"value": "help@boundaryml.com"}}"#,
+  FieldType::Class("ContactInfo".to_string()),
+  {"primary": {"value": "help@boundaryml.com"}}
+);

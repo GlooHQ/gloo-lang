@@ -167,6 +167,12 @@ export interface CompoundBigNumbers {
   
 }
 
+export interface ContactInfo {
+  primary: PhoneNumber | EmailAddress
+  secondary?: PhoneNumber | EmailAddress | null
+  
+}
+
 export interface CustomTaskResult {
   bookOrder?: BookOrder | null | null
   flightConfirmation?: FlightConfirmation | null | null
@@ -205,6 +211,11 @@ export interface DynamicOutput {
   [key: string]: any;
 }
 
+export interface Earthling {
+  age: Checked<number,"earth_aged" | "no_infants">
+  
+}
+
 export interface Education {
   institution: string
   location: string
@@ -218,6 +229,11 @@ export interface Email {
   subject: string
   body: string
   from_address: string
+  
+}
+
+export interface EmailAddress {
+  value: string
   
 }
 
@@ -240,6 +256,13 @@ export interface FlightConfirmation {
   departureTime: string
   arrivalTime: string
   seatNumber: string
+  
+}
+
+export interface FooAny {
+  planetary_age: Martian | Earthling
+  certainty: Checked<number,"unreasonably_certain">
+  species: Checked<string,"regex_bad" | "regex_good" | "trivial">
   
 }
 
@@ -273,6 +296,36 @@ export interface InputClass {
 export interface InputClassNested {
   key: string
   nested: InputClass
+  
+}
+
+export interface LiteralClassHello {
+  prop: "hello"
+  
+}
+
+export interface LiteralClassOne {
+  prop: "one"
+  
+}
+
+export interface LiteralClassTwo {
+  prop: "two"
+  
+}
+
+export interface MalformedConstraints {
+  foo: Checked<number,"foo_check">
+  
+}
+
+export interface MalformedConstraints2 {
+  foo: number
+  
+}
+
+export interface Martian {
+  age: Checked<number,"young_enough">
   
 }
 
@@ -332,6 +385,11 @@ export interface Person {
   hair_color?: (string | Color) | null
   
   [key: string]: any;
+}
+
+export interface PhoneNumber {
+  value: string
+  
 }
 
 export interface Quantity {
@@ -433,6 +491,13 @@ export interface TestClassWithEnum {
 export interface TestOutputClass {
   prop1: string
   prop2: number
+  
+}
+
+export interface TwoStoriesOneTitle {
+  title: string
+  story_a: string
+  story_b: string
   
 }
 

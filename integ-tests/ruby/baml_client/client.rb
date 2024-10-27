@@ -757,6 +757,70 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        document: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::ContactInfo)
+    }
+    def ExtractContactInfo(
+        *varargs,
+        document:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ExtractContactInfo may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "ExtractContactInfo",
+        {
+          document: document,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        text: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T::Array[T.any(Baml::Types::Hobby, String)])
+    }
+    def ExtractHobby(
+        *varargs,
+        text:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ExtractHobby may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "ExtractHobby",
+        {
+          text: text,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(T::Array[String])
@@ -1045,6 +1109,70 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        input: Baml::Types::LiteralClassHello,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::LiteralClassHello)
+    }
+    def FnLiteralClassInputOutput(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnLiteralClassInputOutput may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "FnLiteralClassInputOutput",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: T.any(Baml::Types::LiteralClassOne, Baml::Types::LiteralClassTwo),
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T.any(Baml::Types::LiteralClassOne, Baml::Types::LiteralClassTwo))
+    }
+    def FnLiteralUnionClassInputOutput(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnLiteralUnionClassInputOutput may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "FnLiteralUnionClassInputOutput",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         myString: T.nilable(String),
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(String)
@@ -1224,6 +1352,134 @@ module Baml
 
       raw = @runtime.call_function(
         "FnOutputClassWithEnum",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Integer)
+    }
+    def FnOutputInt(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnOutputInt may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "FnOutputInt",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T::Boolean)
+    }
+    def FnOutputLiteralBool(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnOutputLiteralBool may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "FnOutputLiteralBool",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Integer)
+    }
+    def FnOutputLiteralInt(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnOutputLiteralInt may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "FnOutputLiteralInt",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(String)
+    }
+    def FnOutputLiteralString(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnOutputLiteralString may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "FnOutputLiteralString",
         {
           input: input,
         },
@@ -1463,6 +1719,38 @@ module Baml
         varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T.any(Integer, T::Boolean, String))
+    }
+    def LiteralUnionsTest(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("LiteralUnionsTest may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "LiteralUnionsTest",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::Types::DynamicOutput)
     }
     def MyFunc(
@@ -1514,6 +1802,70 @@ module Baml
         "OptionalTest_Function",
         {
           input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        name: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::FooAny)
+    }
+    def PredictAge(
+        *varargs,
+        name:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("PredictAge may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "PredictAge",
+        {
+          name: name,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        inp: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Checked[Integer])
+    }
+    def PredictAgeBare(
+        *varargs,
+        inp:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("PredictAgeBare may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "PredictAgeBare",
+        {
+          inp: inp,
         },
         @ctx_manager,
         baml_options[:tb]&.instance_variable_get(:@registry),
@@ -1749,6 +2101,70 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        inp: Integer,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Integer)
+    }
+    def ReturnFailingAssert(
+        *varargs,
+        inp:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ReturnFailingAssert may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "ReturnFailingAssert",
+        {
+          inp: inp,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        a: Integer,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::MalformedConstraints)
+    }
+    def ReturnMalformedConstraints(
+        *varargs,
+        a:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ReturnMalformedConstraints may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "ReturnMalformedConstraints",
+        {
+          a: a,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::Types::Schema)
@@ -1802,6 +2218,38 @@ module Baml
         "StreamBigNumbers",
         {
           digits: digits,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        theme: String,length: Integer,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::TwoStoriesOneTitle)
+    }
+    def StreamFailingAssertion(
+        *varargs,
+        theme:,length:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("StreamFailingAssertion may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "StreamFailingAssertion",
+        {
+          theme: theme,length: length,
         },
         @ctx_manager,
         baml_options[:tb]&.instance_variable_get(:@registry),
@@ -2645,6 +3093,102 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        myBool: T::Boolean,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(String)
+    }
+    def TestNamedArgsLiteralBool(
+        *varargs,
+        myBool:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("TestNamedArgsLiteralBool may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "TestNamedArgsLiteralBool",
+        {
+          myBool: myBool,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        myInt: Integer,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(String)
+    }
+    def TestNamedArgsLiteralInt(
+        *varargs,
+        myInt:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("TestNamedArgsLiteralInt may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "TestNamedArgsLiteralInt",
+        {
+          myInt: myInt,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        myString: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(String)
+    }
+    def TestNamedArgsLiteralString(
+        *varargs,
+        myString:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("TestNamedArgsLiteralString may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "TestNamedArgsLiteralString",
+        {
+          myString: myString,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(String)
@@ -2890,6 +3434,38 @@ module Baml
         "UnionTest_Function",
         {
           input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        a: Baml::Types::MalformedConstraints2,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Integer)
+    }
+    def UseMalformedConstraints(
+        *varargs,
+        a:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("UseMalformedConstraints may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "UseMalformedConstraints",
+        {
+          a: a,
         },
         @ctx_manager,
         baml_options[:tb]&.instance_variable_get(:@registry),
@@ -3684,6 +4260,76 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        document: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::ContactInfo])
+    }
+    def ExtractContactInfo(
+        *varargs,
+        document:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ExtractContactInfo may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "ExtractContactInfo",
+        {
+          document: document,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::ContactInfo, Baml::Types::ContactInfo].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        text: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T::Array[T.any(Baml::Types::Hobby, String)]])
+    }
+    def ExtractHobby(
+        *varargs,
+        text:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ExtractHobby may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "ExtractHobby",
+        {
+          text: text,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T::Array[T.nilable(Baml::Types::Hobby)], T::Array[T.any(Baml::Types::Hobby, String)]].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[T::Array[String]])
@@ -3999,6 +4645,76 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        input: Baml::Types::LiteralClassHello,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::LiteralClassHello])
+    }
+    def FnLiteralClassInputOutput(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnLiteralClassInputOutput may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "FnLiteralClassInputOutput",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::LiteralClassHello, Baml::Types::LiteralClassHello].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: T.any(Baml::Types::LiteralClassOne, Baml::Types::LiteralClassTwo),
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T.any(Baml::Types::LiteralClassOne, Baml::Types::LiteralClassTwo)])
+    }
+    def FnLiteralUnionClassInputOutput(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnLiteralUnionClassInputOutput may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "FnLiteralUnionClassInputOutput",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(T.any(Baml::PartialTypes::LiteralClassOne, Baml::PartialTypes::LiteralClassTwo)), T.any(Baml::Types::LiteralClassOne, Baml::Types::LiteralClassTwo)].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         myString: T.nilable(String),
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[String])
@@ -4201,6 +4917,146 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[Baml::PartialTypes::TestClassWithEnum, Baml::Types::TestClassWithEnum].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Integer])
+    }
+    def FnOutputInt(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnOutputInt may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "FnOutputInt",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(Integer), Integer].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T::Boolean])
+    }
+    def FnOutputLiteralBool(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnOutputLiteralBool may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "FnOutputLiteralBool",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(T::Boolean), T::Boolean].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Integer])
+    }
+    def FnOutputLiteralInt(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnOutputLiteralInt may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "FnOutputLiteralInt",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(Integer), Integer].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[String])
+    }
+    def FnOutputLiteralString(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("FnOutputLiteralString may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "FnOutputLiteralString",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(String), String].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
@@ -4456,6 +5312,41 @@ module Baml
         varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T.any(Integer, T::Boolean, String)])
+    }
+    def LiteralUnionsTest(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("LiteralUnionsTest may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "LiteralUnionsTest",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(T.any(T.nilable(Integer), T.nilable(T::Boolean), T.nilable(String))), T.any(Integer, T::Boolean, String)].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[Baml::Types::DynamicOutput])
     }
     def MyFunc(
@@ -4516,6 +5407,76 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[T::Array[Baml::PartialTypes::OptionalTest_ReturnType], T::Array[T.nilable(Baml::Types::OptionalTest_ReturnType)]].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        name: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::FooAny])
+    }
+    def PredictAge(
+        *varargs,
+        name:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("PredictAge may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "PredictAge",
+        {
+          name: name,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::FooAny, Baml::Types::FooAny].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        inp: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Checked[Integer]])
+    }
+    def PredictAgeBare(
+        *varargs,
+        inp:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("PredictAgeBare may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "PredictAgeBare",
+        {
+          inp: inp,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::Checked[T.nilable(Integer)], Baml::Checked[Integer]].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
@@ -4769,6 +5730,76 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        inp: Integer,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Integer])
+    }
+    def ReturnFailingAssert(
+        *varargs,
+        inp:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ReturnFailingAssert may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "ReturnFailingAssert",
+        {
+          inp: inp,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(Integer), Integer].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        a: Integer,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::MalformedConstraints])
+    }
+    def ReturnMalformedConstraints(
+        *varargs,
+        a:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ReturnMalformedConstraints may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "ReturnMalformedConstraints",
+        {
+          a: a,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::MalformedConstraints, Baml::Types::MalformedConstraints].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[Baml::Types::Schema])
@@ -4831,6 +5862,41 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[Baml::PartialTypes::BigNumbers, Baml::Types::BigNumbers].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        theme: String,length: Integer,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::TwoStoriesOneTitle])
+    }
+    def StreamFailingAssertion(
+        *varargs,
+        theme:,length:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("StreamFailingAssertion may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "StreamFailingAssertion",
+        {
+          theme: theme,length: length,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::TwoStoriesOneTitle, Baml::Types::TwoStoriesOneTitle].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
@@ -5749,6 +6815,111 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        myBool: T::Boolean,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[String])
+    }
+    def TestNamedArgsLiteralBool(
+        *varargs,
+        myBool:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("TestNamedArgsLiteralBool may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "TestNamedArgsLiteralBool",
+        {
+          myBool: myBool,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(String), String].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        myInt: Integer,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[String])
+    }
+    def TestNamedArgsLiteralInt(
+        *varargs,
+        myInt:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("TestNamedArgsLiteralInt may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "TestNamedArgsLiteralInt",
+        {
+          myInt: myInt,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(String), String].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        myString: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[String])
+    }
+    def TestNamedArgsLiteralString(
+        *varargs,
+        myString:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("TestNamedArgsLiteralString may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "TestNamedArgsLiteralString",
+        {
+          myString: myString,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(String), String].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[String])
@@ -6021,6 +7192,41 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[Baml::PartialTypes::UnionTest_ReturnType, Baml::Types::UnionTest_ReturnType].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        a: Baml::Types::MalformedConstraints2,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Integer])
+    }
+    def UseMalformedConstraints(
+        *varargs,
+        a:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("UseMalformedConstraints may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "UseMalformedConstraints",
+        {
+          a: a,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(Integer), Integer].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
