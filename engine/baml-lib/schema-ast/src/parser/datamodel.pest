@@ -91,13 +91,16 @@ arguments_list = { "(" ~ (NEWLINE?) ~ expression? ~ ("," ~ (NEWLINE?) ~ expressi
 map_key   = { identifier | quoted_string_literal }
 map_entry = { (comment_block | empty_lines)* ~ map_key ~ (expression | ENTRY_CATCH_ALL)? ~ trailing_comment? }
 
-splitter         = _{ ("," ~ NEWLINE?) | NEWLINE }
-map_expression   =  { "{" ~ empty_lines? ~ (map_entry ~ (splitter ~ map_entry)*)? ~ (comment_block | empty_lines)* ~ "}" }
-array_expression =  { "[" ~ empty_lines? ~ ((expression | ARRAY_CATCH_ALL) ~ trailing_comment? ~ (splitter ~ (comment_block | empty_lines)* ~ (expression | ARRAY_CATCH_ALL) ~ trailing_comment?)*)? ~ (comment_block | empty_lines)* ~ splitter? ~ "]" }
-jinja_expression =  { "{{" ~ (!("}}" | "{{") ~ ANY)* ~ "}}" }
-expression       =  { jinja_expression | map_expression | array_expression | numeric_literal | string_literal | identifier }
-ARRAY_CATCH_ALL  =  { !"]" ~ CATCH_ALL }
-ENTRY_CATCH_ALL  =  { field_attribute | BLOCK_LEVEL_CATCH_ALL }
+splitter          = _{ ("," ~ NEWLINE?) | NEWLINE }
+map_expression    =  { "{" ~ empty_lines? ~ (map_entry ~ (splitter ~ map_entry)*)? ~ (comment_block | empty_lines)* ~ "}" }
+array_expression  =  { "[" ~ empty_lines? ~ ((expression | ARRAY_CATCH_ALL) ~ trailing_comment? ~ (splitter ~ (comment_block | empty_lines)* ~ (expression | ARRAY_CATCH_ALL) ~ trailing_comment?)*)? ~ (comment_block | empty_lines)* ~ splitter? ~ "]" }
+jinja_block_open  = _{ "{{" }
+jinja_block_close = _{ "}}" }
+jinja_body        =  { (!(jinja_block_open | jinja_block_close) ~ ANY)* }
+jinja_expression  =  { jinja_block_open ~ jinja_body ~ jinja_block_close }
+expression        =  { jinja_expression | map_expression | array_expression | numeric_literal | string_literal | identifier }
+ARRAY_CATCH_ALL   =  { !"]" ~ CATCH_ALL }
+ENTRY_CATCH_ALL   =  { field_attribute | BLOCK_LEVEL_CATCH_ALL }
 // ######################################
 // Literals / Values
 // ######################################

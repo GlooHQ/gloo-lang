@@ -25,8 +25,13 @@ import {
 import JsonView from 'react18-json-view'
 import clsx from 'clsx'
 import { Check, Copy, FilterIcon, InfoIcon, Link2Icon, PlayIcon, PlusIcon } from 'lucide-react'
-import { currentClientsAtom, selectedFunctionAtom, selectedTestCaseAtom } from '../EventListener'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import {
+  hasClosedIntroToChecksDialogAtom,
+  showIntroToChecksDialogAtom,
+  selectedFunctionAtom,
+  selectedTestCaseAtom,
+} from '../EventListener'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import FunctionTestSnippet from '../../shared/TestSnippet'
 import { Tooltip, TooltipContent } from '../../components/ui/tooltip'
 import { TooltipTrigger } from '../../components/ui/tooltip'
@@ -125,13 +130,35 @@ const ParsedTestResult: React.FC<{ doneStatus: string; parsed?: WasmParsedTestRe
   const [copiedParsed, setCopiedParsed] = useState(false)
   const [showExplanation, setShowExplanation] = useState(false)
 
+  const [hasClosedIntroToChecksDialog, setHasClosedIntroToChecksDialog] = useAtom(hasClosedIntroToChecksDialogAtom)
+  const [showIntroToChecksDialog, setShowIntroToChecksDialog] = useAtom(showIntroToChecksDialogAtom)
+
   const sorted_parsed = parsed ? JSON.parse(parsed.value) : undefined
+
+  useEffect(() => {
+    if (parsed && parsed.check_count > 0) {
+      // User has never closed the "intro to checks" dialog, so pop it up.
+      // but only if we haven't already closed the dialog
+      if (!hasClosedIntroToChecksDialog) {
+        setShowIntroToChecksDialog(true)
+      }
+    }
+  }, [parsed, hasClosedIntroToChecksDialog, setShowIntroToChecksDialog])
 
   if (doneStatus === 'parse_failed' || parsed !== undefined) {
     return (
       <div className='flex relative flex-col'>
         <div className='flex flex-row '>
-          Parsed LLM Response
+          {(() => {
+            if (parsed && parsed.check_count) {
+              if (parsed.check_count === 1) {
+                return `Parsed LLM Response (evaluated 1 check)`
+              } else {
+                return `Parsed LLM Response (evaluated ${parsed.check_count} checks)`
+              }
+            }
+            return 'Parsed LLM Response'
+          })()}
           <Tooltip delayDuration={100}>
             <TooltipTrigger asChild>
               <Button

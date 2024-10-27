@@ -1,0 +1,20 @@
+{
+    "name": "BAML",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "rust-lang.rust-analyzer",
+                "ms-python.python",
+                "Shopify.ruby-lsp",
+                "Boundary.baml-extension",
+                "ms-azuretools.vscode-docker",
+                "vadimcn.vscode-lldb",
+                "tamasfe.even-better-toml",
+                "samuelcolvin.jinjahtml"
+            ]
+        }
+    }
+}

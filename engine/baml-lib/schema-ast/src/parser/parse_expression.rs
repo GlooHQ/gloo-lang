@@ -3,8 +3,8 @@ use super::{
     parse_identifier::parse_identifier,
     Rule,
 };
-use baml_types::JinjaExpression;
 use crate::{assert_correct_parser, ast::*, unreachable_rule};
+use baml_types::JinjaExpression;
 use internal_baml_diagnostics::Diagnostics;
 
 pub(crate) fn parse_expression(
@@ -255,24 +255,41 @@ fn unescape_string(val: &str) -> String {
 /// therefor the backing string should be contain "\\n".
 pub fn parse_jinja_expression(token: Pair<'_>, diagnostics: &mut Diagnostics) -> Expression {
     assert_correct_parser!(token, Rule::jinja_expression);
-    let mut inner_text = String::new();
-    for c in token.as_str()[2..token.as_str().len() - 2].chars() {
-        match c {
-            // When encountering a single backslash, produce two backslashes.
-            '\\' => inner_text.push_str("\\\\"),
-            // Otherwise, just copy the character.
-            _ => inner_text.push(c),
-        }
+    let value = token
+        .into_inner()
+        .map(|token| match token.as_rule() {
+            Rule::jinja_body => {
+                let mut inner_text = String::new();
+                for c in token.as_str().chars() {
+                    match c {
+                        // When encountering a single backslash, produce two backslashes.
+                        '\\' => inner_text.push_str("\\\\"),
+                        // Otherwise, just copy the character.
+                        _ => inner_text.push(c),
+                    }
+                }
+                return Expression::JinjaExpressionValue(
+                    JinjaExpression(inner_text),
+                    diagnostics.span(token.as_span()),
+                );
+            }
+            _ => unreachable_rule!(token, Rule::jinja_expression),
+        })
+        .next();
+
+    if let Some(value) = value {
+        value
+    } else {
+        unreachable!("Encountered impossible jinja expression during parsing")
     }
-    Expression::JinjaExpressionValue(JinjaExpression(inner_text), diagnostics.span(token.as_span()))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::{BAMLParser, Rule};
-    use pest::{Parser, parses_to, consumes_to};
+    use super::*;
     use internal_baml_diagnostics::{Diagnostics, SourceFile};
+    use pest::{consumes_to, parses_to, Parser};
 
     #[test]
     fn array_trailing_comma() {
@@ -326,9 +343,8 @@ mod tests {
             .unwrap();
         let expr = parse_jinja_expression(pair, &mut diagnostics);
         match expr {
-            Expression::JinjaExpressionValue(JinjaExpression(s), _) => assert_eq!(s, " 1 + 1 "),
+            Expression::JinjaExpressionValue(JinjaExpression(s), _) => assert_eq!(s, "1 + 1"),
             _ => panic!("Expected JinjaExpression, got {:?}", expr),
         }
     }
-
 }

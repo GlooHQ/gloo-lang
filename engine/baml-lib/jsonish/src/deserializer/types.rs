@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use baml_types::{BamlMap, BamlMedia, BamlValue, BamlValueWithMeta, Constraint};
+use baml_types::{BamlMap, BamlMedia, BamlValue, BamlValueWithMeta, Constraint, JinjaExpression};
 use serde_json::json;
 use strsim::jaro;
 
@@ -441,7 +441,7 @@ impl std::fmt::Display for BamlValueWithFlags {
     }
 }
 
-impl From<BamlValueWithFlags> for BamlValueWithMeta<Vec<(Constraint, bool)>> {
+impl From<BamlValueWithFlags> for BamlValueWithMeta<Vec<(String, JinjaExpression, bool)>> {
     fn from(baml_value: BamlValueWithFlags) -> Self {
         use BamlValueWithFlags::*;
         let c = baml_value.conditions().constraint_results();

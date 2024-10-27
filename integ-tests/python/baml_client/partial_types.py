@@ -142,7 +142,7 @@ class Email(BaseModel):
 class EmailAddress(BaseModel):
     
     
-    value: baml_py.Checked[Optional[str],Literal["valid_email"]]
+    value: Optional[str] = None
 
 class Event(BaseModel):
     
@@ -205,6 +205,21 @@ class InputClassNested(BaseModel):
     
     key: Optional[str] = None
     nested: Optional["InputClass"] = None
+
+class LiteralClassHello(BaseModel):
+    
+    
+    prop: Literal["hello"]
+
+class LiteralClassOne(BaseModel):
+    
+    
+    prop: Literal["one"]
+
+class LiteralClassTwo(BaseModel):
+    
+    
+    prop: Literal["two"]
 
 class MalformedConstraints(BaseModel):
     
@@ -282,7 +297,7 @@ class Person(BaseModel):
 class PhoneNumber(BaseModel):
     
     
-    value: baml_py.Checked[Optional[str],Literal["valid_phone_number"]]
+    value: Optional[str] = None
 
 class Quantity(BaseModel):
     

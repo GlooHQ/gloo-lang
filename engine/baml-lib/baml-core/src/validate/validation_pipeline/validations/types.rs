@@ -1,6 +1,8 @@
 use baml_types::TypeValue;
-use internal_baml_diagnostics::DatamodelError;
-use internal_baml_schema_ast::ast::{Argument, Attribute, Expression, FieldArity, FieldType, Identifier, WithName, WithSpan};
+use internal_baml_diagnostics::{DatamodelError, DatamodelWarning, Span};
+use internal_baml_schema_ast::ast::{
+    Argument, Attribute, Expression, FieldArity, FieldType, Identifier, WithName, WithSpan,
+};
 
 use crate::validate::validation_pipeline::context::Context;
 
@@ -89,28 +91,139 @@ fn validate_type_allowed(ctx: &mut Context<'_>, field_type: &FieldType) {
 }
 
 fn validate_type_constraints(ctx: &mut Context<'_>, field_type: &FieldType) {
-    let constraint_attrs = field_type.attributes().iter().filter(|attr| ["assert", "check"].contains(&attr.name.name())).collect::<Vec<_>>();
-    for Attribute { arguments, span, name, .. } in constraint_attrs.iter() {
-        let arg_expressions = arguments.arguments.iter().map(|Argument{value,..}| value).collect::<Vec<_>>();
+    let constraint_attrs = field_type
+        .attributes()
+        .iter()
+        .filter(|attr| ["assert", "check"].contains(&attr.name.name()))
+        .collect::<Vec<_>>();
+    for Attribute {
+        arguments,
+        span,
+        name,
+        ..
+    } in constraint_attrs.iter()
+    {
+        let arg_expressions = arguments
+            .arguments
+            .iter()
+            .map(|Argument { value, .. }| value)
+            .collect::<Vec<_>>();
 
-            match arg_expressions.as_slice() {
-                [ Expression::Identifier(Identifier::Local(s,_)), Expression::JinjaExpressionValue(_, _)] => {
-                    // Ok.
-                },
-                [Expression::JinjaExpressionValue(_, _)] => {
-                    if name.to_string() == "check" {
-                        ctx.push_error(DatamodelError::new_validation_error(
-                            "Check constraints must have a name.",
-                            span.clone()
-                        ))
+        match arg_expressions.as_slice() {
+            [Expression::Identifier(Identifier::Local(s, _)), Expression::JinjaExpressionValue(expr, span)] =>
+            {
+                let mut defined_types = internal_baml_jinja_types::PredefinedTypes::default(
+                    internal_baml_jinja_types::JinjaContext::Parsing,
+                );
+                defined_types.add_variable("this", internal_baml_jinja_types::Type::Unknown);
+                match internal_baml_jinja_types::validate_expression(&expr.0, &mut defined_types) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        if let Some(e) = e.parsing_errors {
+                            let range = match e.range() {
+                                Some(range) => range,
+                                None => {
+                                    ctx.push_error(DatamodelError::new_validation_error(
+                                        &format!("Error parsing jinja template: {}", e),
+                                        span.clone(),
+                                    ));
+                                    continue;
+                                }
+                            };
+
+                            let start_offset = span.start + range.start;
+                            let end_offset = span.start + range.end;
+
+                            let span = Span::new(
+                                span.file.clone(),
+                                start_offset as usize,
+                                end_offset as usize,
+                            );
+
+                            ctx.push_error(DatamodelError::new_validation_error(
+                                &format!("Error parsing jinja template: {}", e),
+                                span,
+                            ))
+                        } else {
+                            e.errors.iter().for_each(|t| {
+                                let tspan = t.span();
+                                let span = Span::new(
+                                    span.file.clone(),
+                                    span.start + tspan.start_offset as usize,
+                                    span.start + tspan.end_offset as usize,
+                                );
+                                ctx.push_warning(DatamodelWarning::new(
+                                    t.message().to_string(),
+                                    span,
+                                ))
+                            })
+                        }
                     }
-                },
-                _ => {
+                }
+            }
+            [Expression::JinjaExpressionValue(expr, span)] => {
+                let mut defined_types = internal_baml_jinja_types::PredefinedTypes::default(
+                    internal_baml_jinja_types::JinjaContext::Parsing,
+                );
+                defined_types.add_variable("this", internal_baml_jinja_types::Type::Unknown);
+                match internal_baml_jinja_types::validate_expression(&expr.0, &mut defined_types) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        if let Some(e) = e.parsing_errors {
+                            let range = match e.range() {
+                                Some(range) => range,
+                                None => {
+                                    ctx.push_error(DatamodelError::new_validation_error(
+                                        &format!("Error parsing jinja template: {}", e),
+                                        span.clone(),
+                                    ));
+                                    continue;
+                                }
+                            };
+
+                            let start_offset = span.start + range.start;
+                            let end_offset = span.start + range.end;
+
+                            let span = Span::new(
+                                span.file.clone(),
+                                start_offset as usize,
+                                end_offset as usize,
+                            );
+
+                            ctx.push_error(DatamodelError::new_validation_error(
+                                &format!("Error parsing jinja template: {}", e),
+                                span,
+                            ))
+                        } else {
+                            e.errors.iter().for_each(|t| {
+                                let tspan = t.span();
+                                let span = Span::new(
+                                    span.file.clone(),
+                                    span.start + tspan.start_offset as usize,
+                                    span.start + tspan.end_offset as usize,
+                                );
+                                ctx.push_warning(DatamodelWarning::new(
+                                    t.message().to_string(),
+                                    span,
+                                ))
+                            })
+                        }
+                    }
+                }
+
+                if name.to_string() == "check" {
                     ctx.push_error(DatamodelError::new_validation_error(
+                        "Check constraints must have a name.",
+                        span.clone(),
+                    ))
+                }
+            }
+            _ => {
+                ctx.push_error(DatamodelError::new_validation_error(
                         "A constraint must have one Jinja argument such as {{ expr }}, and optionally one String label",
                         span.clone()
                     ));
-                }
+            }
         }
     }
 }

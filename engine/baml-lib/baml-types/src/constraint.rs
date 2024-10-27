@@ -7,6 +7,19 @@ pub struct Constraint {
     pub label: Option<String>,
 }
 
+impl Constraint {
+    pub fn as_check(self) -> Option<(String, JinjaExpression)> {
+        match self.level {
+            ConstraintLevel::Check => Some((
+                self.label
+                    .expect("Checks are guaranteed by the pest grammar to have a label."),
+                self.expression,
+            )),
+            ConstraintLevel::Assert => None,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 pub enum ConstraintLevel {
     Check,

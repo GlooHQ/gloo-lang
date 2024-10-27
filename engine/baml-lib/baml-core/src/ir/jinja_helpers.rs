@@ -30,7 +30,6 @@ pub fn render_expression(
     // So producing the string `{{}}` requires writing the literal `"{{{{}}}}"`
     let template = format!(r#"{{{{ {} }}}}"#, expression.0);
     let args_dict = minijinja::Value::from_serialize(ctx);
-    eprintln!("{}", &template);
     Ok(env.render_str(&template, &args_dict)?)
 }
 
@@ -45,7 +44,7 @@ pub fn evaluate_predicate(
     match render_expression(&predicate_expression, &ctx)?.as_ref() {
         "true" => Ok(true),
         "false" => Ok(false),
-        _ => Err(anyhow::anyhow!("TODO")),
+        _ => Err(anyhow::anyhow!("Predicate did not evaluate to a boolean")),
     }
 }
 
