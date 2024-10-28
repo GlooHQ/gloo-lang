@@ -321,7 +321,7 @@ navigation:
           - page: enum
             path: 03-reference/baml/enum.mdx
           - page: generator
-            path: 01-guide/introduction.mdx
+            path: 03-reference/generator.mdx
       - section: Clients (Supported LLMs)
         contents:
           - page: "AWS Bedrock"

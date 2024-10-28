@@ -30,6 +30,10 @@ To set up BAML with Python do the following:
         ```bash poetry
         poetry add baml-py
         ```
+
+         ```bash uv
+        uv add baml-py
+        ```
         </CodeBlocks>
   
   ### Add BAML to your existing project
@@ -43,9 +47,18 @@ To set up BAML with Python do the following:
       ```bash poetry
       poetry run baml-cli init
       ```
+
+      ```bash uv
+      uv run baml-cli init
+      ```
       </CodeBlocks>
   
   ### Generate the `baml_client` python module from `.baml` files
+
+  One of the files in your `baml_src` directory will have a [generator block](/ref/baml/generator). The next commmand will auto-generate the `baml_client` directory, which will have auto-generated python code to call your BAML functions. 
+  
+  Any types defined in .baml files will be converted into Pydantic models in the `baml_client` directory.
+
 
     <CodeBlocks>
     ```bash pip
@@ -56,13 +69,14 @@ To set up BAML with Python do the following:
     ```bash poetry
     poetry run baml-cli generate
     ```
+
+    ```bash uv
+    uv run baml-cli generate
+    ```
     </CodeBlocks>
 
-    See [What is baml_src](/guide/introduction/baml_src) to learn more about how this works.
+    See [What is baml_client](/guide/introduction/baml_client) to learn more about how this works.
     <img src="/assets/languages/baml-to-py.png" />
-
-
-    As fun as writing BAML is, we want you be able to leverage BAML with existing python modules. This command gives you a python module that is a type-safe (mypy / ruff / pylance analyzeable) interface to every BAML function.
 
     <Tip>
       If you set up the [VSCode extension](https://marketplace.visualstudio.com/items?itemName=Boundary.baml-extension), it will automatically run `baml-cli generate` on saving a BAML file.
@@ -166,3 +180,5 @@ This auto-reload approach works best if you're only making changes to the prompt
 </Warning>
 
 </Steps>
+
+You're all set! Continue on to the [Deployment Guides](/docs/get-started/deploying) for your language to learn how to deploy your BAML code or check out the [Interactive Examples](https://baml-examples.vercel.app/) to see more examples.

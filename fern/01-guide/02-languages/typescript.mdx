@@ -52,6 +52,8 @@ To set up BAML with Typescript do the following:
   
   ### Generate the `baml_client` typescript package from `.baml` files
 
+    One of the files in your `baml_src` directory will have a [generator block](/ref/baml/generator). This tells BAML how to generate the `baml_client` directory, which will have auto-generated typescript code to call your BAML functions.
+
     ```bash
     npx baml-cli generate
     ```
@@ -72,8 +74,7 @@ To set up BAML with Typescript do the following:
     See [What is baml_src](/guide/introduction/baml_src) to learn more about how this works.
     <img src="/assets/languages/baml-to-ts.png" />
 
-    As fun as writing BAML is, we want you be able to leverage BAML with existing typescript modules. This command gives you a typescript module that is a type-safe interface to every BAML function.
-
+   
     <Tip>
       If you set up the [VSCode extension](https://marketplace.visualstudio.com/items?itemName=Boundary.baml-extension), it will automatically run `baml-cli generate` on saving a BAML file.
     </Tip>

@@ -1,31 +1,12 @@
----
-title: What is baml_client?
----
-
-**baml_client** is the code that gets generated from your BAML files that transforms your BAML prompts into the same equivalent function in your language, with validated type-safe outputs.
-<img src="/assets/vscode/baml-client.png" width="300px"/>
-
-```python Python
-from baml_client import b
-resume_info = b.ExtractResume("....some text...")
-```
-
-This has all the boilerplate to:
-1. call the LLM endpoint with the right parameters, 
-2. parse the output, 
-3. fix broken JSON (if any)
-4. return the result in a nice typed object.
-5. handle errors
-
-In Python, your BAML types get converted to Pydantic models. In Typescript, they get converted to TypeScript types, and so on. **BAML acts like a universal type system that can be used in any language**.
 
 
+Each `generator` that you define in your BAML project will tell `baml-cli
+generate` to generate code for a specific target language. You can define
+multiple `generator` clauses in your BAML project, and `baml-cli generate` will
+generate code for each of them.
 
-### Generating baml_client
+<Tip>If you created your project using `baml-cli init`, then one has already been generated for you!</Tip>
 
- Refer to the **[Installation](/guide/installation-language/python)** guides for how to set this up for your language, and how to generate it.
-
- But at a high-level, you just include a [generator block](/ref/baml/generator) in any of your BAML files.
 
 <CodeBlocks>
 
@@ -43,7 +24,7 @@ generator target {
     default_client_mode "sync"
     
     // Version of runtime to generate code for (should match installed baml-py version)
-    version "0.54.0"
+    version "0.63.0"
 }
 ```
 
@@ -61,7 +42,7 @@ generator target {
     default_client_mode "async"
     
     // Version of runtime to generate code for (should match the package @boundaryml/baml version)
-    version "0.54.0"
+    version "0.63.0"
 }
 ```
 
@@ -74,7 +55,7 @@ generator target {
     output_dir "../"
     
     // Version of runtime to generate code for (should match installed `baml` package version)
-    version "0.54.0"
+    version "0.63.0"
 }
 ```
 
@@ -94,7 +75,5 @@ generator target {
     on_generate "npx @openapitools/openapi-generator-cli generate -i openapi.yaml -g OPENAPI_CLIENT_TYPE -o ."
 }
 ```
+
 </CodeBlocks>
-
-The `baml_client` transforms a BAML function into the same equivalent function in your language, 
-

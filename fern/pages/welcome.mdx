@@ -11,10 +11,10 @@ hide-toc: false
 With BAML you can build reliable Agents, Chatbots with RAG, extract data from PDFs, and more.
 
 ### A small sample of features:
-1. **An amazingly fast developer experience** for prompting in the BAML VSCode playground
+1. **An amazingly fast developer experience** for prompting in BAML's VSCode LLM Playground
 1. **Fully type-safe outputs**, even when streaming structured data.
 1. **Flexibility** -- it works with **any LLM**, **any language**, and **any schema**.
-2. **State-of-the-art structured outputs** that [outperform other approaches and frameworks](https://www.boundaryml.com/blog/sota-function-calling?q=0) -- that works even better with OpenSource models.
+2. **State-of-the-art structured outputs** that [outperform other approaches and frameworks](https://www.boundaryml.com/blog/sota-function-calling?q=0) -- that works even better with smaller OpenSource models.
 
 
 ## Products
@@ -52,14 +52,18 @@ With BAML you can build reliable Agents, Chatbots with RAG, extract data from PD
 
 ## Motivation
 
-Prompts are not just f'strings. They are actual functions with logic that can become very complex to organize, maintain, and test.
+Prompts are more than just f-strings; they're actual functions with logic that can quickly become complex to organize, maintain, and test.
 
-Today people are writing LLM prompts as if they were writing raw HTML/JS/CSS in their JS files without:
+Currently, developers craft LLM prompts as if they're writing raw HTML and CSS in text files, lacking:
 - Type safety
-- Hot-reloading nor previews
+- Hot-reloading or previews
 - Linting
 
-TSX was the right abstraction for the web, and BAML is that abstraction for prompt engineering.
+The situation worsens when dealing with structured outputs. Since most prompts rely on Python and Pydantic, developers must _execute_ their code and set up an entire Python environment just to test a minor prompt adjustment, or they have to setup a whole Python microservice just to call an LLM.
+
+BAML allows you to view and run prompts directly within your editor, similar to how Markdown Preview function -- no additional setup necessary, that interoperates with all your favorite languages and frameworks.
+
+Just as TSX/JSX provided the ideal abstraction for web development, BAML offers the perfect abstraction for prompt engineering. Watch our [demo video](/guide/introduction/what-is-baml#demo-video) to see it in action.
 
 {/* 
 <div className="motivation">
