@@ -1,7 +1,7 @@
 use std::{collections::HashSet, sync::Arc};
 
 use anyhow::Result;
-use baml_types::{Constraint, FieldType, LiteralValue, TypeValue};
+use baml_types::{Constraint, FieldType, TypeValue};
 use indexmap::{IndexMap, IndexSet};
 
 #[derive(Debug)]
@@ -286,43 +286,37 @@ impl OutputFormatContent {
     }
 
     fn prefix<'a>(&self, options: &'a RenderOptions) -> Option<&'a str> {
-        struct AutoPrefix<'s> {
-            output_format: &'s OutputFormatContent,
-        }
-
-        impl<'s> AutoPrefix<'s> {
-            fn auto_prefix(&self, ft: &FieldType) -> Option<&'static str> {
-                match ft {
-                    FieldType::Primitive(TypeValue::String) => None,
-                    FieldType::Primitive(_) => Some("Answer as a: "),
-                    FieldType::Literal(_) => Some("Answer using this specific value:\n"),
-                    FieldType::Enum(_) => Some("Answer with any of the categories:\n"),
-                    // TODO: Func returns &str we can't format!, do something to
-                    // avoid duplicating the string.
-                    FieldType::Class(cls) => {
-                        Some(if self.output_format.recursive_classes.contains(cls) {
-                            "Answer in JSON using this schema: "
-                        } else {
-                            "Answer in JSON using this schema:\n"
-                        })
-                    }
-                    FieldType::List(_) => Some("Answer with a JSON Array using this schema:\n"),
-                    FieldType::Union(_) => Some("Answer in JSON using any of these schemas:\n"),
-                    FieldType::Optional(_) => Some("Answer in JSON using this schema:\n"),
-                    FieldType::Map(_, _) => Some("Answer in JSON using this schema:\n"),
-                    FieldType::Tuple(_) => None,
-                    FieldType::Constrained { base, .. } => self.auto_prefix(base),
+        fn auto_prefix(
+            ft: &FieldType,
+            output_format_content: &OutputFormatContent,
+        ) -> Option<&'static str> {
+            match ft {
+                FieldType::Primitive(TypeValue::String) => None,
+                FieldType::Primitive(_) => Some("Answer as a: "),
+                FieldType::Literal(_) => Some("Answer using this specific value:\n"),
+                FieldType::Enum(_) => Some("Answer with any of the categories:\n"),
+                // TODO: Func returns &str we can't format!, do something to
+                // avoid duplicating the string.
+                FieldType::Class(cls) => {
+                    Some(if output_format_content.recursive_classes.contains(cls) {
+                        "Answer in JSON using this schema: "
+                    } else {
+                        "Answer in JSON using this schema:\n"
+                    })
                 }
+                FieldType::List(_) => Some("Answer with a JSON Array using this schema:\n"),
+                FieldType::Union(_) => Some("Answer in JSON using any of these schemas:\n"),
+                FieldType::Optional(_) => Some("Answer in JSON using this schema:\n"),
+                FieldType::Map(_, _) => Some("Answer in JSON using this schema:\n"),
+                FieldType::Tuple(_) => None,
+                FieldType::Constrained { base, .. } => auto_prefix(base, output_format_content),
             }
         }
 
         match &options.prefix {
             RenderSetting::Always(prefix) => Some(prefix.as_str()),
             RenderSetting::Never => None,
-            RenderSetting::Auto => AutoPrefix {
-                output_format: self,
-            }
-            .auto_prefix(&self.target),
+            RenderSetting::Auto => auto_prefix(&self.target, self),
         }
     }
 
