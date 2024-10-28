@@ -219,13 +219,13 @@ const main = () => {
 
 ## Checks
 
-`@check` attributes adad validations without raising exceptions if they fail.
+`@check` attributes add validations without raising exceptions if they fail.
 Types with `@check` attributes allow the validations to be inspected at
 runtime.
 
 
 ```baml BAML
-(bar int @check(less_than_zero, {{ this < 0 }})[]
+( bar int @check(less_than_zero, {{ this < 0 }}) )[]
 ```
 
 <CodeBlocks>
