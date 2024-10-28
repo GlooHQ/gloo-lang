@@ -1,5 +1,5 @@
 ---
-slug: docs/calling-baml/assertions
+slug: docs/calling-baml/checks-and-asserts
 ---
 
 With custom type validations, you can set specific rules to ensure your data's
@@ -87,28 +87,6 @@ For now, see our [Jinja cookbook / guide](../snippets/prompt-syntax/what-is-jinj
 or the [Minijinja filters docs](https://docs.rs/minijinja/latest/minijinja/filters/index.html#functions)
 for more information on writing expressions.
 
-
-{/* ### Operators
-| Assertion        | Types                  |
-|------------------|------------------------|
-| length           | array, map, string     |
-| regex_match      | string                 |
-| eq, ne           | all                    |
-| gt, ge, lt, le   | int, float, string     |
-| xor              | int, float, bool       |
-| and, or          | int, float, bool       |
-| index []         | array, map, string     |
-| min, max         | int, float             | */}
-{/* 
-| unique           | array                  | every item is unique (consider using set type?)  |
-| default          | all                    | default value to fill if not found               |
-
-{/* Operators are called using the `|` symbol, followed by the operator name.
-```baml BAML
-class Foo {
-  bar int @assert(positive, {{ this|gt 0 }})
-}
-``` */}
 
 
 ### Expression keywords
