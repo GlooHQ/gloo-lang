@@ -1749,6 +1749,70 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Checked[Baml::Types::BlockConstraint])
+    }
+    def MakeBlockConstraint(
+        *varargs,
+        
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("MakeBlockConstraint may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "MakeBlockConstraint",
+        {
+          
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::NestedBlockConstraint)
+    }
+    def MakeNestedBlockConstraint(
+        *varargs,
+        
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("MakeNestedBlockConstraint may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "MakeNestedBlockConstraint",
+        {
+          
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::Types::DynamicOutput)
@@ -3445,6 +3509,38 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        inp: Baml::Types::BlockConstraintForParam,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Integer)
+    }
+    def UseBlockConstraint(
+        *varargs,
+        inp:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("UseBlockConstraint may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "UseBlockConstraint",
+        {
+          inp: inp,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         a: Baml::Types::MalformedConstraints2,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Integer)
@@ -3466,6 +3562,38 @@ module Baml
         "UseMalformedConstraints",
         {
           a: a,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        inp: Baml::Types::NestedBlockConstraintForParam,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Integer)
+    }
+    def UseNestedBlockConstraint(
+        *varargs,
+        inp:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("UseNestedBlockConstraint may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "UseNestedBlockConstraint",
+        {
+          inp: inp,
         },
         @ctx_manager,
         baml_options[:tb]&.instance_variable_get(:@registry),
@@ -5345,6 +5473,76 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Checked[Baml::Types::BlockConstraint]])
+    }
+    def MakeBlockConstraint(
+        *varargs,
+        
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("MakeBlockConstraint may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "MakeBlockConstraint",
+        {
+          
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::Checked[Baml::PartialTypes::BlockConstraint], Baml::Checked[Baml::Types::BlockConstraint]].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::NestedBlockConstraint])
+    }
+    def MakeNestedBlockConstraint(
+        *varargs,
+        
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("MakeNestedBlockConstraint may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "MakeNestedBlockConstraint",
+        {
+          
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::NestedBlockConstraint, Baml::Types::NestedBlockConstraint].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[Baml::Types::DynamicOutput])
@@ -7200,6 +7398,41 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        inp: Baml::Types::BlockConstraintForParam,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Integer])
+    }
+    def UseBlockConstraint(
+        *varargs,
+        inp:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("UseBlockConstraint may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "UseBlockConstraint",
+        {
+          inp: inp,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(Integer), Integer].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         a: Baml::Types::MalformedConstraints2,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[Integer])
@@ -7221,6 +7454,41 @@ module Baml
         "UseMalformedConstraints",
         {
           a: a,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(Integer), Integer].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        inp: Baml::Types::NestedBlockConstraintForParam,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Integer])
+    }
+    def UseNestedBlockConstraint(
+        *varargs,
+        inp:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("UseNestedBlockConstraint may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "UseNestedBlockConstraint",
+        {
+          inp: inp,
         },
         @ctx_manager,
         baml_options[:tb]&.instance_variable_get(:@registry),

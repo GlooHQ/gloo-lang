@@ -1,7 +1,7 @@
 use baml_types::{BamlValueWithMeta, ResponseCheck};
 use pyo3::prelude::{pymethods, PyResult};
 use pyo3::types::{PyAnyMethods, PyDict, PyModule, PyTuple, PyType};
-use pyo3::{Bound, IntoPy, PyObject, Python};
+use pyo3::{Bound, IntoPy, PyAny, PyObject, Python};
 
 use crate::errors::BamlError;
 
@@ -137,7 +137,24 @@ fn pythonize_strict(
 
             let properties_dict = pyo3::types::PyDict::new_bound(py);
             for (key, value) in properties {
-                properties_dict.set_item(key, value)?;
+                // For each field, try to call pydantic's `model_dump` on the
+                // field. This is necessary in case the field is `Checked[_,_]`,
+                // because pydantic requires to parse such fields from json,
+                // rather than from a Python object. The python object is an
+                // untyped Dict, but python expects a typed `Checked`.
+                // By turning such values into `json`, we allow pydantic's
+                // parser to more flexibly accept input at its expected
+                // type.
+                //
+                // This has the side-effect of calling `model_dump` on all
+                // classes inheriting `BaseModel`, which probably incurs some
+                // performance penalty. So we should consider testing whether
+                // the field is a `Checked` before doing a `model_dump`.
+                let value_model = value.call_method0(py, "model_dump");
+                match value_model {
+                    Err(_) => { properties_dict.set_item(key, value)?; }
+                    Ok(m) => {properties_dict.set_item(key, m)?;}
+                }
             }
 
             let class_type = match cls_module.getattr(class_name.as_str()) {
@@ -150,8 +167,8 @@ fn pythonize_strict(
                 Err(_) => return Ok(properties_dict.into()),
             };
 
+            let instance = class_type.call_method("model_validate", (properties_dict.clone(),), None)?;
 
-            let instance = class_type.call_method("model_validate", (properties_dict,), None)?;
             Ok(instance.into())
         }
         BamlValueWithMeta::Null(_) => Ok(py.None()),
@@ -189,11 +206,11 @@ fn pythonize_strict(
         let type_parameters_tuple = PyTuple::new_bound(py, &[value_type.as_ref(), &literal_check_names]);
 
         // Create the Checked type using __class_getitem__
-        let class_checked_type = class_checked_type_constructor
+        let class_checked_type: Bound<'_, PyAny> = class_checked_type_constructor
             .call_method1("__class_getitem__", (type_parameters_tuple,))?;
 
         // Validate the model with the constructed type
-        let checked_instance = class_checked_type.call_method("model_validate", (properties_dict,), None)?;
+        let checked_instance = class_checked_type.call_method("model_validate", (properties_dict.clone(),), None)?;
 
         Ok(checked_instance.into())
     }

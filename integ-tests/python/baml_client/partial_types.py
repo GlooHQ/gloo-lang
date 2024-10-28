@@ -40,6 +40,18 @@ class Blah(BaseModel):
     
     prop4: Optional[str] = None
 
+class BlockConstraint(BaseModel):
+    
+    
+    foo: Optional[int] = None
+    bar: Optional[str] = None
+
+class BlockConstraintForParam(BaseModel):
+    
+    
+    bcfp: Optional[int] = None
+    bcfp2: Optional[str] = None
+
 class BookOrder(BaseModel):
     
     
@@ -256,6 +268,16 @@ class Nested2(BaseModel):
     
     prop11: Optional[Union[Optional[str], Optional[None]]] = None
     prop12: Optional[Union[Optional[str], Optional[None]]] = None
+
+class NestedBlockConstraint(BaseModel):
+    
+    
+    nbc: Checked[Optional["BlockConstraint"],Literal["cross_field"]]
+
+class NestedBlockConstraintForParam(BaseModel):
+    
+    
+    nbcfp: Optional["BlockConstraintForParam"] = None
 
 class OptionalTest_Prop1(BaseModel):
     

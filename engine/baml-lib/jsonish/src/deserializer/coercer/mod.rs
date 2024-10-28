@@ -19,9 +19,9 @@ use internal_baml_core::ir::{jinja_helpers::evaluate_predicate, FieldType};
 use super::types::BamlValueWithFlags;
 
 pub struct ParsingContext<'a> {
-    scope: Vec<String>,
-    of: &'a OutputFormatContent,
-    allow_partials: bool,
+    pub scope: Vec<String>,
+    pub of: &'a OutputFormatContent,
+    pub allow_partials: bool,
 }
 
 impl ParsingContext<'_> {

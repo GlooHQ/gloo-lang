@@ -22,6 +22,8 @@ module Baml
   module PartialTypes
     class BigNumbers < T::Struct; end
     class Blah < T::Struct; end
+    class BlockConstraint < T::Struct; end
+    class BlockConstraintForParam < T::Struct; end
     class BookOrder < T::Struct; end
     class ClassOptionalOutput < T::Struct; end
     class ClassOptionalOutput2 < T::Struct; end
@@ -56,6 +58,8 @@ module Baml
     class NamedArgsSingleClass < T::Struct; end
     class Nested < T::Struct; end
     class Nested2 < T::Struct; end
+    class NestedBlockConstraint < T::Struct; end
+    class NestedBlockConstraintForParam < T::Struct; end
     class OptionalTest_Prop1 < T::Struct; end
     class OptionalTest_ReturnType < T::Struct; end
     class OrderInfo < T::Struct; end
@@ -101,6 +105,34 @@ module Baml
       def initialize(props)
         super(
           prop4: props[:prop4],
+        )
+
+        @props = props
+      end
+    end
+    class BlockConstraint < T::Struct
+      include Baml::Sorbet::Struct
+      const :foo, T.nilable(Integer)
+      const :bar, T.nilable(String)
+
+      def initialize(props)
+        super(
+          foo: props[:foo],
+          bar: props[:bar],
+        )
+
+        @props = props
+      end
+    end
+    class BlockConstraintForParam < T::Struct
+      include Baml::Sorbet::Struct
+      const :bcfp, T.nilable(Integer)
+      const :bcfp2, T.nilable(String)
+
+      def initialize(props)
+        super(
+          bcfp: props[:bcfp],
+          bcfp2: props[:bcfp2],
         )
 
         @props = props
@@ -593,6 +625,30 @@ module Baml
         super(
           prop11: props[:prop11],
           prop12: props[:prop12],
+        )
+
+        @props = props
+      end
+    end
+    class NestedBlockConstraint < T::Struct
+      include Baml::Sorbet::Struct
+      const :nbc, Baml::Checked[Baml::PartialTypes::BlockConstraint]
+
+      def initialize(props)
+        super(
+          nbc: props[:nbc],
+        )
+
+        @props = props
+      end
+    end
+    class NestedBlockConstraintForParam < T::Struct
+      include Baml::Sorbet::Struct
+      const :nbcfp, Baml::PartialTypes::BlockConstraintForParam
+
+      def initialize(props)
+        super(
+          nbcfp: props[:nbcfp],
         )
 
         @props = props

@@ -30,7 +30,9 @@ from ..baml_client.types import (
     MalformedConstraints2,
     LiteralClassHello,
     LiteralClassOne,
-    all_succeeded
+    all_succeeded,
+    BlockConstraintForParam,
+    NestedBlockConstraintForParam,
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -1387,3 +1389,26 @@ async def test_failing_assert_can_stream():
     with pytest.raises(errors.BamlValidationError):
         final = await stream.get_final_response()
         assert "Yoshimi" in final.story_a
+
+@pytest.mark.asyncio
+async def test_block_constraints():
+    ret = await b.MakeBlockConstraint()
+    assert ret.checks["cross_field"].status == "failed"
+
+@pytest.mark.asyncio
+async def test_nested_block_constraints():
+    ret = await b.MakeNestedBlockConstraint()
+    print(ret)
+    assert ret.nbc.checks["cross_field"].status == "succeeded"
+
+@pytest.mark.asyncio
+async def test_block_constraint_arguments():
+    with pytest.raises(errors.BamlInvalidArgumentError) as e:
+        block_constraint = BlockConstraintForParam(bcfp=1, bcfp2="too long!")
+        await b.UseBlockConstraint(block_constraint)
+    assert "Failed assert: hi" in str(e)
+
+    with pytest.raises(errors.BamlInvalidArgumentError) as e:
+        nested_block_constraint = NestedBlockConstraintForParam(nbcfp=block_constraint)
+        await b.UseNestedBlockConstraint(nested_block_constraint)
+    assert "Failed assert: hi" in str(e)

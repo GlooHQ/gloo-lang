@@ -13,7 +13,7 @@ use crate::{
     },
 };
 use anyhow::Result;
-use baml_types::{BamlMap, BamlValue, BamlValueWithMeta, FieldType, LiteralValue, TypeValue};
+use baml_types::{BamlMap, BamlValue, BamlValueWithMeta, Constraint, ConstraintLevel, FieldType, LiteralValue, TypeValue};
 pub use to_baml_arg::ArgCoercer;
 
 use super::repr;
@@ -51,6 +51,18 @@ pub trait IRHelper {
         value: BamlValue,
         field_type: FieldType,
     ) -> Result<BamlValueWithMeta<FieldType>>;
+    fn distribute_constraints<'a>(
+        &'a self,
+        field_type: &'a FieldType
+    ) -> (&'a FieldType, Vec<Constraint>);
+    fn type_has_constraints(
+        &self,
+        field_type: &FieldType
+    ) -> bool;
+    fn type_has_checks(
+        &self,
+        field_type: &FieldType
+    ) -> bool;
 }
 
 impl IRHelper for IntermediateRepr {
@@ -364,6 +376,66 @@ impl IRHelper for IntermediateRepr {
                 }
             }
         }
+    }
+
+
+    /// Constraints may live in several places. A constrained base type stors its
+    /// constraints by wrapping itself in the `FieldType::Constrained` constructor.
+    /// Additionally, `FieldType::Class` may have constraints stored in its class node,
+    /// and `FieldType::Enum` can store constraints in its `Enum` node.
+    /// And the `FieldType::Constrained` constructor might wrap another
+    /// `FieldType::Constrained` constructor.
+    ///
+    /// This function collects constraints for a given type from all these
+    /// possible sources. Whenever querying a type for its constraints, you
+    /// should do so with this function, instead of searching manually for all
+    /// the places that Constraints can live.
+    fn distribute_constraints<'a>(&'a self, field_type: &'a FieldType) -> (&'a FieldType, Vec<Constraint>) {
+        match field_type {
+            FieldType::Class(class_name) => {
+                match self.find_class(class_name) {
+                    Err(_) => (field_type, Vec::new()),
+                    Ok(class_node) => (field_type, class_node.item.attributes.constraints.clone())
+                }
+            }
+            FieldType::Enum(enum_name) => {
+                match self.find_enum(enum_name) {
+                    Err(_) => (field_type, Vec::new()),
+                    Ok(enum_node) => (field_type, enum_node.item.attributes.constraints.clone())
+                }
+            }
+            // Check the first level to see if it's constrained.
+            FieldType::Constrained { base, constraints } => {
+                match base.as_ref() {
+                    // If so, we must check the second level to see if we need to combine
+                    // constraints across levels.
+                    // The recursion here means that arbitrarily nested `FieldType::Constrained`s
+                    // will be collapsed before the function returns.
+                    FieldType::Constrained { .. } => {
+                        let (sub_base, sub_constraints) = self.distribute_constraints(base.as_ref());
+                        let combined_constraints = vec![constraints.clone(), sub_constraints]
+                            .into_iter()
+                            .flatten()
+                            .collect();
+                        (sub_base, combined_constraints)
+                    }
+                    _ => (base, constraints.clone()),
+                }
+            }
+            _ => (field_type, Vec::new()),
+        }
+    }
+
+    fn type_has_constraints(&self, field_type: &FieldType) -> bool {
+        let (_, constraints) = self.distribute_constraints(field_type);
+        !constraints.is_empty()
+    }
+
+    fn type_has_checks(&self, field_type: &FieldType) -> bool {
+        let (_, constraints) = self.distribute_constraints(field_type);
+        constraints
+            .iter()
+            .any(|Constraint { level, .. }| *level == ConstraintLevel::Check)
     }
 }
 
@@ -685,5 +757,36 @@ mod tests {
         };
         let res = ir.check_function_params(&function, &params, arg_coercer);
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_nested_constraint_distribution() {
+        let ir = make_test_ir("").unwrap();
+        fn mk_constraint(s: &str) -> Constraint {
+            Constraint {
+                level: ConstraintLevel::Assert,
+                expression: JinjaExpression(s.to_string()),
+                label: Some(s.to_string()),
+            }
+        }
+
+        let input = FieldType::Constrained {
+            constraints: vec![mk_constraint("a")],
+            base: Box::new(FieldType::Constrained {
+                constraints: vec![mk_constraint("b")],
+                base: Box::new(FieldType::Constrained {
+                    constraints: vec![mk_constraint("c")],
+                    base: Box::new(FieldType::Primitive(TypeValue::Int)),
+                }),
+            }),
+        };
+
+        let expected_base = FieldType::Primitive(TypeValue::Int);
+        let expected_constraints = vec![mk_constraint("a"), mk_constraint("b"), mk_constraint("c")];
+
+        let (base, constraints) = ir.distribute_constraints(&input);
+
+        assert_eq!(base, &expected_base);
+        assert_eq!(constraints, expected_constraints);
     }
 }

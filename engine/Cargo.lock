@@ -867,6 +867,7 @@ dependencies = [
  "expect-test",
  "indoc",
  "internal-baml-core",
+ "itertools 0.13.0",
  "pretty_assertions",
  "strip-ansi-escapes",
 ]
@@ -2659,6 +2660,7 @@ dependencies = [
  "internal-baml-jinja-types",
  "internal-baml-prompt-parser",
  "internal-baml-schema-ast",
+ "itertools 0.13.0",
  "log",
  "regex",
  "rustc-hash",

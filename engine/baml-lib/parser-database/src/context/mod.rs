@@ -1,5 +1,5 @@
-use internal_baml_diagnostics::DatamodelWarning;
-use internal_baml_schema_ast::ast::ArgumentId;
+use internal_baml_diagnostics::{DatamodelWarning, Span};
+use internal_baml_schema_ast::ast::{Argument, ArgumentId, Attribute};
 
 use crate::{
     ast, ast::WithName, interner::StringInterner, names::Names, types::Types, DatamodelError,
@@ -128,12 +128,10 @@ impl<'db> Context<'db> {
     pub(crate) fn visit_repeated_attr_from_names(
         &mut self,
         names: &'static [&'static str],
-    ) -> Option<String> {
+    ) -> Option<(String, Span)> {
         let mut has_valid_attribute = false;
-        let mut matching_name: Option<String> = None;
+        let mut matching_attr: Option<(String, Span)> = None;
 
-        let all_attributes =
-            iter_attributes(self.attributes.attributes.as_ref(), self.ast).collect::<Vec<_>>();
         while !has_valid_attribute {
             let first_attr = iter_attributes(self.attributes.attributes.as_ref(), self.ast)
                 .filter(|(_, attr)| names.contains(&attr.name.name()))
@@ -145,10 +143,10 @@ impl<'db> Context<'db> {
             };
             self.attributes.unused_attributes.remove(&attr_id);
             has_valid_attribute = self.set_attribute(attr_id, attr);
-            matching_name = Some(attr.name.name().to_string());
+            matching_attr = Some((attr.name.to_string(), attr.span.clone()));
         }
 
-        matching_name
+        matching_attr
     }
 
     /// Validate an _optional_ attribute that should occur only once. Returns whether the attribute
@@ -200,6 +198,14 @@ impl<'db> Context<'db> {
                 self.current_attribute().span.clone(),
             )),
         }
+    }
+
+    pub (crate) fn get_all_args(&mut self) -> Vec<(ArgumentId, &'db ast::Expression)> {
+        let args = self.attributes.args.iter().map(|arg_id| {
+            (arg_id.clone(), &self.arg_at(*arg_id).value)
+        }).collect();
+        self.attributes.args.clear();
+        args
     }
 
     /// This must be called at the end of arguments validation. It will report errors for each argument that was not used by the validators. The Drop impl will helpfully panic

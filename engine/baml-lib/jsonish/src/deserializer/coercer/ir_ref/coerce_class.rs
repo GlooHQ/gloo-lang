@@ -1,10 +1,11 @@
 use anyhow::Result;
-use baml_types::BamlMap;
+use baml_types::{BamlMap, Constraint};
 use internal_baml_core::ir::FieldType;
 use internal_baml_jinja::types::{Class, Name};
 
 use crate::deserializer::{
-    coercer::{array_helper, DefaultValue, ParsingError, TypeCoercer},
+    coercer::field_type::validate_asserts,
+    coercer::{array_helper, run_user_checks, DefaultValue, ParsingError, TypeCoercer},
     deserialize_flags::{DeserializerConditions, Flag},
     types::BamlValueWithFlags,
 };
@@ -29,6 +30,10 @@ impl TypeCoercer for Class {
         );
         let (optional, required): (Vec<_>, Vec<_>) =
             self.fields.iter().partition(|f| f.1.is_optional());
+        let constraints = ctx
+            .of
+            .find_class(self.name.real_name())
+            .map_or(vec![], |class| class.constraints.clone());
 
         let mut optional_values = optional
             .iter()
@@ -115,12 +120,14 @@ impl TypeCoercer for Class {
                 }
 
                 // Coerce the each item into the class if possible
-                if let Ok(option1) = array_helper::coerce_array_to_singular(
+                let option1_result = array_helper::coerce_array_to_singular(
                     ctx,
                     target,
                     &items.iter().collect::<Vec<_>>(),
                     &|value| self.coerce(ctx, target, Some(value)),
-                ) {
+                )
+                .and_then(|value| apply_constraints(target, vec![], value, constraints.clone()));
+                if let Ok(option1) = option1_result {
                     completed_cls.push(Ok(option1));
                 }
             }
@@ -291,13 +298,15 @@ impl TypeCoercer for Class {
                     }
                 }
 
+                let completed_instance = Ok(BamlValueWithFlags::Class(
+                    self.name.real_name().into(),
+                    flags,
+                    ordered_valid_fields.clone(),
+                )).and_then(|value| apply_constraints(target, vec![], value, constraints.clone()));
+
                 completed_cls.insert(
                     0,
-                    Ok(BamlValueWithFlags::Class(
-                        self.name.real_name().into(),
-                        flags,
-                        ordered_valid_fields,
-                    )),
+                    completed_instance,
                 );
             }
         }
@@ -306,6 +315,40 @@ impl TypeCoercer for Class {
 
         array_helper::pick_best(ctx, target, &completed_cls)
     }
+}
+
+pub fn apply_constraints(
+    class_type: &FieldType,
+    scope: Vec<String>,
+    mut value: BamlValueWithFlags,
+    constraints: Vec<Constraint>,
+) -> Result<BamlValueWithFlags, ParsingError> {
+    let res = if constraints.is_empty() {
+        Ok(value)
+    } else {
+        let constrained_class = FieldType::Constrained {
+            base: Box::new(class_type.clone()),
+            constraints,
+        };
+        let constraint_results = run_user_checks(&value.clone().into(), &constrained_class)
+            .map_err(|e| ParsingError {
+                reason: format!("Failed to evaluate constraints: {:?}", e),
+                scope,
+                causes: Vec::new(),
+            })?;
+        validate_asserts(&constraint_results)?;
+        let check_results = constraint_results
+            .into_iter()
+            .filter_map(|(maybe_check, result)| {
+                maybe_check
+                    .as_check()
+                    .map(|(label, expr)| (label, expr, result))
+            })
+            .collect();
+        value.add_flag(Flag::ConstraintResults(check_results));
+        Ok(value)
+    };
+    res
 }
 
 fn update_map<'a>(

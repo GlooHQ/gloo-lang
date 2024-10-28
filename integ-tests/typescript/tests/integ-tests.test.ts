@@ -742,6 +742,17 @@ describe('Integ tests', () => {
     expect(res.primary.value).toBe('111-222-3333')
     expect(res.secondary?.value).toBe('robert@boundaryml.com')
   })
+
+  it('constraints: should handle block-level checks', async () => {
+    const res = await b.MakeBlockConstraint()
+    expect(res.checks.cross_field.status).toBe('failed')
+  })
+
+  it('constraints: should handle nested-block-level checks', async () => {
+    const res = await b.MakeNestedBlockConstraint()
+    console.log(JSON.stringify(res));
+    expect(res.nbc.checks.cross_field.status).toBe('succeeded')
+  })
 })
 
 interface MyInterface {

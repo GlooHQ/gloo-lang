@@ -132,6 +132,18 @@ export interface Blah {
   
 }
 
+export interface BlockConstraint {
+  foo: number
+  bar: string
+  
+}
+
+export interface BlockConstraintForParam {
+  bcfp: number
+  bcfp2: string
+  
+}
+
 export interface BookOrder {
   orderId: string
   title: string
@@ -346,6 +358,16 @@ export interface Nested {
 export interface Nested2 {
   prop11?: string | null | null
   prop12?: string | null | null
+  
+}
+
+export interface NestedBlockConstraint {
+  nbc: Checked<BlockConstraint,"cross_field">
+  
+}
+
+export interface NestedBlockConstraintForParam {
+  nbcfp: BlockConstraintForParam
   
 }
 
