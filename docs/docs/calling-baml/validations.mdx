@@ -35,7 +35,7 @@ class Foo {
 
 function NextInt8(a: int) -> int @assert(ok_int8, {{ this >= -128 and this < 127 }}) {
   client GPT4
-  prompt "Return the number after {{ a }}"
+  prompt #"Return the number after {{ a }}"#
 }
 ```
 
@@ -48,8 +48,7 @@ type, as it is not known until runtime which type the value will be.
 
 ```baml BAML
 class Foo {
-  bar (int @assert(between_0_and_10, {{this > 0 and this < 10}})
-    | string @assert(valid_string, {{this|length > 0 and this|contains("foobar")}}))
+  bar (int @assert(positive, {{ this > 0 }}) | bool @assert(is_true, {{ this }}))
 }
 ```
 
@@ -98,14 +97,11 @@ for more information on writing expressions.
 | gt, ge, lt, le   | int, float, string     |
 | xor              | int, float, bool       |
 | and, or          | int, float, bool       |
-| contains         | string, array, map     |
 | index []         | array, map, string     |
 | min, max         | int, float             | */}
 {/* 
-| custom function  | all                    |
 | unique           | array                  | every item is unique (consider using set type?)  |
 | default          | all                    | default value to fill if not found               |
-| reference        | all                    | when a value references another value            | */}
 
 {/* Operators are called using the `|` symbol, followed by the operator name.
 ```baml BAML
@@ -137,7 +133,7 @@ class Person {
 
 ## Assertion Errors
 
-When validations fail, your BAML function will raise a `BAMLValidationError`
+When validations fail, your BAML function will raise a `BamlValidationError`
 exception, same as when parsing fails. You can catch this exception and handle
 it as you see fit.
 
@@ -146,9 +142,9 @@ in the exception for that failure case. If you don't define a custom name,
 BAML will display the body of the assert expression.
 
 In this example, if the `quote` field is empty, BAML raises a
-`BAMLValidationError` with the message **"exact_citation_not_found"**. If the
+`BamlValidationError` with the message **"exact_citation_not_found"**. If the
 `website_link` field does not contain **"https://",** it raises a
-`BAMLValidationError` with the message **invalid_link**.
+`BamlValidationError` with the message **invalid_link**.
 
 ```baml BAML
 class Citation {
@@ -158,7 +154,7 @@ class Citation {
   )
 
   website_link string @assert(valid_link,
-    {{ this|contains("https://") }}
+    {{ this|regex_match("https://") }}
   )
 }
 ```
@@ -178,7 +174,7 @@ def main():
         website_link = citation.website_link
         print(f"Quote: {quote} from {website_link}")
         
-    except BAMLValidationError as e:
+    except BamlValidationError as e:
         print(f"Validation error: {str(e)}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
@@ -186,12 +182,12 @@ def main():
 ```
 
 ```typescript Typescript
-import { b, BAMLValidationError } from './baml_client';
+import { b, BamlValidationError } from './baml_client';
 import { Citation } from './baml_client/types';
 
 const main = () => {
     try {
-        const citation: Citation = b.GetCitation("SpaceX, is an American spacecraft manufacturer, launch service provider...");
+        const citation = b.GetCitation("SpaceX, is an American spacecraft manufacturer, launch service provider...");
         
         const quote = citation.quote.value;
         console.log(`Quote: ${quote}`);
@@ -199,14 +195,14 @@ const main = () => {
         const checks = citation.quote.checks;
         console.log(`Check exact_citation_found: ${checks.exact_citation_found.status}`);
         for (const check of get_checks(checks)) {
-            console.log(`Check ${check_name}: ${result ? 'passed' : 'failed'}`);
+            console.log(`Check ${check.name}: ${check.status}`);
         }
 
         const author = citation.author;
         console.log(`Author: ${author}`);
     } catch (e) {
-        if (e instanceof BAMLValidationError) {
-            console.log(`Validation error: ${e.error_message}`);
+        if (e instanceof BamlValidationError) {
+            console.log(`Validation error: ${e}`);
         } else {
             console.error(e);
         }
@@ -248,10 +244,12 @@ was a `@check`, client code can inspect the result of the check.
 ```baml BAML
 class Citation {
   quote string @check(
-	  {{ this|length > 0 }}, "exact_citation_not_found"
+      exact_citation_match,
+	  {{ this|length > 0 }}
   )
   line_number string @assert(
-    {{ this|length >= 0 }}, "no_line_number"
+    has_line_number
+    {{ this|length >= 0 }}
   )
 }
 
@@ -279,37 +277,35 @@ def main():
     quote = citation.quote.value 
     print(f"Quote: {quote}")
 
-    # Access the error messages for each check and its status
-    checks = citation.quote.checks
-    for check_name, result in checks.items():
-        print(f"Check {check_name}: {'passed' if result else 'failed'}")
+    # Access a particular check.
+    quote_match_check = citation.quote.checks['exact_citation_match'].status
+    print(f"Citation match status: {quote_match_check})")
 
-    # Access the author field directly, as it uses @assert
-    author = citation.author
-    print(f"Author: {author}")
-
+    # Access each check and its status.
+    for check in baml_py.get_checks(citation.quote.checks):
+        print(f"Check {check.name}: {check.status}")
 ```
 
 ```typescript Typescript
 import { b } from './baml_client'
 import { Citation } from './baml_client/types'
+import { get_checks } from '@boundaryml/baml/checked'
 
 const main = () => {
     const citation = b.GetCitation("SpaceX, is an American spacecraft manufacturer, launch service provider...")
-    
+
     // Access the value of the quote field
-    const quote = citation.quote.value 
+    const quote = citation.quote.value
     console.log(`Quote: ${quote}`)
 
-    // Access the error messages for each check and its status
-    const checks = citation.quote.checks
-    for (const [check_name, result] of Object.entries(checks)) {
-        console.log(`Check ${check_name}: ${result ? 'passed' : 'failed'}`)
-    }
+    // Access a particular check.
+    const quote_match_check = citation.quote.checks.exact_citation_match.status;
+    console.log(`Exact citation status: ${quote_match_check}`);
 
-    // Access the author field directly, as it uses @assert 
-    const author = citation.author
-    console.log(`Author: ${author}`)
+    // Access each check and its status.
+    for (const check of get_checks(citation.quote.checks)) {
+        console.log(`Check: ${check.name}, Status: ${check.status}`)
+    }
 }
 ```
 
@@ -320,10 +316,10 @@ You can also chain multiple `@check` and `@assert` attributes on a single field.
 
 ```baml BAML
 class Foo {
-  bar string @check({{ this|length > 0 }}, "bar_empty")
-  @assert({{ this|contains("foo") }}, "bar_no_foo")
-  @check({{ this|contains("fizzle") }}, "bar_no_fizzle")
-  @assert({{ this|contains("baz") }}, "bar_no_baz")
+  bar string @check(bar_nonempty, {{ this|length > 0 }})
+  @assert(bar_no_foo, {{ this|contains("foo") }})
+  @check(bar_no_fizzle, {{ this|contains("fizzle") }})
+  @assert(bar_no_baz, {{ this|contains("baz") }})
 }
 ```
 
@@ -353,13 +349,13 @@ class Book {
         {{ this|regex_match("^(97(8|9))?\d{9}(\d|X)$") }},
         "Invalid ISBN format"
     )
-    publication_year int @assert({{ 1000 <= this <= 2100 }}, "Valid publication year")
-    genres string[] @assert(1 <= this|length <= 10)
+    publication_year int @assert(valid_pub_year, {{ 1000 <= this <= 2100 }})
+    genres string[] @assert(valid_length, {{ 1 <= this|length <= 10 }})
 }
 
 class Library {
     name string
-    books Book[] @assert({{ this|length > 0 }}, "Nonempty books")
-                 @assert(unique_isbn {{ this|map(attribute='isbn')|unique()|length == this|length }} )
+    books Book[] @assert(nonempty_books, {{ this|length > 0 }})
+                 @assert(unique_isbn, {{ this|map(attribute='isbn')|unique()|length == this|length }} )
 }
 ```
