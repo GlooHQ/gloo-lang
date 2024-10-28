@@ -255,6 +255,9 @@ enum Name {
 }
 ```
 
+If you need to add new variants, because they need to be loaded from a file or fetched dynamically
+from a database, you can do this with [Dynamic Types](/docs/calling-baml/dynamic-types).
+
 ### class
 
 **See also:** [Class](/docs/snippets/class)
@@ -272,6 +275,9 @@ class Car {
   year int @description("Year of manufacture")
 }
 ```
+
+If you need to add fields to a class because some properties of your class are only
+known at runtime, you can do this with [Dynamic Types](/docs/calling-baml/dynamic-types).
 
 ### Optional (?)
 
