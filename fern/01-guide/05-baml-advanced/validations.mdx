@@ -39,7 +39,7 @@ function NextInt8(a: int) -> int @assert(ok_int8, {{ this >= -128 and this < 127
 
 ### Using `@assert` with `Union` Types
 
-Note that when using [`Unions`](../snippets/supported-types.mdx#union-), it is
+Note that when using [`Unions`](/ref/baml/types#union-), it is
 crucial to specify where the `@assert` attribute is applied within the union
 type, as it is not known until runtime which type the value will be.
 
@@ -80,7 +80,7 @@ regular expressions.
 In the future, we plan to support shorthand syntax for common assertions to make
 writing them easier.
 
-For now, see our [Jinja cookbook / guide](../snippets/prompt-syntax/what-is-jinja.mdx)
+For now, see our [Jinja cookbook / guide](/ref/prompt-syntax/what-is-jinja)
 or the [Minijinja filters docs](https://docs.rs/minijinja/latest/minijinja/filters/index.html#functions)
 for more information on writing expressions.
 

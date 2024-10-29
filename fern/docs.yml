@@ -83,6 +83,10 @@ navigation:
           - page: REST API (other languages)
             icon: fa-regular fa-network-wired
             path: 01-guide/02-languages/rest.mdx
+
+          - page: NextJS
+            icon: fa-brands fa-react
+            path: 01-guide/08-integrations/nextjs.mdx
       - section: Development
         contents:
           - page: Environment Variables
@@ -111,7 +115,7 @@ navigation:
                 path: 01-guide/03-development/deploying/openapi.mdx
       - section: BAML Basics
         contents:
-          - page: Prompting and calling LLMs with BAML
+          - page: Prompting with BAML
             icon: fa-solid fa-terminal
             path: 01-guide/04-baml-basics/my-first-function.mdx
           - page: Switching LLMs
@@ -129,6 +133,9 @@ navigation:
           - page: Error Handling
             icon: fa-regular fa-triangle-exclamation
             path: 01-guide/04-baml-basics/error-handling.mdx
+          - page: Concurrent Calls
+            icon: fa-regular fa-clock-rotate-left
+            path: 01-guide/04-baml-basics/concurrent-calls.mdx
 
       - section: BAML Advanced
         contents:
@@ -152,12 +159,17 @@ navigation:
           - page: Tracking Usage
             icon: fa-regular fa-bar-chart
             path: 01-guide/07-observability/studio.mdx
-      - section: Integrations
+      - section: Comparisons
         contents:
-          - page: NextJS
-            icon: fa-brands fa-react
-            path: 01-guide/08-integrations/nextjs.mdx
-
+          - page: BAML vs Marvin
+            icon: fa-solid fa-magnifying-glass
+            path: 01-guide/09-comparisons/marvin.mdx
+          - page: BAML vs Pydantic
+            icon: fa-solid fa-magnifying-glass
+            path: 01-guide/09-comparisons/pydantic.mdx
+      - page: Contact
+        icon: fa-regular fa-envelope
+        path: 01-guide/contact.mdx
   - tab: examples
     layout:
       - page: Interactive Examples
@@ -174,24 +186,24 @@ navigation:
           - page: Tools / Function Calling
             icon: fa-regular fa-wrench
             path: 01-guide/06-prompt-engineering/tools.mdx
-          - page: Zero shot prompting
-            icon: fa-regular fa-bullseye
-            path: 01-guide/introduction.mdx
-          - page: Few shot prompting
-            icon: fa-regular fa-dice-three
-            path: 01-guide/introduction.mdx
+          # - page: Zero shot prompting
+          #   icon: fa-regular fa-bullseye
+          #   path: 01-guide/introduction.mdx
+          # - page: Few shot prompting
+          #   icon: fa-regular fa-dice-three
+          #   path: 01-guide/introduction.mdx
           - page: Chain of Thought
             icon: fa-solid fa-brain
-            path: 01-guide/introduction.mdx
+            path: 01-guide/06-prompt-engineering/chain-of-thought.mdx
           - page: Symbol Tuning
             icon: fa-regular fa-adjust
-            path: 01-guide/introduction.mdx
-          - page: Self-Consistency Prompting
-            icon: fa-regular fa-sync-alt
-            path: 01-guide/introduction.mdx
-          - page: Prompt Chaining
-            icon: fa-regular fa-link
-            path: 01-guide/introduction.mdx
+            path: 01-guide/06-prompt-engineering/symbol-tuning.mdx
+          # - page: Self-Consistency Prompting
+          #   icon: fa-regular fa-sync-alt
+          #   path: 01-guide/introduction.mdx
+          # - page: Prompt Chaining
+          #   icon: fa-regular fa-link
+          #   path: 01-guide/introduction.mdx
           - page: Retrieval Augmented Generation
             icon: fa-regular fa-database
             path: 01-guide/introduction.mdx
@@ -283,14 +295,7 @@ navigation:
       #           slug: examples
       - page: Overview
         path: 03-reference/overview.mdx
-      - section: Editor Extension Settings
-        contents:
-          - page: baml.cliPath
-            path: 03-reference/vscode-ext/clipath.mdx
-          - page: baml.generateCodeOnSave
-            path: 03-reference/vscode-ext/generateCodeOnSave.mdx
-          - page: baml.restartTSServerOnSave
-            path: 03-reference/vscode-ext/restartTSServerOnSave.mdx
+
       - section: baml-cli
         contents:
           - page: init
@@ -401,6 +406,24 @@ navigation:
             path: 03-reference/baml/prompt-syntax/conditionals.mdx
           - page: Loops
             path: 03-reference/baml/prompt-syntax/loops.mdx
+      - section: Editor Extension Settings
+        contents:
+          - page: baml.cliPath
+            path: 03-reference/vscode-ext/clipath.mdx
+          - page: baml.generateCodeOnSave
+            path: 03-reference/vscode-ext/generateCodeOnSave.mdx
+          - page: baml.restartTSServerOnSave
+            path: 03-reference/vscode-ext/restartTSServerOnSave.mdx
+      - section: Boundary Extraction API
+        contents:
+          - api: API Reference
+            layout:
+              - POST /extract
+              - page: Extraction Examples
+                path: 03-reference/extract/examples.mdx
+            slug: extract
+            summary: 03-reference/extract/summary.mdx
+            display-errors: true
           # - page: Advanced
           #   path: 01-guide/introduction.mdx
 
@@ -519,7 +542,7 @@ redirects:
   - source: "/docs/get-started/what-is-baml"
     destination: "/guide/introduction/what-is-baml"
   - source: "/docs/get-started/interactive-demos"
-    destination: "NA"
+    destination: "/examples/interactive-examples"
   - source: "/docs/get-started/quickstart/python"
     destination: "/guide/installation-language/python"
   - source: "/docs/get-started/quickstart/typescript"
@@ -597,9 +620,9 @@ redirects:
   - source: "/docs/snippets/functions/overview"
     destination: "/ref/baml/function"
   - source: "/docs/snippets/functions/classification"
-    destination: "NA"
+    destination: "/guide/baml-basics/prompting-with-baml"
   - source: "/docs/snippets/functions/extraction"
-    destination: "NA"
+    destination: "/guide/baml-basics/prompting-with-baml"
   - source: "/docs/snippets/functions/function-calling"
     destination: "/examples/prompt-engineering/tools-function-calling"
   - source: "/docs/snippets/class"
@@ -641,7 +664,7 @@ redirects:
   - source: "/docs/calling-baml/streaming"
     destination: "/guide/baml-basics/streaming"
   - source: "/docs/calling-baml/concurrent-calls"
-    destination: "NA"
+    destination: "/guide/baml-basics/concurrent-calls"
   - source: "/docs/calling-baml/multi-modal"
     destination: "/guide/baml-basics/multi-modal"
   - source: "/docs/baml-nextjs/baml-nextjs"
@@ -649,20 +672,20 @@ redirects:
   - source: "/docs/observability/overview"
     destination: "/guide/observability/tracking-usage"
   - source: "/docs/observability/tracing-tagging"
-    destination: "NA"
+    destination: "/guide/observability/tracking-usage"
   - source: "/docs/comparisons/marvin"
-    destination: "NA"
+    destination: "/guide/comparisons/baml-vs-marvin"
   - source: "/docs/comparisons/pydantic"
-    destination: "NA"
+    destination: "/guide/comparisons/baml-vs-pydantic"
   - source: "/contact"
-    destination: "NA"
+    destination: "/guide/contact"
   - source: "/docs/reference/env-vars"
     destination: "/docs/guide/development/environment-variables"
   - source: "/docs/incidents/2024-07-10-ssrf-issue-in-fiddle-proxy"
     destination: "/changelog/changelog"
   - source: "/document-extraction-api/overview/docs/api"
-    destination: "NA"
+    destination: "/ref/boundary-extraction-api/extract"
   - source: "/document-extraction-api/overview/docs/api/extract-data"
-    destination: "NA"
+    destination: "/ref/boundary-extraction-api/extract"
   - source: "/document-extraction-api/overview/docs/api/extraction-examples"
-    destination: "NA"
+    destination: "/ref/boundary-extraction-api/extract/examples"

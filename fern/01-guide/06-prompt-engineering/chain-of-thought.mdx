@@ -1,0 +1,75 @@
+---
+title: Chain of Thought Prompting
+---
+
+Chain of thought prompting is a technique that encourages the language model to think step by step, reasoning through the problem before providing an answer. This can improve the quality of the response and make it easier to understand.
+
+
+In the below example, we use chain of thought prompting to extract information from an email.
+
+BAML will still parse the response as an `OrderInfo` object, even though there is additional text in the response.
+```baml
+class Email {
+    subject string
+    body string
+    from_address string
+}
+
+
+class OrderInfo {
+    order_status "ORDERED" | "SHIPPED" | "DELIVERED" | "CANCELLED"
+    tracking_number string?
+    estimated_arrival_date string?
+}
+
+function GetOrderInfo(email: Email) -> OrderInfo {
+  client GPT4o
+  prompt #"
+    Extract the info from this email in the INPUT:
+
+    INPUT:
+    -------
+    from: {{email.from_address}}
+    Email Subject: {{email.subject}}
+    Email Body: {{email.body}}
+    -------
+
+    {{ ctx.output_format }}
+
+    Before you output the JSON, please explain your
+    reasoning step-by-step. Here is an example on how to do this:
+    'If we think step by step we can see that ...
+     therefore the output JSON is:
+    {
+      ... the json schema ...
+    }'
+  "#
+}
+
+test Test1 {
+  functions [GetOrderInfo]
+  args {
+    email {
+      from_address "hello@amazon.com"
+      subject "Your Amazon.com order of 'Wood Dowel Rods...' has shipped!"
+      body #"
+        Hi Sam, your package will arrive:
+        Thurs, April 4
+        Track your package:
+        www.amazon.com/gp/your-account/ship-track?ie=23&orderId123
+
+        On the way:
+        Wood Dowel Rods...
+        Order #113-7540940
+        Ship to:
+            Sam
+            SEATTLE, WA
+
+        Shipment total:
+        $0.00
+    "#
+
+    }
+  }
+}
+```
