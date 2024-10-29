@@ -161,6 +161,8 @@ navigation:
             path: docs/calling-baml/dynamic-types.mdx
           - page: Client Registry
             path: docs/calling-baml/client-registry.mdx
+          - page: Checks and Asserts
+            path: docs/calling-baml/validations.mdx
       - section: BAML with Python/TS/Ruby
         contents:
           - page: Generate the BAML Client
