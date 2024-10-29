@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.64.0](https://github.com/boundaryml/baml/compare/0.63.0..0.64.0) - 2024-10-29
+
+### Bug Fixes
+- **Playground Stability:** Prevented crashes in the playground due to malformed vertex credentials ([#1107](https://github.com/boundaryml/baml/commit/e665346fbc84a9b969a979cfdf1c70d530201e93)) - _Samuel Lijin_
+- **Union Handling:** Addressed an issue with union types in the schema ([#1096](https://github.com/boundaryml/baml/commit/cb5ce7623d3e95464fb5e5152c4d2339458caa26)) - _Greg Hale_
+- **WASM Function Signatures:** Resolved stack overflow when computing WASM function signatures ([#1100](https://github.com/boundaryml/baml/commit/aa736ed2d7386cae78421c22d5669c73d8921085)) - _aaronvg_
+- **VSCode Extension:** Fixed crashes in the VSCode extension that caused the output panel to open unexpectedly ([#1103](https://github.com/boundaryml/baml/commit/cb5a266bc68f15483f3ec3fa0f4edbc8d176287a)) - _hellovai_
+- **Static Analysis Improvements:** Enhanced static analysis on Jinja expressions and `regex_match` functions ([#1102](https://github.com/boundaryml/baml/commit/7ca8136ffbc690877091627415941674f6f14b2f), [#1104](https://github.com/boundaryml/baml/commit/83ddb1cfe81c9b5f6ae620c331c4eefe512c78bd)) - _hellovai_
+- **Codegen Enhancements:** Fixed code generation for Python boolean literals and updated integration tests ([#1099](https://github.com/boundaryml/baml/commit/635976238fd9246bfb8764875358a36b4ec6a7f5)) - _Antonio Sarosi_
+- **Enum Handling:** Improved substring alias handling for enums ([#1098](https://github.com/boundaryml/baml/commit/0c5cbd4ae03d2bc836ee4b61a7df638855bb72ca)) - _Miguel Cárdenas_
+- **Syntax Highlighting:** Refined span calculations for Jinja expressions and improved VSCode syntax highlighting with Lezer ([#1110](https://github.com/boundaryml/baml/commit/a53072f5fe9fe83a0accb36e43a06550602a3c65)) - _hellovai_
+- **Ruby Support:** Fixed literal boolean tests for Ruby ([#1109](https://github.com/boundaryml/baml/commit/23e590b0b2fdb51f80e7eced769baabd12b3be22)) - _Antonio Sarosi_
+
+### Features
+- **Constraint Support:** Added the ability to define constraints using Jinja expressions ([#1006](https://github.com/boundaryml/baml/commit/d794f28b4f8830b1a40cd08043ecdc562938d36e)) - _Greg Hale_
+- **VSCode & Fiddle UI:** Introduced a new "Intro to Checks" UI for easier onboarding ([#1106](https://github.com/boundaryml/baml/commit/11efa5e97f8e9b8f385b7fb0e823f5ff2bc4c314)) - _Samuel Lijin_
+- **Dev Container Configurations:** Added Dev Container configurations for streamlined development environments ([#1112](https://github.com/boundaryml/baml/commit/5790393d7ad320e9e257c09e461c9bc39310a834)) - _Antonio Sarosi_
+
+### Documentation
+- **Constraints Documentation:** Published new documentation for defining constraints in BAML ([#1113](https://github.com/boundaryml/baml/commit/6332021a59661d3931934adc2afbf4f99f6f4bee)) - _Greg Hale_
+- **Dynamic Types Linking:** Added cross-links to dynamic types documentation for easier navigation ([#1116](https://github.com/boundaryml/baml/commit/8ce0a539d74d05438e8047e4e02022ddd7121e21)) - _Greg Hale_
+
+### Miscellaneous
+- **Code Quality:** Improved style and fixed typos in the codebase ([#1115](https://github.com/boundaryml/baml/commit/4c3970a6e6ce998a784e682f4c218ba2a69cf86a)) - _Greg Hale_
+- **Parsing Stability:** Added logic to prevent assertions from parsing errors and ensured checks no longer affect parsing ([#1101](https://github.com/boundaryml/baml/commit/5ec89c92ab14622afddc3ce348c5b981b4840492)) - _hellovai_
+- **Version Bump:** Bumped version to 0.64.0 ([#1114](https://github.com/boundaryml/baml/commit/90d3c17ba67bc1467ee5973ff6cf257069e265b9), [#ff7e152](https://github.com/boundaryml/baml/commit/ff7e152510395bab1d38afa60211226070d12cc2)) - _Vaibhav Gupta_
+
+
 ## [0.63.0](https://github.com/boundaryml/baml/compare/0.62.0..0.63.0) - 2024-10-23
 
 ### Bug Fixes
