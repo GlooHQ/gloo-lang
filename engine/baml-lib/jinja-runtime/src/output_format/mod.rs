@@ -117,7 +117,7 @@ impl minijinja::value::Object for OutputFormat {
         };
 
         let hoisted_class_prefix = if kwargs.has("hoisted_class_prefix") {
-            match kwargs.get::<String>("always_hoist_enums") {
+            match kwargs.get::<Option<String>>("hoisted_class_prefix") {
                 Ok(hoisted_class_prefix) => Some(hoisted_class_prefix),
                 Err(e) => {
                     return Err(Error::new(

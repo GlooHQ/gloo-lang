@@ -145,7 +145,7 @@ pub(crate) struct RenderOptions {
     prefix: RenderSetting<String>,
     pub(crate) or_splitter: String,
     enum_value_prefix: RenderSetting<String>,
-    hoisted_class_prefix: String,
+    hoisted_class_prefix: RenderSetting<String>,
     always_hoist_enums: RenderSetting<bool>,
     map_style: MapStyle,
 }
@@ -156,7 +156,7 @@ impl Default for RenderOptions {
             prefix: RenderSetting::Auto,
             or_splitter: Self::DEFAULT_OR_SPLITTER.to_string(),
             enum_value_prefix: RenderSetting::Auto,
-            hoisted_class_prefix: Self::DEFAULT_HOISTED_CLASS_PREFIX.to_string(),
+            hoisted_class_prefix: RenderSetting::Auto,
             always_hoist_enums: RenderSetting::Auto,
             map_style: MapStyle::TypeParameters,
         }
@@ -165,7 +165,6 @@ impl Default for RenderOptions {
 
 impl RenderOptions {
     const DEFAULT_OR_SPLITTER: &'static str = " or ";
-    const DEFAULT_HOISTED_CLASS_PREFIX: &'static str = "";
 
     pub(crate) fn new(
         prefix: Option<Option<String>>,
@@ -173,7 +172,7 @@ impl RenderOptions {
         enum_value_prefix: Option<Option<String>>,
         always_hoist_enums: Option<bool>,
         map_style: Option<MapStyle>,
-        hoisted_class_prefix: Option<String>,
+        hoisted_class_prefix: Option<Option<String>>,
     ) -> Self {
         Self {
             prefix: prefix.map_or(RenderSetting::Auto, |p| {
@@ -186,9 +185,18 @@ impl RenderOptions {
             always_hoist_enums: always_hoist_enums
                 .map_or(RenderSetting::Auto, RenderSetting::Always),
             map_style: map_style.unwrap_or(MapStyle::TypeParameters),
-            hoisted_class_prefix: hoisted_class_prefix
-                .unwrap_or(Self::DEFAULT_HOISTED_CLASS_PREFIX.to_string()),
+            hoisted_class_prefix: hoisted_class_prefix.map_or(RenderSetting::Auto, |p| {
+                p.map_or(RenderSetting::Never, RenderSetting::Always)
+            }),
         }
+    }
+
+    // TODO: Might need a builder pattern for this as well.
+    pub(crate) fn with_hoisted_class_prefix(prefix: &str) -> Self {
+        let mut render_options = Self::default();
+        render_options.hoisted_class_prefix = RenderSetting::Always(prefix.to_owned());
+
+        render_options
     }
 }
 
@@ -613,8 +621,12 @@ impl OutputFormatContent {
                 false,
             )?;
 
-            // TODO: Prefix (type, interface, class, etc...) grab from &options.
-            class_definitions.push(format!("{class_name} {schema}"));
+            class_definitions.push(match &options.hoisted_class_prefix {
+                RenderSetting::Always(prefix) if !prefix.is_empty() => {
+                    format!("{prefix} {class_name} {schema}")
+                }
+                _ => format!("{class_name} {schema}"),
+            });
         }
 
         let mut output = String::new();
@@ -1608,6 +1620,86 @@ Answer in JSON using this schema:
   },
   len: int,
   description: string,
+}"#
+            ))
+        );
+    }
+
+    #[test]
+    fn render_hoisted_classes_with_prefix() {
+        let classes = vec![
+            Class {
+                name: Name::new("A".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Class("B".to_string()),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("B".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Class("C".to_string()),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("C".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Optional(Box::new(FieldType::Class("A".to_string()))),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("NonRecursive".to_string()),
+                fields: vec![
+                    (
+                        Name::new("pointer".to_string()),
+                        FieldType::Class("A".to_string()),
+                        None,
+                    ),
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (Name::new("field".to_string()), FieldType::bool(), None),
+                ],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Class("NonRecursive".to_string()))
+            .classes(classes)
+            .recursive_classes(IndexSet::from_iter(
+                ["A", "B", "C"].map(ToString::to_string),
+            ))
+            .build();
+        let rendered = content
+            .render(RenderOptions::with_hoisted_class_prefix("interface"))
+            .unwrap();
+        #[rustfmt::skip]
+        assert_eq!(
+            rendered,
+            Some(String::from(
+r#"interface A {
+  pointer: B,
+}
+
+interface B {
+  pointer: C,
+}
+
+interface C {
+  pointer: A or null,
+}
+
+Answer in JSON using this schema:
+{
+  pointer: A,
+  data: int,
+  field: bool,
 }"#
             ))
         );
