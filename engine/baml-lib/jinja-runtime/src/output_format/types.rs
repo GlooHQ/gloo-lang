@@ -495,9 +495,43 @@ impl OutputFormatContent {
                     }
                 }
             }
+            // TODO: Extract this into function and reuse.
             FieldType::Union(items) => items
                 .iter()
-                .map(|t| self.inner_type_render(options, t, render_state, true))
+                .map(|t| match t {
+                    FieldType::Class(cls) if self.recursive_classes.contains(cls) => {
+                        for recursive_class in self.recursive_classes.iter() {
+                            render_state.hoisted_classes.insert(recursive_class.clone());
+                        }
+                        Ok(cls.to_string())
+                    }
+                    FieldType::Optional(boxed_field_type) => {
+                        if let FieldType::Class(nested_class) = boxed_field_type.as_ref() {
+                            if self.recursive_classes.contains(nested_class) {
+                                for recursive_class in self.recursive_classes.iter() {
+                                    render_state.hoisted_classes.insert(recursive_class.clone());
+                                }
+                                return Ok(format!("{nested_class}{}null", options.or_splitter));
+                            }
+                        }
+
+                        self.inner_type_render(options, t, render_state, false)
+                    }
+                    // List class, part of a cycle.
+                    FieldType::List(boxed_field_type) => {
+                        if let FieldType::Class(nested_class) = boxed_field_type.as_ref() {
+                            if self.recursive_classes.contains(nested_class) {
+                                for recursive_class in self.recursive_classes.iter() {
+                                    render_state.hoisted_classes.insert(recursive_class.clone());
+                                }
+                                return Ok(format!("{nested_class}{}null", options.or_splitter));
+                            }
+                        }
+
+                        self.inner_type_render(options, t, render_state, false)
+                    }
+                    _ => self.inner_type_render(options, t, render_state, false),
+                })
                 .collect::<Result<Vec<_>, minijinja::Error>>()?
                 .join(&options.or_splitter),
             FieldType::Optional(inner) => {
@@ -646,17 +680,19 @@ impl OutputFormatContent {
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use super::*;
 
     #[test]
-    fn test_render_string() {
+    fn render_string() {
         let content = OutputFormatContent::new_string();
         let rendered = content.render(RenderOptions::default()).unwrap();
         assert_eq!(rendered, None);
     }
 
     #[test]
-    fn test_render_array() {
+    fn render_array() {
         let content = OutputFormatContent::new_array();
         let rendered = content.render(RenderOptions::default()).unwrap();
         assert_eq!(
@@ -666,7 +702,7 @@ mod tests {
     }
 
     #[test]
-    fn test_render_enum() {
+    fn render_enum() {
         let enums = vec![Enum {
             name: Name::new("Color".to_string()),
             values: vec![
@@ -690,7 +726,7 @@ mod tests {
     }
 
     #[test]
-    fn test_render_class() {
+    fn render_class() {
         let classes = vec![Class {
             name: Name::new("Person".to_string()),
             fields: vec![
@@ -721,7 +757,7 @@ mod tests {
     }
 
     #[test]
-    fn test_render_class_with_multiline_descriptions() {
+    fn render_class_with_multiline_descriptions() {
         let classes = vec![Class {
             name: Name::new("Education".to_string()),
             fields: vec![
@@ -757,7 +793,150 @@ mod tests {
     }
 
     #[test]
-    fn test_render_top_level_simple_recursive_class() {
+    fn render_top_level_union() {
+        let classes = vec![
+            Class {
+                name: Name::new("Bug".to_string()),
+                fields: vec![
+                    (
+                        Name::new("description".to_string()),
+                        FieldType::string(),
+                        None,
+                    ),
+                    (Name::new("severity".to_string()), FieldType::string(), None),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Enhancement".to_string()),
+                fields: vec![
+                    (Name::new("title".to_string()), FieldType::string(), None),
+                    (
+                        Name::new("description".to_string()),
+                        FieldType::string(),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Documentation".to_string()),
+                fields: vec![
+                    (Name::new("module".to_string()), FieldType::string(), None),
+                    (Name::new("format".to_string()), FieldType::string(), None),
+                ],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Union(vec![
+            FieldType::Class("Bug".to_string()),
+            FieldType::Class("Enhancement".to_string()),
+            FieldType::Class("Documentation".to_string()),
+        ]))
+        .classes(classes)
+        .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+        assert_eq!(
+            rendered,
+            Some(String::from(
+r#"Answer in JSON using any of these schemas:
+{
+  description: string,
+  severity: string,
+} or {
+  title: string,
+  description: string,
+} or {
+  module: string,
+  format: string,
+}"#
+            ))
+        );
+    }
+
+    #[test]
+    fn render_nested_union() {
+        let classes = vec![
+            Class {
+                name: Name::new("Issue".to_string()),
+                fields: vec![
+                    (
+                        Name::new("category".to_string()),
+                        FieldType::Union(vec![
+                            FieldType::Class("Bug".to_string()),
+                            FieldType::Class("Enhancement".to_string()),
+                            FieldType::Class("Documentation".to_string()),
+                        ]),
+                        None,
+                    ),
+                    (Name::new("date".to_string()), FieldType::string(), None),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Bug".to_string()),
+                fields: vec![
+                    (
+                        Name::new("description".to_string()),
+                        FieldType::string(),
+                        None,
+                    ),
+                    (Name::new("severity".to_string()), FieldType::string(), None),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Enhancement".to_string()),
+                fields: vec![
+                    (Name::new("title".to_string()), FieldType::string(), None),
+                    (
+                        Name::new("description".to_string()),
+                        FieldType::string(),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Documentation".to_string()),
+                fields: vec![
+                    (Name::new("module".to_string()), FieldType::string(), None),
+                    (Name::new("format".to_string()), FieldType::string(), None),
+                ],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Class("Issue".to_string()))
+            .classes(classes)
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+        assert_eq!(
+            rendered,
+            Some(String::from(
+r#"Answer in JSON using this schema:
+{
+  category: {
+    description: string,
+    severity: string,
+  } or {
+    title: string,
+    description: string,
+  } or {
+    module: string,
+    format: string,
+  },
+  date: string,
+}"#
+            ))
+        );
+    }
+
+    #[test]
+    fn render_top_level_simple_recursive_class() {
         let classes = vec![Class {
             name: Name::new("Node".to_string()),
             fields: vec![
@@ -795,7 +974,7 @@ Answer in JSON using this schema: Node"#
     }
 
     #[test]
-    fn test_render_nested_simple_recursive_class() {
+    fn render_nested_simple_recursive_class() {
         let classes = vec![
             Class {
                 name: Name::new("Node".to_string()),
@@ -847,7 +1026,7 @@ Answer in JSON using this schema:
     }
 
     #[test]
-    fn test_top_level_recursive_cycle() {
+    fn top_level_recursive_cycle() {
         let classes = vec![
             Class {
                 name: Name::new("A".to_string()),
@@ -907,7 +1086,7 @@ Answer in JSON using this schema: A"#
     }
 
     #[test]
-    fn test_nested_recursive_cycle() {
+    fn nested_recursive_cycle() {
         let classes = vec![
             Class {
                 name: Name::new("A".to_string()),
@@ -985,7 +1164,7 @@ Answer in JSON using this schema:
     }
 
     #[test]
-    fn test_nested_class_in_hoisted_recursive_class() {
+    fn nested_class_in_hoisted_recursive_class() {
         let classes = vec![
             Class {
                 name: Name::new("A".to_string()),
@@ -1082,7 +1261,7 @@ Answer in JSON using this schema:
     }
 
     #[test]
-    fn test_mutually_recursive_list() {
+    fn mutually_recursive_list() {
         let classes = vec![
             Class {
                 name: Name::new("Tree".to_string()),
@@ -1128,6 +1307,308 @@ Forest {
 }
 
 Answer in JSON using this schema: Tree"#
+            ))
+        );
+    }
+
+    #[test]
+    fn top_level_recursive_union() {
+        let classes = vec![
+            Class {
+                name: Name::new("Node".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("next".to_string()),
+                        FieldType::Optional(Box::new(FieldType::Class("Node".to_string()))),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Tree".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("children".to_string()),
+                        FieldType::List(Box::new(FieldType::Class("Tree".to_string()))),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Union(vec![
+            FieldType::Class("Node".to_string()),
+            FieldType::Class("Tree".to_string()),
+        ]))
+        .classes(classes)
+        .recursive_classes(IndexSet::from_iter(
+            ["Node", "Tree"].map(ToString::to_string),
+        ))
+        .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+            assert_eq!(
+                rendered,
+                Some(String::from(
+r#"Node {
+  data: int,
+  next: Node or null,
+}
+
+Tree {
+  data: int,
+  children: Tree[],
+}
+
+Answer in JSON using any of these schemas:
+Node or Tree"#
+            ))
+        );
+    }
+
+    #[test]
+    fn nested_recursive_union() {
+        let classes = vec![
+            Class {
+                name: Name::new("DataType".to_string()),
+                fields: vec![
+                    (
+                        Name::new("data_type".to_string()),
+                        FieldType::Union(vec![
+                            FieldType::Class("Node".to_string()),
+                            FieldType::Class("Tree".to_string()),
+                        ]),
+                        None,
+                    ),
+                    (Name::new("len".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("description".to_string()),
+                        FieldType::string(),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Node".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("next".to_string()),
+                        FieldType::Optional(Box::new(FieldType::Class("Node".to_string()))),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Tree".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("children".to_string()),
+                        FieldType::List(Box::new(FieldType::Class("Tree".to_string()))),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Class("DataType".to_string()))
+            .classes(classes)
+            .recursive_classes(IndexSet::from_iter(
+                ["Node", "Tree"].map(ToString::to_string),
+            ))
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+            assert_eq!(
+                rendered,
+                Some(String::from(
+r#"Node {
+  data: int,
+  next: Node or null,
+}
+
+Tree {
+  data: int,
+  children: Tree[],
+}
+
+Answer in JSON using this schema:
+{
+  data_type: Node or Tree,
+  len: int,
+  description: string,
+}"#
+            ))
+        );
+    }
+
+    #[test]
+    fn top_level_recursive_union_with_non_recursive_class() {
+        let classes = vec![
+            Class {
+                name: Name::new("Node".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("next".to_string()),
+                        FieldType::Optional(Box::new(FieldType::Class("Node".to_string()))),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Tree".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("children".to_string()),
+                        FieldType::List(Box::new(FieldType::Class("Tree".to_string()))),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("NonRecursive".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (Name::new("tag".to_string()), FieldType::string(), None),
+                ],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Union(vec![
+            FieldType::Class("Node".to_string()),
+            FieldType::Class("Tree".to_string()),
+            FieldType::Class("NonRecursive".to_string()),
+        ]))
+        .classes(classes)
+        .recursive_classes(IndexSet::from_iter(
+            ["Node", "Tree"].map(ToString::to_string),
+        ))
+        .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+            assert_eq!(
+                rendered,
+                Some(String::from(
+r#"Node {
+  data: int,
+  next: Node or null,
+}
+
+Tree {
+  data: int,
+  children: Tree[],
+}
+
+Answer in JSON using any of these schemas:
+Node or Tree or {
+  data: int,
+  tag: string,
+}"#
+            ))
+        );
+    }
+
+    #[test]
+    fn nested_recursive_union_with_non_recursive_class() {
+        let classes = vec![
+            Class {
+                name: Name::new("DataType".to_string()),
+                fields: vec![
+                    (
+                        Name::new("data_type".to_string()),
+                        FieldType::Union(vec![
+                            FieldType::Class("Node".to_string()),
+                            FieldType::Class("Tree".to_string()),
+                            FieldType::Class("NonRecursive".to_string()),
+                        ]),
+                        None,
+                    ),
+                    (Name::new("len".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("description".to_string()),
+                        FieldType::string(),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Node".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("next".to_string()),
+                        FieldType::Optional(Box::new(FieldType::Class("Node".to_string()))),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Tree".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("children".to_string()),
+                        FieldType::List(Box::new(FieldType::Class("Tree".to_string()))),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("NonRecursive".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (Name::new("tag".to_string()), FieldType::string(), None),
+                ],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Class("DataType".to_string()))
+            .classes(classes)
+            .recursive_classes(IndexSet::from_iter(
+                ["Node", "Tree"].map(ToString::to_string),
+            ))
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+            assert_eq!(
+                rendered,
+                Some(String::from(
+r#"Node {
+  data: int,
+  next: Node or null,
+}
+
+Tree {
+  data: int,
+  children: Tree[],
+}
+
+Answer in JSON using this schema:
+{
+  data_type: Node or Tree or {
+    data: int,
+    tag: string,
+  },
+  len: int,
+  description: string,
+}"#
             ))
         );
     }
