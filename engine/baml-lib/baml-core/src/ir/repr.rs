@@ -28,7 +28,7 @@ pub struct IntermediateRepr {
     enums: Vec<Node<Enum>>,
     classes: Vec<Node<Class>>,
     /// Strongly connected components of the dependency graph (finite cycles).
-    finite_recursive_cycles: Vec<HashSet<String>>,
+    finite_recursive_cycles: Vec<Vec<String>>,
     functions: Vec<Node<Function>>,
     clients: Vec<Node<Client>>,
     retry_policies: Vec<Node<RetryPolicy>>,
@@ -79,7 +79,7 @@ impl IntermediateRepr {
     ///
     /// Each cycle is represented as a set of strings, where each string is the
     /// name of a class.
-    pub fn finite_recursive_cycles(&self) -> &[HashSet<String>] {
+    pub fn finite_recursive_cycles(&self) -> &[Vec<String>] {
         &self.finite_recursive_cycles
     }
 

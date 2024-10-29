@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Result;
 use baml_types::{Constraint, FieldType, TypeValue};
@@ -65,7 +65,8 @@ pub struct OutputFormatContent {
 pub struct Builder {
     enums: Vec<Enum>,
     classes: Vec<Class>,
-    recursive_classes: HashSet<String>,
+    /// Order matters for this one.
+    recursive_classes: IndexSet<String>,
     target: FieldType,
 }
 
@@ -74,7 +75,7 @@ impl Builder {
         Self {
             enums: vec![],
             classes: vec![],
-            recursive_classes: HashSet::new(),
+            recursive_classes: IndexSet::new(),
             target,
         }
     }
@@ -89,7 +90,7 @@ impl Builder {
         self
     }
 
-    pub fn recursive_classes(mut self, recursive_classes: HashSet<String>) -> Self {
+    pub fn recursive_classes(mut self, recursive_classes: IndexSet<String>) -> Self {
         self.recursive_classes = recursive_classes;
         self
     }
@@ -413,26 +414,40 @@ impl OutputFormatContent {
                         .iter()
                         .map(|(name, field_type, description)| {
                             let mut maybe_nested_recursive_class = None;
+                            let mut is_optional = false;
+                            let mut is_list = false;
 
                             match field_type {
-                                // TODO: Don't panic, return err, this should not
-                                // happen anyway.
+                                // Non-optional class, part of a cycle.
                                 FieldType::Class(nested_class)
                                     if self.recursive_classes.contains(nested_class) =>
                                 {
-                                    panic!("Infinite recursive cycle detected for class '{nested_class}'")
+                                    maybe_nested_recursive_class = Some(nested_class);
                                 }
 
+                                // Optional class, part of a cycle.
                                 FieldType::Optional(boxed_field_type) => {
                                     if let FieldType::Class(nested_class) =
                                         boxed_field_type.as_ref()
                                     {
                                         if self.recursive_classes.contains(nested_class) {
                                             maybe_nested_recursive_class = Some(nested_class);
+                                            is_optional = true;
                                         }
                                     }
                                 }
 
+                                // List class, part of a cycle.
+                                FieldType::List(boxed_field_type) => {
+                                    if let FieldType::Class(nested_class) =
+                                        boxed_field_type.as_ref()
+                                    {
+                                        if self.recursive_classes.contains(nested_class) {
+                                            maybe_nested_recursive_class = Some(nested_class);
+                                            is_list = true;
+                                        }
+                                    }
+                                }
                                 _ => {}
                             }
 
@@ -441,7 +456,13 @@ impl OutputFormatContent {
                             // and all recursive classes are hoisted so they'll
                             // be handled at a later stage.
                             let r#type = if let Some(nested_class) = maybe_nested_recursive_class {
-                                format!("{nested_class}{}null", options.or_splitter)
+                                if is_optional {
+                                    format!("{nested_class}{}null", options.or_splitter)
+                                } else if is_list {
+                                    format!("{nested_class}[]")
+                                } else {
+                                    nested_class.to_string()
+                                }
                             } else {
                                 self.inner_type_render(options, field_type, render_state, false)?
                             };
@@ -570,7 +591,7 @@ impl OutputFormatContent {
         }
 
         if class_definitions.len() > 0 {
-            output.push_str(&class_definitions.join("\n"));
+            output.push_str(&class_definitions.join("\n\n"));
             output.push_str("\n\n");
         }
 
@@ -756,7 +777,7 @@ mod tests {
 
         let content = OutputFormatContent::target(FieldType::Class("Node".to_string()))
             .classes(classes)
-            .recursive_classes(HashSet::from_iter(["Node".to_string()]))
+            .recursive_classes(IndexSet::from_iter(["Node".to_string()]))
             .build();
         let rendered = content.render(RenderOptions::default()).unwrap();
         #[rustfmt::skip]
@@ -804,7 +825,7 @@ Answer in JSON using this schema: Node"#
 
         let content = OutputFormatContent::target(FieldType::Class("LinkedList".to_string()))
             .classes(classes)
-            .recursive_classes(HashSet::from_iter(["Node".to_string()]))
+            .recursive_classes(IndexSet::from_iter(["Node".to_string()]))
             .build();
         let rendered = content.render(RenderOptions::default()).unwrap();
         #[rustfmt::skip]
@@ -821,6 +842,292 @@ Answer in JSON using this schema:
   head: Node or null,
   len: int,
 }"#
+            ))
+        );
+    }
+
+    #[test]
+    fn test_top_level_recursive_cycle() {
+        let classes = vec![
+            Class {
+                name: Name::new("A".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Class("B".to_string()),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("B".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Class("C".to_string()),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("C".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Optional(Box::new(FieldType::Class("A".to_string()))),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Class("A".to_string()))
+            .classes(classes)
+            .recursive_classes(IndexSet::from_iter(
+                ["A", "B", "C"].map(ToString::to_string),
+            ))
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+        assert_eq!(
+            rendered,
+            Some(String::from(
+r#"A {
+  pointer: B,
+}
+
+B {
+  pointer: C,
+}
+
+C {
+  pointer: A or null,
+}
+
+Answer in JSON using this schema: A"#
+            ))
+        );
+    }
+
+    #[test]
+    fn test_nested_recursive_cycle() {
+        let classes = vec![
+            Class {
+                name: Name::new("A".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Class("B".to_string()),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("B".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Class("C".to_string()),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("C".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Optional(Box::new(FieldType::Class("A".to_string()))),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("NonRecursive".to_string()),
+                fields: vec![
+                    (
+                        Name::new("pointer".to_string()),
+                        FieldType::Class("A".to_string()),
+                        None,
+                    ),
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (Name::new("field".to_string()), FieldType::bool(), None),
+                ],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Class("NonRecursive".to_string()))
+            .classes(classes)
+            .recursive_classes(IndexSet::from_iter(
+                ["A", "B", "C"].map(ToString::to_string),
+            ))
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+        assert_eq!(
+            rendered,
+            Some(String::from(
+r#"A {
+  pointer: B,
+}
+
+B {
+  pointer: C,
+}
+
+C {
+  pointer: A or null,
+}
+
+Answer in JSON using this schema:
+{
+  pointer: A,
+  data: int,
+  field: bool,
+}"#
+            ))
+        );
+    }
+
+    #[test]
+    fn test_nested_class_in_hoisted_recursive_class() {
+        let classes = vec![
+            Class {
+                name: Name::new("A".to_string()),
+                fields: vec![
+                    (
+                        Name::new("pointer".to_string()),
+                        FieldType::Class("B".to_string()),
+                        None,
+                    ),
+                    (
+                        Name::new("nested".to_string()),
+                        FieldType::Class("Nested".to_string()),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("B".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Class("C".to_string()),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("C".to_string()),
+                fields: vec![(
+                    Name::new("pointer".to_string()),
+                    FieldType::Optional(Box::new(FieldType::Class("A".to_string()))),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("NonRecursive".to_string()),
+                fields: vec![
+                    (
+                        Name::new("pointer".to_string()),
+                        FieldType::Class("A".to_string()),
+                        None,
+                    ),
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (Name::new("field".to_string()), FieldType::bool(), None),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Nested".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (Name::new("field".to_string()), FieldType::bool(), None),
+                ],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Class("NonRecursive".to_string()))
+            .classes(classes)
+            .recursive_classes(IndexSet::from_iter(
+                ["A", "B", "C"].map(ToString::to_string),
+            ))
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+            assert_eq!(
+                rendered,
+                Some(String::from(
+r#"A {
+  pointer: B,
+  nested: {
+    data: int,
+    field: bool,
+  },
+}
+
+B {
+  pointer: C,
+}
+
+C {
+  pointer: A or null,
+}
+
+Answer in JSON using this schema:
+{
+  pointer: A,
+  data: int,
+  field: bool,
+}"#
+            ))
+        );
+    }
+
+    #[test]
+    fn test_mutually_recursive_list() {
+        let classes = vec![
+            Class {
+                name: Name::new("Tree".to_string()),
+                fields: vec![
+                    (Name::new("data".to_string()), FieldType::int(), None),
+                    (
+                        Name::new("children".to_string()),
+                        FieldType::Class("Forest".to_string()),
+                        None,
+                    ),
+                ],
+                constraints: Vec::new(),
+            },
+            Class {
+                name: Name::new("Forest".to_string()),
+                fields: vec![(
+                    Name::new("trees".to_string()),
+                    FieldType::List(Box::new(FieldType::Class("Tree".to_string()))),
+                    None,
+                )],
+                constraints: Vec::new(),
+            },
+        ];
+
+        let content = OutputFormatContent::target(FieldType::Class("Tree".to_string()))
+            .classes(classes)
+            .recursive_classes(IndexSet::from_iter(
+                ["Tree", "Forest"].map(ToString::to_string),
+            ))
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+            assert_eq!(
+                rendered,
+                Some(String::from(
+r#"Tree {
+  data: int,
+  children: Forest,
+}
+
+Forest {
+  trees: Tree[],
+}
+
+Answer in JSON using this schema: Tree"#
             ))
         );
     }

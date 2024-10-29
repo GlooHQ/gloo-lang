@@ -235,7 +235,7 @@ pub(super) struct Types {
     /// TODO: There's probably some data structure other than [`Vec`] which can
     /// get us a class with its dependencies faster than O(n), maybe a
     /// Merge-Find Set or something like that.
-    pub(super) finite_recursive_cycles: Vec<HashSet<ast::TypeExpId>>,
+    pub(super) finite_recursive_cycles: Vec<Vec<ast::TypeExpId>>,
 
     pub(super) function: HashMap<ast::ValExpId, FunctionType>,
 

@@ -14,12 +14,13 @@ mod test_maps;
 mod test_partials;
 mod test_unions;
 
+use indexmap::IndexSet;
 use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
 };
 
-use baml_types::{BamlValue, Constraint, ConstraintLevel, JinjaExpression};
+use baml_types::BamlValue;
 use internal_baml_core::{
     internal_baml_diagnostics::SourceFile,
     ir::{repr::IntermediateRepr, ClassWalker, EnumWalker, FieldType, IRHelper, TypeValue},
@@ -122,11 +123,11 @@ fn relevant_data_models<'a>(
     ir: &'a IntermediateRepr,
     output: &'a FieldType,
     env_values: &HashMap<String, String>,
-) -> Result<(Vec<Enum>, Vec<Class>, HashSet<String>)> {
+) -> Result<(Vec<Enum>, Vec<Class>, IndexSet<String>)> {
     let mut checked_types: HashSet<String> = HashSet::new();
     let mut enums = Vec::new();
     let mut classes: Vec<Class> = Vec::new();
-    let mut recursive_classes = HashSet::new();
+    let mut recursive_classes = IndexSet::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     while !start.is_empty() {

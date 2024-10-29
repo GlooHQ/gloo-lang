@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use anyhow::Result;
-use baml_types::{BamlValue, Constraint};
+use baml_types::BamlValue;
 use indexmap::IndexSet;
 use internal_baml_core::ir::{
     repr::IntermediateRepr, ClassWalker, EnumWalker, FieldType, IRHelper,
@@ -207,11 +207,11 @@ fn relevant_data_models<'a>(
     ir: &'a IntermediateRepr,
     output: &'a FieldType,
     ctx: &RuntimeContext,
-) -> Result<(Vec<Enum>, Vec<Class>, HashSet<String>)> {
+) -> Result<(Vec<Enum>, Vec<Class>, IndexSet<String>)> {
     let mut checked_types = HashSet::new();
     let mut enums = Vec::new();
     let mut classes = Vec::new();
-    let mut recursive_classes = HashSet::new();
+    let mut recursive_classes = IndexSet::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     while let Some(output) = start.pop() {
@@ -365,9 +365,9 @@ fn relevant_data_models<'a>(
             }
             (FieldType::Literal(_), _) => {}
             (FieldType::Primitive(_), _) => {}
-            (FieldType::Constrained{..}, _)=> {
+            (FieldType::Constrained { .. }, _) => {
                 unreachable!("It is guaranteed that a call to distribute_constraints will not return FieldType::Constrained")
-            },
+            }
         }
     }
 
@@ -406,5 +406,4 @@ mod tests {
         assert_eq!(foo_enum.values[0].0.real_name(), "Bar".to_string());
         assert_eq!(foo_enum.values.len(), 1);
     }
-
 }

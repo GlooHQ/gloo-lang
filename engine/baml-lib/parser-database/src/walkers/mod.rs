@@ -14,8 +14,6 @@ mod field;
 mod function;
 mod template_string;
 
-use std::collections::HashSet;
-
 use baml_types::TypeValue;
 pub use client::*;
 pub use configuration::*;
@@ -132,7 +130,7 @@ impl<'db> crate::ParserDatabase {
     }
 
     /// Returns a set of all classes that are part of some recursive definition.
-    pub fn finite_recursive_cycles(&self) -> &[HashSet<TypeExpId>] {
+    pub fn finite_recursive_cycles(&self) -> &[Vec<TypeExpId>] {
         &self.types.finite_recursive_cycles
     }
 
