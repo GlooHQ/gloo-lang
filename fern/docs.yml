@@ -149,9 +149,12 @@ navigation:
           - page: Tracking Usage
             icon: fa-regular fa-bar-chart
             path: 01-guide/07-observability/studio.mdx
+
+  - tab: examples
+    layout:
       - section: Prompt Engineering
         contents:
-          - page: Reduce Hallucinations
+          - page: Reducing Hallucinations
             icon: fa-regular fa-person-fairy
             path: 01-guide/06-prompt-engineering/hallucinations.mdx
           - page: Chat
@@ -181,77 +184,75 @@ navigation:
           - page: Retrieval Augmented Generation
             icon: fa-regular fa-database
             path: 01-guide/introduction.mdx
-  - tab: examples
-    layout:
-      - section: Python
-        icon: fa-brands fa-python
-        contents:
-          - page: Hello World
-            icon: fa-regular fa-rocket
-            path: 01-guide/introduction.mdx
-          - page: FastAPI + RAG + streaming
-            icon: fa-regular fa-database
-            path: 01-guide/introduction.mdx
-          - page: Flask + ChatBot
-            icon: fa-regular fa-comments
-            path: 01-guide/introduction.mdx
-          - page: Reflex + Reciept Parsing
-            icon: fa-regular fa-receipt
-            path: 01-guide/introduction.mdx
-          - page: Parsing PDFs
-            icon: fa-regular fa-file-pdf
-            path: 01-guide/introduction.mdx
-          - page: Web scraping with Selenium
-            icon: fa-regular fa-globe
-            path: 01-guide/introduction.mdx
-      - section: Typescript
-        icon: fa-brands fa-js
-        contents:
-          - page: Hello World
-            icon: fa-regular fa-rocket
-            path: 01-guide/introduction.mdx
-          - page: NextJS + RAG + streaming
-            icon: fa-regular fa-database
-            path: 01-guide/introduction.mdx
-          - page: React + Express + ChatBot
-            icon: fa-regular fa-comments
-            path: 01-guide/introduction.mdx
-          - page: NextJS parsing PDFs
-            icon: fa-regular fa-file-pdf
-            path: 01-guide/introduction.mdx
-          - page: Web scraping with Playwright
-            icon: fa-regular fa-globe
-            path: 01-guide/introduction.mdx
-      - section: Ruby
-        icon: fa-solid fa-gem
-        contents:
-          - page: Hello world
-            icon: fa-regular fa-rocket
-            path: 01-guide/introduction.mdx
-          - page: Rails + RAG + streaming
-            icon: fa-regular fa-database
-            path: 01-guide/introduction.mdx
-      - section: Rest API Hello World
-        icon: fa-regular fa-network-wired
-        contents:
-          - page: Ruby
-            icon: fa-solid fa-gem
-            path: 01-guide/introduction.mdx
-          - page: Java
-            icon: fa-brands fa-java
-            path: 01-guide/introduction.mdx
-          - page: Go
-            icon: fa-brands fa-golang
-            path: 01-guide/introduction.mdx
-          - page: C++
-            icon: fa-brands fa-cuttlefish
-            path: 01-guide/introduction.mdx
-          - page: Rust
-            icon: fa-brands fa-rust
-            path: 01-guide/introduction.mdx
-          - page: PHP
-            icon: fa-brands fa-php
-            path: 01-guide/introduction.mdx
+      # - section: Python
+      #   icon: fa-brands fa-python
+      #   contents:
+      #     - page: Hello World
+      #       icon: fa-regular fa-rocket
+      #       path: 01-guide/introduction.mdx
+      #     - page: FastAPI + RAG + streaming
+      #       icon: fa-regular fa-database
+      #       path: 01-guide/introduction.mdx
+      #     - page: Flask + ChatBot
+      #       icon: fa-regular fa-comments
+      #       path: 01-guide/introduction.mdx
+      #     - page: Reflex + Reciept Parsing
+      #       icon: fa-regular fa-receipt
+      #       path: 01-guide/introduction.mdx
+      #     - page: Parsing PDFs
+      #       icon: fa-regular fa-file-pdf
+      #       path: 01-guide/introduction.mdx
+      #     - page: Web scraping with Selenium
+      #       icon: fa-regular fa-globe
+      #       path: 01-guide/introduction.mdx
+      # - section: Typescript
+      #   icon: fa-brands fa-js
+      #   contents:
+      #     - page: Hello World
+      #       icon: fa-regular fa-rocket
+      #       path: 01-guide/introduction.mdx
+      #     - page: NextJS + RAG + streaming
+      #       icon: fa-regular fa-database
+      #       path: 01-guide/introduction.mdx
+      #     - page: React + Express + ChatBot
+      #       icon: fa-regular fa-comments
+      #       path: 01-guide/introduction.mdx
+      #     - page: NextJS parsing PDFs
+      #       icon: fa-regular fa-file-pdf
+      #       path: 01-guide/introduction.mdx
+      #     - page: Web scraping with Playwright
+      #       icon: fa-regular fa-globe
+      #       path: 01-guide/introduction.mdx
+      # - section: Ruby
+      #   icon: fa-solid fa-gem
+      #   contents:
+      #     - page: Hello world
+      #       icon: fa-regular fa-rocket
+      #       path: 01-guide/introduction.mdx
+      #     - page: Rails + RAG + streaming
+      #       icon: fa-regular fa-database
+      #       path: 01-guide/introduction.mdx
+      # - section: Rest API Hello World
+      #   icon: fa-regular fa-network-wired
+      #   contents:
+      #     - page: Ruby
+      #       icon: fa-solid fa-gem
+      #       path: 01-guide/introduction.mdx
+      #     - page: Java
+      #       icon: fa-brands fa-java
+      #       path: 01-guide/introduction.mdx
+      #     - page: Go
+      #       icon: fa-brands fa-golang
+      #       path: 01-guide/introduction.mdx
+      #     - page: C++
+      #       icon: fa-brands fa-cuttlefish
+      #       path: 01-guide/introduction.mdx
+      #     - page: Rust
+      #       icon: fa-brands fa-rust
+      #       path: 01-guide/introduction.mdx
+      #     - page: PHP
+      #       icon: fa-brands fa-php
+      #       path: 01-guide/introduction.mdx
   - tab: reference
     layout:
       #     - page: Changelog
@@ -322,7 +323,7 @@ navigation:
             path: 03-reference/baml/enum.mdx
           - page: generator
             path: 03-reference/generator.mdx
-      - section: Clients (Supported LLMs)
+      - section: LLM Client Providers
         contents:
           - page: "AWS Bedrock"
             path: 03-reference/baml/clients/providers/aws-bedrock.mdx
@@ -356,7 +357,7 @@ navigation:
             path: 03-reference/baml/clients/providers/unify.mdx
           - page: "openai-generic: vLLM"
             path: 03-reference/baml/clients/providers/vllm.mdx
-      - section: Client Strategies
+      - section: LLM Client Strategies
         contents:
           - page: "Retry Policy"
             path: 03-reference/baml/clients/strategy/retry.mdx
@@ -364,6 +365,12 @@ navigation:
             path: 03-reference/baml/clients/strategy/fallback.mdx
           - page: "Round Robin"
             path: 03-reference/baml/clients/strategy/round-robin.mdx
+      - section: baml_client
+        contents:
+          - page: TypeBuilder
+            path: 03-reference/baml_client/typebuilder.mdx
+          - page: ClientRegistry
+            path: 01-guide/05-baml-advanced/client-registry.mdx
 
       - section: Prompt Syntax
         contents:

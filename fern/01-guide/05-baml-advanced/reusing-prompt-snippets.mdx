@@ -3,7 +3,7 @@ title: Reusing Prompt Snippets
 ---
 
 
-Writing prompts requires a lot of string manipulation. BAML has a `template_string` to let you combine different string templates together. Under-the-hood they use [jinja](prompt-syntax/what-is-jinja.mdx) to evaluate the string and its inputs.
+Writing prompts requires a lot of string manipulation. BAML has a `template_string` to let you combine different string templates together. Under-the-hood they use [jinja](/ref/prompt-syntax/what-is-jinja) to evaluate the string and its inputs.
 
 **Template Strings are functions that always return a string.** They can be used to define reusable parts of a prompt, or to make the prompt more readable by breaking it into smaller parts.
 
@@ -30,7 +30,7 @@ function ClassifyConversation(messages: Message[]) -> Category[] {
 }
 ```
 
-In this example we can call the template_string `PrintMessages` to subdivide the prompt into "user" or "system" messages using `_.role()` (see [message roles](prompt-syntax/roles.mdx)). This allows us to reuse the logic for printing messages in multiple prompts. 
+In this example we can call the template_string `PrintMessages` to subdivide the prompt into "user" or "system" messages using `_.role()` (see [message roles](/ref/prompt-syntax/role)). This allows us to reuse the logic for printing messages in multiple prompts. 
 
 You can nest as many template strings inside each other and call them however many times you want.
 

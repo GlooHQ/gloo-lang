@@ -1,5 +1,5 @@
 
-Classes consist of a name, a list of properties, and their [types](supported-types.mdx).
+Classes consist of a name, a list of properties, and their [types](class).
 In the context of LLMs, classes describe the type of the variables you can inject into prompts and extract out from the response.
 
 <Warning>
@@ -78,7 +78,7 @@ class MyClass {
 <ParamField
   path="@@dynamic"
 >
-If set, will allow you to add fields to the class dynamically at runtime (in your python/ts/etc code). See [dynamic classes](../calling-baml/dynamic-types.mdx) for more information.
+If set, will allow you to add fields to the class dynamically at runtime (in your python/ts/etc code). See [dynamic classes](/guide/baml-advanced/dynamic-runtime-types) for more information.
 </ParamField>
 
 
@@ -105,6 +105,10 @@ The type of a property can be any [supported type](supported-types)
 ### Default values
 
 - Not yet supported. For optional properties, the default value is `None` in python.
+
+### Dynamic classes
+
+See [Dynamic Types](/guide/baml-advanced/dynamic-runtime-types).
 
 ## Inheritance
 
