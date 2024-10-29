@@ -144,6 +144,9 @@ navigation:
           - page: Prompt Caching / Message Role Metadata
             icon: fa-regular fa-database
             path: 01-guide/05-baml-advanced/prompt-caching.mdx
+          - page: Validations
+            icon: fa-regular fa-check-circle
+            path: 01-guide/05-baml-advanced/validations.mdx
       - section: Observability
         contents:
           - page: Tracking Usage
@@ -157,6 +160,9 @@ navigation:
 
   - tab: examples
     layout:
+      - page: Interactive Examples
+        icon: fa-solid fa-play
+        path: 02-examples/interactive-examples.mdx
       - section: Prompt Engineering
         contents:
           - page: Reducing Hallucinations
@@ -275,6 +281,8 @@ navigation:
       #         - page: Extraction Examples
       #           path: reference/extract/examples.mdx
       #           slug: examples
+      - page: Overview
+        path: 03-reference/overview.mdx
       - section: Editor Extension Settings
         contents:
           - page: baml.cliPath
