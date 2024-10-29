@@ -1324,6 +1324,42 @@ Answer in JSON using this schema: Tree"#
     }
 
     #[test]
+    fn self_referential_union() {
+        let classes = vec![Class {
+            name: Name::new("SelfReferential".to_string()),
+            fields: vec![(
+                Name::new("recursion".to_string()),
+                FieldType::Union(vec![
+                    FieldType::int(),
+                    FieldType::string(),
+                    FieldType::Optional(Box::new(FieldType::Class("SelfReferential".to_string()))),
+                ]),
+                None,
+            )],
+            constraints: Vec::new(),
+        }];
+
+        let content = OutputFormatContent::target(FieldType::Class("SelfReferential".to_string()))
+            .classes(classes)
+            .recursive_classes(IndexSet::from_iter(
+                ["SelfReferential"].map(ToString::to_string),
+            ))
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+            assert_eq!(
+                rendered,
+                Some(String::from(
+r#"SelfReferential {
+  recursion: int or string or SelfReferential or null,
+}
+
+Answer in JSON using this schema: SelfReferential"#
+            ))
+        );
+    }
+
+    #[test]
     fn top_level_recursive_union() {
         let classes = vec![
             Class {
