@@ -1,6 +1,4 @@
----
-title: Supported Types
----
+
 
 
 Here's a list of all the types that can be represented in BAML:
@@ -13,6 +11,9 @@ Here's a list of all the types that can be represented in BAML:
 * `null`
 
 ## Literal Types
+<Info>
+  This feature was added in: v0.61.0.
+</Info>
 
 The primitive types `string`, `int` and `bool` can be constrained to a specific value.
 For example, you can use literal values as return types:
@@ -32,9 +33,6 @@ function ClassifyIssue(issue_description: string) -> "bug" | "enhancement" {
 
 See [Union(|)](#union-) for more details.
 
-<Info>
-  This feature was added in: v0.61.0.
-</Info>
 
 ## Multimodal Types
 See [calling a function with multimodal types](/docs/snippets/calling-baml/multi-modal)

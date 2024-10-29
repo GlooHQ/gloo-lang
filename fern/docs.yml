@@ -306,7 +306,7 @@ navigation:
                 path: 03-reference/baml/array.mdx
               - page: map (dictionary)
                 path: 03-reference/baml/map.mdx
-          - page: Supported Types
+          - page: Types
             path: 03-reference/baml/types.mdx
           - page: function
             path: 03-reference/baml/function.mdx
@@ -328,8 +328,8 @@ navigation:
             path: 03-reference/baml/clients/providers/aws-bedrock.mdx
           - page: "Anthropic"
             path: 03-reference/baml/clients/providers/anthropic.mdx
-          - page: "Gemini"
-            path: 03-reference/baml/clients/providers/gemini.mdx
+          - page: "Google AI Studio"
+            path: 03-reference/baml/clients/providers/google-ai.mdx
           - page: "OpenAI"
             path: 03-reference/baml/clients/providers/openai.mdx
           - page: "OpenAI from Azure"

@@ -3,7 +3,7 @@ title: Prompting in BAML
 ---
 
 <Note>
-We recommend reading the [installation](/) instructions first
+We recommend reading the [installation](/guide/installation-language/python) instructions first
 </Note>
 
 BAML functions are special definitions that get converted into real code (Python, TS, etc) that calls LLMs. Think of them as a way to define AI-powered functions that are type-safe and easy to use in your application.
@@ -18,6 +18,7 @@ function ExtractResume(resume_text: string) -> Resume {
   prompt #"
      Extract info from this text.
 
+    {# special macro to print the output schema + instructions #}
     {{ ctx.output_format }}
 
     Resume:
@@ -31,15 +32,17 @@ function ExtractResume(resume_text: string) -> Resume {
 BAML converts it into code that:
 
 1. Takes your input (`resume_text`)
-2. Sends a request to OpenAI's GPT-4 API with your prompt
+2. Sends a request to OpenAI's GPT-4 API with your prompt.
 3. Parses the JSON response into your `Resume` type
 4. Returns a type-safe object you can use in your code
 
-If you are using VSCode extension, you can see the how the prompt is rendered, and what `ctx.output_format` is:
+### Prompt Preview + seeing the CURL request
+
+If you are using VSCode extension, you can see the how the prompt is rendered, and how `ctx.output_format` injects the output schema into the prompt:
 
 <img src="/assets/vscode/extract-resume-prompt-preview.png" alt="Prompt preview" />
 
-And you can dive even deeper to see the **Raw CURL request** BAML will make to the LLM provider:
+And you can dive even deeper to see the _exact_ **Raw CURL request** BAML will make to the LLM provider when you call the function:
 
 <img src="/assets/vscode/curl-preview.png" alt="Raw CURL request" />
 
@@ -50,16 +53,15 @@ One of our design philosophies is to never hide the prompt from you. You control
 </Warning>
 
 ## Calling the function
-Recall that BAML will generate a `baml_client` directory in the language of your choice using the parameters in your [`generator`](/ref/baml/generator) config. 
-
-Here's a sample project structure with the `baml_client` directory:
-<img src="/assets/vscode/baml-client.png" alt="Generated client" width={300} />
+Recall that BAML will generate a `baml_client` directory in the language of your choice using the parameters in your [`generator`](/ref/baml/generator) config. This contains the function and types you defined.
 
 Now we can call the function, which will make a request to the LLM and return the `Resume` object:
 <CodeBlocks>
 ```python python
+# Import the baml client (We call it `b` for short)
 from baml_client import b
-from baml_client.types import Resume
+# Import the Resume type, which is now a Pydantic model!
+from baml_client.types import Resume 
 
 def main():
 resume_text = """Jason Doe\nPython, Rust\nUniversity of California, Berkeley, B.S.\nin Computer Science, 2020\nAlso an expert in Tableau, SQL, and C++\n"""
@@ -75,6 +77,7 @@ resume_text = """Jason Doe\nPython, Rust\nUniversity of California, Berkeley, B.
 
 ```typescript typescript
 import b from 'baml_client'
+import { Resume } from 'baml_client/types'
 
 async function main() {
   const resume_text = `Jason Doe\nPython, Rust\nUniversity of California, Berkeley, B.S.\nin Computer Science, 2020\nAlso an expert in Tableau, SQL, and C++`
@@ -85,6 +88,9 @@ async function main() {
 
   // Fully type-checked and validated!
   resume.name === 'Jason Doe'
+  if (resume instanceof Resume) {
+    console.log('resume is a Resume')
+  }
 }
 ```
 
