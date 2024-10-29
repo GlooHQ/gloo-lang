@@ -1,8 +1,9 @@
 ---
 title: Switching LLMs
+slug: guide/baml-basics/switching-llms
 ---
 
-BAML Supports getting structured output from **all** major providers as well as all OpenAI-API compatible open-source models. See [LLM Providers Reference](/ref/clients-supported-ll-ms/open-ai) for how to set each one up.
+BAML Supports getting structured output from **all** major providers as well as all OpenAI-API compatible open-source models. See [LLM Providers Reference](/ref/llm-client-providers/open-ai) for how to set each one up.
 <Tip>
 BAML can help you get structured output from **any Open-Source model**, with better performance than other techniques, even when it's not officially supported via a Tool-Use API (like o1-preview) or fine-tuned for it! [Read more about how BAML does this](https://www.boundaryml.com/blog/schema-aligned-parsing).
 </Tip>
@@ -54,7 +55,7 @@ and models, the default options, and setting [retry policies](/docs/reference/re
 
 <Tip>
 If you want to specify which client to use at runtime, in your Python/TS/Ruby code,
-you can use the [client registry](/docs/calling-baml/client-registry) to do so.
+you can use the [client registry](/guide/baml-advanced/llm-client-registry) to do so.
 
 This can come in handy if you're trying to, say, send 10% of your requests to a
 different model.

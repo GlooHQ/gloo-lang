@@ -149,6 +149,11 @@ navigation:
           - page: Tracking Usage
             icon: fa-regular fa-bar-chart
             path: 01-guide/07-observability/studio.mdx
+      - section: Integrations
+        contents:
+          - page: NextJS
+            icon: fa-brands fa-react
+            path: 01-guide/08-integrations/nextjs.mdx
 
   - tab: examples
     layout:
