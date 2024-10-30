@@ -77,7 +77,14 @@ impl<'g> Tarjan<'g> {
             components: Vec::new(),
         };
 
-        for node in tarjans.graph.keys() {
+        // Always start at the same node to avoid randomness in the cycle path,
+        // although the hash sets to which the nodes point to might still cause
+        // randomness but we deal with that in the strong_connect method when
+        // we build the component path.
+        let mut nodes = Vec::from_iter(graph.keys());
+        nodes.sort();
+
+        for node in nodes {
             if tarjans.state[node].index == Self::UNVISITED {
                 tarjans.strong_connect(*node);
             }

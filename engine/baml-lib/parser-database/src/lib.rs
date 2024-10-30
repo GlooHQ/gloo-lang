@@ -235,3 +235,216 @@ impl std::ops::Index<StringId> for ParserDatabase {
         self.interner.get(index).unwrap()
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::path::PathBuf;
+
+    use super::*;
+    use internal_baml_diagnostics::{Diagnostics, SourceFile};
+    use internal_baml_schema_ast::parse_schema;
+
+    fn assert_finite_cycles(baml: &'static str, expected: &[&[&str]]) -> Result<(), Diagnostics> {
+        let mut db = ParserDatabase::new();
+        let source = SourceFile::new_static(PathBuf::from("test.baml"), baml);
+        let (ast, mut diag) = parse_schema(&source.path_buf(), &source)?;
+
+        db.add_ast(ast);
+        db.validate(&mut diag)?;
+        db.finalize(&mut diag);
+
+        assert_eq!(
+            db.finite_recursive_cycles()
+                .iter()
+                .map(|ids| Vec::from_iter(ids.iter().map(|id| db.ast()[*id].name.to_string())))
+                .collect::<Vec<_>>(),
+            expected
+                .iter()
+                .map(|cycle| Vec::from_iter(cycle.iter().map(ToString::to_string)))
+                .collect::<Vec<_>>()
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn find_simple_recursive_class() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class Node {
+                    data int
+                    next Node?
+                }
+
+                class LinkedList {
+                    head Node?
+                    len int
+                }
+            "#,
+            &[&["Node"]],
+        )
+    }
+
+    #[test]
+    fn find_mutually_recursive_classes() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class Tree {
+                    data int
+                    children Forest
+                }
+
+                class Forest {
+                    trees Tree[]
+                }
+
+                class A {
+                    b B
+                }
+
+                class B {
+                    a A?
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["Tree", "Forest"], &["A", "B"]],
+        )
+    }
+
+    #[test]
+    fn find_long_cycles() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    b B
+                }
+
+                class B {
+                    c C
+                }
+
+                class C {
+                    d D
+                }
+
+                class D {
+                    a A?
+                }
+
+                class One {
+                    two Two
+                }
+
+                class Two {
+                    three Three
+                }
+
+                class Three {
+                    one One?
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A", "B", "C", "D"], &["One", "Two", "Three"]],
+        )
+    }
+
+    #[test]
+    fn find_interconnected_long_cycles() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    b B
+                }
+
+                class B {
+                    c C
+                }
+
+                class C {
+                    d D
+                }
+
+                class D {
+                    a A?
+                    one One
+                }
+
+                class One {
+                    two Two
+                }
+
+                class Two {
+                    three Three
+                }
+
+                class Three {
+                    one One?
+                    A A
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A", "B", "C", "D", "One", "Two", "Three"]],
+        )
+    }
+
+    #[test]
+    fn find_simple_union_cycle() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    recursion int | string | A
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A"]],
+        )
+    }
+
+    #[test]
+    fn find_nested_union_cycle() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    recursion int | string | (Other | A)
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A"]],
+        )
+    }
+
+    #[test]
+    fn find_mutually_recursive_unions() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    recursion int | string | B
+                }
+
+                class B {
+                    recursion int | string | A
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A", "B"]],
+        )
+    }
+}
