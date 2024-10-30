@@ -668,7 +668,7 @@ redirects:
   - source: "/docs/calling-baml/multi-modal"
     destination: "/guide/baml-basics/multi-modal"
   - source: "/docs/baml-nextjs/baml-nextjs"
-    destination: "/docs/baml-nextjs/baml-nextjs"
+    destination: "/guides/installation-language/next-js"
   - source: "/docs/observability/overview"
     destination: "/guide/observability/tracking-usage"
   - source: "/docs/observability/tracing-tagging"
