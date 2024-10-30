@@ -286,7 +286,6 @@ impl<'s> std::fmt::Display for MapRender<'s> {
 
 struct RenderState {
     hoisted_enums: IndexSet<String>,
-    hoisted_classes: IndexSet<String>,
 }
 
 impl OutputFormatContent {
@@ -359,20 +358,6 @@ impl OutputFormatContent {
         render_state: &mut RenderState,
         options: &RenderOptions,
     ) -> Option<String> {
-        // Hoist recursive classes.
-        //
-        // TODO: Some cloning in these functions again, check
-        // baml-lib/jsonish/src/tests/mod.rs
-        // there's room for optimization.
-        //
-        // TODO: Maybe we can put this somewhere else, it can probably run  only
-        // once before the recursive rendering happens.
-        if render_state.hoisted_classes.len() < self.recursive_classes.len() {
-            for recursive_class in self.recursive_classes.iter() {
-                render_state.hoisted_classes.insert(recursive_class.clone());
-            }
-        }
-
         let mut maybe_nested_recursive_class = None;
         let mut is_optional = false;
         let mut is_list = false;
@@ -568,7 +553,6 @@ impl OutputFormatContent {
 
         let mut render_state = RenderState {
             hoisted_enums: IndexSet::new(),
-            hoisted_classes: IndexSet::new(),
         };
 
         let mut message = match &self.target {
@@ -599,12 +583,13 @@ impl OutputFormatContent {
             self.enum_to_string(enm, &options)
         }));
 
-        // Yeah we love the borrow checker...
-        let hoisted_classes = std::mem::replace(&mut render_state.hoisted_classes, IndexSet::new());
-
         let mut class_definitions = Vec::new();
 
-        for class_name in hoisted_classes {
+        // Hoist recursive classes. The render_state struct doesn't need to
+        // contain these classes because we already know that we're gonna hoist
+        // them beforehand. Recursive cycles are computed after the AST
+        // validation stage.
+        for class_name in self.recursive_classes.iter() {
             let schema = self.inner_type_render(
                 &options,
                 &FieldType::Class(class_name.to_owned()),
