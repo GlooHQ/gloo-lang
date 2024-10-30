@@ -1,0 +1,26 @@
+---
+title: Set Environment Variables
+slug: /guide/development/environment-variables
+---
+
+
+
+## Environment Variables in BAML
+
+Sometimes you'll see environment variables used in BAML, like in clients:
+
+```baml
+
+client<llm> GPT4o {
+  provider baml-openai-chat
+  options {
+    model gpt-4o
+    api_key env.OPENAI_API_KEY
+  }
+}
+```
+
+<Markdown src="/snippets/setting-env-vars.mdx" />
+
+## Dynamically setting LLM API Keys
+You can set the API key for an LLM dynamically by passing in the key as a header or as a parameter (depending on the provider), using the [ClientRegistry](/guide/baml-advanced/llm-client-registry).
