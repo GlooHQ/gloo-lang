@@ -30,6 +30,7 @@ from ..baml_client.types import (
     MalformedConstraints2,
     LiteralClassHello,
     LiteralClassOne,
+    all_succeeded
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -109,6 +110,7 @@ class TestAllInputs:
     async def test_constraints(self):
         res = await b.PredictAge("Greg")
         assert res.certainty.checks["unreasonably_certain"].status == "failed"
+        assert not (all_succeeded(res.certainty.checks))
 
     @pytest.mark.asyncio
     async def test_constraint_union_variant_checking(self):

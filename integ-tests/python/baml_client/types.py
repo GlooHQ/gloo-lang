@@ -35,7 +35,7 @@ def get_checks(checks: Dict[CheckName, Check]) -> List[Check]:
     return list(checks.values())
 
 def all_succeeded(checks: Dict[CheckName, Check]) -> bool:
-    get_checks(checks).all(lambda check: check.status == "succeeded")
+    return all(check.status == "succeeded" for check in get_checks(checks))
 
 
 
