@@ -1,0 +1,142 @@
+---
+title: Boundary Studio
+---
+
+<Tip>
+For the remaining of 2024, Boundary Studio is free for new accounts!
+
+Boundary Studio 2 will be released in 2025 with a new pricing model.
+</Tip>
+
+To enable observability with BAML, you'll first need to sign up for a [Boundary Studio](https://app.boundaryml.com) account. 
+
+Once you've signed up, you'll be able to create a new project and get your project token.
+
+Then simply add the following environment variables prior to running your application:
+
+```bash
+export BOUNDARY_PROJECT_ID=project_uuid
+export BOUNDARY_SECRET=your_token
+```
+
+There you'll be able to see all the metrics and logs from your application including:
+
+- Cost
+- Function calls
+- Execution time
+- Token Usage
+- Prompt Logs
+- and more...
+
+## Tracing Custom Events
+
+
+BAML allows you to trace any function with the **@trace** decorator.
+This will make the function's input and output show up in the Boundary dashboard. This works for any python function you define yourself. BAML LLM functions (or any other function declared in a .baml file) are already traced by default. Logs are only sent to the Dashboard if you setup your environment variables correctly.
+
+### Example
+
+In the example below, we trace each of the two functions `pre_process_text` and `full_analysis`:
+
+<CodeGroup>
+```python Python
+from baml_client import baml
+from baml_client.types import Book, AuthorInfo
+from baml_client.tracing import trace
+
+# You can also add a custom name with trace(name="my_custom_name")
+# By default, we use the function's name.
+@trace
+def pre_process_text(text):
+    return text.replace("\n", " ")
+
+
+@trace
+async def full_analysis(book: Book):
+    sentiment = await baml.ClassifySentiment(
+        pre_process_text(book.content)
+    )
+    book_analysis = await baml.AnalyzeBook(book)
+    return book_analysis
+
+
+@trace
+async def test_book1():
+    content = """Before I could reply that he [Gatsby] was my neighbor...
+    """
+    processed_content = pre_process_text(content)
+    return await full_analysis(
+        Book(
+            title="The Great Gatsby",
+            author=AuthorInfo(firstName="F. Scott", lastName="Fitzgerald"),
+            content=processed_content,
+        ),
+    )
+```
+
+```typescript TypeScript
+import { baml } from 'baml_client';
+import { Book, AuthorInfo } from 'baml_client/types';
+import { traceSync, traceAsync } from 'baml_client/tracing';
+
+const preProcessText = traceSync(function(text: string): Promise<string> {
+    return text.replace(/\n/g, " ");
+});
+
+const fullAnalysis = traceAsync(async function(book: Book): Promise<any> {
+    const sentiment = await baml.ClassifySentiment(
+        preProcessText(book.content)
+    );
+    const bookAnalysis = await baml.AnalyzeBook(book);
+    return bookAnalysis;
+});
+
+const testBook1 = traceAsync(async function(): Promise<any> {
+    const content = `Before I could reply that he [Gatsby] was my neighbor...`;
+    const processedContent = preProcessText(content);
+    return await fullAnalysis(
+        new Book(
+            "The Great Gatsby",
+            new AuthorInfo("F. Scott", "Fitzgerald"),
+            processedContent
+        )
+    );
+});
+```
+
+```text Ruby
+Tracing non-baml functions is not yet supported in Ruby.
+```
+
+
+```text REST (OpenAPI)
+Tracing non-baml functions is not yet supported in REST (OpenAPI).
+```
+</CodeGroup>
+
+
+This allows us to see each function invocation, as well as all its children in the dashboard:
+
+<img src="/assets/studio/dashboard-test-pic.png" width="auto" />
+
+See [running tests](/running-tests) for more information on how to run this test.
+
+### Adding custom tags
+
+The dashboard view allows you to see custom tags for each of the function calls. This is useful for adding metadata to your traces and allow you to query your generated logs more easily.
+
+To add a custom tag, you can import **set_tags(..)** as below:
+
+```python
+from baml_client.tracing import set_tags, trace
+import typing
+
+@trace
+async def pre_process_text(text):
+    set_tags(userId="1234")
+
+    # You can also create a dictionary and pass it in
+    tags_dict: typing.Dict[str, str] = {"userId": "1234"}
+    set_tags(**tags_dict) # "**" unpacks the dictionary
+    return text.replace("\n", " ")
+```
