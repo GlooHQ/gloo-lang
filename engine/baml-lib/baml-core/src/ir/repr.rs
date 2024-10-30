@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use anyhow::{anyhow, Result};
 use baml_types::{Constraint, ConstraintLevel, FieldType};
 use either::Either;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use internal_baml_parser_database::{
     walkers::{
         ClassWalker, ClientSpec as AstClientSpec, ClientWalker, ConfigurationWalker,
@@ -28,7 +28,7 @@ pub struct IntermediateRepr {
     enums: Vec<Node<Enum>>,
     classes: Vec<Node<Class>>,
     /// Strongly connected components of the dependency graph (finite cycles).
-    finite_recursive_cycles: Vec<Vec<String>>,
+    finite_recursive_cycles: Vec<IndexSet<String>>,
     functions: Vec<Node<Function>>,
     clients: Vec<Node<Client>>,
     retry_policies: Vec<Node<RetryPolicy>>,
@@ -79,7 +79,7 @@ impl IntermediateRepr {
     ///
     /// Each cycle is represented as a set of strings, where each string is the
     /// name of a class.
-    pub fn finite_recursive_cycles(&self) -> &[Vec<String>] {
+    pub fn finite_recursive_cycles(&self) -> &[IndexSet<String>] {
         &self.finite_recursive_cycles
     }
 
