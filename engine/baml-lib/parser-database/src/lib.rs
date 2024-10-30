@@ -447,4 +447,24 @@ mod test {
             &[&["A", "B"]],
         )
     }
+
+    #[test]
+    fn find_mutually_recursive_nested_unions() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    recursion int | string | (bool | B)
+                }
+
+                class B {
+                    recursion int | string | (bool | A)
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A", "B"]],
+        )
+    }
 }
