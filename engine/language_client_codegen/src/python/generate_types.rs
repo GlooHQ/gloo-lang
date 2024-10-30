@@ -185,7 +185,7 @@ fn type_def_for_checks(checks: TypeCheckAttributes) -> PythonClass<'static> {
         fields: checks
             .0
             .into_iter()
-            .map(|check_name| (Cow::Owned(check_name), "baml_py.Check".to_string()))
+            .map(|check_name| (Cow::Owned(check_name), "Check".to_string()))
             .collect(),
         dynamic: false,
     }
@@ -254,7 +254,7 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
                 Some(checks) => {
                     let base_type_ref = base.to_type_ref(ir);
                     let checks_type_ref = type_name_for_checks(&checks);
-                    format!("baml_py.Checked[{base_type_ref},{checks_type_ref}]")
+                    format!("Checked[{base_type_ref},{checks_type_ref}]")
                 }
                 None => base.to_type_ref(ir),
             },
@@ -314,7 +314,7 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
                     Some(checks) => {
                         let base_type_ref = base.to_partial_type_ref(ir, false);
                         let checks_type_ref = type_name_for_checks(&checks);
-                        format!("baml_py.Checked[{base_type_ref},{checks_type_ref}]")
+                        format!("Checked[{base_type_ref},{checks_type_ref}]")
                     }
                     None => base_type_ref,
                 }

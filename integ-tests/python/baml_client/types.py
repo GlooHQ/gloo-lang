@@ -16,7 +16,27 @@
 import baml_py
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
-from typing import Dict, List, Optional, Union, Literal
+from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union
+
+
+T = TypeVar('T')
+CheckName = TypeVar('CheckName', bound=str)
+
+class Check(BaseModel):
+    name: str
+    expression: str
+    status: str
+
+class Checked(BaseModel, Generic[T,CheckName]):
+    value: T
+    checks: Dict[CheckName, Check]
+
+def get_checks(checks: Dict[CheckName, Check]) -> List[Check]:
+    return list(checks.values())
+
+def all_succeeded(checks: Dict[CheckName, Check]) -> bool:
+    get_checks(checks).all(lambda check: check.status == "succeeded")
+
 
 
 class AliasedEnum(str, Enum):
@@ -217,7 +237,7 @@ class DynamicOutput(BaseModel):
 class Earthling(BaseModel):
     
     
-    age: baml_py.Checked[int,Literal["earth_aged", "no_infants"]]
+    age: Checked[int,Literal["earth_aged", "no_infants"]]
 
 class Education(BaseModel):
     
@@ -266,8 +286,8 @@ class FooAny(BaseModel):
     
     
     planetary_age: Union["Martian", "Earthling"]
-    certainty: baml_py.Checked[int,Literal["unreasonably_certain"]]
-    species: baml_py.Checked[str,Literal["regex_bad", "regex_good", "trivial"]]
+    certainty: Checked[int,Literal["unreasonably_certain"]]
+    species: Checked[str,Literal["regex_bad", "regex_good", "trivial"]]
 
 class GroceryReceipt(BaseModel):
     
@@ -320,7 +340,7 @@ class LiteralClassTwo(BaseModel):
 class MalformedConstraints(BaseModel):
     
     
-    foo: baml_py.Checked[int,Literal["foo_check"]]
+    foo: Checked[int,Literal["foo_check"]]
 
 class MalformedConstraints2(BaseModel):
     
@@ -330,7 +350,7 @@ class MalformedConstraints2(BaseModel):
 class Martian(BaseModel):
     
     
-    age: baml_py.Checked[int,Literal["young_enough"]]
+    age: Checked[int,Literal["young_enough"]]
 
 class NamedArgsSingleClass(BaseModel):
     

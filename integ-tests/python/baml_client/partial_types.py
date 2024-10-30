@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import Dict, List, Optional, Union, Literal
 
 from . import types
+from .types import Checked, Check
 
 ###############################################################################
 #
@@ -121,7 +122,7 @@ class DynamicOutput(BaseModel):
 class Earthling(BaseModel):
     
     
-    age: baml_py.Checked[Optional[int],Literal["earth_aged", "no_infants"]]
+    age: Checked[Optional[int],Literal["earth_aged", "no_infants"]]
 
 class Education(BaseModel):
     
@@ -170,8 +171,8 @@ class FooAny(BaseModel):
     
     
     planetary_age: Optional[Union["Martian", "Earthling"]] = None
-    certainty: baml_py.Checked[Optional[int],Literal["unreasonably_certain"]]
-    species: baml_py.Checked[Optional[str],Literal["regex_bad", "regex_good", "trivial"]]
+    certainty: Checked[Optional[int],Literal["unreasonably_certain"]]
+    species: Checked[Optional[str],Literal["regex_bad", "regex_good", "trivial"]]
 
 class GroceryReceipt(BaseModel):
     
@@ -224,7 +225,7 @@ class LiteralClassTwo(BaseModel):
 class MalformedConstraints(BaseModel):
     
     
-    foo: baml_py.Checked[Optional[int],Literal["foo_check"]]
+    foo: Checked[Optional[int],Literal["foo_check"]]
 
 class MalformedConstraints2(BaseModel):
     
@@ -234,7 +235,7 @@ class MalformedConstraints2(BaseModel):
 class Martian(BaseModel):
     
     
-    age: baml_py.Checked[Optional[int],Literal["young_enough"]]
+    age: Checked[Optional[int],Literal["young_enough"]]
 
 class NamedArgsSingleClass(BaseModel):
     

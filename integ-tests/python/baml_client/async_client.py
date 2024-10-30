@@ -21,6 +21,7 @@ import baml_py
 from pydantic import BaseModel, ValidationError, create_model
 
 from . import partial_types, types
+from .types import Checked, Check
 from .type_builder import TypeBuilder
 from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX, DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME
 
@@ -1341,7 +1342,7 @@ class BamlAsyncClient:
         self,
         inp: str,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.Checked[int,types.Literal["too_big"]]:
+    ) -> Checked[int,types.Literal["too_big"]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb
@@ -1358,7 +1359,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(baml_py.Checked[int,types.Literal["too_big"]], raw.cast_to(types, types))
+      return cast(Checked[int,types.Literal["too_big"]], raw.cast_to(types, types))
     
     async def PromptTestClaude(
         self,
@@ -4208,7 +4209,7 @@ class BamlStreamClient:
         self,
         inp: str,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlStream[baml_py.Checked[Optional[int],types.Literal["too_big"]], baml_py.Checked[int,types.Literal["too_big"]]]:
+    ) -> baml_py.BamlStream[Checked[Optional[int],types.Literal["too_big"]], Checked[int,types.Literal["too_big"]]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb
@@ -4227,10 +4228,10 @@ class BamlStreamClient:
         __cr__,
       )
 
-      return baml_py.BamlStream[baml_py.Checked[Optional[int],types.Literal["too_big"]], baml_py.Checked[int,types.Literal["too_big"]]](
+      return baml_py.BamlStream[Checked[Optional[int],types.Literal["too_big"]], Checked[int,types.Literal["too_big"]]](
         raw,
-        lambda x: cast(baml_py.Checked[Optional[int],types.Literal["too_big"]], x.cast_to(types, partial_types)),
-        lambda x: cast(baml_py.Checked[int,types.Literal["too_big"]], x.cast_to(types, types)),
+        lambda x: cast(Checked[Optional[int],types.Literal["too_big"]], x.cast_to(types, partial_types)),
+        lambda x: cast(Checked[int,types.Literal["too_big"]], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

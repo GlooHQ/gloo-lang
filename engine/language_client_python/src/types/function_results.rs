@@ -46,11 +46,11 @@ impl FunctionResult {
 
 fn pythonize_checks<'a>(
     py: Python<'a>,
-    baml_py: &Bound<'_, PyModule>,
+    types_module: &Bound<'_, PyModule>,
     checks: &Vec<ResponseCheck>,
 ) -> PyResult<Bound<'a, PyDict>> {
     let dict = PyDict::new_bound(py);
-    let check_class: &PyType = baml_py.getattr("Check")?.extract()?;
+    let check_class: &PyType = types_module.getattr("Check")?.extract()?;
     checks.iter().try_for_each(|ResponseCheck{name, expression, status}| {
         // Construct the Check.
         let check_properties_dict = pyo3::types::PyDict::new_bound(py);
@@ -70,7 +70,6 @@ fn pythonize_strict(
     enum_module: &Bound<'_, PyModule>,
     cls_module: &Bound<'_, PyModule>,
 ) -> PyResult<PyObject> {
-    let baml_py = py.import_bound("baml_py")?;
     let meta = parsed.meta().clone();
     let py_value_without_constraints = match parsed {
         BamlValueWithMeta::String(val, _) => PyResult::Ok(val.into_py(py)),
@@ -163,7 +162,7 @@ fn pythonize_strict(
     } else {
 
         // Generate the Python checks
-        let python_checks = pythonize_checks(py, &baml_py, &meta)?;
+        let python_checks = pythonize_checks(py, &cls_module, &meta)?;
 
         // Get the type of the original value
         let value_type = py_value_without_constraints.bind(py).get_type();
@@ -184,9 +183,7 @@ fn pythonize_strict(
         properties_dict.set_item("value", py_value_without_constraints)?;
         properties_dict.set_item("checks", python_checks)?;
 
-        // Import the `baml_py` module and get the `Checked` constructor
-        let baml_py = py.import_bound("baml_py")?;
-        let class_checked_type_constructor = baml_py.getattr("Checked")?;
+        let class_checked_type_constructor = cls_module.getattr("Checked")?;
 
         // Prepare type parameters for Checked[...]
         let type_parameters_tuple = PyTuple::new_bound(py, &[value_type.as_ref(), &literal_check_names]);
