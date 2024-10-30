@@ -942,6 +942,7 @@ dependencies = [
  "clap",
  "derive_builder",
  "indexmap 2.2.6",
+ "log",
  "minijinja",
  "serde",
  "serde_json",

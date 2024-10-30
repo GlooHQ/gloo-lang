@@ -354,4 +354,87 @@ test ImageReceiptTest {
 
         Ok(())
     }
+
+    #[test]
+    fn test_literals() -> anyhow::Result<()> {
+        let runtime = make_test_runtime(
+            r##"
+// My first tool
+class GetWeather {
+  name "weather"
+  // any other params
+}
+
+class CheckCalendar {
+  name "check_calendar"
+  // any other params
+}
+
+class GetDelivery {
+  name "get_delivery_date" @description(#"Get the delivery date for a customer's order. Call this whenever you need to know the delivery date, for example when a customer asks 'Where is my package'"#)
+  order_id string
+}
+
+class Response {
+  name "reply_to_user"
+  response string
+}
+
+class Message {
+  role "user" | "assistant"
+  message string
+}
+
+function Bot(convo: Message[]) -> GetWeather | CheckCalendar | GetDelivery | Response {
+  client "openai/gpt-4o"
+  prompt #"
+    You are a helpful assistant.
+    {{ ctx.output_format }}
+
+    {% for m in convo %}
+    {{ _.role(m.role) }}
+    {{ m.message }}
+    {% endfor %}
+  "#
+}
+
+test TestName {
+  functions [Bot]
+  args {
+    convo [
+      {
+        role "user"
+        message "Hi, can you tell me the delivery date for my order?"
+      }
+    {
+      role "assistant"
+      message "Hi there! I can help with that. Can you please provide your order ID?"
+    }
+    {
+      role "user"
+      message "i think it is order_12345"
+    }
+    ]
+  }
+}
+        "##,
+        )?;
+
+        let missing_env_vars = runtime.internal().ir().required_env_vars();
+
+        let ctx = runtime
+            .create_ctx_manager(BamlValue::String("test".to_string()), None)
+            .create_ctx_with_default(missing_env_vars.iter());
+
+        let function_name = "Bot";
+        let test_name = "TestName";
+        let params = runtime.get_test_params(function_name, test_name, &ctx)?;
+        let render_prompt_future =
+            runtime
+                .internal()
+                .render_prompt(function_name, &ctx, &params, None);
+        let (prompt, scope, _) = runtime.async_runtime.block_on(render_prompt_future)?;
+
+        Ok(())
+    }
 }

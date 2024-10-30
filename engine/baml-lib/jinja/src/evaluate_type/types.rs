@@ -13,7 +13,7 @@ use minijinja::machinery::{
 
 use super::TypeError;
 
-#[derive(Debug, Clone, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Type {
     Unknown,
     Undefined,
@@ -37,38 +37,93 @@ pub enum Type {
     Audio,
 }
 
-impl PartialEq for Type {
-    fn eq(&self, other: &Self) -> bool {
-        self.matches(other)
-    }
-}
-
-impl Eq for Type {}
-
 impl Type {
-    pub fn matches(&self, r: &Self) -> bool {
-        match (self, r) {
-            (Self::Unknown, Self::Unknown) => true,
-            (Self::Unknown, _) => true,
-            (_, Self::Unknown) => true,
-            (Self::Number, Self::Int | Self::Float) => true,
-            (Self::Int | Self::Float, Self::Number) => true,
-            (Self::List(l0), Self::List(r0)) => l0.matches(r0),
-            (Self::Map(l0, l1), Self::Map(r0, r1)) => l0.matches(r0) && l1.matches(r1),
-            (Self::Union(l0), Self::Union(r0)) => {
-                // Sort l0 and r0 to make sure the order doesn't matter
-                let mut l0 = l0.clone();
-                let mut r0 = r0.clone();
-                l0.sort();
-                r0.sort();
-                l0 == r0
+    /// This is very similar to FieldType::is_subtype_of.
+    pub fn is_subtype_of(&self, other: &Self) -> bool {
+        if let Type::Union(items) = other {
+            if items.iter().any(|x| self.is_subtype_of(x)) {
+                return true;
             }
-            (l0, Self::Union(r0)) => r0.iter().any(|x| l0.matches(x)),
-            (Self::ClassRef(l0), Self::ClassRef(r0)) => l0 == r0,
-            (Self::FunctionRef(l0), Self::FunctionRef(r0)) => l0 == r0,
-            _ => core::mem::discriminant(self) == core::mem::discriminant(r),
+        }
+        match (self, other) {
+            (_, Type::Unknown) => true,
+            (_, Type::Undefined) => true,
+            (Type::Unknown, _) => true,
+            (Type::Undefined, Type::None) => true,
+            (Type::Undefined, _) => false,
+            (Type::None, _) => false,
+            (_, Type::None) => false,
+
+            // Handle types that nest other types.
+            (Type::List(l0), Type::List(r0)) => l0.is_subtype_of(r0),
+            (Type::List(_), _) => false,
+            (Type::Map(l0, l1), Type::Map(r0, r1)) => l0.is_subtype_of(r0) && l1.is_subtype_of(r1),
+            (Type::Map(_, _), _) => false,
+
+            (Type::Int, Type::Number) => true,
+            (Type::Int, _) => false,
+
+            (Type::Float, Type::Number) => true,
+            (Type::Float, _) => false,
+
+            // This is cause jinja is dumb and doesn't know the difference between int and float
+            (Type::Number, Type::Float | Type::Int) => true,
+            (Type::Number, _) => false,
+
+            (Type::Literal(LiteralValue::Int(_)), Type::Int | Type::Number) => true,
+            (Type::Literal(LiteralValue::Bool(_)), Type::Bool) => true,
+            (Type::Literal(LiteralValue::String(_)), Type::String) => true,
+            (Type::Literal(_), _) => false,
+
+            (Type::Union(l0), Type::Union(r0)) => {
+                let r = l0.iter().all(|x| r0.iter().any(|y| x.is_subtype_of(y)));
+                r
+            }
+            (Type::Union(l0), _) => l0.iter().any(|x| x.is_subtype_of(other)),
+
+            (Type::Both(l0, r0), _) => l0.is_subtype_of(other) && r0.is_subtype_of(other),
+            (_, Type::Both(l0, r0)) => self.is_subtype_of(l0) || self.is_subtype_of(r0),
+
+            (Type::Tuple(l0), Type::Tuple(r0)) => {
+                if l0.len() != r0.len() {
+                    return false;
+                }
+                l0.iter().zip(r0.iter()).all(|(l, r)| l.is_subtype_of(r))
+            }
+            (Type::Tuple(_), _) => false,
+
+            (Type::ClassRef(_), _) => false,
+            (Type::FunctionRef(_), _) => false,
+            (Type::Image, _) => false,
+            (Type::Audio, _) => false,
+            (Type::String, _) => false,
+            (Type::Bool, _) => false,
         }
     }
+
+    // pub fn matches(&self, r: &Self) -> bool {
+    //     match (self, r) {
+    //         (Self::Unknown, Self::Unknown) => true,
+    //         (Self::Unknown, _) => true,
+    //         (_, Self::Unknown) => true,
+    //         (Self::Number, Self::Int | Self::Float) => true,
+    //         (Self::Int | Self::Float, Self::Number) => true,
+    //         (Self::List(l0), Self::List(r0)) => l0.matches(r0),
+    //         (Self::Map(l0, l1), Self::Map(r0, r1)) => l0.matches(r0) && l1.matches(r1),
+    //         (Self::Union(l0), Self::Union(r0)) => {
+    //             // Sort l0 and r0 to make sure the order doesn't matter
+    //             let mut l0 = l0.clone();
+    //             let mut r0 = r0.clone();
+    //             l0.sort();
+    //             r0.sort();
+    //             l0 == r0
+    //         }
+    //         (l0, Self::Union(r0)) => r0.iter().any(|x| l0.matches(x)),
+    //         (Self::ClassRef(l0), Self::ClassRef(r0)) => l0 == r0,
+    //         (Self::FunctionRef(l0), Self::FunctionRef(r0)) => l0 == r0,
+    //         _ => core::mem::discriminant(self) == core::mem::discriminant(r),
+    //     }
+    // }
 
     pub fn name(&self) -> String {
         match self {
@@ -125,24 +180,24 @@ impl BitOr for Type {
             (Type::Union(mut v1), Type::Union(v2)) => {
                 v1.extend(v2);
                 // Remove duplicates
-                v1.sort();
+                // v1.sort();
                 v1.dedup();
                 Type::Union(v1)
             }
             (Type::Union(mut v), t) => {
                 v.push(t);
-                v.sort();
+                // v.sort();
                 v.dedup();
                 Type::Union(v)
             }
             (t, Type::Union(mut v)) => {
                 v.push(t);
-                v.sort();
+                // v.sort();
                 v.dedup();
                 Type::Union(v)
             }
             (t1, t2) => {
-                if t1 == t2 {
+                if t1.is_subtype_of(&t2) {
                     return t1;
                 }
                 Type::Union(vec![t1, t2])
@@ -479,7 +534,7 @@ impl PredefinedTypes {
                 if i < positional_args.len() {
                     unused_args.remove(name);
                     let arg_t = &positional_args[i];
-                    if arg_t != t {
+                    if arg_t.is_subtype_of(t) {
                         errors.push(TypeError::new_wrong_arg_type(
                             func,
                             span,
@@ -492,7 +547,7 @@ impl PredefinedTypes {
                 } else {
                     if let Some(arg_t) = kwargs.get(name.as_str()) {
                         unused_args.remove(name);
-                        if arg_t != t {
+                        if arg_t.is_subtype_of(&t) {
                             errors.push(TypeError::new_wrong_arg_type(
                                 func,
                                 span,

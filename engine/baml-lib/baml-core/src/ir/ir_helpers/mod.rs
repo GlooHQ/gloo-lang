@@ -202,34 +202,25 @@ impl IRHelper for IntermediateRepr {
     ) -> anyhow::Result<BamlValueWithMeta<FieldType>> {
         match value {
             BamlValue::String(s)
-                if FieldType::Primitive(TypeValue::String).is_subtype_of(&field_type) =>
+                if field_type.is_subtype_of(&FieldType::union(vec![
+                    FieldType::Literal(LiteralValue::String(s.clone())),
+                    FieldType::Primitive(TypeValue::String),
+                ])) =>
             {
                 Ok(BamlValueWithMeta::String(s, field_type))
             }
-
-            BamlValue::String(s) => {
-                if let FieldType::Literal(LiteralValue::String(l)) = &field_type {
-                    if s == *l {
-                        return Ok(BamlValueWithMeta::String(s, field_type));
-                    }
-                }
-
+            BamlValue::String(_) => {
                 anyhow::bail!("Could not unify String with {:?}", field_type)
             }
-
             BamlValue::Int(i)
-                if FieldType::Primitive(TypeValue::Int).is_subtype_of(&field_type) =>
+                if field_type.is_subtype_of(&FieldType::union(vec![
+                    FieldType::Literal(LiteralValue::Int(i.clone())),
+                    FieldType::Primitive(TypeValue::Int),
+                ])) =>
             {
                 Ok(BamlValueWithMeta::Int(i, field_type))
             }
-
             BamlValue::Int(i) => {
-                if let FieldType::Literal(LiteralValue::Int(l)) = &field_type {
-                    if i == *l {
-                        return Ok(BamlValueWithMeta::Int(i, field_type));
-                    }
-                }
-
                 anyhow::bail!("Could not unify Int with {:?}", field_type)
             }
 
@@ -241,7 +232,10 @@ impl IRHelper for IntermediateRepr {
             BamlValue::Float(_) => anyhow::bail!("Could not unify Float with {:?}", field_type),
 
             BamlValue::Bool(b)
-                if FieldType::Primitive(TypeValue::Bool).is_subtype_of(&field_type) =>
+                if field_type.is_subtype_of(&FieldType::union(vec![
+                    FieldType::Literal(LiteralValue::Bool(b)),
+                    FieldType::Primitive(TypeValue::Bool),
+                ])) =>
             {
                 Ok(BamlValueWithMeta::Bool(b, field_type))
             }
@@ -426,7 +420,8 @@ pub fn infer_type<'a>(value: &'a BamlValue) -> Option<FieldType> {
 mod tests {
     use super::*;
     use baml_types::{
-        BamlMedia, BamlMediaContent, BamlMediaType, BamlValue, Constraint, ConstraintLevel, FieldType, JinjaExpression, MediaBase64, TypeValue
+        BamlMedia, BamlMediaContent, BamlMediaType, BamlValue, Constraint, ConstraintLevel,
+        FieldType, JinjaExpression, MediaBase64, TypeValue,
     };
     use repr::make_test_ir;
 
@@ -685,8 +680,13 @@ mod tests {
         )
         .unwrap();
         let function = ir.find_function("Foo").unwrap();
-        let params = vec![("a".to_string(), BamlValue::Int(1))].into_iter().collect();
-        let arg_coercer = ArgCoercer { span_path: None, allow_implicit_cast_to_string: true };
+        let params = vec![("a".to_string(), BamlValue::Int(1))]
+            .into_iter()
+            .collect();
+        let arg_coercer = ArgCoercer {
+            span_path: None,
+            allow_implicit_cast_to_string: true,
+        };
         let res = ir.check_function_params(&function, &params, arg_coercer);
         assert!(res.is_err());
     }
