@@ -46,13 +46,12 @@ impl Type {
             }
         }
         match (self, other) {
-            (_, Type::Unknown) => true,
-            (_, Type::Undefined) => true,
             (Type::Unknown, _) => true,
-            (Type::Undefined, Type::None) => true,
+            (_, Type::Unknown) => true,
+            (_, Type::Undefined) => false,
+            (_, Type::None) => false,
             (Type::Undefined, _) => false,
             (Type::None, _) => false,
-            (_, Type::None) => false,
 
             // Handle types that nest other types.
             (Type::List(l0), Type::List(r0)) => l0.is_subtype_of(r0),
@@ -534,7 +533,7 @@ impl PredefinedTypes {
                 if i < positional_args.len() {
                     unused_args.remove(name);
                     let arg_t = &positional_args[i];
-                    if arg_t.is_subtype_of(t) {
+                    if t.is_subtype_of(arg_t) {
                         errors.push(TypeError::new_wrong_arg_type(
                             func,
                             span,
@@ -547,7 +546,7 @@ impl PredefinedTypes {
                 } else {
                     if let Some(arg_t) = kwargs.get(name.as_str()) {
                         unused_args.remove(name);
-                        if arg_t.is_subtype_of(&t) {
+                        if t.is_subtype_of(&arg_t) {
                             errors.push(TypeError::new_wrong_arg_type(
                                 func,
                                 span,
