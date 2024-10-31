@@ -291,15 +291,24 @@ generator cloud {{
         let project_id = match get_or_create {
             GetOrCreateProjectResult::Existing(project) => project.project_id,
             GetOrCreateProjectResult::ToBeCreated(project_fqn) => {
-                println!("Created project {}", project_fqn);
-                api_client
-                    .create_project(CreateProjectRequest {
-                        project_fqn: format!("{project_fqn}"),
-                    })
-                    .await
-                    .context("Failed while creating project in API")?
-                    .project
-                    .project_id
+                async {
+                    let (resp, _) = join!(
+                        api_client.create_project(CreateProjectRequest {
+                            project_fqn: format!("{project_fqn}"),
+                        }),
+                        sleep(Duration::from_millis(1500)),
+                    );
+                    resp
+                }
+                .with_progress_spinner(
+                    format!("Creating project {}", project_fqn),
+                    |_| "done!".to_string(),
+                    "uh-oh, something went wrong.",
+                )
+                .await
+                .context("Failed while creating project in API")?
+                .project
+                .project_id
             }
         };
 
