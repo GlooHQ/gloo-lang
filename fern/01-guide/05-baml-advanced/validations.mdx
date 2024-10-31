@@ -4,7 +4,7 @@ value falls within an acceptable range.
 
 BAML provides two types of validations:
 - **`@assert`** for strict validations. If a type fails an `@assert` validation, it
-  will not be returned the response. If the failing assertion was part of the
+  will not be returned in the response. If the failing assertion was part of the
   top-level type, it will raise an exception. If it's part of a container, it
   will be removed from the container.
 - **`@check`** for non-exception-raising validations. Whether a `@check` passes or
@@ -36,6 +36,15 @@ function NextInt8(a: int) -> int @assert(ok_int8, {{ this >= -128 and this < 127
 }
 ```
 
+Asserts may be applied to a whole class via `@@assert`.
+
+```baml BAML
+class Bar {
+  baz int
+  quux string
+  @@assert(length_limit, {{ this.quux|length < this.baz }})
+}
+```
 
 ### Using `@assert` with `Union` Types
 
@@ -332,5 +341,20 @@ class Library {
     name string
     books Book[] @assert(nonempty_books, {{ this|length > 0 }})
                  @assert(unique_isbn, {{ this|map(attribute='isbn')|unique()|length == this|length }} )
+}
+```
+
+In this example, we use a block-level `@@assert` to check a dependency across
+a pair of fields.
+
+```baml BAML
+class Person {
+    name string @assert(valid_name, {{ this|length >= 2 }})
+    age int @assert(valid_age, {{ this >= 0 }})
+    address Address
+
+    @@assert(not_usa_minor, {{
+        this.age >= 18 or this.address.country != "USA",
+    }})
 }
 ```

@@ -37,3 +37,15 @@ function MyFunction(x: int @assert(between_0_and_10, {{ this > 0 and this < 10 }
   prompt #"Hello, world!"#
 }
 ```
+
+### Block Assertion
+
+Asserts can be used in a block definition, referencing fields within the block.
+
+```baml BAML
+class Foo {
+  bar int
+  baz string
+  @@assert(baz_length_limit, {{ this.baz|length < this.bar }})
+}
+```
