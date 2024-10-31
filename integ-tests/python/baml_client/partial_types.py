@@ -34,6 +34,13 @@ class BigNumbers(BaseModel):
     a: Optional[int] = None
     b: Optional[float] = None
 
+class BinaryNode(BaseModel):
+    
+    
+    data: Optional[int] = None
+    left: Optional["BinaryNode"] = None
+    right: Optional["BinaryNode"] = None
+
 class Blah(BaseModel):
     
     
@@ -173,6 +180,11 @@ class FooAny(BaseModel):
     certainty: baml_py.Checked[Optional[int],Literal["unreasonably_certain"]]
     species: baml_py.Checked[Optional[str],Literal["regex_bad", "regex_good", "trivial"]]
 
+class Forest(BaseModel):
+    
+    
+    trees: List["Tree"]
+
 class GroceryReceipt(BaseModel):
     
     
@@ -205,6 +217,12 @@ class InputClassNested(BaseModel):
     
     key: Optional[str] = None
     nested: Optional["InputClass"] = None
+
+class LinkedList(BaseModel):
+    
+    
+    head: Optional["Node"] = None
+    len: Optional[int] = None
 
 class LiteralClassHello(BaseModel):
     
@@ -255,6 +273,12 @@ class Nested2(BaseModel):
     
     prop11: Optional[Union[Optional[str], Optional[None]]] = None
     prop12: Optional[Union[Optional[str], Optional[None]]] = None
+
+class Node(BaseModel):
+    
+    
+    data: Optional[int] = None
+    next: Optional["Node"] = None
 
 class OptionalTest_Prop1(BaseModel):
     
@@ -400,6 +424,12 @@ class TestOutputClass(BaseModel):
     
     prop1: Optional[str] = None
     prop2: Optional[int] = None
+
+class Tree(BaseModel):
+    
+    
+    data: Optional[int] = None
+    children: Optional["Forest"] = None
 
 class TwoStoriesOneTitle(BaseModel):
     

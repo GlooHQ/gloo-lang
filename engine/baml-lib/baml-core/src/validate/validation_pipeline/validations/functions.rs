@@ -1,9 +1,11 @@
+use std::collections::HashSet;
+
 use crate::validate::validation_pipeline::context::Context;
 
 use either::Either;
 use internal_baml_diagnostics::{DatamodelError, DatamodelWarning, Span};
 
-use internal_baml_schema_ast::ast::{FieldType, WithIdentifier, WithName, WithSpan};
+use internal_baml_schema_ast::ast::{FieldType, TypeExpId, WithIdentifier, WithName, WithSpan};
 
 use super::types::validate_type;
 
@@ -215,35 +217,65 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
     }
 }
 
-/// Recusively search for `check` attributes in a field type and all of its
-/// composed children.
+/// Just syntactic sugar for the recursive check.
+///
+/// See [`NestedChecks::has_checks_nested`].
 fn has_checks_nested(ctx: &Context<'_>, field_type: &FieldType) -> bool {
-    if field_type.has_checks() {
-        return true;
+    NestedChecks::new(ctx).has_checks_nested(field_type)
+}
+
+struct NestedChecks<'c> {
+    ctx: &'c Context<'c>,
+    visited: HashSet<TypeExpId>,
+}
+
+impl<'c> NestedChecks<'c> {
+    fn new(ctx: &'c Context<'c>) -> Self {
+        Self {
+            ctx,
+            visited: HashSet::new(),
+        }
     }
 
-    match field_type {
-        FieldType::Symbol(_, id, ..) => match ctx.db.find_type(id) {
-            Some(Either::Left(class_walker)) => {
-                let mut fields = class_walker.static_fields();
-                fields.any(|field| {
-                    field
-                        .ast_field()
-                        .expr
-                        .as_ref()
-                        .map_or(false, |ft| has_checks_nested(ctx, &ft))
-                })
-            }
-            _ => false,
-        },
+    /// Recusively search for `check` attributes in a field type and all of its
+    /// composed children.
+    fn has_checks_nested(&mut self, field_type: &FieldType) -> bool {
+        if field_type.has_checks() {
+            return true;
+        }
 
-        FieldType::Primitive(..) => false,
-        FieldType::Union(_, children, ..) => children.iter().any(|ft| has_checks_nested(ctx, ft)),
-        FieldType::Literal(..) => false,
-        FieldType::Tuple(_, children, ..) => children.iter().any(|ft| has_checks_nested(ctx, ft)),
-        FieldType::List(_, child, ..) => has_checks_nested(ctx, child),
-        FieldType::Map(_, kv, ..) => {
-            has_checks_nested(ctx, &kv.as_ref().0) || has_checks_nested(ctx, &kv.as_ref().1)
+        match field_type {
+            FieldType::Symbol(_, id, ..) => match self.ctx.db.find_type(id) {
+                Some(Either::Left(class_walker)) => {
+                    // Stop recursion when dealing with recursive types.
+                    if !self.visited.insert(class_walker.id) {
+                        return false;
+                    }
+
+                    let mut fields = class_walker.static_fields();
+                    fields.any(|field| {
+                        field
+                            .ast_field()
+                            .expr
+                            .as_ref()
+                            .map_or(false, |ft| self.has_checks_nested(&ft))
+                    })
+                }
+                _ => false,
+            },
+
+            FieldType::Primitive(..) => false,
+            FieldType::Union(_, children, ..) => {
+                children.iter().any(|ft| self.has_checks_nested(ft))
+            }
+            FieldType::Literal(..) => false,
+            FieldType::Tuple(_, children, ..) => {
+                children.iter().any(|ft| self.has_checks_nested(ft))
+            }
+            FieldType::List(_, child, ..) => self.has_checks_nested(child),
+            FieldType::Map(_, kv, ..) => {
+                self.has_checks_nested(&kv.as_ref().0) || self.has_checks_nested(&kv.as_ref().1)
+            }
         }
     }
 }

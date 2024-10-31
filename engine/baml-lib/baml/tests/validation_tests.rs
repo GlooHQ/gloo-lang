@@ -50,6 +50,11 @@ static INIT: Once = Once::new();
 
 #[inline(never)] // we want to compile fast
 fn run_validation_test(test_file_path: &str) {
+    println!("testing: {}", test_file_path);
+    if test_file_path == "functions_v2/recursive_type_as_input.baml" {
+        println!("Break");
+    }
+
     INIT.call_once(|| {
         env_logger::init();
     });

@@ -21,6 +21,7 @@ module Baml
   
   module PartialTypes
     class BigNumbers < T::Struct; end
+    class BinaryNode < T::Struct; end
     class Blah < T::Struct; end
     class BookOrder < T::Struct; end
     class ClassOptionalOutput < T::Struct; end
@@ -42,11 +43,13 @@ module Baml
     class FakeImage < T::Struct; end
     class FlightConfirmation < T::Struct; end
     class FooAny < T::Struct; end
+    class Forest < T::Struct; end
     class GroceryReceipt < T::Struct; end
     class InnerClass < T::Struct; end
     class InnerClass2 < T::Struct; end
     class InputClass < T::Struct; end
     class InputClassNested < T::Struct; end
+    class LinkedList < T::Struct; end
     class LiteralClassHello < T::Struct; end
     class LiteralClassOne < T::Struct; end
     class LiteralClassTwo < T::Struct; end
@@ -56,6 +59,7 @@ module Baml
     class NamedArgsSingleClass < T::Struct; end
     class Nested < T::Struct; end
     class Nested2 < T::Struct; end
+    class Node < T::Struct; end
     class OptionalTest_Prop1 < T::Struct; end
     class OptionalTest_ReturnType < T::Struct; end
     class OrderInfo < T::Struct; end
@@ -77,6 +81,7 @@ module Baml
     class TestClassNested < T::Struct; end
     class TestClassWithEnum < T::Struct; end
     class TestOutputClass < T::Struct; end
+    class Tree < T::Struct; end
     class TwoStoriesOneTitle < T::Struct; end
     class UnionTest_ReturnType < T::Struct; end
     class WithReasoning < T::Struct; end
@@ -89,6 +94,22 @@ module Baml
         super(
           a: props[:a],
           b: props[:b],
+        )
+
+        @props = props
+      end
+    end
+    class BinaryNode < T::Struct
+      include Baml::Sorbet::Struct
+      const :data, T.nilable(Integer)
+      const :left, Baml::PartialTypes::BinaryNode
+      const :right, Baml::PartialTypes::BinaryNode
+
+      def initialize(props)
+        super(
+          data: props[:data],
+          left: props[:left],
+          right: props[:right],
         )
 
         @props = props
@@ -404,6 +425,18 @@ module Baml
         @props = props
       end
     end
+    class Forest < T::Struct
+      include Baml::Sorbet::Struct
+      const :trees, T::Array[Baml::PartialTypes::Tree]
+
+      def initialize(props)
+        super(
+          trees: props[:trees],
+        )
+
+        @props = props
+      end
+    end
     class GroceryReceipt < T::Struct
       include Baml::Sorbet::Struct
       const :receiptId, T.nilable(String)
@@ -475,6 +508,20 @@ module Baml
         super(
           key: props[:key],
           nested: props[:nested],
+        )
+
+        @props = props
+      end
+    end
+    class LinkedList < T::Struct
+      include Baml::Sorbet::Struct
+      const :head, Baml::PartialTypes::Node
+      const :len, T.nilable(Integer)
+
+      def initialize(props)
+        super(
+          head: props[:head],
+          len: props[:len],
         )
 
         @props = props
@@ -593,6 +640,20 @@ module Baml
         super(
           prop11: props[:prop11],
           prop12: props[:prop12],
+        )
+
+        @props = props
+      end
+    end
+    class Node < T::Struct
+      include Baml::Sorbet::Struct
+      const :data, T.nilable(Integer)
+      const :next, Baml::PartialTypes::Node
+
+      def initialize(props)
+        super(
+          data: props[:data],
+          next: props[:next],
         )
 
         @props = props
@@ -919,6 +980,20 @@ module Baml
         super(
           prop1: props[:prop1],
           prop2: props[:prop2],
+        )
+
+        @props = props
+      end
+    end
+    class Tree < T::Struct
+      include Baml::Sorbet::Struct
+      const :data, T.nilable(Integer)
+      const :children, Baml::PartialTypes::Forest
+
+      def initialize(props)
+        super(
+          data: props[:data],
+          children: props[:children],
         )
 
         @props = props
