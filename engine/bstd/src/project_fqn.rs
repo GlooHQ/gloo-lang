@@ -84,15 +84,15 @@ mod tests {
             ("_org/proj", Ok(())),
             (
                 "-org/proj",
-                Err("'-org/proj' contains an invalid org ID ('-org')"),
+                Err("'-org/proj' contains an invalid org name ('-org')"),
             ),
             (
                 "@org/proj",
-                Err("'@org/proj' contains an invalid org ID ('@org')"),
+                Err("'@org/proj' contains an invalid org name ('@org')"),
             ),
             (
                 "%org/proj",
-                Err("'%org/proj' contains an invalid org ID ('%org')"),
+                Err("'%org/proj' contains an invalid org name ('%org')"),
             ),
             ("123/proj", Ok(())),
             ("org1/proj", Ok(())),
@@ -104,15 +104,15 @@ mod tests {
             ("org/proj_", Ok(())),
             (
                 "org/1proj",
-                Err("'org/1proj' contains an invalid project ID ('1proj') - must start with a lowercase letter"),
+                Err("'org/1proj' contains an invalid project name ('1proj') - must start with a lowercase letter"),
             ),
             (
                 "org/-proj",
-                Err("'org/-proj' contains an invalid project ID ('-proj') - must start with a lowercase letter"),
+                Err("'org/-proj' contains an invalid project name ('-proj') - must start with a lowercase letter"),
             ),
             (
                 "org/_proj",
-                Err("'org/_proj' contains an invalid project ID ('_proj') - must start with a lowercase letter"),
+                Err("'org/_proj' contains an invalid project name ('_proj') - must start with a lowercase letter"),
             ),
         ];
 
