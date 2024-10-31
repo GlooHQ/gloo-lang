@@ -357,17 +357,17 @@ navigation:
         contents:
           - page: What are attributes?
             path: 03-reference/baml/attributes/attributes-overview.mdx
-          - page: alias
+          - page: "@alias / @@alias"
             path: 03-reference/baml/attributes/alias.mdx
-          - page: description
+          - page: "@description / @@description"
             path: 03-reference/baml/attributes/description.mdx
-          - page: skip
+          - page: "@skip"
             path: 03-reference/baml/attributes/skip.mdx
-          - page: assert
+          - page: "@assert"
             path: 03-reference/baml/attributes/assert.mdx
-          - page: check
+          - page: "@check"
             path: 03-reference/baml/attributes/check.mdx
-          - page: dynamic
+          - page: "@@dynamic"
             path: 03-reference/baml/attributes/dynamic.mdx
       - section: LLM Client Providers
         contents:
