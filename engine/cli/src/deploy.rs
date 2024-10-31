@@ -129,8 +129,13 @@ fn choose_project_shortname() -> Result<String> {
         .context("Failed to wait for user input")
 }
 
+enum GetOrCreateProjectResult {
+    Existing(Project),
+    ToBeCreated(String),
+}
+
 impl Deployer {
-    async fn get_or_create_project(&self) -> Result<Project> {
+    async fn get_or_create_project(&self) -> Result<GetOrCreateProjectResult> {
         let propel_auth_client = super::propelauth::PropelAuthClient::new()?;
         let user_info = propel_auth_client
             .get_user_info(self.token_data.borrow_mut().access_token().await?)
@@ -170,14 +175,10 @@ impl Deployer {
         match project_resp.projects.len() {
             0 => {
                 let project_shortname = choose_project_shortname()?;
-                let resp = api_client
-                    .create_project(CreateProjectRequest {
-                        project_fqn: format!("{}/{}", org_slug, project_shortname),
-                    })
-                    .await
-                    .context("Failed while creating project in API")?;
-
-                Ok(resp.project)
+                Ok(GetOrCreateProjectResult::ToBeCreated(format!(
+                    "{}/{}",
+                    org_slug, project_shortname
+                )))
             }
             _ => {
                 let project_idx = dialoguer::Select::with_theme(&ColorfulTheme::default())
@@ -203,25 +204,36 @@ impl Deployer {
 
                 if project_idx == 0 {
                     let project_shortname = choose_project_shortname()?;
-                    let resp = api_client
-                        .create_project(CreateProjectRequest {
-                            project_fqn: format!("{}/{}", org_slug, project_shortname),
-                        })
-                        .await
-                        .context("Failed while creating project in API")?;
 
-                    Ok(resp.project)
+                    Ok(GetOrCreateProjectResult::ToBeCreated(format!(
+                        "{}/{}",
+                        org_slug, project_shortname
+                    )))
                 } else {
-                    Ok(project_resp.projects[project_idx - 1].clone())
+                    Ok(GetOrCreateProjectResult::Existing(
+                        project_resp.projects[project_idx - 1].clone(),
+                    ))
                 }
             }
         }
     }
 
     async fn deploy_new_project(&self) -> Result<CreateDeploymentResponse> {
-        let project = self.get_or_create_project().await?;
-        let project_id = &project.project_id;
-        let project_fqn = ProjectFqn::parse(project.project_fqn.clone())?;
+        let api_client = ApiClient {
+            base_url: self.api_url.clone(),
+            token: self
+                .token_data
+                .borrow_mut()
+                .access_token()
+                .await?
+                .to_string(),
+        };
+
+        let get_or_create = self.get_or_create_project().await?;
+        let project_fqn = ProjectFqn::parse(match &get_or_create {
+            GetOrCreateProjectResult::Existing(project) => &project.project_fqn,
+            GetOrCreateProjectResult::ToBeCreated(project_fqn) => project_fqn,
+        })?;
 
         let new_generator_block = format!(
             r#"
@@ -231,7 +243,7 @@ generator cloud {{
   version "{}"
 }}
             "#,
-            project.project_fqn,
+            project_fqn,
             env!("CARGO_PKG_VERSION")
         );
         let (path, prev_generators, new_generators) = match self.runtime.generator_path() {
@@ -275,6 +287,21 @@ generator cloud {{
             "Failed to write to {}",
             generator_abspath.display()
         ))?;
+
+        let project_id = match get_or_create {
+            GetOrCreateProjectResult::Existing(project) => project.project_id,
+            GetOrCreateProjectResult::ToBeCreated(project_fqn) => {
+                println!("Created project {}", project_fqn);
+                api_client
+                    .create_project(CreateProjectRequest {
+                        project_fqn: format!("{project_fqn}"),
+                    })
+                    .await
+                    .context("Failed while creating project in API")?
+                    .project
+                    .project_id
+            }
+        };
 
         let resp = async {
             let (resp, _) = join!(

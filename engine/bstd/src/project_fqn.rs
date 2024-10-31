@@ -43,7 +43,8 @@ impl ProjectFqn {
         }
     }
 
-    pub fn parse(fqn: String) -> Result<Self> {
+    pub fn parse(fqn: impl AsRef<str>) -> Result<Self> {
+        let fqn = fqn.as_ref();
         let (org_slug, project_shortname) = fqn.split_once('/').context(format!(
             "'{}' is not a valid fully-qualified project name - must specify both an org and project name",
             fqn
