@@ -779,7 +779,7 @@ dependencies = [
 
 [[package]]
 name = "baml-cli"
-version = "0.64.0"
+version = "0.65.0"
 dependencies = [
  "ambassador",
  "anyhow",
@@ -1155,7 +1155,7 @@ dependencies = [
 
 [[package]]
 name = "bstd"
-version = "0.64.0"
+version = "0.65.0"
 dependencies = [
  "anyhow",
  "array-macro",

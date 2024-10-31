@@ -1,11 +1,11 @@
 ---
-slug: cloud/functions/get-started
+slug: guide/cloud/functions/get-started
 ---
 
 _Learn how to host your BAML code on Boundary Functions and call it over HTTP._
 
 <Info>
-  This is a preview feature, available starting with `baml-cli v0.63.0`.
+  This is a preview feature, available starting with `baml-cli v0.65.0`.
 </Info>
 
 <Note>
@@ -35,25 +35,27 @@ This guide will walk you through:
 Once you've deployed your BAML functions, you can use the [OpenAPI client] to
 call them.
 
-[OpenAPI client]: /docs/get-started/quickstart/openapi
+[OpenAPI client]: /guide/installation-language/rest-api-other-languages
 
 ## Get Started
 
-First, create your account and organization:
+First, create your account and organization at https://dashboard.boundaryml.com.
+
+Then, log in from your terminal:
 
 ```bash
 baml-cli login
 ```
 
-This will take you to https://dashboard.boundaryml.com, where you'll create an account and your organization.
-
-Then, run this command in your `baml_src/` directory:
+and run this command in your `baml_src/` directory:
 
 ```bash
 baml-cli deploy
 ```
 
-which will set up a new Boundary project for you, deploy your BAML code to it, point you to the dashboard, where you can set environment variables and create API keys.
+This will prompt you to create a new Boundary project, deploy your BAML code to it,
+and then point you to the dashboard, where you can set environment variables and
+create API keys to use to call your BAML functions.
 
 <div class="flex flex-col items-center">
   <img class="rounded-md px-4 py-2 m-0" src="/assets/cloud/deploy-screenshot.png" alt="Boundary Functions deploy output" />
