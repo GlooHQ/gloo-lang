@@ -424,8 +424,20 @@ navigation:
             slug: extract
             summary: 03-reference/extract/summary.mdx
             display-errors: true
-          # - page: Advanced
-          #   path: 01-guide/introduction.mdx
+      - section: Boundary Cloud API
+        contents:
+        - section: Boundary Functions
+          contents:
+            - page: Get Started
+              path: 03-reference/cloud/functions/get-started.mdx
+            - page: Using OpenAPI
+              path: 03-reference/cloud/functions/using-openapi.mdx
+            - page: Environment Variables
+              path: 03-reference/cloud/functions/environment-variables.mdx
+        - section: Reference
+          contents:
+            - page: Limits
+              path: 03-reference/cloud/limits.mdx
 
       # - section: "baml_client: Python"
       #   contents:
