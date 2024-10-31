@@ -156,21 +156,21 @@ navigation:
             path: 01-guide/05-baml-advanced/validations.mdx
       - section: Boundary Cloud
         contents:
-        - section: Functions
-          icon: fa-cloud
-          contents:
-            - page: Get Started
-              path: 01-guide/functions/get-started.mdx
-            - page: Using OpenAPI
-              path: 01-guide/functions/using-openapi.mdx
-            - page: Environment Variables
-              path: 01-guide/functions/environment-variables.mdx
-        - section: Observability
-          icon: fa-chart-simple
-          contents:
-            - page: Tracking Usage
-              icon: fa-regular fa-bar-chart
-              path: 01-guide/07-observability/studio.mdx
+          - section: Functions
+            icon: fa-cloud
+            contents:
+              - page: Get Started
+                path: 01-guide/functions/get-started.mdx
+              - page: Using OpenAPI
+                path: 01-guide/functions/using-openapi.mdx
+              - page: Environment Variables
+                path: 01-guide/functions/environment-variables.mdx
+          - section: Observability
+            icon: fa-chart-simple
+            contents:
+              - page: Tracking Usage
+                icon: fa-regular fa-bar-chart
+                path: 01-guide/07-observability/studio.mdx
       - section: Comparisons
         contents:
           - page: BAML vs Marvin
@@ -353,6 +353,22 @@ navigation:
             path: 03-reference/baml/enum.mdx
           - page: generator
             path: 03-reference/generator.mdx
+      - section: Attributes
+        contents:
+          - page: What are attributes?
+            path: 03-reference/baml/attributes/attributes-overview.mdx
+          - page: alias
+            path: 03-reference/baml/attributes/alias.mdx
+          - page: description
+            path: 03-reference/baml/attributes/description.mdx
+          - page: skip
+            path: 03-reference/baml/attributes/skip.mdx
+          - page: assert
+            path: 03-reference/baml/attributes/assert.mdx
+          - page: check
+            path: 03-reference/baml/attributes/check.mdx
+          - page: dynamic
+            path: 03-reference/baml/attributes/dynamic.mdx
       - section: LLM Client Providers
         contents:
           - page: "AWS Bedrock"

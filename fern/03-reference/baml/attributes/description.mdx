@@ -1,0 +1,21 @@
+# Description
+
+The `@description` attribute in BAML provides additional context to fields or values in prompts. This can help the LLM understand the intended use or meaning of a field or value.
+
+## Usage
+
+### Field Description
+
+```baml BAML
+class MyClass {
+  property1 string @description("The name of the object")
+}
+```
+
+### Enum Value Description
+
+```baml BAML
+enum MyEnum {
+  Value1 @description("Answer in 2 sentences")
+}
+```

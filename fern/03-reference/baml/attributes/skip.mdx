@@ -1,0 +1,14 @@
+# Skip
+
+The `@skip` attribute in BAML is used to exclude certain fields or values from being included in prompts or parsed responses. This can be useful when certain data is not relevant for the LLM's processing.
+
+## Usage
+
+### Enum Value Skipping
+
+```baml BAML
+enum MyEnum {
+  Value1
+  Value2 @skip
+}
+```

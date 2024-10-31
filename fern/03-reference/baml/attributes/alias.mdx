@@ -1,0 +1,30 @@
+# Alias
+
+The `@alias` attribute in BAML is used to rename fields or values for better understanding by the LLM, while keeping the original name in your code. This is particularly useful for prompt engineering, as it allows you to provide a more intuitive name for the LLM without altering your existing codebase.
+
+## Usage
+
+### Field Aliasing
+
+```baml BAML
+class MyClass {
+  property1 string @alias("name")
+}
+```
+
+### Enum Value Aliasing
+
+```baml BAML
+enum MyEnum {
+  Value1 @alias("complete_summary")
+}
+```
+
+### Enum Name Aliasing
+
+```baml BAML
+enum MyEnum {
+  Value1
+  @@alias("MyActualEnumName")
+}
+```
