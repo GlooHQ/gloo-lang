@@ -15,8 +15,6 @@ tabs:
     display-name: BAML
   boundary-extraction-api:
     display-name: Document Extraction API
-  boundary-cloud:
-    display-name: Boundary Functions
   observability:
     display-name: Observability
 
@@ -219,20 +217,6 @@ navigation:
             slug: docs/api
             summary: docs/api/summary.mdx
             display-errors: true
-  - tab: boundary-cloud
-    layout:
-      - section: Boundary Functions
-        contents:
-          - page: Get Started
-            path: docs/cloud/functions/get-started.mdx
-          - page: Using OpenAPI
-            path: docs/cloud/functions/using-openapi.mdx
-          - page: Environment Variables
-            path: docs/cloud/functions/environment-variables.mdx
-      - section: Reference
-        contents:
-          - page: Limits
-            path: docs/cloud/limits.mdx
 
 navbar-links:
   - type: github
