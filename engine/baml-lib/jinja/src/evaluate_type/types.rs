@@ -40,6 +40,9 @@ pub enum Type {
 impl Type {
     /// This is very similar to FieldType::is_subtype_of.
     pub fn is_subtype_of(&self, other: &Self) -> bool {
+        if self == other {
+            return true;
+        }
         if let Type::Union(items) = other {
             if items.iter().any(|x| self.is_subtype_of(x)) {
                 return true;
@@ -74,14 +77,10 @@ impl Type {
             (Type::Literal(LiteralValue::String(_)), Type::String) => true,
             (Type::Literal(_), _) => false,
 
-            (Type::Union(l0), Type::Union(r0)) => {
-                let r = l0.iter().all(|x| r0.iter().any(|y| x.is_subtype_of(y)));
-                r
-            }
-            (Type::Union(l0), _) => l0.iter().any(|x| x.is_subtype_of(other)),
+            (Type::Union(l0), _) => l0.iter().all(|x| x.is_subtype_of(other)),
 
-            (Type::Both(l0, r0), _) => l0.is_subtype_of(other) && r0.is_subtype_of(other),
-            (_, Type::Both(l0, r0)) => self.is_subtype_of(l0) || self.is_subtype_of(r0),
+            (Type::Both(l0, r0), _) => l0.is_subtype_of(other) || r0.is_subtype_of(other),
+            (_, Type::Both(l0, r0)) => self.is_subtype_of(l0) && self.is_subtype_of(r0),
 
             (Type::Tuple(l0), Type::Tuple(r0)) => {
                 if l0.len() != r0.len() {
@@ -179,19 +178,19 @@ impl BitOr for Type {
             (Type::Union(mut v1), Type::Union(v2)) => {
                 v1.extend(v2);
                 // Remove duplicates
-                // v1.sort();
+                v1.sort();
                 v1.dedup();
                 Type::Union(v1)
             }
             (Type::Union(mut v), t) => {
                 v.push(t);
-                // v.sort();
+                v.sort();
                 v.dedup();
                 Type::Union(v)
             }
             (t, Type::Union(mut v)) => {
                 v.push(t);
-                // v.sort();
+                v.sort();
                 v.dedup();
                 Type::Union(v)
             }
@@ -199,7 +198,12 @@ impl BitOr for Type {
                 if t1.is_subtype_of(&t2) {
                     return t1;
                 }
-                Type::Union(vec![t1, t2])
+                if t2.is_subtype_of(&t1) {
+                    return t2;
+                }
+                let mut types = vec![t1, t2];
+                types.sort();
+                Type::Union(types)
             }
         }
     }
@@ -533,7 +537,7 @@ impl PredefinedTypes {
                 if i < positional_args.len() {
                     unused_args.remove(name);
                     let arg_t = &positional_args[i];
-                    if t.is_subtype_of(arg_t) {
+                    if !arg_t.is_subtype_of(t) {
                         errors.push(TypeError::new_wrong_arg_type(
                             func,
                             span,
@@ -546,7 +550,7 @@ impl PredefinedTypes {
                 } else {
                     if let Some(arg_t) = kwargs.get(name.as_str()) {
                         unused_args.remove(name);
-                        if t.is_subtype_of(&arg_t) {
+                        if !arg_t.is_subtype_of(&t) {
                             errors.push(TypeError::new_wrong_arg_type(
                                 func,
                                 span,

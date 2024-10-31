@@ -201,22 +201,24 @@ impl IRHelper for IntermediateRepr {
         field_type: FieldType,
     ) -> anyhow::Result<BamlValueWithMeta<FieldType>> {
         match value {
-            BamlValue::String(s)
-                if field_type.is_subtype_of(&FieldType::union(vec![
-                    FieldType::Literal(LiteralValue::String(s.clone())),
-                    FieldType::Primitive(TypeValue::String),
-                ])) =>
-            {
-                Ok(BamlValueWithMeta::String(s, field_type))
-            }
-            BamlValue::String(_) => {
+            BamlValue::String(s) => {
+                let literal_type = FieldType::Literal(LiteralValue::String(s.clone()));
+                let primitive_type = FieldType::Primitive(TypeValue::String);
+
+                if literal_type.is_subtype_of(&field_type)
+                    || primitive_type.is_subtype_of(&field_type)
+                {
+                    return Ok(BamlValueWithMeta::String(s, field_type));
+                }
                 anyhow::bail!("Could not unify String with {:?}", field_type)
             }
             BamlValue::Int(i)
-                if field_type.is_subtype_of(&FieldType::union(vec![
-                    FieldType::Literal(LiteralValue::Int(i.clone())),
-                    FieldType::Primitive(TypeValue::Int),
-                ])) =>
+                if FieldType::Literal(LiteralValue::Int(i.clone())).is_subtype_of(&field_type) =>
+            {
+                Ok(BamlValueWithMeta::Int(i, field_type))
+            }
+            BamlValue::Int(i)
+                if FieldType::Primitive(TypeValue::Int).is_subtype_of(&field_type) =>
             {
                 Ok(BamlValueWithMeta::Int(i, field_type))
             }
@@ -231,23 +233,17 @@ impl IRHelper for IntermediateRepr {
             }
             BamlValue::Float(_) => anyhow::bail!("Could not unify Float with {:?}", field_type),
 
-            BamlValue::Bool(b)
-                if field_type.is_subtype_of(&FieldType::union(vec![
-                    FieldType::Literal(LiteralValue::Bool(b)),
-                    FieldType::Primitive(TypeValue::Bool),
-                ])) =>
-            {
-                Ok(BamlValueWithMeta::Bool(b, field_type))
-            }
-
             BamlValue::Bool(b) => {
-                if let FieldType::Literal(LiteralValue::Bool(l)) = &field_type {
-                    if b == *l {
-                        return Ok(BamlValueWithMeta::Bool(b, field_type));
-                    }
-                }
+                let literal_type = FieldType::Literal(LiteralValue::Bool(b));
+                let primitive_type = FieldType::Primitive(TypeValue::Bool);
 
-                anyhow::bail!("Could not unify Bool with {:?}", field_type)
+                if literal_type.is_subtype_of(&field_type) {
+                    Ok(BamlValueWithMeta::Bool(b, field_type))
+                } else if primitive_type.is_subtype_of(&field_type) {
+                    Ok(BamlValueWithMeta::Bool(b, field_type))
+                } else {
+                    anyhow::bail!("Could not unify Bool with {:?}", field_type)
+                }
             }
 
             BamlValue::Null if FieldType::Primitive(TypeValue::Null).is_subtype_of(&field_type) => {
