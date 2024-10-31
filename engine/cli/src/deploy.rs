@@ -236,8 +236,6 @@ generator cloud {{
         );
         let (path, prev_generators, new_generators) = match self.runtime.generator_path() {
             Some(path) => {
-                let path = relative_path_to_baml_src(&path, &self.from)?;
-
                 let current_generators =
                     std::fs::read_to_string(std::path::Path::new(&self.from).join(&path))
                         .context(format!("Failed to read generators in {}", path.display()))?;
@@ -245,11 +243,7 @@ generator cloud {{
                 let new_generators = format!("{}{}", current_generators, new_generator_block);
                 (path, current_generators, new_generators)
             }
-            None => {
-                let path = std::path::PathBuf::from("generators.baml");
-
-                (path, String::new(), new_generator_block)
-            }
+            None => ("generators.baml".into(), String::new(), new_generator_block),
         };
 
         println!();
@@ -271,6 +265,7 @@ generator cloud {{
         }
 
         let generator_abspath = std::path::Path::new(&self.from).join(&path);
+        log::debug!("Will write generators to {}", generator_abspath.display());
         let mut file = std::fs::OpenOptions::new()
             .write(true)
             .create(true)
@@ -356,7 +351,8 @@ Read the docs to learn more: https://docs.boundaryml.com/cloud
                     relative_path_to_baml_src(&f, &self.from)?
                         .to_string_lossy()
                         .to_string(),
-                    std::fs::read_to_string(std::path::Path::new(&self.from).join(f))?,
+                    std::fs::read_to_string(&f)
+                        .context(format!("Failed to read {}", f.display()))?,
                 ))
             })
             .chain(baml_src_overrides.into_iter().map(|(k, v)| Ok((k, v))))
