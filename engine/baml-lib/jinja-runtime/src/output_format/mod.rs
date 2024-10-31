@@ -28,7 +28,7 @@ impl std::fmt::Display for OutputFormat {
         let content = self
             .text
             .render(RenderOptions::default())
-            .map_err(|e| std::fmt::Error {})?;
+            .map_err(|_e| std::fmt::Error {})?;
 
         match content {
             Some(content) => write!(f, "{}", content),

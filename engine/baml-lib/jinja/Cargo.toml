@@ -6,7 +6,10 @@ authors.workspace = true
 description.workspace = true
 license-file.workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lints.rust]
+dead_code = "deny"
+unused_imports = "deny"
+unused_variables = "deny"
 
 [dependencies]
 baml-types = { path = "../baml-types" }

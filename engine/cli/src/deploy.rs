@@ -1,31 +1,16 @@
 use anyhow::{Context, Result};
-use axum::{extract::Path, extract::Query, routing::get, Router};
-use baml_runtime::{baml_src_files, internal, BamlRuntime};
-use base64::{engine::general_purpose, Engine as _};
+use baml_runtime::{baml_src_files, BamlRuntime};
 use bstd::ProjectFqn;
 use console::style;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Confirm;
 use futures::join;
 use indexmap::IndexMap;
-use indicatif::{ProgressBar, ProgressStyle};
-use indoc::indoc;
-use internal_baml_core::configuration::CloudProject;
-use reqwest;
-use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
-use std::cell::{RefCell, RefMut};
-use std::io::{self, Write};
-use std::net::SocketAddr;
+use std::cell::RefCell;
+use std::io::Write;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::time::Duration;
-use tokio::net::TcpListener;
-use tokio::sync::mpsc;
-use tokio::sync::Mutex;
 use tokio::time::sleep;
-
-use web_time::SystemTime;
 
 use crate::api_client::{
     ApiClient, CreateDeploymentRequest, CreateDeploymentResponse, CreateProjectRequest,

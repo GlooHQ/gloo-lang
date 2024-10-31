@@ -1,7 +1,6 @@
 use anyhow::Result;
 use baml_runtime::cli::RuntimeCliDefaults;
 use clap::{Parser, Subcommand};
-use internal_baml_core::configuration::GeneratorOutputType;
 
 use baml_runtime::BamlRuntime;
 

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use baml_runtime::{BamlRuntime, RuntimeCliDefaults};
+use baml_runtime::RuntimeCliDefaults;
 use indicatif::MultiProgress;
 
 fn main() -> Result<()> {

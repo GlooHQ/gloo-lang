@@ -40,7 +40,7 @@ impl IntoMiniJinjaValue for BamlValue {
             }
             BamlValue::Media(i) => i.into_minijinja_value(ir, env_vars),
             // For enums and classes we compute the aliases from the IR, and generate custom jinja structs that print out the alias if stringified.
-            BamlValue::Enum(name, value) => {
+            BamlValue::Enum(_name, value) => {
                 minijinja::Value::from(value.clone())
                 // Until we can fix the broken test, just return the normal value. For now we wont suppport enum alias rendering.
                 // let mut alias: Option<String> = None;
@@ -100,8 +100,8 @@ impl From<BamlMedia> for MinijinjaBamlMedia {
 impl IntoMiniJinjaValue for BamlMedia {
     fn into_minijinja_value(
         &self,
-        ir: &IntermediateRepr,
-        env_vars: &HashMap<String, String>,
+        _ir: &IntermediateRepr,
+        _env_vars: &HashMap<String, String>,
     ) -> minijinja::Value {
         minijinja::Value::from_object(MinijinjaBamlMedia::from(self.clone()))
     }
@@ -166,7 +166,7 @@ impl minijinja::value::Object for MinijinjaBamlEnum {
 }
 
 impl minijinja::value::StructObject for MinijinjaBamlEnum {
-    fn get_field(&self, name: &str) -> Option<minijinja::Value> {
+    fn get_field(&self, _name: &str) -> Option<minijinja::Value> {
         return None;
     }
 

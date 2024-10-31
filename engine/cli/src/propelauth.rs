@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use axum::{extract::Path, extract::Query, routing::get, Router};
+use axum::{extract::Query, routing::get, Router};
 use base64::{engine::general_purpose, Engine as _};
 use derive_more::Constructor;
 use dialoguer::theme::ColorfulTheme;
@@ -13,14 +13,9 @@ use reqwest::RequestBuilder;
 use serde::Deserialize;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
-use std::io::{self, Write};
-use std::net::SocketAddr;
-use std::path::PathBuf;
-use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio::sync::mpsc;
-use tokio::sync::Mutex;
 use web_time::SystemTime;
 
 fn app_strategy() -> Result<impl AppStrategy> {
@@ -63,14 +58,17 @@ pub struct GetUserInfoResponse {
 #[derive(Debug, Deserialize)]
 pub struct OrgInfo {
     /// Example: "6cf8e40c-c34b-42e2-b51f-f6ad08f9848f",
+    #[allow(dead_code)]
     pub org_id: String,
 
     /// Example: "a b c"
+    #[allow(dead_code)]
     pub org_name: String,
 
     /// Example: "a-b-c"
     pub url_safe_org_name: String,
 
+    #[allow(dead_code)]
     pub user_role: String,
 }
 
@@ -113,7 +111,7 @@ impl PropelAuthClient {
         code_verifier: &str,
     ) -> Result<(String, String)> {
         let (tx, mut rx) = mpsc::channel(1);
-        let (handle, redirect_uri) = start_redirect_server(tx).await?;
+        let (_handle, redirect_uri) = start_redirect_server(tx).await?;
 
         // Generate code challenge
         let code_challenge = generate_code_challenge(code_verifier);

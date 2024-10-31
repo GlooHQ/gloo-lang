@@ -10,6 +10,7 @@ license-file.workspace = true
 RSTEST_TIMEOUT = "10"
 
 [lints.rust]
+dead_code = "deny"
 unused_imports = "deny"
 unused_variables = "deny"
 

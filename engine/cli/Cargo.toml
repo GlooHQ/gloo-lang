@@ -13,8 +13,9 @@ RSTEST_TIMEOUT = "10"
 anyhow.workspace = true
 
 [lints.rust]
-unused_imports = "allow"
-unused_variables = "allow"
+dead_code = "deny"
+unused_imports = "deny"
+unused_variables = "deny"
 
 [dependencies]
 anyhow.workspace = true

@@ -6,6 +6,11 @@ authors.workspace = true
 description.workspace = true
 license-file.workspace = true
 
+[lints.rust]
+dead_code = "deny"
+unused_imports = "deny"
+unused_variables = "deny"
+
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
