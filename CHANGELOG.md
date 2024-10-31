@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.65.0](https://github.com/boundaryml/baml/compare/0.64.0..0.65.0) - 2024-10-31
+
+### Documentation
+
+- **New Documentation Structure**: Introduced version 3 of the documentation, enhancing clarity and organization. ([#1118](https://github.com/boundaryml/baml/commit/bab2767414172dd632437a57631c4cee04910518))
+
+Co-authored by: Vaibhav Gupta <vbv@boundaryml.com>, Antonio Sarosi <sarosiantonio@gmail.com>
+
+### Bug Fixes
+
+- **Python Type Handling**: Moved Python Checked and Check types into `baml_client` for better type management. ([#1122](https://github.com/boundaryml/baml/commit/0ccf473fd821d25d431bbf4341c4e837967104bf))
+- **Literal Input Type Checking**: Fixed an issue where literal inputs were not being type-checked correctly. ([#1121](https://github.com/boundaryml/baml/commit/aa5dc85026a175216b5caae6320d09a1fcd35752))
+
+
 ## [0.64.0](https://github.com/boundaryml/baml/compare/0.63.0..0.64.0) - 2024-10-29
 
 ### Bug Fixes

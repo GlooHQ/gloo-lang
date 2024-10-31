@@ -81,7 +81,7 @@ internal-baml-jinja = { path = "baml-lib/jinja" }
 internal-baml-schema-ast = { path = "baml-lib/schema-ast" }
 
 [workspace.package]
-version = "0.64.0"
+version = "0.65.0"
 authors = ["Boundary <contact@boundaryml.com>"]
 
 description = "BAML Toolchain"
