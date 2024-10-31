@@ -672,7 +672,6 @@ fn add_checks<'a, S: SerializeMap>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::JinjaExpression;
     use serde_json;
 
     #[test]
