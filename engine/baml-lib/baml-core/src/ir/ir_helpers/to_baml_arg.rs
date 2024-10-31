@@ -436,8 +436,11 @@ mod tests {
                 label: Some("foo".to_string()),
             }],
         };
-        let arg_coercer = ArgCoercer { span_path: None, allow_implicit_cast_to_string: true };
-        let res =  arg_coercer.coerce_arg(&ir, &type_, &value, &mut ScopeStack::new());
+        let arg_coercer = ArgCoercer {
+            span_path: None,
+            allow_implicit_cast_to_string: true,
+        };
+        let res = arg_coercer.coerce_arg(&ir, &type_, &value, &mut ScopeStack::new());
         assert!(res.is_err());
     }
 }

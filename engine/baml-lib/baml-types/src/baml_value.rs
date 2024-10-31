@@ -1,8 +1,10 @@
 use std::collections::HashMap;
-use std::{collections::{HashSet, VecDeque}, fmt};
+use std::{
+    collections::{HashSet, VecDeque},
+    fmt,
+};
 
-use indexmap::IndexMap;
-use serde::ser::{SerializeMap, SerializeSeq};
+use serde::ser::SerializeMap;
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::media::BamlMediaType;
@@ -367,7 +369,6 @@ pub enum BamlValueWithMeta<T> {
 }
 
 impl<T> BamlValueWithMeta<T> {
-
     pub fn r#type(&self) -> String {
         let plain_value: BamlValue = self.into();
         plain_value.r#type()
@@ -430,18 +431,36 @@ impl<T> BamlValueWithMeta<T> {
         }
     }
 
-    pub fn with_default_meta(value: &BamlValue) -> BamlValueWithMeta<T> where T: Default {
+    pub fn with_default_meta(value: &BamlValue) -> BamlValueWithMeta<T>
+    where
+        T: Default,
+    {
         use BamlValueWithMeta::*;
         match value {
             BamlValue::String(s) => String(s.clone(), T::default()),
             BamlValue::Int(i) => Int(*i, T::default()),
             BamlValue::Float(f) => Float(*f, T::default()),
             BamlValue::Bool(b) => Bool(*b, T::default()),
-            BamlValue::Map(entries) => BamlValueWithMeta::Map(entries.iter().map(|(k,v)| (k.clone(), Self::with_default_meta(v))).collect(), T::default()),
-            BamlValue::List(items) => List(items.iter().map(|i| Self::with_default_meta(i)).collect(), T::default()),
+            BamlValue::Map(entries) => BamlValueWithMeta::Map(
+                entries
+                    .iter()
+                    .map(|(k, v)| (k.clone(), Self::with_default_meta(v)))
+                    .collect(),
+                T::default(),
+            ),
+            BamlValue::List(items) => List(
+                items.iter().map(|i| Self::with_default_meta(i)).collect(),
+                T::default(),
+            ),
             BamlValue::Media(m) => Media(m.clone(), T::default()),
-            BamlValue::Enum(n,v) => Enum(n.clone(), v.clone(), T::default()),
-            BamlValue::Class(n, items) => Map(items.iter().map(|(k,v)| (k.clone(), Self::with_default_meta(v))).collect(), T::default()),
+            BamlValue::Enum(n, v) => Enum(n.clone(), v.clone(), T::default()),
+            BamlValue::Class(_, items) => Map(
+                items
+                    .iter()
+                    .map(|(k, v)| (k.clone(), Self::with_default_meta(v)))
+                    .collect(),
+                T::default(),
+            ),
             BamlValue::Null => Null(T::default()),
         }
     }
@@ -466,7 +485,9 @@ impl<T> BamlValueWithMeta<T> {
             BamlValueWithMeta::Enum(v, e, m) => BamlValueWithMeta::Enum(v.clone(), e.clone(), f(m)),
             BamlValueWithMeta::Class(n, fs, m) => BamlValueWithMeta::Class(
                 n.clone(),
-                fs.into_iter().map(|(k, v)| (k.clone(), v.map_meta(f))).collect(),
+                fs.into_iter()
+                    .map(|(k, v)| (k.clone(), v.map_meta(f)))
+                    .collect(),
                 f(m),
             ),
             BamlValueWithMeta::Null(m) => BamlValueWithMeta::Null(f(m)),
@@ -476,11 +497,11 @@ impl<T> BamlValueWithMeta<T> {
 
 /// An iterator over a BamlValue and all of its sub-values.
 /// It yields entries in depth-first order.
-pub struct BamlValueWithMetaIterator<'a,T> {
+pub struct BamlValueWithMetaIterator<'a, T> {
     stack: VecDeque<&'a BamlValueWithMeta<T>>,
 }
 
-impl <'a, T> BamlValueWithMetaIterator<'a, T> {
+impl<'a, T> BamlValueWithMetaIterator<'a, T> {
     /// Construct a new iterator. Users should do this via
     /// `.iter()` on a `BamlValueWithMeta` value.
     fn new(root: &'a BamlValueWithMeta<T>) -> Self {
@@ -490,31 +511,34 @@ impl <'a, T> BamlValueWithMetaIterator<'a, T> {
     }
 }
 
-impl <'a,T:'a> Iterator for BamlValueWithMetaIterator<'a,T> {
+impl<'a, T: 'a> Iterator for BamlValueWithMetaIterator<'a, T> {
     type Item = &'a BamlValueWithMeta<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(value) = self.stack.pop_back() {
             // Get all the children and push them onto the stack.
             match value {
-                BamlValueWithMeta::List(items,_) => {
+                BamlValueWithMeta::List(items, _) => {
                     self.stack.extend(items);
                 }
-                BamlValueWithMeta::Map(fields,_) => {
-                    for (_,v) in fields.iter() {
+                BamlValueWithMeta::Map(fields, _) => {
+                    for (_, v) in fields.iter() {
                         self.stack.push_back(v);
                     }
                 }
                 BamlValueWithMeta::Class(_, fields, _) => {
-                    for (_,v) in fields.iter() {
+                    for (_, v) in fields.iter() {
                         self.stack.push_back(v);
                     }
                 }
                 // These items have to children.
-                BamlValueWithMeta::String(..) | BamlValueWithMeta::Int(..) |
-                BamlValueWithMeta::Float(..) | BamlValueWithMeta::Bool(..) |
-                BamlValueWithMeta::Media(..) | BamlValueWithMeta::Enum(..) |
-                BamlValueWithMeta::Null(..) => {}
+                BamlValueWithMeta::String(..)
+                | BamlValueWithMeta::Int(..)
+                | BamlValueWithMeta::Float(..)
+                | BamlValueWithMeta::Bool(..)
+                | BamlValueWithMeta::Media(..)
+                | BamlValueWithMeta::Enum(..)
+                | BamlValueWithMeta::Null(..) => {}
             }
             Some(&value)
         } else {
@@ -524,15 +548,15 @@ impl <'a,T:'a> Iterator for BamlValueWithMetaIterator<'a,T> {
 }
 
 // Boilerplate.
-impl <'a, T:'a>  IntoIterator for &'a BamlValueWithMeta<T> {
+impl<'a, T: 'a> IntoIterator for &'a BamlValueWithMeta<T> {
     type Item = &'a BamlValueWithMeta<T>;
-    type IntoIter = BamlValueWithMetaIterator<'a,T>;
+    type IntoIter = BamlValueWithMetaIterator<'a, T>;
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
 
-impl <T> From<&BamlValueWithMeta<T>> for BamlValue {
+impl<T> From<&BamlValueWithMeta<T>> for BamlValue {
     fn from(baml_value: &BamlValueWithMeta<T>) -> BamlValue {
         use BamlValueWithMeta::*;
         match baml_value {
@@ -540,17 +564,22 @@ impl <T> From<&BamlValueWithMeta<T>> for BamlValue {
             Int(v, _) => BamlValue::Int(v.clone()),
             Float(v, _) => BamlValue::Float(v.clone()),
             Bool(v, _) => BamlValue::Bool(v.clone()),
-            Map(v, _) => BamlValue::Map(v.into_iter().map(|(k,v)| (k.clone(), v.into())).collect()),
+            Map(v, _) => {
+                BamlValue::Map(v.into_iter().map(|(k, v)| (k.clone(), v.into())).collect())
+            }
             List(v, _) => BamlValue::List(v.into_iter().map(|v| v.into()).collect()),
             Media(v, _) => BamlValue::Media(v.clone()),
             Enum(enum_name, v, _) => BamlValue::Enum(enum_name.clone(), v.clone()),
-            Class(class_name, v, _) => BamlValue::Class(class_name.clone(), v.into_iter().map(|(k,v)| (k.clone(), v.into())).collect()),
+            Class(class_name, v, _) => BamlValue::Class(
+                class_name.clone(),
+                v.into_iter().map(|(k, v)| (k.clone(), v.into())).collect(),
+            ),
             Null(_) => BamlValue::Null,
         }
     }
 }
 
-impl <T> From<BamlValueWithMeta<T>> for BamlValue {
+impl<T> From<BamlValueWithMeta<T>> for BamlValue {
     fn from(baml_value: BamlValueWithMeta<T>) -> BamlValue {
         use BamlValueWithMeta::*;
         match baml_value {
@@ -558,11 +587,14 @@ impl <T> From<BamlValueWithMeta<T>> for BamlValue {
             Int(v, _) => BamlValue::Int(v),
             Float(v, _) => BamlValue::Float(v),
             Bool(v, _) => BamlValue::Bool(v),
-            Map(v, _) => BamlValue::Map(v.into_iter().map(|(k,v)| (k, v.into())).collect()),
+            Map(v, _) => BamlValue::Map(v.into_iter().map(|(k, v)| (k, v.into())).collect()),
             List(v, _) => BamlValue::List(v.into_iter().map(|v| v.into()).collect()),
             Media(v, _) => BamlValue::Media(v),
             Enum(enum_name, v, _) => BamlValue::Enum(enum_name, v),
-            Class(class_name, v, _) => BamlValue::Class(class_name, v.into_iter().map(|(k,v)| (k, v.into())).collect()),
+            Class(class_name, v, _) => BamlValue::Class(
+                class_name,
+                v.into_iter().map(|(k, v)| (k, v.into())).collect(),
+            ),
             Null(_) => BamlValue::Null,
         }
     }
@@ -573,7 +605,8 @@ impl <T> From<BamlValueWithMeta<T>> for BamlValue {
 /// metadata than just a `Vec<ResponseCheck>`, `
 impl Serialize for BamlValueWithMeta<Vec<ResponseCheck>> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer,
+    where
+        S: Serializer,
     {
         match self {
             BamlValueWithMeta::String(v, cr) => serialize_with_checks(v, cr, serializer),
@@ -587,7 +620,7 @@ impl Serialize for BamlValueWithMeta<Vec<ResponseCheck>> {
                 }
                 add_checks(&mut map, cr)?;
                 map.end()
-            },
+            }
             BamlValueWithMeta::List(v, cr) => serialize_with_checks(v, cr, serializer),
             BamlValueWithMeta::Media(v, cr) => serialize_with_checks(v, cr, serializer),
             BamlValueWithMeta::Enum(_enum_name, v, cr) => serialize_with_checks(v, cr, serializer),
@@ -598,7 +631,7 @@ impl Serialize for BamlValueWithMeta<Vec<ResponseCheck>> {
                 }
                 add_checks(&mut map, cr)?;
                 map.end()
-            },
+            }
             BamlValueWithMeta::Null(cr) => serialize_with_checks(&(), cr, serializer),
         }
     }
@@ -607,10 +640,10 @@ impl Serialize for BamlValueWithMeta<Vec<ResponseCheck>> {
 fn serialize_with_checks<S, T: Serialize>(
     value: &T,
     checks: &Vec<ResponseCheck>,
-    serializer:S,
-
+    serializer: S,
 ) -> Result<S::Ok, S::Error>
-    where S: Serializer,
+where
+    S: Serializer,
 {
     if !checks.is_empty() {
         let mut map = serializer.serialize_map(Some(2))?;
@@ -627,7 +660,10 @@ fn add_checks<'a, S: SerializeMap>(
     checks: &'a Vec<ResponseCheck>,
 ) -> Result<(), S::Error> {
     if !checks.is_empty() {
-        let checks_map: HashMap<_,_> = checks.iter().map(|check| (check.name.clone(), check)).collect();
+        let checks_map: HashMap<_, _> = checks
+            .iter()
+            .map(|check| (check.name.clone(), check))
+            .collect();
         map.serialize_entry("checks", &checks_map)?;
     }
     Ok(())
@@ -637,34 +673,37 @@ fn add_checks<'a, S: SerializeMap>(
 mod tests {
     use super::*;
     use serde_json;
-    use crate::JinjaExpression;
 
     #[test]
     fn test_baml_value_with_meta_serialization() {
         let baml_value: BamlValueWithMeta<Vec<ResponseCheck>> =
             BamlValueWithMeta::String("hi".to_string(), vec![]);
-        let baml_value_2: BamlValueWithMeta<Vec<ResponseCheck>> =
-            BamlValueWithMeta::Class(
-                "ContactInfo".to_string(),
-                vec![
-                    ("primary".to_string(), BamlValueWithMeta::Class(
-                        "PhoneNumber".to_string(),
-                        vec![
-                            ("value".to_string(), BamlValueWithMeta::String(
-                                "123-456-7890".to_string(),
-                                vec![
-                                    ResponseCheck {
-                                        name: "foo".to_string(),
-                                        expression: "foo".to_string(),
-                                        status: "succeeded".to_string(),
-                                    }
-                                ]
-                            ))
-                        ].into_iter().collect(),
-                        vec![]
-                    ))
-                ].into_iter().collect(),
-                vec![]);
+        let baml_value_2: BamlValueWithMeta<Vec<ResponseCheck>> = BamlValueWithMeta::Class(
+            "ContactInfo".to_string(),
+            vec![(
+                "primary".to_string(),
+                BamlValueWithMeta::Class(
+                    "PhoneNumber".to_string(),
+                    vec![(
+                        "value".to_string(),
+                        BamlValueWithMeta::String(
+                            "123-456-7890".to_string(),
+                            vec![ResponseCheck {
+                                name: "foo".to_string(),
+                                expression: "foo".to_string(),
+                                status: "succeeded".to_string(),
+                            }],
+                        ),
+                    )]
+                    .into_iter()
+                    .collect(),
+                    vec![],
+                ),
+            )]
+            .into_iter()
+            .collect(),
+            vec![],
+        );
         assert!(serde_json::to_value(baml_value).is_ok());
         assert!(serde_json::to_value(baml_value_2).is_ok());
     }

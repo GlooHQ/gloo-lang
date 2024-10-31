@@ -17,7 +17,7 @@ pub fn parse_configuration(
     schema: &str,
 ) -> Result<(Configuration, Diagnostics), Diagnostics> {
     let source = SourceFile::from((path.into(), schema));
-    internal_baml_core::parse_configuration(root_path, &source)
+    internal_baml_core::validate_single_file(root_path, &source)
 }
 
 /// Parse and analyze a Prisma schema.

@@ -12,6 +12,11 @@ RSTEST_TIMEOUT = "10"
 [build-dependencies]
 anyhow.workspace = true
 
+[lints.rust]
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+
 [dependencies]
 anyhow.workspace = true
 base64.workspace = true
@@ -119,11 +124,7 @@ axum-extra = { version = "0.9.3", features = ["erased-json", "typed-header"] }
 hostname = "0.3.1"
 notify-debouncer-full = "0.3.1"
 tokio = { version = "1", features = ["full"] }
-reqwest = { version = "0.12.5", features = [
-  "json",
-  "native-tls-vendored",
-  "stream",
-] }
+reqwest.workspace = true
 walkdir = "2.5.0"
 which = "6.0.3"
 

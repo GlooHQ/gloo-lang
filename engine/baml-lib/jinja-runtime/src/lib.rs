@@ -9,7 +9,7 @@ pub use output_format::types;
 mod baml_value_to_jinja_value;
 
 use minijinja::{self, value::Kwargs};
-use minijinja::{context, ErrorKind, Value};
+use minijinja::{context, ErrorKind};
 use output_format::types::OutputFormatContent;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -456,7 +456,7 @@ mod render_tests {
 
     pub fn make_test_ir(source_code: &str) -> anyhow::Result<IntermediateRepr> {
         use internal_baml_core::validate;
-        use internal_baml_core::{Configuration, ValidatedSchema};
+        use internal_baml_core::ValidatedSchema;
         use internal_baml_diagnostics::SourceFile;
         use std::path::PathBuf;
         let path: PathBuf = "fake_file.baml".into();

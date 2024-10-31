@@ -222,6 +222,11 @@ impl FieldType {
             }
             match (self, other) {
                 (FieldType::Primitive(TypeValue::Null), FieldType::Optional(_)) => true,
+                (FieldType::Optional(self_item), FieldType::Optional(other_item)) => {
+                    self_item.is_subtype_of(other_item)
+                }
+                (_, FieldType::Optional(t)) => self.is_subtype_of(t),
+                (FieldType::Optional(_), _) => false,
 
                 // Handle types that nest other types.
                 (FieldType::List(self_item), FieldType::List(other_item)) => {
@@ -233,12 +238,6 @@ impl FieldType {
                     other_k.is_subtype_of(self_k) && (**self_v).is_subtype_of(other_v)
                 }
                 (FieldType::Map(_, _), _) => false,
-
-                (FieldType::Optional(self_item), FieldType::Optional(other_item)) => {
-                    self_item.is_subtype_of(other_item)
-                }
-                (_, FieldType::Optional(other_item)) => self.is_subtype_of(other_item),
-                (FieldType::Optional(_), _) => false,
 
                 (
                     FieldType::Constrained {
@@ -252,13 +251,24 @@ impl FieldType {
                 ) => self_base.is_subtype_of(other_base) && self_cs == other_cs,
                 (FieldType::Constrained { base, .. }, _) => base.is_subtype_of(other),
                 (_, FieldType::Constrained { base, .. }) => self.is_subtype_of(base),
-
+                (
+                    FieldType::Literal(LiteralValue::Bool(_)),
+                    FieldType::Primitive(TypeValue::Bool),
+                ) => true,
                 (FieldType::Literal(LiteralValue::Bool(_)), _) => {
                     self.is_subtype_of(&FieldType::Primitive(TypeValue::Bool))
                 }
+                (
+                    FieldType::Literal(LiteralValue::Int(_)),
+                    FieldType::Primitive(TypeValue::Int),
+                ) => true,
                 (FieldType::Literal(LiteralValue::Int(_)), _) => {
                     self.is_subtype_of(&FieldType::Primitive(TypeValue::Int))
                 }
+                (
+                    FieldType::Literal(LiteralValue::String(_)),
+                    FieldType::Primitive(TypeValue::String),
+                ) => true,
                 (FieldType::Literal(LiteralValue::String(_)), _) => {
                     self.is_subtype_of(&FieldType::Primitive(TypeValue::String))
                 }

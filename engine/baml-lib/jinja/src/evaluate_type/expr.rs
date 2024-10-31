@@ -128,7 +128,7 @@ fn tracker_visit_expr<'a>(
 
             match expr.op {
                 ast::BinOpKind::Add => {
-                    if lhs == Type::String || rhs == Type::String {
+                    if lhs.is_subtype_of(&Type::String) || rhs.is_subtype_of(&Type::String) {
                         Type::String
                     } else {
                         Type::Number
@@ -221,7 +221,7 @@ fn tracker_visit_expr<'a>(
             ];
             match expr.name {
                 "abs" => {
-                    if inner.matches(&Type::Number) {
+                    if Type::Number.is_subtype_of(&inner) {
                         ensure_type("number");
                     }
                     Type::Number
@@ -230,7 +230,7 @@ fn tracker_visit_expr<'a>(
                 "batch" => Type::Unknown,
                 "bool" => Type::Bool,
                 "capitalize" | "escape" => {
-                    if inner.matches(&Type::String) {
+                    if Type::String.is_subtype_of(&inner) {
                         ensure_type("string");
                     }
                     Type::String
@@ -268,7 +268,7 @@ fn tracker_visit_expr<'a>(
                 },
                 "list" => Type::List(Box::new(Type::Unknown)),
                 "lower" | "upper" => {
-                    if inner.matches(&Type::String) {
+                    if Type::String.is_subtype_of(&inner) {
                         ensure_type("string");
                     }
                     Type::String
@@ -382,16 +382,21 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
                         .map(|x| infer_const_type(&x))
                         .fold(None, |acc, x| match acc {
                             None => Some(x),
-                            Some(Type::Union(mut acc)) => {
-                                if acc.contains(&x) {
-                                    Some(Type::Union(acc))
+                            Some(Type::Union(acc)) => {
+                                let t = Type::Union(acc);
+                                if x.is_subtype_of(&t) {
+                                    Some(t)
                                 } else {
-                                    acc.push(x);
-                                    Some(Type::Union(acc))
+                                    if let Type::Union(mut acc) = t {
+                                        acc.push(x);
+                                        Some(Type::Union(acc))
+                                    } else {
+                                        unreachable!()
+                                    }
                                 }
                             }
                             Some(acc) => {
-                                if acc == x {
+                                if x.is_subtype_of(&acc) {
                                     Some(acc)
                                 } else {
                                     Some(Type::Union(vec![acc, x]))

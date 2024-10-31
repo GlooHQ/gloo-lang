@@ -201,7 +201,7 @@ runtime.
 
 <CodeBlocks>
 ```python Python
-List[baml_py.Checked[int, Dict[Literal["less_than_zero"]]]]
+List[Checked[int, Dict[Literal["less_than_zero"]]]]
 ```
 
 ```typescript Typescript
@@ -243,7 +243,7 @@ function GetCitation(full_text: string) -> Citation {
 <CodeBlocks>
 ```python Python
 from baml_client import b
-from baml_client.types import Citation
+from baml_client.types import Citation, get_checks
 
 def main():
     citation = b.GetCitation("SpaceX, is an American spacecraft manufacturer, launch service provider...")
@@ -257,7 +257,7 @@ def main():
     print(f"Citation match status: {quote_match_check})")
 
     # Access each check and its status.
-    for check in baml_py.get_checks(citation.quote.checks):
+    for check in get_checks(citation.quote.checks):
         print(f"Check {check.name}: {check.status}")
 ```
 

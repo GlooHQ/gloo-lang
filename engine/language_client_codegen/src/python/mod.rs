@@ -234,7 +234,7 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 Some(checks) => {
                     let base_type_ref = base.to_type_ref(ir, with_checked);
                     let checks_type_ref = type_name_for_checks(&checks);
-                    format!("baml_py.Checked[{base_type_ref},types.{checks_type_ref}]")
+                    format!("Checked[{base_type_ref},types.{checks_type_ref}]")
                 }
                 None => base.to_type_ref(ir, with_checked),
             },
@@ -288,7 +288,7 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 Some(checks) => {
                     let base_type_ref = base.to_partial_type_ref(ir, with_checked);
                     let checks_type_ref = type_name_for_checks(&checks);
-                    format!("baml_py.Checked[{base_type_ref},types.{checks_type_ref}]")
+                    format!("Checked[{base_type_ref},types.{checks_type_ref}]")
                 }
                 None => base.to_partial_type_ref(ir, with_checked),
             },

@@ -355,7 +355,7 @@ impl OutputFormatContent {
     fn maybe_render_recursive_class(
         &self,
         field_type: &FieldType,
-        render_state: &mut RenderState,
+        _render_state: &mut RenderState,
         options: &RenderOptions,
     ) -> Option<String> {
         let mut maybe_nested_recursive_class = None;
@@ -500,7 +500,7 @@ impl OutputFormatContent {
                 if match inner.as_ref() {
                     FieldType::Primitive(_) => false,
                     FieldType::Optional(t) => !t.is_primitive(),
-                    FieldType::Enum(e) => inner_str.len() > 15,
+                    FieldType::Enum(_e) => inner_str.len() > 15,
                     _ => true,
                 } {
                     format!("[\n  {}\n]", inner_str.replace('\n', "\n  "))

@@ -60,14 +60,12 @@ pub(crate) fn parse_value_expr(
     }
 }
 
-fn reassociate_type_attributes(
-    field_attributes: &mut Vec<Attribute>,
-    field_type: &mut FieldType,
-) {
+fn reassociate_type_attributes(field_attributes: &mut Vec<Attribute>, field_type: &mut FieldType) {
     let mut all_attrs = field_type.attributes().to_owned();
     all_attrs.append(field_attributes);
-    let (attrs_for_type, attrs_for_field): (Vec<Attribute>, Vec<Attribute>) =
-        all_attrs.into_iter().partition(|attr| ["assert", "check"].contains(&attr.name()));
+    let (attrs_for_type, attrs_for_field): (Vec<Attribute>, Vec<Attribute>) = all_attrs
+        .into_iter()
+        .partition(|attr| ["assert", "check"].contains(&attr.name()));
     field_type.set_attributes(attrs_for_type);
     *field_attributes = attrs_for_field;
 }
@@ -78,7 +76,7 @@ pub(crate) fn parse_type_expr(
     pair: Pair<'_>,
     block_comment: Option<Pair<'_>>,
     diagnostics: &mut Diagnostics,
-    is_enum: bool,
+    _is_enum: bool,
 ) -> Result<Field<FieldType>, DatamodelError> {
     let pair_span = pair.as_span();
     let mut name: Option<Identifier> = None;
@@ -90,21 +88,23 @@ pub(crate) fn parse_type_expr(
         match current.as_rule() {
             Rule::identifier => {
                 name = Some(parse_identifier(current, diagnostics));
-            },
+            }
             Rule::trailing_comment => {
                 comment = merge_comments(comment, parse_trailing_comment(current));
             }
             Rule::field_type_chain => {
-                    field_type = parse_field_type_chain(current, diagnostics);
+                field_type = parse_field_type_chain(current, diagnostics);
             }
-            Rule::field_attribute => field_attributes.push(parse_attribute(current, false, diagnostics)),
+            Rule::field_attribute => {
+                field_attributes.push(parse_attribute(current, false, diagnostics))
+            }
             _ => parsing_catch_all(current, "field"),
         }
     }
 
     // Strip certain attributes from the field and attach them to the type.
     match field_type.as_mut() {
-        None => {},
+        None => {}
         Some(ft) => reassociate_type_attributes(&mut field_attributes, ft),
     }
 
@@ -197,8 +197,7 @@ pub(crate) fn parse_field_type_with_attr(
                     //     ft.set_attributes(attributes.clone()); // Clone the borrowed `Vec<Attribute>`
                     // }
                 }
-                _ => {
-                }
+                _ => {}
             }
             ft.extend_attributes(field_attributes);
 
@@ -271,7 +270,10 @@ mod tests {
         let result = parse_field_type_chain(parsed, &mut diagnostics).unwrap();
         if let FieldType::Union(_, types, _, _) = &result {
             assert_eq!(types[1].clone().attributes().len(), 1);
-            assert_eq!(types[1].clone().attributes()[0].name.to_string().as_str(), "description");
+            assert_eq!(
+                types[1].clone().attributes()[0].name.to_string().as_str(),
+                "description"
+            );
         } else {
             panic!("Expected union");
         }
@@ -489,6 +491,7 @@ mod tests {
     fn mk_string(attrs: Option<Vec<Attribute>>) -> FieldType {
         FieldType::Primitive(FieldArity::Required, TypeValue::String, Span::fake(), attrs)
     }
+    #[allow(dead_code)]
     fn mk_null(attrs: Option<Vec<Attribute>>) -> FieldType {
         FieldType::Primitive(FieldArity::Required, TypeValue::Null, Span::fake(), attrs)
     }

@@ -102,8 +102,8 @@ fn test_ifexpr() {
     );
 
     assert_eq!(
-        assert_evaluates_to!("1 if true else '2'", &types),
-        Type::Union(vec![Type::String, Type::Number])
+        assert_evaluates_to!("'1' if true else 2", &types),
+        Type::Union(vec![Type::Number, Type::String])
     );
 
     types.add_function("AnotherFunc", Type::Float, vec![("arg".into(), Type::Bool)]);
@@ -229,7 +229,7 @@ fn test_output_format() {
             "ctx.output_format(prefix='1', always_hoist_enums=1)",
             &types
         ),
-        vec!["Function 'baml::OutputFormat' expects argument 'always_hoist_enums' to be of type (bool | none), but got number"]
+        vec!["Function 'baml::OutputFormat' expects argument 'always_hoist_enums' to be of type (none | bool), but got number"]
     );
 
     assert_eq!(

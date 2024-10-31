@@ -35,6 +35,7 @@ from ..baml_client.types import (
     BinaryNode,
     Tree,
     Forest,
+    all_succeeded,
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -114,10 +115,13 @@ class TestAllInputs:
     async def test_constraints(self):
         res = await b.PredictAge("Greg")
         assert res.certainty.checks["unreasonably_certain"].status == "failed"
+        assert not (all_succeeded(res.certainty.checks))
 
     @pytest.mark.asyncio
     async def test_constraint_union_variant_checking(self):
-        res = await b.ExtractContactInfo("Reach me at help@boundaryml.com, or 111-222-3333 if needed.")
+        res = await b.ExtractContactInfo(
+            "Reach me at help@boundaryml.com, or 111-222-3333 if needed."
+        )
         assert res.primary.value is not None
         assert res.primary.value == "help@boundaryml.com"
         assert res.secondary.value is not None
@@ -1395,58 +1399,37 @@ async def test_failing_assert_can_stream():
 @pytest.mark.asyncio
 async def test_simple_recursive_type():
     res = await b.BuildLinkedList([1, 2, 3, 4, 5])
-    assert res == LinkedList(len=5, head=Node(
-        data=1,
-        next=Node(
-            data=2,
+    assert res == LinkedList(
+        len=5,
+        head=Node(
+            data=1,
             next=Node(
-                data=3,
-                next=Node(
-                    data=4,
-                    next=Node(
-                        data=5,
-                        next=None
-                    )
-                )
-            )
-        )
-    ))
+                data=2,
+                next=Node(data=3, next=Node(data=4, next=Node(data=5, next=None))),
+            ),
+        ),
+    )
+
 
 @pytest.mark.asyncio
 async def test_mutually_recursive_type():
-    res = await b.BuildTree(BinaryNode(
-        data=5,
-        left=BinaryNode(
-            data=3,
+    res = await b.BuildTree(
+        BinaryNode(
+            data=5,
             left=BinaryNode(
-                data=1,
+                data=3,
                 left=BinaryNode(
-                    data=2,
-                    left=None,
-                    right=None
+                    data=1, left=BinaryNode(data=2, left=None, right=None), right=None
                 ),
-                right=None
+                right=BinaryNode(data=4, left=None, right=None),
             ),
             right=BinaryNode(
-                data=4,
-                left=None,
-                right=None
-            )
-        ),
-        right=BinaryNode(
-            data=7,
-            left=BinaryNode(
-                data=6,
-                left=None,
-                right=None
+                data=7,
+                left=BinaryNode(data=6, left=None, right=None),
+                right=BinaryNode(data=8, left=None, right=None),
             ),
-            right=BinaryNode(
-                data=8,
-                left=None,
-                right=None
-            )
-        ),
-    ))
+        )
+    )
     assert res == Tree(
         data=5,
         children=Forest(
@@ -1458,45 +1441,22 @@ async def test_mutually_recursive_type():
                             Tree(
                                 data=1,
                                 children=Forest(
-                                    trees=[
-                                        Tree(
-                                            data=2,
-                                            children=Forest(
-                                                trees=[]
-                                            )
-                                        )
-                                    ]
-                                )
+                                    trees=[Tree(data=2, children=Forest(trees=[]))]
+                                ),
                             ),
-                            Tree(
-                                data=4,
-                                children=Forest(
-                                    trees=[]
-                                )
-                            )
+                            Tree(data=4, children=Forest(trees=[])),
                         ]
-                    )
+                    ),
                 ),
                 Tree(
                     data=7,
                     children=Forest(
                         trees=[
-                            Tree(
-                                data=6,
-                                children=Forest(
-                                    trees=[]
-                                )
-                            ),
-                            Tree(
-                                data=8,
-                                children=Forest(
-                                    trees=[]
-                                )
-                            )
+                            Tree(data=6, children=Forest(trees=[])),
+                            Tree(data=8, children=Forest(trees=[])),
                         ]
-                    )
-                )
+                    ),
+                ),
             ]
-        )
+        ),
     )
-

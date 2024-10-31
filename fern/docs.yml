@@ -154,11 +154,23 @@ navigation:
           - page: Validations
             icon: fa-regular fa-check-circle
             path: 01-guide/05-baml-advanced/validations.mdx
-      - section: Observability
+      - section: Boundary Cloud
         contents:
-          - page: Tracking Usage
-            icon: fa-regular fa-bar-chart
-            path: 01-guide/07-observability/studio.mdx
+        - section: Functions
+          icon: fa-cloud
+          contents:
+            - page: Get Started
+              path: 01-guide/functions/get-started.mdx
+            - page: Using OpenAPI
+              path: 01-guide/functions/using-openapi.mdx
+            - page: Environment Variables
+              path: 01-guide/functions/environment-variables.mdx
+        - section: Observability
+          icon: fa-chart-simple
+          contents:
+            - page: Tracking Usage
+              icon: fa-regular fa-bar-chart
+              path: 01-guide/07-observability/studio.mdx
       - section: Comparisons
         contents:
           - page: BAML vs Marvin
@@ -424,8 +436,10 @@ navigation:
             slug: extract
             summary: 03-reference/extract/summary.mdx
             display-errors: true
-          # - page: Advanced
-          #   path: 01-guide/introduction.mdx
+      - section: Boundary Cloud API
+        contents:
+          - page: Limits
+            path: 03-reference/cloud/limits.mdx
 
       # - section: "baml_client: Python"
       #   contents:
