@@ -246,7 +246,7 @@ fn if_else() {
         "#
             .trim(),
             types,
-            vec![r#"Function 'Foo' expects argument 'arg' to be of type string, but got (undefined | number | literal["2"])"#]
+            vec![r#"Function 'Foo' expects argument 'arg' to be of type string, but got (undefined | literal["2"] | literal[1])"#]
         );
 
     let mut types = PredefinedTypes::default(JinjaContext::Prompt);
