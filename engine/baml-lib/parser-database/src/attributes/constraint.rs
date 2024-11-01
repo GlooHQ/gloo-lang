@@ -19,7 +19,14 @@ pub(super) fn visit_constraint_attributes(
     let level = match attribute_name.as_str() {
         "assert" => ConstraintLevel::Assert,
         "check" => ConstraintLevel::Check,
-        _ => panic!("Internal error - the parser should have ruled out other attribute names."),
+        other_name => {
+            ctx.push_error(DatamodelError::new_attribute_validation_error(
+                "Internal error - the parser should have ruled out other attribute names.",
+                other_name,
+                span
+            ));
+            return ();
+        }
     };
 
     let (label, expression) = match arguments.as_slice() {
