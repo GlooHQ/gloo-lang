@@ -1,3 +1,4 @@
+use baml_types::LiteralValue;
 use minijinja::machinery::parse_expr;
 
 use crate::evaluate_type::{
@@ -98,12 +99,12 @@ fn test_ifexpr() {
 
     assert_eq!(
         assert_evaluates_to!("1 if true else '2'", &types),
-        Type::Union(vec![Type::Number, Type::String])
+        Type::Union(vec![Type::Number, Type::Literal(LiteralValue::String("2".to_string()))])
     );
 
     assert_eq!(
         assert_evaluates_to!("'1' if true else 2", &types),
-        Type::Union(vec![Type::Number, Type::String])
+        Type::Union(vec![Type::Number, Type::Literal(LiteralValue::String("1".to_string()))])
     );
 
     types.add_function("AnotherFunc", Type::Float, vec![("arg".into(), Type::Bool)]);
@@ -158,7 +159,7 @@ fn test_call_function() {
 
     assert_eq!(
         assert_fails_to!("AnotherFunc(arg='true', arg2='1')", &types),
-        vec!["Function 'AnotherFunc' expects argument 'arg' to be of type bool, but got string"]
+        vec![r#"Function 'AnotherFunc' expects argument 'arg' to be of type bool, but got literal["true"]"#]
     );
 
     assert_eq!(
@@ -201,6 +202,25 @@ fn test_call_function() {
             "Function 'AnotherFunc' does not have an argument 'arg4'. Did you mean 'arg3'?"
         ]
     );
+
+    types.add_function(
+        "TakesLiteralFoo",
+        Type::Float,
+        vec![
+            ("arg".to_string(),
+                Type::Union(vec![
+                    Type::Literal(LiteralValue::String("Foo".to_string())),
+                    Type::Literal(LiteralValue::String("Bar".to_string()))
+                ])
+            )
+        ]
+    );
+
+    assert_eq!(
+        assert_evaluates_to!("TakesLiteralFoo('Foo')", &types),
+        Type::Float
+    );
+
 }
 
 #[test]

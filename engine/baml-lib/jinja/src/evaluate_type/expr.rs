@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use baml_types::LiteralValue;
 use minijinja::machinery::ast;
 
 use super::{
@@ -371,7 +372,7 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
         minijinja::value::ValueKind::Undefined => Type::Undefined,
         minijinja::value::ValueKind::None => Type::None,
         minijinja::value::ValueKind::Bool => Type::Bool,
-        minijinja::value::ValueKind::String => Type::String,
+        minijinja::value::ValueKind::String => Type::Literal(LiteralValue::String(v.to_string())),
         minijinja::value::ValueKind::Seq => {
             let list = v.as_seq().unwrap();
             match list.item_count() {
