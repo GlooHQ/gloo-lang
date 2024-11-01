@@ -6,6 +6,7 @@ pub mod macros;
 
 mod test_basics;
 mod test_class;
+mod test_class_2;
 mod test_constraints;
 mod test_enum;
 mod test_lists;
@@ -162,7 +163,8 @@ fn relevant_data_models<'a>(
                     }
                 }
             }
-            (FieldType::Tuple(options), _constraints) | (FieldType::Union(options), _constraints) => {
+            (FieldType::Tuple(options), _constraints)
+            | (FieldType::Union(options), _constraints) => {
                 if checked_types.insert((&output).to_string()) {
                     for inner in options {
                         if !checked_types.contains(&inner.to_string()) {
@@ -202,7 +204,7 @@ fn relevant_data_models<'a>(
             }
             (FieldType::Literal(_), _) => {}
             (FieldType::Primitive(_), _constraints) => {}
-            (FieldType::Constrained{..}, _) => {
+            (FieldType::Constrained { .. }, _) => {
                 unreachable!("It is guaranteed that a call to distribute_constraints will not return FieldType::Constrained")
             }
         }
@@ -706,7 +708,7 @@ fn singleton_list_int_deleted() {
     let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
     let res = from_str(&output_format, &target, "[123", true).expect("Can parse");
     let baml_value: BamlValue = res.into();
-    assert_eq!(baml_value, BamlValue::List( vec![] ));
+    assert_eq!(baml_value, BamlValue::List(vec![]));
 }
 
 #[test]
@@ -718,7 +720,7 @@ fn list_int_deleted() {
     let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
     let res = from_str(&output_format, &target, "[123, 456", true).expect("Can parse");
     let baml_value: BamlValue = res.into();
-    assert_eq!(baml_value, BamlValue::List( vec![ BamlValue::Int(123)] ));
+    assert_eq!(baml_value, BamlValue::List(vec![BamlValue::Int(123)]));
 }
 
 #[test]
@@ -730,7 +732,10 @@ fn list_int_not_deleted() {
     let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
     let res = from_str(&output_format, &target, "[123, 456 // Done", true).expect("Can parse");
     let baml_value: BamlValue = res.into();
-    assert_eq!(baml_value, BamlValue::List( vec![ BamlValue::Int(123), BamlValue::Int(456)] ));
+    assert_eq!(
+        baml_value,
+        BamlValue::List(vec![BamlValue::Int(123), BamlValue::Int(456)])
+    );
 }
 
 #[test]

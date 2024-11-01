@@ -616,7 +616,20 @@ impl JsonParseState {
                         ));
                         return Ok(1);
                     }
-                    _ => {}
+                    _ => {
+                        // if we're in an object, this could be the beginning of a string
+                        // say a path?
+                        if matches!(
+                            self.collection_stack.last(),
+                            Some((JsonCollection::Object(_, _), _))
+                        ) {
+                            self.collection_stack.push((
+                                JsonCollection::UnquotedString(token.into()),
+                                Default::default(),
+                            ));
+                            return Ok(0);
+                        }
+                    }
                 }
             }
             x if x.is_whitespace() => {}
