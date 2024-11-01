@@ -76,7 +76,7 @@ jobs:
 
       # Install common toolchain dependencies
       # NOTE: we can't use mise here because it doesn't support Windows
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         with:
           version: 9.0.6
           run_install: false
