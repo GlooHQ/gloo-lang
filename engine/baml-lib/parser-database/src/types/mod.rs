@@ -332,13 +332,22 @@ fn visit_function<'db>(idx: ValExpId, function: &'db ast::ValueExprBlock, ctx: &
         .iter()
         .map(|f| f.name().to_string())
         .collect::<HashSet<_>>();
-    let output_deps = function
-        .output()
-        .map(|output| output.field_type.flat_idns())
-        .unwrap_or_else(Vec::new)
-        .iter()
-        .map(|f| f.name().to_string())
-        .collect::<HashSet<_>>();
+
+    let output_deps = match function.output() {
+        Some(output) => output
+            .field_type
+            .flat_idns()
+            .iter()
+            .map(|f| f.name().to_string())
+            .collect::<HashSet<_>>(),
+        None => {
+            ctx.push_error(DatamodelError::new_invalid_function_syntax_error(
+                function.name(),
+                function.identifier().span().clone(),
+            ));
+            HashSet::new()
+        }
+    };
 
     let mut prompt = None;
     let mut client = None;
