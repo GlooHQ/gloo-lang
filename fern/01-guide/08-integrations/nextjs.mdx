@@ -20,6 +20,36 @@ You will need to use Server Actions, from the App Router, for this tutorial. You
 - Install the VSCode extension and Save a baml file to generate the client (or use `npx baml-cli generate`).
 
 
+### Update next.config.mjs
+
+@boundaryml/baml uses a native node addon to run the BAML functions. You need to tell NextJS to use the loader for these files.
+```JS
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ["@boundaryml/baml"],
+  },
+  webpack: (config, { dev, isServer, webpack, nextRuntime }) => {
+    config.module.rules.push({
+      test: /\.node$/,
+      use: [
+        {
+          loader: "nextjs-node-loader",
+          options: {
+            outputPath: config.output.path,
+          },
+        },
+      ],
+    });
+
+    return config;
+  },
+};
+
+export default nextConfig;
+```
+
+
 ### Create some helper utilities to stream BAML functions
 Let's add some helpers to export our baml functions as streamable server actions. See the last line in this file, where we export the `extractResume` function.
 

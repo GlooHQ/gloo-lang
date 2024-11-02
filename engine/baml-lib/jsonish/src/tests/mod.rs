@@ -120,10 +120,10 @@ fn relevant_data_models<'a>(
 
     while !start.is_empty() {
         let output = start.pop().unwrap();
-        match output.distribute_constraints() {
+        match ir.distribute_constraints(&output) {
             (FieldType::Enum(enm), constraints) => {
                 if checked_types.insert(output.to_string()) {
-                    let walker = ir.find_enum(enm);
+                    let walker = ir.find_enum(&enm);
 
                     let real_values = walker
                         .as_ref()
@@ -134,7 +134,7 @@ fn relevant_data_models<'a>(
                         .flatten()
                         .into_iter()
                         .map(|value| {
-                            let meta = find_enum_value(enm, &value, &walker, env_values)?;
+                            let meta = find_enum_value(enm.as_str(), &value, &walker, env_values)?;
                             Ok(meta.map(|m| m))
                         })
                         .filter_map(|v| v.transpose())

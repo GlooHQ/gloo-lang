@@ -10,9 +10,19 @@ class Foo {
 }
 ```
 
+### Block check
+
+```baml
+class Bar {
+  baz int
+  quux string
+  @@check(quux_limit, {{ this.quux|length < this.baz }})
+}
+```
+
 ## Benefits
 
 - **Non-Intrusive Validation**: Allows for validation checks without interrupting the flow of data processing.
 - **Runtime Inspection**: Enables inspection of validation results at runtime.
 
-See more in [validations guide](/guide/baml-advanced/validations). 
+See more in [validations guide](/guide/baml-advanced/validations).

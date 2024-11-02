@@ -9,6 +9,7 @@ license-file.workspace = true
 
 [dependencies]
 internal-baml-core = { path = "../baml-core" }
+itertools = "0.13.0"
 
 
 [dev-dependencies]

@@ -12,6 +12,10 @@
   /* font-weight: 600; */
 }
 
+.prose code {
+  background-color: #f8f8f8;
+}
+
 .fern-sidebar-link-container[data-state="active"] .fern-sidebar-link {
   font-weight: 600;
 }

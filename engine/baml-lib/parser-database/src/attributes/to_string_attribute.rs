@@ -1,10 +1,15 @@
+use baml_types::Constraint;
+use internal_baml_diagnostics::{DatamodelError, Span};
+
+use itertools::Itertools;
+
 use crate::{context::Context, types::Attributes};
 
 use super::alias::visit_alias_attribute;
 use super::constraint::visit_constraint_attributes;
 use super::description::visit_description_attribute;
 
-pub(super) fn visit(ctx: &mut Context<'_>, as_block: bool) -> Option<Attributes> {
+pub(super) fn visit(ctx: &mut Context<'_>, span: &Span, as_block: bool) -> Option<Attributes> {
     let mut modified = false;
 
     let mut attributes = Attributes::default();
@@ -27,9 +32,8 @@ pub(super) fn visit(ctx: &mut Context<'_>, as_block: bool) -> Option<Attributes>
         ctx.validate_visited_arguments();
     }
 
-    // TODO: (Greg) Note: This validation never gets run.
-    if let Some(attribute_name) = ctx.visit_repeated_attr_from_names(&["assert", "check"]) {
-        visit_constraint_attributes(attribute_name, &mut attributes, ctx);
+    if let Some((attribute_name, span)) = ctx.visit_repeated_attr_from_names(&["assert", "check"]) {
+        visit_constraint_attributes(attribute_name, span, &mut attributes, ctx);
         modified = true;
         ctx.validate_visited_arguments();
     }

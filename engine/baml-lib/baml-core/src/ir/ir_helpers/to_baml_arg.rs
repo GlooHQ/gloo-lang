@@ -43,7 +43,7 @@ impl ArgCoercer {
         value: &BamlValue, // original value passed in by user
         scope: &mut ScopeStack,
     ) -> Result<BamlValue, ()> {
-        let value = match field_type.distribute_constraints() {
+        let value = match ir.distribute_constraints(field_type) {
             (FieldType::Primitive(t), _) => match t {
                 TypeValue::String if matches!(value, BamlValue::String(_)) => Ok(value.clone()),
                 TypeValue::String if self.allow_implicit_cast_to_string => match value {
@@ -372,7 +372,7 @@ fn first_failing_assert_nested<'a>(
     let first_failure = value_with_types
         .iter()
         .map(|value_node| {
-            let (_, constraints) = value_node.meta().distribute_constraints();
+            let (_, constraints) = ir.distribute_constraints(value_node.meta());
             constraints
                 .into_iter()
                 .filter_map(|c| {

@@ -1,3 +1,4 @@
+use baml_types::LiteralValue;
 use minijinja::machinery::parse_expr;
 
 use crate::evaluate_type::{
@@ -93,17 +94,23 @@ fn test_ifexpr() {
     let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     assert_eq!(
         assert_evaluates_to!("1 if true else 2", &types),
-        Type::Number
+        Type::Union(vec![
+            Type::Literal(LiteralValue::Int(1)),
+            Type::Literal(LiteralValue::Int(2))
+        ])
     );
 
     assert_eq!(
         assert_evaluates_to!("1 if true else '2'", &types),
-        Type::Union(vec![Type::Number, Type::String])
+        Type::Union(vec![Type::Literal(LiteralValue::String("2".to_string())), Type::Literal(LiteralValue::Int(1))])
     );
 
     assert_eq!(
         assert_evaluates_to!("'1' if true else 2", &types),
-        Type::Union(vec![Type::Number, Type::String])
+        Type::Union(vec![
+            Type::Literal(LiteralValue::String("1".to_string())),
+            Type::Literal(LiteralValue::Int(2))
+        ])
     );
 
     types.add_function("AnotherFunc", Type::Float, vec![("arg".into(), Type::Bool)]);
@@ -143,7 +150,7 @@ fn test_call_function() {
     assert_eq!(assert_evaluates_to!("SomeFunc(true)", &types), Type::Float);
     assert_eq!(
         assert_fails_to!("SomeFunc(arg=1)", &types),
-        vec!["Function 'SomeFunc' expects argument 'arg' to be of type bool, but got number"]
+        vec!["Function 'SomeFunc' expects argument 'arg' to be of type bool, but got literal[1]"]
     );
 
     types.add_function(
@@ -158,14 +165,14 @@ fn test_call_function() {
 
     assert_eq!(
         assert_fails_to!("AnotherFunc(arg='true', arg2='1')", &types),
-        vec!["Function 'AnotherFunc' expects argument 'arg' to be of type bool, but got string"]
+        vec![r#"Function 'AnotherFunc' expects argument 'arg' to be of type bool, but got literal["true"]"#]
     );
 
     assert_eq!(
         assert_fails_to!("AnotherFunc(arg=SomeFunc(true) ~ 1, arg2=1)", &types),
         vec![
             "Function 'AnotherFunc' expects argument 'arg' to be of type bool, but got string",
-            "Function 'AnotherFunc' expects argument 'arg2' to be of type string, but got number"
+            "Function 'AnotherFunc' expects argument 'arg2' to be of type string, but got literal[1]"
         ]
     );
 
@@ -201,6 +208,25 @@ fn test_call_function() {
             "Function 'AnotherFunc' does not have an argument 'arg4'. Did you mean 'arg3'?"
         ]
     );
+
+    types.add_function(
+        "TakesLiteralFoo",
+        Type::Float,
+        vec![
+            ("arg".to_string(),
+                Type::Union(vec![
+                    Type::Literal(LiteralValue::String("Foo".to_string())),
+                    Type::Literal(LiteralValue::String("Bar".to_string()))
+                ])
+            )
+        ]
+    );
+
+    assert_eq!(
+        assert_evaluates_to!("TakesLiteralFoo('Foo')", &types),
+        Type::Float
+    );
+
 }
 
 #[test]
@@ -229,7 +255,7 @@ fn test_output_format() {
             "ctx.output_format(prefix='1', always_hoist_enums=1)",
             &types
         ),
-        vec!["Function 'baml::OutputFormat' expects argument 'always_hoist_enums' to be of type (none | bool), but got number"]
+        vec!["Function 'baml::OutputFormat' expects argument 'always_hoist_enums' to be of type (none | bool), but got literal[1]"]
     );
 
     assert_eq!(

@@ -55,9 +55,9 @@ pub struct Class {
 
 #[derive(Debug, Clone)]
 pub struct OutputFormatContent {
-    enums: Arc<IndexMap<String, Enum>>,
-    classes: Arc<IndexMap<String, Class>>,
-    target: FieldType,
+    pub enums: Arc<IndexMap<String, Enum>>,
+    pub classes: Arc<IndexMap<String, Class>>,
+    pub target: FieldType,
 }
 
 enum RenderSetting<T> {

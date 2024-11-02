@@ -109,7 +109,7 @@ impl TypeCoercer for FieldType {
     }
 }
 
-fn validate_asserts(constraints: &Vec<(Constraint, bool)>) -> Result<(), ParsingError> {
+pub fn validate_asserts(constraints: &Vec<(Constraint, bool)>) -> Result<(), ParsingError> {
     let failing_asserts = constraints
         .iter()
         .filter_map(

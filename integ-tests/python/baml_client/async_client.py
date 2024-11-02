@@ -1269,6 +1269,52 @@ class BamlAsyncClient:
       )
       return cast(Union[Literal[1], Literal[True], Literal["string output"]], raw.cast_to(types, types))
     
+    async def MakeBlockConstraint(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> Checked[types.BlockConstraint,types.Literal["cross_field"]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "MakeBlockConstraint",
+        {
+          
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Checked[types.BlockConstraint,types.Literal["cross_field"]], raw.cast_to(types, types))
+    
+    async def MakeNestedBlockConstraint(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> types.NestedBlockConstraint:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "MakeNestedBlockConstraint",
+        {
+          
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.NestedBlockConstraint, raw.cast_to(types, types))
+    
     async def MyFunc(
         self,
         input: str,
@@ -2488,6 +2534,29 @@ class BamlAsyncClient:
       )
       return cast(types.UnionTest_ReturnType, raw.cast_to(types, types))
     
+    async def UseBlockConstraint(
+        self,
+        inp: types.BlockConstraintForParam,
+        baml_options: BamlCallOptions = {},
+    ) -> int:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "UseBlockConstraint",
+        {
+          "inp": inp,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(int, raw.cast_to(types, types))
+    
     async def UseMalformedConstraints(
         self,
         a: types.MalformedConstraints2,
@@ -2504,6 +2573,29 @@ class BamlAsyncClient:
         "UseMalformedConstraints",
         {
           "a": a,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(int, raw.cast_to(types, types))
+    
+    async def UseNestedBlockConstraint(
+        self,
+        inp: types.NestedBlockConstraintForParam,
+        baml_options: BamlCallOptions = {},
+    ) -> int:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "UseNestedBlockConstraint",
+        {
+          "inp": inp,
         },
         self.__ctx_manager.get(),
         tb,
@@ -4115,6 +4207,64 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def MakeBlockConstraint(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Checked[partial_types.BlockConstraint,types.Literal["cross_field"]], Checked[types.BlockConstraint,types.Literal["cross_field"]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "MakeBlockConstraint",
+        {
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Checked[partial_types.BlockConstraint,types.Literal["cross_field"]], Checked[types.BlockConstraint,types.Literal["cross_field"]]](
+        raw,
+        lambda x: cast(Checked[partial_types.BlockConstraint,types.Literal["cross_field"]], x.cast_to(types, partial_types)),
+        lambda x: cast(Checked[types.BlockConstraint,types.Literal["cross_field"]], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def MakeNestedBlockConstraint(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.NestedBlockConstraint, types.NestedBlockConstraint]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "MakeNestedBlockConstraint",
+        {
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.NestedBlockConstraint, types.NestedBlockConstraint](
+        raw,
+        lambda x: cast(partial_types.NestedBlockConstraint, x.cast_to(types, partial_types)),
+        lambda x: cast(types.NestedBlockConstraint, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def MyFunc(
         self,
         input: str,
@@ -5705,6 +5855,36 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def UseBlockConstraint(
+        self,
+        inp: types.BlockConstraintForParam,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[int], int]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "UseBlockConstraint",
+        {
+          "inp": inp,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[int], int](
+        raw,
+        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
+        lambda x: cast(int, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def UseMalformedConstraints(
         self,
         a: types.MalformedConstraints2,
@@ -5721,6 +5901,36 @@ class BamlStreamClient:
         "UseMalformedConstraints",
         {
           "a": a,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[int], int](
+        raw,
+        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
+        lambda x: cast(int, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def UseNestedBlockConstraint(
+        self,
+        inp: types.NestedBlockConstraintForParam,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[int], int]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "UseNestedBlockConstraint",
+        {
+          "inp": inp,
         },
         None,
         self.__ctx_manager.get(),
