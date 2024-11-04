@@ -68,7 +68,7 @@ jobs:
               tar -xzf aarch64-linux-musl-cross.tgz
               echo "$PWD/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
               cat >>$GITHUB_ENV <<EOF
-              RUSTFLAGS="-C target-feature=-crt-static --cfg tracing_unstable"
+              RUSTFLAGS=-C target-feature=-crt-static --cfg tracing_unstable
               EOF
             node_build: pnpm build:napi-release --target aarch64-unknown-linux-musl --use-napi-cross
 
