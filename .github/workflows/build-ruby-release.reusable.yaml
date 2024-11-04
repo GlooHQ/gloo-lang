@@ -2,6 +2,8 @@ name: Release engine/language_client_ruby
 
 on:
   workflow_call: {}
+  push:
+    branches: [aaron-fix]
 
 permissions:
   contents: read
