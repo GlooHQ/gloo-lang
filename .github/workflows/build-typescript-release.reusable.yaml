@@ -95,7 +95,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: engine
-          shared-key: engine-${{ github.job }}-${{ matrix._.target }}
+          shared-key: engine-${{ github.job }}-${{ matrix._.target }}-v2
           cache-on-failure: true
 
       - name: PNPM Install
