@@ -11,5 +11,8 @@ function FnLiteralUnionClassInputOutput(input: LiteralClassOne | LiteralClassTwo
   prompt #"
     Return the same object you were given.
     {{ ctx.output_format }}
+
+    {{ _.role('user') }}
+    {{ input }}
   "#
 }
