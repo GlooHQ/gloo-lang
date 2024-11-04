@@ -59,25 +59,58 @@ pub(super) fn pick_best(
     // Sort by (false, score, index)
     all_valid_scores.sort_by(
         |&(a, a_score, a_default, a_val), &(b, b_score, b_default, b_val)| {
-            if a_val.r#type() == b_val.r#type() {
-                if matches!(a_val, BamlValueWithFlags::List(_, _)) {
-                    let a_is_single = a_val
-                        .conditions()
-                        .flags
-                        .iter()
-                        .any(|f| matches!(f, Flag::SingleToArray));
-                    let b_is_single = b_val
-                        .conditions()
-                        .flags
-                        .iter()
-                        .any(|f| matches!(f, Flag::SingleToArray));
+            // TODO: This is a bit of a hack. We should likely use some is_subtype_of logic here
+            // to ensure that we're accepting the "best" type.
+            // E.g. if a is a subtype of b, we should prefer a over b. (empty list is a subtype of any list)
+            if matches!(a_val, BamlValueWithFlags::List(_, _))
+                && matches!(b_val, BamlValueWithFlags::List(_, _))
+            {
+                let a_is_single = a_val
+                    .conditions()
+                    .flags
+                    .iter()
+                    .any(|f| matches!(f, Flag::SingleToArray));
+                let b_is_single = b_val
+                    .conditions()
+                    .flags
+                    .iter()
+                    .any(|f| matches!(f, Flag::SingleToArray));
 
-                    match (a_is_single, b_is_single) {
-                        // Return B
-                        (true, false) => return std::cmp::Ordering::Greater,
-                        // Return A
-                        (false, true) => return std::cmp::Ordering::Less,
-                        _ => {}
+                match (a_is_single, b_is_single) {
+                    // Return B
+                    (true, false) => return std::cmp::Ordering::Greater,
+                    // Return A
+                    (false, true) => return std::cmp::Ordering::Less,
+                    _ => {
+                        if let (
+                            BamlValueWithFlags::List(_, items_a),
+                            BamlValueWithFlags::List(_, items_b),
+                        ) = (a_val, b_val)
+                        {
+                            let unparseables_a = a_val
+                                .conditions()
+                                .flags
+                                .iter()
+                                .filter(|f| matches!(f, Flag::ArrayItemParseError(..)))
+                                .count();
+                            let unparseables_b = b_val
+                                .conditions()
+                                .flags
+                                .iter()
+                                .filter(|f| matches!(f, Flag::ArrayItemParseError(..)))
+                                .count();
+                            match (unparseables_a, unparseables_b) {
+                                // If A has no unparseables and B has unparseables and B is empty, prefer A
+                                (0, b) if b > 0 && items_b.is_empty() => {
+                                    return std::cmp::Ordering::Less
+                                }
+                                // If A has unparseables and B has no unparseables and A is empty, prefer B
+                                (a, 0) if a > 0 && items_a.is_empty() => {
+                                    return std::cmp::Ordering::Greater
+                                }
+                                _ => {}
+                            }
+                        }
                     }
                 }
             }
