@@ -57,6 +57,7 @@ jobs:
               CC_x86_64_unknown_linux_musl=x86_64-linux-musl-gcc
               CXX_x86_64_unknown_linux_musl=x86_64-linux-musl-g++
               AR_x86_64_unknown_linux_musl=x86_64-linux-musl-ar
+              RUSTFLAGS="-C target-feature=-crt-static --cfg tracing_unstable"
               EOF
             node_build: pnpm build:napi-release --target x86_64-unknown-linux-musl --use-napi-cross
 
@@ -66,6 +67,9 @@ jobs:
               curl -LO https://musl.cc/aarch64-linux-musl-cross.tgz
               tar -xzf aarch64-linux-musl-cross.tgz
               echo "$PWD/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
+              cat >>$GITHUB_ENV <<EOF
+              RUSTFLAGS="-C target-feature=-crt-static --cfg tracing_unstable"
+              EOF
             node_build: pnpm build:napi-release --target aarch64-unknown-linux-musl --use-napi-cross
 
     name: ${{ matrix._.target }}
@@ -83,9 +87,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          # cache: ""
-          # cache-dependency-path: |
-          #   engine/language_client_typescript/pnpm-lock.yaml
+          cache: pnpm
+          cache-dependency-path: |
+            engine/language_client_typescript/pnpm-lock.yaml
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
@@ -95,7 +99,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: engine
-          shared-key: engine-${{ github.job }}-${{ matrix._.target }}-v2
+          shared-key: engine-${{ github.job }}-${{ matrix._.target }}
           cache-on-failure: true
 
       - name: PNPM Install
