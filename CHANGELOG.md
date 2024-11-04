@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.66.0](https://github.com/boundaryml/baml/compare/0.65.0..0.66.0) - 2024-11-04
+
+### Features
+
+- BAML_LOG supports JSON mode (#1137) - ([f140767](https://github.com/boundaryml/baml/commit/f1407674fc0d91c079fd93b655ff097a05475740)) - aaronvg
+- Block-level constraints (#1124) - ([e931acb](https://github.com/boundaryml/baml/commit/e931acb7f765e86a70cb33cd86728aabe058024b)) - Greg Hale
+- Parser improvement! Streaming arrays is much more stable and parsing file paths improved (#1134) - ([56570f0](https://github.com/boundaryml/baml/commit/56570f0fe6c4c09594eb757c8a78158cf0e73fcd)) - hellovai
+
+
+### Documentation
+
+- Improvements to Reference Documentation (#1125) - ([12c8fa7](https://github.com/boundaryml/baml/commit/12c8fa7ec5aea8571f27fb65b8f2a327a1a5e0ce)) - hellovai
+- README.md: typo/readability fixes (#1092) - ([cb67e31](https://github.com/boundaryml/baml/commit/cb67e316dce2c4ee29b6fd625316f5df4409335f)) - Prathamesh Pawar
+- README.md: Correct Promptfiddle link (#1108) - ([b296c4c](https://github.com/boundaryml/baml/commit/b296c4cf6104513e40ef89f17d534d6d8858f223)) - Sagar Sharma
+- Fix broken links (#1133) - ([e0bfc94](https://github.com/boundaryml/baml/commit/e0bfc94f453f35971e871a4b121a1f35fa0b17cc)) - aaronvg
+
+
+### Bug-fix
+
+- Improve syntax highlighting for template strings (#1130) - ([54de4b6](https://github.com/boundaryml/baml/commit/54de4b6ed9144a68fe0a84d916679f9aec46fe28)) - hellovai
+- Improved static analysis for literals in jinja (#1132) - ([b8a221f](https://github.com/boundaryml/baml/commit/b8a221ff44668e2b1d9fa75100c270ce5a227ed4)) - Greg Hale
+- Adds missing imports to the sync_client template (#1131) - ([823f74c](https://github.com/boundaryml/baml/commit/823f74c88df3cc7b9ebb4b19b74b5ee6edbafd9c)) - Jesus Lizama
+- Add `Checked` in baml client typescript (#1135) - ([ad759cd](https://github.com/boundaryml/baml/commit/ad759cdb67cb0b6a6d2bd0d16575e3e1bc847a68)) - Greg Hale
+- Produce syntax error when user misses return type on functions (#1129) - ([034d6eb](https://github.com/boundaryml/baml/commit/034d6ebda38aded1c6a93321d363575156b0ecc6)) - hellovai
+
 ## [0.65.0](https://github.com/boundaryml/baml/compare/0.64.0..0.65.0) - 2024-10-31
 
 ### Documentation
