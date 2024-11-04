@@ -83,8 +83,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: false
-          # cache: pnpm
+          # cache: ""
           # cache-dependency-path: |
           #   engine/language_client_typescript/pnpm-lock.yaml
       - uses: dtolnay/rust-toolchain@stable
