@@ -57,7 +57,7 @@ jobs:
               CC_x86_64_unknown_linux_musl=x86_64-linux-musl-gcc
               CXX_x86_64_unknown_linux_musl=x86_64-linux-musl-g++
               AR_x86_64_unknown_linux_musl=x86_64-linux-musl-ar
-              RUSTFLAGS="-C target-feature=-crt-static --cfg tracing_unstable"
+              RUSTFLAGS=-C target-feature=-crt-static --cfg tracing_unstable
               EOF
             node_build: pnpm build:napi-release --target x86_64-unknown-linux-musl --use-napi-cross
 
