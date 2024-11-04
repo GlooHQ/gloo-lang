@@ -19,8 +19,6 @@ pub struct Config {
     pub log_redaction_placeholder: String,
     #[serde(default = "default_max_log_chunk_chars")]
     pub max_log_chunk_chars: usize,
-    #[serde(default)] // default is false
-    pub log_json: bool,
 }
 
 fn default_base_url() -> String {
@@ -55,32 +53,15 @@ fn default_max_log_chunk_chars() -> usize {
 
 impl Config {
     pub fn from_env_vars<T: AsRef<str>>(env_vars: impl Iterator<Item = (T, T)>) -> Result<Self> {
-        let env_map: HashMap<String, String> = env_vars
-            .map(|(k, v)| (k.as_ref().to_string(), v.as_ref().to_string()))
-            .collect();
+        let config: Result<Config, envy::Error> = envy::prefixed("BOUNDARY_")
+            .from_iter(env_vars.map(|(k, v)| (k.as_ref().to_string(), v.as_ref().to_string())));
 
-        // Extract and remove the BAML_LOG_JSON value
-        let log_json_key = "BAML_LOG_JSON".to_string();
-        let log_json_value = env_map.get(&log_json_key).cloned();
-
-        // Collect remaining environment variables with the BOUNDARY_ prefix
-        let boundary_vars = env_map
-            .into_iter()
-            .filter(|(k, _)| k != &log_json_key)
-            .collect::<HashMap<String, String>>();
-
-        // Parse the Config from BOUNDARY_ prefixed variables
-        let mut config: Config = envy::prefixed("BOUNDARY_")
-            .from_iter(boundary_vars.into_iter())
-            .map_err(|e| anyhow::anyhow!("Failed to parse BOUNDARY_ config: {}", e))?;
-
-        // Override the log_json field if BAML_LOG_JSON is present
-        if let Some(value) = log_json_value {
-            config.log_json = value
-                .parse()
-                .map_err(|e| anyhow::anyhow!("Failed to parse BAML_LOG_JSON into bool: {}", e))?;
+        match config {
+            Ok(config) => Ok(config),
+            Err(err) => Err(anyhow::anyhow!(
+                "Failed to parse config from environment variables: {}",
+                err
+            )),
         }
-
-        Ok(config)
     }
 }

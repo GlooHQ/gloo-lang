@@ -78,13 +78,6 @@ impl APIConfig {
             Self::Web(config) => config.max_log_chunk_chars,
         }
     }
-
-    pub fn log_json(&self) -> bool {
-        match self {
-            Self::LocalOnly(config) => config.log_json,
-            Self::Web(config) => config.log_json,
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -97,7 +90,6 @@ pub(super) struct CompleteAPIConfig {
     pub host_name: String,
     pub log_redaction_enabled: bool,
     pub log_redaction_placeholder: String,
-    pub log_json: bool,
     pub max_log_chunk_chars: usize,
 
     client: reqwest::Client,
@@ -115,7 +107,6 @@ pub(super) struct PartialAPIConfig {
     host_name: String,
     log_redaction_enabled: bool,
     log_redaction_placeholder: String,
-    log_json: bool,
     pub max_log_chunk_chars: usize,
 }
 
@@ -321,7 +312,6 @@ impl APIWrapper {
                     client: create_tracing_client()?,
                     log_redaction_enabled: config.log_redaction_enabled,
                     log_redaction_placeholder: config.log_redaction_placeholder,
-                    log_json: config.log_json,
                     max_log_chunk_chars: config.max_log_chunk_chars,
                 }),
             },
@@ -335,7 +325,6 @@ impl APIWrapper {
                     host_name: config.host_name,
                     log_redaction_enabled: config.log_redaction_enabled,
                     log_redaction_placeholder: config.log_redaction_placeholder,
-                    log_json: config.log_json,
                     max_log_chunk_chars: config.max_log_chunk_chars,
                 }),
             },
