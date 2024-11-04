@@ -1,5 +1,8 @@
 pub use crate::internal::llm_client::LLMResponse;
-use crate::{errors::ExposedError, internal::llm_client::{orchestrator::OrchestrationScope, ResponseBamlValue}};
+use crate::{
+    errors::ExposedError,
+    internal::llm_client::{orchestrator::OrchestrationScope, ResponseBamlValue},
+};
 use anyhow::Result;
 use colored::*;
 
@@ -122,7 +125,9 @@ impl FunctionResult {
             // Error at parse time was not forwarded to later results.
             (Some(Err(e)), _) => Err(self.format_err(e)),
             (None, None) => Err(anyhow::anyhow!(self.llm_response().clone())),
-            (None, Some(_)) => unreachable!("A response could not have been created without a successful parse")
+            (None, Some(_)) => {
+                unreachable!("A response could not have been created without a successful parse")
+            }
         }
     }
 
@@ -137,7 +142,7 @@ impl FunctionResult {
                 if let Ok(val) = res {
                     Ok(val)
                 } else {
-                    Err(self.format_err( res.as_ref().err().unwrap() ))
+                    Err(self.format_err(res.as_ref().err().unwrap()))
                 }
             })
             .unwrap_or_else(|| Err(anyhow::anyhow!(self.llm_response().clone())))
