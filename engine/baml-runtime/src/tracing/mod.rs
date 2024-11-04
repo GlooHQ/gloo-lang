@@ -151,7 +151,6 @@ impl<'a> Visualize for FunctionResult {
 // We may break this at any time.
 // It differs from the LogEvent that is sent to the on_log_event callback in that it doesn't include
 // actual tracing details like span_id, event_chain, (for now).
-// #[cfg(feature = "json-logging")]
 #[derive(Valuable)]
 struct BamlEventJson {
     // Metadata

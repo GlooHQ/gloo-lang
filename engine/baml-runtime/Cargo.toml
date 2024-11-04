@@ -138,7 +138,6 @@ which = "6.0.3"
 defaults = []
 internal = []
 skip-integ-tests = []
-# json-logging = ["dep:tracing", "dep:valuable"]
 
 
 
