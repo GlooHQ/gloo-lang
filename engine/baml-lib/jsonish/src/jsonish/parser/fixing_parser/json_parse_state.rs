@@ -74,6 +74,7 @@ impl JsonParseState {
             | JsonCollection::TripleQuotedString(s)
             | JsonCollection::BlockComment(s)
             | JsonCollection::SingleQuotedString(s)
+            | JsonCollection::BacktickString(s)
             | JsonCollection::UnquotedString(s)
             | JsonCollection::TrailingComment(s) => {
                 // println!("Consuming: {s} + {:?}", token);
@@ -484,6 +485,22 @@ impl JsonParseState {
                         _ => self.consume(token),
                     }
                 }
+                JsonCollection::BacktickString(_) => {
+                    // We could be expecting:
+                    // - A closing backtick
+                    // - A character
+                    match token {
+                        '`' => {
+                            if self.should_close_string(next, '`') {
+                                self.complete_collection();
+                                Ok(0)
+                            } else {
+                                self.consume(token)
+                            }
+                        }
+                        _ => self.consume(token),
+                    }
+                }
                 JsonCollection::SingleQuotedString(_) => {
                     // We could be expecting:
                     // - A closing quote
@@ -596,6 +613,12 @@ impl JsonParseState {
             '\'' => {
                 self.collection_stack.push((
                     JsonCollection::SingleQuotedString(String::new()),
+                    Default::default(),
+                ));
+            }
+            '`' => {
+                self.collection_stack.push((
+                    JsonCollection::BacktickString(String::new()),
                     Default::default(),
                 ));
             }

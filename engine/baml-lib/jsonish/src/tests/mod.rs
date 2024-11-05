@@ -7,6 +7,7 @@ pub mod macros;
 mod test_basics;
 mod test_class;
 mod test_class_2;
+mod test_code;
 mod test_constraints;
 mod test_enum;
 mod test_lists;
