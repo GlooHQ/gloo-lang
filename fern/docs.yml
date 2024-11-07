@@ -325,7 +325,7 @@ navigation:
             contents:
               - page: comments
                 path: 03-reference/baml/comments.mdx
-              - page: Enviornment Variables
+              - page: Environment Variables
                 path: 03-reference/baml/env-vars.mdx
               - page: string
                 path: 03-reference/baml/string.mdx
@@ -358,8 +358,10 @@ navigation:
           - page: What are attributes?
             path: 03-reference/baml/attributes/attributes-overview.mdx
           - page: "@alias / @@alias"
+            slug: alias
             path: 03-reference/baml/attributes/alias.mdx
           - page: "@description / @@description"
+            slug: description
             path: 03-reference/baml/attributes/description.mdx
           - page: "@skip"
             path: 03-reference/baml/attributes/skip.mdx
