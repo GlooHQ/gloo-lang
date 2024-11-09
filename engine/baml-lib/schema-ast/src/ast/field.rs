@@ -38,7 +38,7 @@ pub struct Field<T> {
     /// ```
     pub attributes: Vec<Attribute>,
     /// The location of this field in the text representation.
-    pub(crate) span: Span,
+    pub span: Span,
 }
 
 impl<T> Field<T> {

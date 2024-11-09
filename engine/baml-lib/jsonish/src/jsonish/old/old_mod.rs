@@ -144,7 +144,7 @@ impl Target {
         match res {
             Ok(value) => {
                 if !state.is_empty() {
-                    println!("{:?}", state);
+                    // println!("{:?}", state);
                 }
                 Ok(value)
             }

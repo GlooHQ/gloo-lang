@@ -7,6 +7,7 @@ use baml_types::{BamlMap, BamlMediaType, BamlValue};
 use cfg_if::cfg_if;
 use colored::{ColoredString, Colorize};
 use internal_baml_jinja::RenderedPrompt;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -26,6 +27,8 @@ use self::api_wrapper::{
     },
     APIWrapper,
 };
+use ::tracing as rust_tracing;
+use valuable::Valuable;
 
 cfg_if! {
     if #[cfg(target_arch = "wasm32")] {
@@ -37,7 +40,7 @@ cfg_if! {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TracingSpan {
     span_id: Uuid,
     params: BamlMap<String, BamlValue>,
@@ -120,7 +123,6 @@ impl<'a> Visualize for FunctionResult {
         s.push(self.llm_response().visualize(max_chunk_size));
         match self.result_with_constraints() {
             Some(Ok(val)) => {
-                let val: BamlValue = val.into();
                 s.push(format!(
                     "{}",
                     format!("---Parsed Response ({})---", val.r#type()).blue()
@@ -142,6 +144,46 @@ impl<'a> Visualize for FunctionResult {
         };
         s.join("\n")
     }
+}
+
+// A best effort way of serializing the baml_event log into a structured format.
+// Users will see this as JSON in their logs (primarily in baml server)
+// We may break this at any time.
+// It differs from the LogEvent that is sent to the on_log_event callback in that it doesn't include
+// actual tracing details like span_id, event_chain, (for now).
+#[derive(Valuable)]
+struct BamlEventJson {
+    // Metadata
+    start_time: String,
+    num_tries: usize,
+    total_tries: usize,
+
+    // LLM Info
+    client: String,
+    model: String,
+    latency_ms: u128,
+    stop_reason: Option<String>,
+
+    // Content
+    prompt: Option<String>,
+    llm_reply: Option<String>,
+    // JSON string
+    request_options_json: Option<String>,
+
+    // Token Usage
+    tokens: Option<TokenUsage>,
+
+    // Response/Error Info
+    parsed_response_type: Option<String>,
+    parsed_response: Option<String>,
+    error: Option<String>,
+}
+
+#[derive(Valuable)]
+struct TokenUsage {
+    prompt_tokens: Option<u64>,
+    completion_tokens: Option<u64>,
+    total_tokens: Option<u64>,
 }
 
 impl BamlTracer {
@@ -292,7 +334,10 @@ impl BamlTracer {
 
         if let Ok(response) = &response {
             let name = event_chain.last().map(|s| s.name.as_str());
-            let is_ok = response.result_with_constraints().as_ref().is_some_and(|r| r.is_ok());
+            let is_ok = response
+                .result_with_constraints()
+                .as_ref()
+                .is_some_and(|r| r.is_ok());
             log::log!(
                 target: "baml_events",
                 if is_ok { log::Level::Info } else { log::Level::Warn },
@@ -337,16 +382,13 @@ impl BamlTracer {
             anyhow::bail!("Span ID mismatch: {} != {}", span.span_id, span_id);
         }
 
-        if let Ok(response) = &response {
-            let name = event_chain.last().map(|s| s.name.as_str());
-            let is_ok = response.result_with_constraints().as_ref().is_some_and(|r| r.is_ok());
-            log::log!(
-                target: "baml_events",
-                if is_ok { log::Level::Info } else { log::Level::Warn },
-                "{}{}",
-                name.map(|s| format!("Function {}:\n", s)).unwrap_or_default().purple(),
-                response.visualize(self.options.config.max_log_chunk_chars())
-            );
+        let log_json = Self::is_json_logging_enabled();
+
+        match response {
+            Ok(response) => {
+                self.handle_ok_response(response, log_json, &event_chain, &tags, &span)?
+            }
+            Err(e) => self.handle_error_response(e, log_json, &span),
         }
 
         if let Some(tracer) = &self.tracer {
@@ -358,6 +400,183 @@ impl BamlTracer {
             Ok(None)
         }
     }
+
+    fn is_json_logging_enabled() -> bool {
+        matches!(
+            std::env::var("BAML_LOG_JSON"),
+            Ok(val) if val.trim().eq_ignore_ascii_case("true") || val.trim() == "1"
+        )
+    }
+
+    fn handle_ok_response(
+        &self,
+        response: &FunctionResult,
+        log_json: bool,
+        event_chain: &[SpanCtx],
+        tags: &HashMap<String, BamlValue>,
+        span: &TracingSpan,
+    ) -> Result<()> {
+        let name = event_chain.last().map(|s| s.name.as_str());
+        let is_ok = response
+            .result_with_constraints()
+            .as_ref()
+            .is_some_and(|r| r.is_ok());
+
+        let log_schema = response.to_log_schema(
+            &self.options,
+            event_chain.to_vec(),
+            tags.clone(),
+            span.clone(),
+        );
+
+        if log_json {
+            let log_event = self.build_baml_event_json(response, span);
+            log_json_event(is_ok, log_event)?;
+        } else {
+            log_simple_event(is_ok, name, response, &self.options);
+        }
+
+        Ok(())
+    }
+
+    fn handle_error_response(&self, error: &anyhow::Error, log_json: bool, span: &TracingSpan) {
+        if log_json {
+            let baml_event_json = BamlEventJson {
+                start_time: to_iso_string(&span.start_time),
+                num_tries: 0,
+                total_tries: 0,
+                client: "unknown".to_string(),
+                model: "unknown".to_string(),
+                latency_ms: 0,
+                stop_reason: None,
+                prompt: None,
+                llm_reply: None,
+                request_options_json: None,
+                tokens: None,
+                parsed_response_type: None,
+                parsed_response: None,
+                error: Some(error.to_string()),
+            };
+            rust_tracing::event!(
+                target: "baml_events",
+                rust_tracing::Level::ERROR,
+                baml_event = baml_event_json.as_value()
+            );
+        } else {
+            log::error!("{}", error);
+        }
+    }
+
+    fn build_baml_event_json(
+        &self,
+        response: &FunctionResult,
+        span: &TracingSpan,
+    ) -> BamlEventJson {
+        let last_ctx = response.llm_response();
+        let start_time = to_iso_string(&span.start_time);
+        let num_tries = response.event_chain().len();
+        let total_tries = response.event_chain().len();
+        let error = error_from_result(response).map(|e| e.message.clone());
+
+        match last_ctx {
+            LLMResponse::Success(resp) => BamlEventJson {
+                start_time,
+                num_tries,
+                total_tries,
+                client: resp.client.clone(),
+                model: resp.model.clone(),
+                latency_ms: resp.latency.as_millis(),
+                stop_reason: resp.metadata.finish_reason.clone(),
+                prompt: Some(resp.prompt.to_string()),
+                llm_reply: Some(resp.content.clone()),
+                request_options_json: Some(
+                    serde_json::to_string(&resp.request_options).unwrap_or_default(),
+                ),
+                tokens: Some(TokenUsage {
+                    prompt_tokens: resp.metadata.prompt_tokens,
+                    completion_tokens: resp.metadata.output_tokens,
+                    total_tokens: resp.metadata.total_tokens,
+                }),
+                parsed_response_type: response
+                    .result_with_constraints()
+                    .as_ref()
+                    .and_then(|r| r.as_ref().ok())
+                    .map(|v| v.r#type().to_string()),
+                parsed_response: response
+                    .result_with_constraints()
+                    .as_ref()
+                    .and_then(|r| r.as_ref().ok())
+                    .map(|v| serde_json::to_string(v).unwrap_or_default()),
+                error,
+            },
+            LLMResponse::LLMFailure(err) => BamlEventJson {
+                start_time,
+                num_tries,
+                total_tries,
+                client: err.client.clone(),
+                model: err.model.clone().unwrap_or_default(),
+                latency_ms: err.latency.as_millis(),
+                stop_reason: None,
+                prompt: Some(err.prompt.to_string()),
+                llm_reply: None,
+                request_options_json: Some(
+                    serde_json::to_string(&err.request_options).unwrap_or_default(),
+                ),
+                tokens: None,
+                parsed_response_type: None,
+                parsed_response: None,
+                error,
+            },
+            LLMResponse::UserFailure(msg) | LLMResponse::InternalFailure(msg) => BamlEventJson {
+                start_time,
+                num_tries,
+                total_tries,
+                client: "unknown".to_string(),
+                model: "unknown".to_string(),
+                latency_ms: 0,
+                stop_reason: None,
+                prompt: None,
+                llm_reply: None,
+                request_options_json: None,
+                tokens: None,
+                parsed_response_type: None,
+                parsed_response: None,
+                error: Some(msg.clone()),
+            },
+        }
+    }
+}
+
+fn log_json_event(is_ok: bool, log_event: BamlEventJson) -> Result<()> {
+    if is_ok {
+        rust_tracing::event!(
+            target: "baml_events",
+            rust_tracing::Level::INFO,
+            baml_event = log_event.as_value()
+        );
+    } else {
+        rust_tracing::event!(
+            target: "baml_events",
+            rust_tracing::Level::WARN,
+            baml_event = log_event.as_value()
+        );
+    }
+    Ok(())
+}
+
+fn log_simple_event(
+    is_ok: bool,
+    name: Option<&str>,
+    response: &FunctionResult,
+    options: &APIWrapper,
+) {
+    log::log!(
+        target: "baml_events",
+        if is_ok { log::Level::Info } else { log::Level::Warn },
+        "{}{}",
+        name.map(|s| format!("Function {}:\n", s)).unwrap_or_default().purple(),
+        response.visualize(options.config.max_log_chunk_chars())
+    );
 }
 
 // Function to convert web_time::SystemTime to ISO 8601 string

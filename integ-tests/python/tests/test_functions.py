@@ -30,12 +30,18 @@ from ..baml_client.types import (
     MalformedConstraints2,
     LiteralClassHello,
     LiteralClassOne,
+<<<<<<< HEAD
     LinkedList,
     Node,
     BinaryNode,
     Tree,
     Forest,
     all_succeeded,
+=======
+    all_succeeded,
+    BlockConstraintForParam,
+    NestedBlockConstraintForParam,
+>>>>>>> canary
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -1122,8 +1128,8 @@ async def test_event_log_hook():
 @pytest.mark.asyncio
 async def test_aws_bedrock():
     ## unstreamed
-    # res = await b.TestAws("lightning in a rock")
-    # print("unstreamed", res)
+    res = await b.TestAws("lightning in a rock")
+    print("unstreamed", res)
 
     ## streamed
     stream = b.stream.TestAws("lightning in a rock")
@@ -1135,6 +1141,16 @@ async def test_aws_bedrock():
     res = await stream.get_final_response()
     print("streamed final", res)
     assert len(res) > 0, "Expected non-empty result but got empty."
+
+
+@pytest.mark.asyncio
+async def test_aws_bedrock_invalid_region():
+    ## unstreamed
+    with pytest.raises(errors.BamlClientError) as excinfo:
+        res = await b.TestAwsInvalidRegion("lightning in a rock")
+        print("unstreamed", res)
+
+    assert "DispatchFailure" in str(excinfo)
 
 
 @pytest.mark.asyncio
@@ -1397,6 +1413,7 @@ async def test_failing_assert_can_stream():
 
 
 @pytest.mark.asyncio
+<<<<<<< HEAD
 async def test_simple_recursive_type():
     res = await b.BuildLinkedList([1, 2, 3, 4, 5])
     assert res == LinkedList(
@@ -1460,3 +1477,28 @@ async def test_mutually_recursive_type():
             ]
         ),
     )
+=======
+async def test_block_constraints():
+    ret = await b.MakeBlockConstraint()
+    assert ret.checks["cross_field"].status == "failed"
+
+
+@pytest.mark.asyncio
+async def test_nested_block_constraints():
+    ret = await b.MakeNestedBlockConstraint()
+    print(ret)
+    assert ret.nbc.checks["cross_field"].status == "succeeded"
+
+
+@pytest.mark.asyncio
+async def test_block_constraint_arguments():
+    with pytest.raises(errors.BamlInvalidArgumentError) as e:
+        block_constraint = BlockConstraintForParam(bcfp=1, bcfp2="too long!")
+        await b.UseBlockConstraint(block_constraint)
+    assert "Failed assert: hi" in str(e)
+
+    with pytest.raises(errors.BamlInvalidArgumentError) as e:
+        nested_block_constraint = NestedBlockConstraintForParam(nbcfp=block_constraint)
+        await b.UseNestedBlockConstraint(nested_block_constraint)
+    assert "Failed assert: hi" in str(e)
+>>>>>>> canary

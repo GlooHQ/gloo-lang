@@ -215,11 +215,11 @@ fn relevant_data_models<'a>(
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     while let Some(output) = start.pop() {
-        match output.distribute_constraints() {
+        match ir.distribute_constraints(&output) {
             (FieldType::Enum(enm), constraints) => {
                 if checked_types.insert(output.to_string()) {
                     let overrides = ctx.enum_overrides.get(enm);
-                    let walker = ir.find_enum(enm);
+                    let walker = ir.find_enum(&enm);
 
                     let real_values = walker
                         .as_ref()

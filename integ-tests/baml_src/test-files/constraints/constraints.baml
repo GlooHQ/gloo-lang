@@ -73,3 +73,55 @@ function StreamFailingAssertion(theme: string, length: int) -> TwoStoriesOneTitl
     {{ctx.output_format}}
   "#
 }
+
+class BlockConstraint {
+  foo int
+  bar string
+  @@check(cross_field, {{ this.bar|length > this.foo }})
+}
+
+function MakeBlockConstraint() -> BlockConstraint {
+  client GPT35
+  prompt #"
+    Generate an output in the following schema with a short string and a large int.
+
+    {{ ctx.output_format }}
+  "#
+}
+
+class NestedBlockConstraint {
+  nbc BlockConstraint
+}
+
+class BlockConstraintForParam {
+  bcfp int
+  bcfp2 string
+  @@assert(hi, {{ this.bcfp2|length < this.bcfp }})
+}
+
+class NestedBlockConstraintForParam {
+  nbcfp BlockConstraintForParam
+}
+
+function MakeNestedBlockConstraint() -> NestedBlockConstraint {
+  client GPT35
+  prompt #"Generate an output where the inner foo is 1 and the inner bar is "hello".
+  {{ ctx.output_format }}
+  "#
+}
+
+function UseBlockConstraint(inp: BlockConstraintForParam) -> int {
+  client GPT35
+  prompt #"
+    Generate 3
+    {{ ctx.output_format }}
+  "#
+}
+
+function UseNestedBlockConstraint(inp: NestedBlockConstraintForParam) -> int {
+  client GPT35
+  prompt #"
+    Generate 3
+    {{ ctx.output_format }}
+  "#
+}

@@ -3,7 +3,7 @@ use baml_types::FieldType;
 use internal_baml_jinja::types::Enum;
 
 use crate::deserializer::{
-    coercer::{match_string::match_string, ParsingError, TypeCoercer},
+    coercer::{ir_ref::coerce_class::apply_constraints, match_string::match_string, ParsingError, TypeCoercer},
     types::BamlValueWithFlags,
 };
 
@@ -42,11 +42,20 @@ impl TypeCoercer for Enum {
             current = value.map(|v| v.r#type()).unwrap_or("<null>".into())
         );
 
-        let variant_match = match_string(ctx, target, value, &enum_match_candidates(self))?;
+        let constraints = ctx
+            .of
+            .find_enum(self.name.real_name())
+            .map_or(vec![], |class| class.constraints.clone());
 
-        Ok(BamlValueWithFlags::Enum(
-            self.name.real_name().to_string(),
-            variant_match,
-        ))
+        let variant_match = match_string(ctx, target, value, &enum_match_candidates(self))?;
+        let enum_match =
+            apply_constraints(
+                target, vec![],
+
+                BamlValueWithFlags::Enum(self.name.real_name().to_string(), variant_match)
+                , constraints.clone()
+            )?;
+
+        Ok(enum_match)
     }
 }

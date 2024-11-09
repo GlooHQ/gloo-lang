@@ -1312,6 +1312,52 @@ class BamlSyncClient:
       )
       return cast(Union[Literal[1], Literal[True], Literal["string output"]], raw.cast_to(types, types))
     
+    def MakeBlockConstraint(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> Checked[types.BlockConstraint,types.Literal["cross_field"]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "MakeBlockConstraint",
+        {
+          
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Checked[types.BlockConstraint,types.Literal["cross_field"]], raw.cast_to(types, types))
+    
+    def MakeNestedBlockConstraint(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> types.NestedBlockConstraint:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "MakeNestedBlockConstraint",
+        {
+          
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.NestedBlockConstraint, raw.cast_to(types, types))
+    
     def MyFunc(
         self,
         input: str,
@@ -1809,6 +1855,29 @@ class BamlSyncClient:
 
       raw = self.__runtime.call_function_sync(
         "TestAws",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types))
+    
+    def TestAwsInvalidRegion(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "TestAwsInvalidRegion",
         {
           "input": input,
         },
@@ -2531,6 +2600,29 @@ class BamlSyncClient:
       )
       return cast(types.UnionTest_ReturnType, raw.cast_to(types, types))
     
+    def UseBlockConstraint(
+        self,
+        inp: types.BlockConstraintForParam,
+        baml_options: BamlCallOptions = {},
+    ) -> int:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "UseBlockConstraint",
+        {
+          "inp": inp,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(int, raw.cast_to(types, types))
+    
     def UseMalformedConstraints(
         self,
         a: types.MalformedConstraints2,
@@ -2547,6 +2639,29 @@ class BamlSyncClient:
         "UseMalformedConstraints",
         {
           "a": a,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(int, raw.cast_to(types, types))
+    
+    def UseNestedBlockConstraint(
+        self,
+        inp: types.NestedBlockConstraintForParam,
+        baml_options: BamlCallOptions = {},
+    ) -> int:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "UseNestedBlockConstraint",
+        {
+          "inp": inp,
         },
         self.__ctx_manager.get(),
         tb,
@@ -4219,6 +4334,64 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def MakeBlockConstraint(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Checked[partial_types.BlockConstraint,types.Literal["cross_field"]], Checked[types.BlockConstraint,types.Literal["cross_field"]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "MakeBlockConstraint",
+        {
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Checked[partial_types.BlockConstraint,types.Literal["cross_field"]], Checked[types.BlockConstraint,types.Literal["cross_field"]]](
+        raw,
+        lambda x: cast(Checked[partial_types.BlockConstraint,types.Literal["cross_field"]], x.cast_to(types, partial_types)),
+        lambda x: cast(Checked[types.BlockConstraint,types.Literal["cross_field"]], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def MakeNestedBlockConstraint(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.NestedBlockConstraint, types.NestedBlockConstraint]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "MakeNestedBlockConstraint",
+        {
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[partial_types.NestedBlockConstraint, types.NestedBlockConstraint](
+        raw,
+        lambda x: cast(partial_types.NestedBlockConstraint, x.cast_to(types, partial_types)),
+        lambda x: cast(types.NestedBlockConstraint, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def MyFunc(
         self,
         input: str,
@@ -4865,6 +5038,36 @@ class BamlStreamClient:
 
       raw = self.__runtime.stream_function_sync(
         "TestAws",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
+        lambda x: cast(str, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestAwsInvalidRegion(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "TestAwsInvalidRegion",
         {
           "input": input,
         },
@@ -5809,6 +6012,36 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def UseBlockConstraint(
+        self,
+        inp: types.BlockConstraintForParam,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Optional[int], int]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "UseBlockConstraint",
+        {
+          "inp": inp,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Optional[int], int](
+        raw,
+        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
+        lambda x: cast(int, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def UseMalformedConstraints(
         self,
         a: types.MalformedConstraints2,
@@ -5825,6 +6058,36 @@ class BamlStreamClient:
         "UseMalformedConstraints",
         {
           "a": a,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Optional[int], int](
+        raw,
+        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
+        lambda x: cast(int, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def UseNestedBlockConstraint(
+        self,
+        inp: types.NestedBlockConstraintForParam,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Optional[int], int]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "UseNestedBlockConstraint",
+        {
+          "inp": inp,
         },
         None,
         self.__ctx_manager.get(),

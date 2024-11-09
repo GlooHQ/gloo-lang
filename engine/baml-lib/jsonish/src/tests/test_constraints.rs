@@ -119,8 +119,40 @@ test_deserializer_with_expected_score!(
     0
 );
 
-const MISSPELLED_CONSTRAINT: &str = r#"
+const BLOCK_LEVEL: &str = r#"
 class Foo {
-  foo int @description("hi") @check(hi, {{this == 1}})
+  foo int
+  @@assert(hi, {{ this.foo > 0 }})
+}
+
+enum MyEnum {
+  ONE
+  TWO
+  THREE
+  @@assert(nonsense, {{ this == "TWO" }})
 }
 "#;
+
+test_failing_deserializer!(
+    test_block_level_assert_failure,
+    BLOCK_LEVEL,
+    r#"{"foo": -1}"#,
+    FieldType::Class("Foo".to_string())
+);
+
+
+test_deserializer!(
+    test_block_level_check_failure,
+    BLOCK_LEVEL,
+    r#"{"foo": 1}"#,
+    FieldType::Class("Foo".to_string()),
+    {"foo": 1}
+);
+
+
+test_failing_deserializer!(
+    test_block_level_enum_assert_failure,
+    BLOCK_LEVEL,
+    r#"THREE"#,
+    FieldType::Enum("MyEnum".to_string())
+);

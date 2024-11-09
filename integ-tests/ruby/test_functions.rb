@@ -190,7 +190,6 @@ describe "ruby<->baml integration tests" do
     stream = b.stream.FnOutputClassNested(input: "a")
     msgs = []
     stream.each do |msg|
-      puts msg
       msgs << msg
     end
     final = stream.get_final_response
@@ -319,4 +318,28 @@ describe "ruby<->baml integration tests" do
     res = b.PredictAge(name: "Greg")
     assert_equal res["certainty"].checks[:unreasonably_certain].status, "failed"
   end
+
+  it "uses block_level constraints" do
+    res = b.MakeBlockConstraint()
+    assert_equal res.checks[:cross_field].status, "failed"
+  end
+
+  it "uses nested_block_level constraints" do
+      res = b.MakeNestedBlockConstraint()
+      assert_equal res["nbc"].checks[:cross_field].status, "succeeded"
+  end
+
+  it "uses block_level constraints in function parameters" do
+    block_constraint = Baml::Types::BlockConstraintForParam.new(bcfp: 1, bcfp2: "too long!")
+    assert_raises Exception do
+      res = b.UseBlockConstraint(inp: block_constraint)
+    end
+    nested_block_constraint = Baml::Types::NestedBlockConstraintForParam.new(
+      nbcfp: block_constraint
+    )
+    assert_raises Exception do
+      res = b.UseNestedBlockConstraint(inp: nested_block_constraint)
+    end
+  end
+
 end

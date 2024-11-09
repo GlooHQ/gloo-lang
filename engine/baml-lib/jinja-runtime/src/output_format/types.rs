@@ -55,10 +55,10 @@ pub struct Class {
 
 #[derive(Debug, Clone)]
 pub struct OutputFormatContent {
-    enums: Arc<IndexMap<String, Enum>>,
-    classes: Arc<IndexMap<String, Class>>,
+    pub enums: Arc<IndexMap<String, Enum>>,
+    pub classes: Arc<IndexMap<String, Class>>,
     recursive_classes: Arc<IndexSet<String>>,
-    target: FieldType,
+    pub target: FieldType,
 }
 
 /// Builder for [`OutputFormatContent`].

@@ -13,9 +13,8 @@ Example:
 client<llm> MyClient {
   provider aws-bedrock
   options {
+    model_id "anthropic.claude-3-5-sonnet-20240620-v1:0"
     api_key env.MY_OPENAI_KEY
-    model "gpt-3.5-turbo"
-    temperature 0.1
   }
 }
 ```
@@ -53,6 +52,15 @@ Add these three environment variables to your extension variables to use the AWS
 
 <Markdown src="../../../../snippets/allowed-role-metadata-basic.mdx" />
 
+<ParamField
+  path="region"
+  type="string"
+>
+  The AWS region to use. **Default: `AWS_REGION` environment variable**
+
+  We don't have any checks for this field, you can pass any string you wish.
+</ParamField>
+
 ## Forwarded options
 
 <ParamField
@@ -63,15 +71,15 @@ Add these three environment variables to your extension variables to use the AWS
 </ParamField>
 
 <ParamField
-  path="model_id"
+  path="model_id (or model)"
   type="string"
 >
   The model to use.
 
 | Model           | Description                    |
 | --------------- | ------------------------------ |
+| `anthropic.claude-3-5-sonnet-20240620-v1:0` | Smartest              |
 | `anthropic.claude-3-haiku-20240307-v1:0`  | Fastest + Cheapest    |
-| `anthropic.claude-3-sonnet-20240307-v1:0` | Smartest              |
 | `meta.llama3-8b-instruct-v1:0`            |                       |
 | `meta.llama3-70b-instruct-v1:0`           |                       |
 | `mistral.mistral-7b-instruct-v0:2`        |                       |

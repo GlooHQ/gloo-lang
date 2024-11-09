@@ -162,6 +162,18 @@ class Blah(BaseModel):
     
     prop4: Optional[str] = None
 
+class BlockConstraint(BaseModel):
+    
+    
+    foo: int
+    bar: str
+
+class BlockConstraintForParam(BaseModel):
+    
+    
+    bcfp: int
+    bcfp2: str
+
 class BookOrder(BaseModel):
     
     
@@ -389,6 +401,16 @@ class Nested2(BaseModel):
     
     prop11: Union[str, Optional[None]]
     prop12: Union[str, Optional[None]]
+
+class NestedBlockConstraint(BaseModel):
+    
+    
+    nbc: Checked["BlockConstraint",Literal["cross_field"]]
+
+class NestedBlockConstraintForParam(BaseModel):
+    
+    
+    nbcfp: "BlockConstraintForParam"
 
 class Node(BaseModel):
     

@@ -773,7 +773,7 @@ dependencies = [
 
 [[package]]
 name = "baml-cli"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "ambassador",
  "anyhow",
@@ -848,6 +848,8 @@ dependencies = [
  "test-log",
  "tokio",
  "tokio-stream",
+ "tracing",
+ "tracing-subscriber",
  "url",
  "uuid",
  "walkdir",
@@ -858,7 +860,7 @@ dependencies = [
 
 [[package]]
 name = "baml-lib"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "base64 0.13.1",
  "dissimilar",
@@ -867,6 +869,7 @@ dependencies = [
  "expect-test",
  "indoc",
  "internal-baml-core",
+ "itertools 0.13.0",
  "pretty_assertions",
  "strip-ansi-escapes",
 ]
@@ -896,7 +899,7 @@ dependencies = [
 
 [[package]]
 name = "baml-runtime"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "ambassador",
  "anyhow",
@@ -972,8 +975,11 @@ dependencies = [
  "test-log",
  "tokio",
  "tokio-stream",
+ "tracing",
+ "tracing-subscriber",
  "url",
  "uuid",
+ "valuable",
  "walkdir",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -986,7 +992,7 @@ dependencies = [
 
 [[package]]
 name = "baml-schema-build"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "anyhow",
  "baml-runtime",
@@ -1022,7 +1028,7 @@ dependencies = [
 
 [[package]]
 name = "baml-types"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1149,7 +1155,7 @@ dependencies = [
 
 [[package]]
 name = "bstd"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -2533,7 +2539,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-codegen"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2558,7 +2564,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-core"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2594,7 +2600,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-diagnostics"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "anyhow",
  "colored",
@@ -2607,7 +2613,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-jinja"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2628,7 +2634,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-jinja-types"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2647,7 +2653,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-parser-database"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2659,6 +2665,7 @@ dependencies = [
  "internal-baml-jinja-types",
  "internal-baml-prompt-parser",
  "internal-baml-schema-ast",
+ "itertools 0.13.0",
  "log",
  "regex",
  "rustc-hash",
@@ -2669,7 +2676,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-prompt-parser"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "internal-baml-diagnostics",
  "internal-baml-schema-ast",
@@ -2681,7 +2688,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-schema-ast"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "baml-types",
  "either",
@@ -2786,7 +2793,7 @@ checksum = "9dbbfed4e59ba9750e15ba154fdfd9329cee16ff3df539c2666b70f58cc32105"
 
 [[package]]
 name = "jsonish"
-version = "0.65.0"
+version = "0.67.0"
 dependencies = [
  "anyhow",
  "assert-json-diff",
@@ -4911,6 +4918,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-serde"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc6b213177105856957181934e4920de57730fc69bf42c37ee5bb664d406d9e1"
+dependencies = [
+ "serde",
+ "tracing-core",
+ "valuable",
+ "valuable-serde",
+]
+
+[[package]]
 name = "tracing-subscriber"
 version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4920,11 +4939,17 @@ dependencies = [
  "nu-ansi-term",
  "once_cell",
  "regex",
+ "serde",
+ "serde_json",
  "sharded-slab",
+ "smallvec",
  "thread_local",
  "tracing",
  "tracing-core",
  "tracing-log",
+ "tracing-serde",
+ "valuable",
+ "valuable-serde",
 ]
 
 [[package]]
@@ -5050,6 +5075,30 @@ name = "valuable"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
+dependencies = [
+ "valuable-derive",
+]
+
+[[package]]
+name = "valuable-derive"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d44690c645190cfce32f91a1582281654b2338c6073fa250b0949fd25c55b32"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "valuable-serde"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5285cfff30cdabe26626736a54d989687dd9cab84f51f4048b61d6d0ae8b0907"
+dependencies = [
+ "serde",
+ "valuable",
+]
 
 [[package]]
 name = "value-bag"

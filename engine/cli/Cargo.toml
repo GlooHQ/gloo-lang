@@ -97,6 +97,10 @@ aws-smithy-json = "0.60.7"
 jsonwebtoken = "9.3.0"
 pretty_assertions = "1.4.0"
 sha2 = "0.10.8"
+tracing = "0.1.40"
+# Valuable is needed to prevent serializing objects using Debug, and instead use Serialize.
+# https://github.com/tokio-rs/tracing/issues/1570
+tracing-subscriber = { version = "0.3.18", features = ["json", "env-filter","valuable"] }
 
 
 [features]

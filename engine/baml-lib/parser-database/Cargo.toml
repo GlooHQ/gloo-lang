@@ -30,6 +30,7 @@ serde.workspace = true
 serde_json.workspace = true
 regex = "1.10.2"
 anyhow.workspace = true
+itertools = "0.13.0"
 
 [features]
 default = []

@@ -281,6 +281,12 @@ describe('Integ tests', () => {
     expect(msgs.at(-1)).toEqual(final)
   })
 
+  it('should allow overriding the region', async () => {
+    await expect(async () => {
+      await b.TestAwsInvalidRegion('Dr. Pepper')
+    }).rejects.toThrow('DispatchFailure')
+  })
+
   it('should support OpenAI shorthand', async () => {
     const res = await b.TestOpenAIShorthand('Dr. Pepper')
     expect(res.length).toBeGreaterThan(0)
@@ -743,6 +749,17 @@ describe('Integ tests', () => {
     expect(res.secondary?.value).toBe('robert@boundaryml.com')
   })
 
+  it('constraints: should handle block-level checks', async () => {
+    const res = await b.MakeBlockConstraint()
+    expect(res.checks.cross_field.status).toBe('failed')
+  })
+
+  it('constraints: should handle nested-block-level checks', async () => {
+    const res = await b.MakeNestedBlockConstraint()
+    console.log(JSON.stringify(res))
+    expect(res.nbc.checks.cross_field.status).toBe('succeeded')
+  })
+
   it('simple recursive type', async () => {
     const res = await b.BuildLinkedList([1, 2, 3, 4, 5])
     expect(res).toEqual({
@@ -756,11 +773,11 @@ describe('Integ tests', () => {
               data: 4,
               next: {
                 data: 5,
-                next: null
-              }
-            }
-          }
-        }
+                next: null,
+              },
+            },
+          },
+        },
       },
       len: 5,
     })
@@ -774,17 +791,17 @@ describe('Integ tests', () => {
         left: {
           data: 1,
           left: null,
-          right:{
+          right: {
             data: 2,
             left: null,
-            right: null
+            right: null,
           },
         },
         right: {
           data: 4,
           left: null,
           right: null,
-        }
+        },
       },
       right: {
         data: 7,
@@ -797,8 +814,8 @@ describe('Integ tests', () => {
           data: 8,
           left: null,
           right: null,
-        }
-      }
+        },
+      },
     })
     expect(res).toEqual({
       data: 5,
@@ -815,20 +832,20 @@ describe('Integ tests', () => {
                       {
                         data: 2,
                         children: {
-                          trees: []
-                        }
-                      }
-                    ]
-                  }
+                          trees: [],
+                        },
+                      },
+                    ],
+                  },
                 },
                 {
                   data: 4,
                   children: {
-                    trees: []
-                  }
-                }
-              ]
-            }
+                    trees: [],
+                  },
+                },
+              ],
+            },
           },
           {
             data: 7,
@@ -837,20 +854,20 @@ describe('Integ tests', () => {
                 {
                   data: 6,
                   children: {
-                    trees: []
-                  }
+                    trees: [],
+                  },
                 },
                 {
                   data: 8,
                   children: {
-                    trees: []
+                    trees: [],
                   },
-                }
-              ]
-            }
-          }
-        ]
-      }
+                },
+              ],
+            },
+          },
+        ],
+      },
     })
   })
 })

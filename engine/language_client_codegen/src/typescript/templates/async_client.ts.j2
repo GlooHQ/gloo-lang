@@ -1,4 +1,5 @@
 import { BamlRuntime, FunctionResult, BamlCtxManager, BamlStream, Image, ClientRegistry, BamlValidationError, createBamlValidationError } from "@boundaryml/baml"
+import { Checked, Check } from "./types"
 import { 
   {%- for t in types %}{{ t }}{% if !loop.last %}, {% endif %}{% endfor -%} 
 } from "./types"

@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use super::{field::FieldWalker, EnumWalker};
 use crate::types::Attributes;
+use baml_types::Constraint;
 use either::Either;
 use internal_baml_schema_ast::ast::Identifier;
 use internal_baml_schema_ast::ast::SubType;
@@ -87,6 +88,11 @@ impl<'db> ClassWalker<'db> {
                 .get(&self.id)
                 .and_then(|f| f.serilizer.as_ref()),
         }
+    }
+
+    /// Get the constraints of a class or an enum.
+    pub fn get_constraints(&self, sub_type: SubType) -> Option<Vec<Constraint>> {
+        self.get_default_attributes(sub_type).map(|attrs| attrs.constraints.clone())
     }
 
     /// Arguments of the function.

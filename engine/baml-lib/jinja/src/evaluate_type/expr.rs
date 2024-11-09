@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
+use baml_types::LiteralValue;
 use minijinja::machinery::ast;
+use std::str::FromStr;
 
 use super::{
     pretty_print::pretty_print,
@@ -370,8 +372,13 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
     match v.kind() {
         minijinja::value::ValueKind::Undefined => Type::Undefined,
         minijinja::value::ValueKind::None => Type::None,
-        minijinja::value::ValueKind::Bool => Type::Bool,
-        minijinja::value::ValueKind::String => Type::String,
+        minijinja::value::ValueKind::Bool => {
+            match bool::from_str(&v.to_string()) {
+                Ok(b) => Type::Literal(LiteralValue::Bool(b)),
+                Err(_) => Type::Bool,
+            }
+        },
+        minijinja::value::ValueKind::String => Type::Literal(LiteralValue::String(v.to_string())),
         minijinja::value::ValueKind::Seq => {
             let list = v.as_seq().unwrap();
             match list.item_count() {
@@ -410,7 +417,12 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
         }
         minijinja::value::ValueKind::Map => Type::Unknown,
         // We don't handle these types
-        minijinja::value::ValueKind::Number => Type::Number,
+        minijinja::value::ValueKind::Number => {
+            match i64::from_str(&v.to_string()) {
+                Ok(i) => Type::Literal(LiteralValue::Int(i)),
+                Err(_) => Type::Number,
+            }
+        },
         minijinja::value::ValueKind::Bytes => Type::Undefined,
     }
 }

@@ -23,10 +23,10 @@ use crate::jsonish;
 use super::types::BamlValueWithFlags;
 
 pub struct ParsingContext<'a> {
-    scope: Vec<String>,
+    pub scope: Vec<String>,
     visited: HashSet<(String, jsonish::Value)>,
-    of: &'a OutputFormatContent,
-    allow_partials: bool,
+    pub of: &'a OutputFormatContent,
+    pub allow_partials: bool,
 }
 
 impl ParsingContext<'_> {
