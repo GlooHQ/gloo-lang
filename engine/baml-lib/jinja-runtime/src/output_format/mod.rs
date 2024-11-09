@@ -116,19 +116,20 @@ impl minijinja::value::Object for OutputFormat {
             None
         };
 
-        let hoisted_class_prefix = if kwargs.has("hoisted_class_prefix") {
-            match kwargs.get::<Option<String>>("hoisted_class_prefix") {
-                Ok(hoisted_class_prefix) => Some(hoisted_class_prefix),
-                Err(e) => {
-                    return Err(Error::new(
+        let hoisted_class_prefix =
+            if kwargs.has("hoisted_class_prefix") {
+                match kwargs.get::<Option<String>>("hoisted_class_prefix") {
+                    Ok(hoisted_class_prefix) => Some(hoisted_class_prefix),
+                    Err(e) => return Err(Error::new(
                         ErrorKind::SyntaxError,
-                        format!("Invalid value for hoisted_class_prefix (expected string): {e}"),
-                    ))
+                        format!(
+                            "Invalid value for hoisted_class_prefix (expected string | null): {e}"
+                        ),
+                    )),
                 }
-            }
-        } else {
-            None
-        };
+            } else {
+                None
+            };
 
         let map_style = if kwargs.has("map_style") {
             match kwargs
