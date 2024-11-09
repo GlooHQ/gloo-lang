@@ -456,11 +456,7 @@ impl OutputFormatContent {
             }
             FieldType::List(inner) => {
                 let is_recursive = match inner.as_ref() {
-                    FieldType::Class(nested_class)
-                        if self.recursive_classes.contains(nested_class) =>
-                    {
-                        true
-                    }
+                    FieldType::Class(nested_class) => self.recursive_classes.contains(nested_class),
                     _ => false,
                 };
 
