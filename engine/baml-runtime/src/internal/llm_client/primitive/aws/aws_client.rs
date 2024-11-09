@@ -68,20 +68,38 @@ fn resolve_properties(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Req
         })
         .collect::<Result<HashMap<_, _>>>()?;
 
-    let model_id = properties
-        .remove("model_id")
-        .context("model_id is required")?
-        .as_str()
-        .context("model_id should be a string")?
-        .to_string();
+    let model_id = {
+        // We allow `provider aws-bedrock` to specify the model using either `model_id` or `model`:
+        //
+        //  - the Bedrock API itself only accepts `model_id`
+        //  - but all other providers specify the model using `model`, so for someone used to using
+        //    "openai/gpt-4o", they'll expect to be able to use `model gpt-4o`
+        //  - if I were on the bedrock team, I would be _very_ hesitant to add a new request field
+        //    `model` if I already have `model_id`, so I think using `model` isn't too risky
+        let maybe_model_id = properties.remove("model_id");
+        let maybe_model = properties.remove("model");
+
+        match (maybe_model_id, maybe_model) {
+            (Some(model_id), _) => model_id
+                .as_str()
+                .context("model_id should be a string")?
+                .to_string(),
+            (None, Some(model)) => model
+                .as_str()
+                .context("model should be a string")?
+                .to_string(),
+            _ => anyhow::bail!("model_id or model is required"),
+        }
+    };
 
     let default_role = properties
         .remove("default_role")
         .and_then(|v| v.as_str().map(|s| s.to_string()))
         .unwrap_or_else(|| "user".to_string());
     let allowed_metadata = match properties.remove("allowed_role_metadata") {
-        Some(allowed_metadata) => serde_json::from_value(allowed_metadata)
-            .context("allowed_role_metadata must be an array of keys. For example: ['key1', 'key2']")?,
+        Some(allowed_metadata) => serde_json::from_value(allowed_metadata).context(
+            "allowed_role_metadata must be an array of keys. For example: ['key1', 'key2']",
+        )?,
         None => AllowedMetadata::None,
     };
     let inference_config = match properties.remove("inference_configuration") {
