@@ -467,4 +467,16 @@ mod test {
             &[&["A", "B"]],
         )
     }
+
+    #[test]
+    fn find_self_referential_map() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class RecMap {
+                    recursion map<string, RecMap>
+                }
+            "#,
+            &[&["RecMap"]],
+        )
+    }
 }

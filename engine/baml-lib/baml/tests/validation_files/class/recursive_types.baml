@@ -34,3 +34,7 @@ class NestedUnion {
 class UnionOfUnions {
   data (Node | (BasicUnion | Tree)) | (NestedUnion | UnionOfUnions) | Forest
 }
+
+class RecursiveMap {
+  data map<string, RecursiveMap>
+}
