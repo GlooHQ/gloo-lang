@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use aws_config::Region;
 use aws_config::{identity::IdentityCache, retry::RetryConfig, BehaviorVersion, ConfigLoader};
 use aws_sdk_bedrockruntime::{self as bedrock, operation::converse::ConverseOutput};
 
@@ -34,6 +35,8 @@ use crate::{RenderCurlSettings, RuntimeContext};
 // stores properties required for making a post request to the API
 struct RequestProperties {
     model_id: String,
+
+    aws_region: Option<String>,
 
     default_role: String,
     inference_config: Option<bedrock::types::InferenceConfiguration>,
@@ -111,8 +114,13 @@ fn resolve_properties(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Req
         None => None,
     };
 
+    let aws_region = properties
+        .remove("region")
+        .and_then(|v| v.as_str().map(str::to_owned));
+
     Ok(RequestProperties {
         model_id,
+        aws_region,
         default_role,
         inference_config,
         allowed_metadata,
@@ -131,7 +139,7 @@ impl AwsClient {
             context: RenderContext_Client {
                 name: client.name().into(),
                 provider: client.elem().provider.clone(),
-                default_role: default_role,
+                default_role,
             },
             features: ModelFeatures {
                 chat: true,
@@ -156,42 +164,46 @@ impl AwsClient {
     // TODO: this should be memoized on client construction, but because config loading is async,
     // we can't do this in AwsClient::new (which is called from LLMPRimitiveProvider::try_from)
     async fn client_anyhow(&self) -> Result<bedrock::Client> {
+        #[cfg(not(target_arch = "wasm32"))]
+        let loader: ConfigLoader = aws_config::defaults(BehaviorVersion::latest());
+
+        #[cfg(target_arch = "wasm32")]
         let loader: ConfigLoader = {
-            cfg_if::cfg_if! {
-                if #[cfg(target_arch = "wasm32")] {
-                    use aws_config::Region;
-                    use aws_credential_types::Credentials;
+            use aws_config::Region;
+            use aws_credential_types::Credentials;
 
-                    let (aws_region, aws_access_key_id, aws_secret_access_key) = match (
-                        self.properties.ctx_env.get("AWS_REGION"),
-                        self.properties.ctx_env.get("AWS_ACCESS_KEY_ID"),
-                        self.properties.ctx_env.get("AWS_SECRET_ACCESS_KEY"),
-                    ) {
-                        (Some(aws_region), Some(aws_access_key_id), Some(aws_secret_access_key)) => {
-                            (aws_region, aws_access_key_id, aws_secret_access_key)
-                        }
-                        _ => {
-                            anyhow::bail!(
-                                "AWS_REGION, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set in the environment"
-                            )
-                        }
-                    };
-
-                    let loader = super::wasm::load_aws_config()
-                        .region(Region::new(aws_region.clone()))
-                        .credentials_provider(Credentials::new(
-                            aws_access_key_id.clone(),
-                            aws_secret_access_key.clone(),
-                            None,
-                            None,
-                            "baml-runtime/wasm",
-                        ));
-
-                    loader
-                } else {
-                    aws_config::defaults(BehaviorVersion::latest())
+            let (aws_region, aws_access_key_id, aws_secret_access_key) = match (
+                self.properties.ctx_env.get("AWS_REGION"),
+                self.properties.ctx_env.get("AWS_ACCESS_KEY_ID"),
+                self.properties.ctx_env.get("AWS_SECRET_ACCESS_KEY"),
+            ) {
+                (Some(aws_region), Some(aws_access_key_id), Some(aws_secret_access_key)) => {
+                    (aws_region, aws_access_key_id, aws_secret_access_key)
                 }
-            }
+                _ => {
+                    anyhow::bail!(
+                        "AWS_REGION, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set in the environment"
+                    )
+                }
+            };
+
+            let loader = super::wasm::load_aws_config()
+                .region(Region::new(aws_region.clone()))
+                .credentials_provider(Credentials::new(
+                    aws_access_key_id.clone(),
+                    aws_secret_access_key.clone(),
+                    None,
+                    None,
+                    "baml-runtime/wasm",
+                ));
+
+            loader
+        };
+
+        let loader = if let Some(aws_region) = &self.properties.aws_region {
+            loader.region(Region::new(aws_region.clone()))
+        } else {
+            loader
         };
 
         let config = loader

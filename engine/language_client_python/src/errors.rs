@@ -76,7 +76,7 @@ impl BamlError {
                     baml_runtime::internal::llm_client::ErrorCode::Other(2) => {
                         PyErr::new::<BamlClientError, _>(format!(
                             "Something went wrong with the LLM client: {}",
-                            err
+                            failed.message
                         ))
                     }
                     baml_runtime::internal::llm_client::ErrorCode::Other(_)

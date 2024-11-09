@@ -281,6 +281,12 @@ describe('Integ tests', () => {
     expect(msgs.at(-1)).toEqual(final)
   })
 
+  it.only('should allow overriding the region', async () => {
+    await expect(async () => {
+      await b.TestAwsInvalidRegion('Dr. Pepper')
+    }).rejects.toThrow('DispatchFailure')
+  })
+
   it('should support OpenAI shorthand', async () => {
     const res = await b.TestOpenAIShorthand('Dr. Pepper')
     expect(res.length).toBeGreaterThan(0)
@@ -750,7 +756,7 @@ describe('Integ tests', () => {
 
   it('constraints: should handle nested-block-level checks', async () => {
     const res = await b.MakeNestedBlockConstraint()
-    console.log(JSON.stringify(res));
+    console.log(JSON.stringify(res))
     expect(res.nbc.checks.cross_field.status).toBe('succeeded')
   })
 })

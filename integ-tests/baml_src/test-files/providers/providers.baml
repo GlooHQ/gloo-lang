@@ -55,6 +55,13 @@ function TestAws(input: string) -> string {
   "#
 }
 
+function TestAwsInvalidRegion(input: string) -> string {
+  client AwsBedrockInvalidRegion
+  prompt #"
+    Write a nice short story about {{ input }}
+  "#
+}
+
 function TestOpenAIShorthand(input: string) -> string {
   client "openai/gpt-4o-mini"
   prompt #"
@@ -72,6 +79,7 @@ function TestAnthropicShorthand(input: string) -> string {
 test TestProvider {
   functions [
     TestAnthropic, TestVertex, PromptTestOpenAI, TestAzure, TestOllama, TestGemini, TestAws,
+    TestAwsInvalidRegion,
     TestOpenAIShorthand,
     TestAnthropicShorthand
   ]

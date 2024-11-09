@@ -116,7 +116,9 @@ class TestAllInputs:
 
     @pytest.mark.asyncio
     async def test_constraint_union_variant_checking(self):
-        res = await b.ExtractContactInfo("Reach me at help@boundaryml.com, or 111-222-3333 if needed.")
+        res = await b.ExtractContactInfo(
+            "Reach me at help@boundaryml.com, or 111-222-3333 if needed."
+        )
         assert res.primary.value is not None
         assert res.primary.value == "help@boundaryml.com"
         assert res.secondary.value is not None
@@ -1117,8 +1119,8 @@ async def test_event_log_hook():
 @pytest.mark.asyncio
 async def test_aws_bedrock():
     ## unstreamed
-    # res = await b.TestAws("lightning in a rock")
-    # print("unstreamed", res)
+    res = await b.TestAws("lightning in a rock")
+    print("unstreamed", res)
 
     ## streamed
     stream = b.stream.TestAws("lightning in a rock")
@@ -1130,6 +1132,16 @@ async def test_aws_bedrock():
     res = await stream.get_final_response()
     print("streamed final", res)
     assert len(res) > 0, "Expected non-empty result but got empty."
+
+
+@pytest.mark.asyncio
+async def test_aws_bedrock_invalid_region():
+    ## unstreamed
+    with pytest.raises(errors.BamlClientError) as excinfo:
+        res = await b.TestAwsInvalidRegion("lightning in a rock")
+        print("unstreamed", res)
+
+    assert "DispatchFailure" in str(excinfo)
 
 
 @pytest.mark.asyncio
@@ -1390,16 +1402,19 @@ async def test_failing_assert_can_stream():
         final = await stream.get_final_response()
         assert "Yoshimi" in final.story_a
 
+
 @pytest.mark.asyncio
 async def test_block_constraints():
     ret = await b.MakeBlockConstraint()
     assert ret.checks["cross_field"].status == "failed"
+
 
 @pytest.mark.asyncio
 async def test_nested_block_constraints():
     ret = await b.MakeNestedBlockConstraint()
     print(ret)
     assert ret.nbc.checks["cross_field"].status == "succeeded"
+
 
 @pytest.mark.asyncio
 async def test_block_constraint_arguments():
