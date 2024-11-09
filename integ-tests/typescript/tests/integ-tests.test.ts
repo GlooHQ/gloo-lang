@@ -281,7 +281,7 @@ describe('Integ tests', () => {
     expect(msgs.at(-1)).toEqual(final)
   })
 
-  it.only('should allow overriding the region', async () => {
+  it('should allow overriding the region', async () => {
     await expect(async () => {
       await b.TestAwsInvalidRegion('Dr. Pepper')
     }).rejects.toThrow('DispatchFailure')
