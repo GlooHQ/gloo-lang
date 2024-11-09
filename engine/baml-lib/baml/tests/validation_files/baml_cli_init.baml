@@ -39,7 +39,6 @@ test vaibhav_resume {
   }
 }
 
-
 // Learn more about clients at https://docs.boundaryml.com/docs/snippets/clients/overview
 
 client<llm> CustomGPT4o {
@@ -115,4 +114,3 @@ retry_policy Exponential {
     max_delay_ms 10000
   }
 }
-
