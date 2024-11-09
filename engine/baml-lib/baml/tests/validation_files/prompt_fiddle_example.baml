@@ -799,3 +799,4 @@ test ImageTest {
     myImage { url "https://imgs.xkcd.com/comics/standards.png"}
   }
 }
+
