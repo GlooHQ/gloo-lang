@@ -1225,3 +1225,171 @@ test_deserializer!(
     "res": ["hello", "world"]
   }
 );
+
+test_deserializer!(
+  test_recursive_type,
+  r#"class Foo {
+      pointer Foo?
+  }"#,
+  r#"
+    The answer is
+    {
+      "pointer": {
+        "pointer": null
+      }
+    },
+  
+    Anything else I can help with?
+  "#,
+  FieldType::Class("Foo".to_string()),
+  {
+    "pointer": {
+      "pointer": null,
+    },
+  }
+);
+
+test_deserializer!(
+  test_recursive_type_missing_brackets_and_quotes,
+  r#"class Foo {
+      pointer Foo?
+  }"#,
+  r#"
+    The answer is
+    {
+      "pointer": {
+        pointer: null,
+  
+    Anything else I can help with?
+  "#,
+  FieldType::Class("Foo".to_string()),
+  {
+    "pointer": {
+      "pointer": null,
+    },
+  }
+);
+
+test_deserializer!(
+  test_recursive_type_with_union,
+  r#"class Foo {
+      pointer Foo | int
+  }"#,
+  r#"
+    The answer is
+    {
+      "pointer": {
+        "pointer": 1,
+      }
+    },
+
+    Anything else I can help with?
+  "#,
+  FieldType::Class("Foo".to_string()),
+  {
+    "pointer": {
+      "pointer": 1,
+    },
+  }
+);
+
+test_deserializer!(
+  test_mutually_recursive_with_union,
+  r#"class Foo {
+      b Bar | int
+  }
+  
+  class Bar {
+    f Foo | int
+  }
+  "#,
+  r#"
+    The answer is
+    {
+      "b": {
+        "f": {
+          "b": 1
+        },
+      }
+    },
+
+    Anything else I can help with?
+  "#,
+  FieldType::Class("Foo".to_string()),
+  {
+    "b": {
+      "f": {
+        "b": 1,
+      },
+    },
+  }
+);
+
+test_deserializer!(
+  test_recursive_type_with_union_missing_brackets_and_quotes,
+  r#"class Foo {
+      pointer Foo | int
+  }"#,
+  r#"
+    The answer is
+    {
+      "pointer": {
+        pointer: 1
+    },
+
+    Anything else I can help with?
+  "#,
+  FieldType::Class("Foo".to_string()),
+  {
+    "pointer": {
+      "pointer": 1,
+    },
+  }
+);
+
+test_deserializer!(
+  test_same_recursive_union_on_multiple_fields,
+  r#"class Foo {
+      rec_one Foo | int
+      rec_two Foo | int
+  }
+  "#,
+  r#"
+    The answer is
+    {
+      "rec_one": {
+        "rec_one": 1,
+        "rec_two": 2
+      },
+      "rec_two": {
+        "rec_one": {
+          "rec_one": 1,
+          "rec_two": 2
+        },
+        "rec_two": {
+          "rec_one": 1,
+          "rec_two": 2
+        }
+      }
+    },
+
+    Anything else I can help with?
+  "#,
+  FieldType::Class("Foo".to_string()),
+  {
+    "rec_one": {
+      "rec_one": 1,
+      "rec_two": 2
+    },
+    "rec_two": {
+      "rec_one": {
+        "rec_one": 1,
+        "rec_two": 2
+      },
+      "rec_two": {
+        "rec_one": 1,
+        "rec_two": 2
+      }
+    },
+  }
+);

@@ -1,4 +1,7 @@
-use std::collections::HashSet;
+use std::{
+    collections::HashSet,
+    hash::{Hash, Hasher},
+};
 
 use baml_types::BamlMap;
 
@@ -24,6 +27,40 @@ pub enum Value {
     Markdown(String, Box<Value>),
     FixedJson(Box<Value>, Vec<Fixes>),
     AnyOf(Vec<Value>, String),
+}
+
+impl Hash for Value {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+
+        match self {
+            Value::String(s) => s.hash(state),
+            Value::Number(n) => n.to_string().hash(state),
+            Value::Boolean(b) => b.hash(state),
+            Value::Null => "null".hash(state),
+            Value::Object(o) => {
+                for (k, v) in o {
+                    k.hash(state);
+                    v.hash(state);
+                }
+            }
+            Value::Array(a) => {
+                for v in a {
+                    v.hash(state);
+                }
+            }
+            Value::Markdown(s, v) => {
+                s.hash(state);
+                v.hash(state);
+            }
+            Value::FixedJson(v, _) => v.hash(state),
+            Value::AnyOf(items, _) => {
+                for item in items {
+                    item.hash(state);
+                }
+            }
+        }
+    }
 }
 
 impl Value {
