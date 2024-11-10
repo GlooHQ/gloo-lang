@@ -3,7 +3,6 @@ from .baml_py import (
     BamlClientError,
     BamlClientHttpError,
     BamlInvalidArgumentError,
-    BamlValidationError,
 )
 from .internal_monkeypatch import BamlValidationError
 

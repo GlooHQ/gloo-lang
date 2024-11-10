@@ -191,7 +191,6 @@ pub enum ErrorCode {
     RateLimited,           // 429
     ServerError,           // 500
     ServiceUnavailable,    // 503
-    BadRequest,            // 400
 
     // We failed to parse the response
     UnsupportedResponse(u16),
@@ -207,7 +206,6 @@ impl ErrorCode {
             ErrorCode::NotSupported => "NotSupported (403)".into(),
             ErrorCode::RateLimited => "RateLimited (429)".into(),
             ErrorCode::ServerError => "ServerError (500)".into(),
-            ErrorCode::BadRequest => "BadRequest (400)".into(),
             ErrorCode::ServiceUnavailable => "ServiceUnavailable (503)".into(),
             ErrorCode::UnsupportedResponse(code) => format!("BadResponse {}", code),
             ErrorCode::Other(code) => format!("Unspecified error code: {}", code),
@@ -216,7 +214,6 @@ impl ErrorCode {
 
     pub fn from_status(status: StatusCode) -> Self {
         match status.as_u16() {
-            400 => ErrorCode::BadRequest,
             401 => ErrorCode::InvalidAuthentication,
             403 => ErrorCode::NotSupported,
             429 => ErrorCode::RateLimited,
@@ -228,7 +225,6 @@ impl ErrorCode {
 
     pub fn from_u16(code: u16) -> Self {
         match code {
-            400 => ErrorCode::BadRequest,
             401 => ErrorCode::InvalidAuthentication,
             403 => ErrorCode::NotSupported,
             429 => ErrorCode::RateLimited,
@@ -240,7 +236,6 @@ impl ErrorCode {
 
     pub fn to_u16(&self) -> u16 {
         match self {
-            ErrorCode::BadRequest => 400,
             ErrorCode::InvalidAuthentication => 401,
             ErrorCode::NotSupported => 403,
             ErrorCode::RateLimited => 429,
