@@ -30,18 +30,14 @@ from ..baml_client.types import (
     MalformedConstraints2,
     LiteralClassHello,
     LiteralClassOne,
-<<<<<<< HEAD
     LinkedList,
     Node,
     BinaryNode,
     Tree,
     Forest,
     all_succeeded,
-=======
-    all_succeeded,
     BlockConstraintForParam,
     NestedBlockConstraintForParam,
->>>>>>> canary
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -1413,7 +1409,6 @@ async def test_failing_assert_can_stream():
 
 
 @pytest.mark.asyncio
-<<<<<<< HEAD
 async def test_simple_recursive_type():
     res = await b.BuildLinkedList([1, 2, 3, 4, 5])
     assert res == LinkedList(
@@ -1477,7 +1472,8 @@ async def test_mutually_recursive_type():
             ]
         ),
     )
-=======
+
+
 async def test_block_constraints():
     ret = await b.MakeBlockConstraint()
     assert ret.checks["cross_field"].status == "failed"
@@ -1501,4 +1497,3 @@ async def test_block_constraint_arguments():
         nested_block_constraint = NestedBlockConstraintForParam(nbcfp=block_constraint)
         await b.UseNestedBlockConstraint(nested_block_constraint)
     assert "Failed assert: hi" in str(e)
->>>>>>> canary

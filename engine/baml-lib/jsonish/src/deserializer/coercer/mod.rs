@@ -210,7 +210,7 @@ impl ParsingContext<'_> {
         value: &jsonish::Value,
     ) -> ParsingError {
         ParsingError {
-            reason: "Circular reference detected".to_string(),
+            reason: format!("Circular reference detected for class-value pair {cls} <-> {value}"),
             scope: self.scope.clone(),
             causes: vec![],
         }
