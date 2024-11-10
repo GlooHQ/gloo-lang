@@ -211,6 +211,52 @@ class BamlAsyncClient:
       )
       return cast(str, raw.cast_to(types, types))
     
+    async def BuildLinkedList(
+        self,
+        input: List[int],
+        baml_options: BamlCallOptions = {},
+    ) -> types.LinkedList:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "BuildLinkedList",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.LinkedList, raw.cast_to(types, types))
+    
+    async def BuildTree(
+        self,
+        input: types.BinaryNode,
+        baml_options: BamlCallOptions = {},
+    ) -> types.Tree:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "BuildTree",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.Tree, raw.cast_to(types, types))
+    
     async def ClassifyDynEnumTwo(
         self,
         input: str,
@@ -2844,6 +2890,66 @@ class BamlStreamClient:
         raw,
         lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
         lambda x: cast(str, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def BuildLinkedList(
+        self,
+        input: List[int],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.LinkedList, types.LinkedList]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "BuildLinkedList",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.LinkedList, types.LinkedList](
+        raw,
+        lambda x: cast(partial_types.LinkedList, x.cast_to(types, partial_types)),
+        lambda x: cast(types.LinkedList, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def BuildTree(
+        self,
+        input: types.BinaryNode,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.Tree, types.Tree]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "BuildTree",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.Tree, types.Tree](
+        raw,
+        lambda x: cast(partial_types.Tree, x.cast_to(types, partial_types)),
+        lambda x: cast(types.Tree, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

@@ -146,6 +146,13 @@ export interface BigNumbers {
   
 }
 
+export interface BinaryNode {
+  data: number
+  left?: BinaryNode | null
+  right?: BinaryNode | null
+  
+}
+
 export interface Blah {
   prop4?: string | null
   
@@ -297,6 +304,11 @@ export interface FooAny {
   
 }
 
+export interface Forest {
+  trees: Tree[]
+  
+}
+
 export interface GroceryReceipt {
   receiptId: string
   storeName: string
@@ -327,6 +339,12 @@ export interface InputClass {
 export interface InputClassNested {
   key: string
   nested: InputClass
+  
+}
+
+export interface LinkedList {
+  head?: Node | null
+  len: number
   
 }
 
@@ -387,6 +405,12 @@ export interface NestedBlockConstraint {
 
 export interface NestedBlockConstraintForParam {
   nbcfp: BlockConstraintForParam
+  
+}
+
+export interface Node {
+  data: number
+  next?: Node | null
   
 }
 
@@ -532,6 +556,12 @@ export interface TestClassWithEnum {
 export interface TestOutputClass {
   prop1: string
   prop2: number
+  
+}
+
+export interface Tree {
+  data: number
+  children: Forest
   
 }
 

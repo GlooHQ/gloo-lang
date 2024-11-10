@@ -437,4 +437,74 @@ test TestName {
 
         Ok(())
     }
+
+    #[test]
+    fn test_recursive_types() -> anyhow::Result<()> {
+        let runtime = make_test_runtime(
+            r##"
+class Tree {
+  data int
+  children Forest
+}
+
+class Forest {
+  trees Tree[]
+}
+
+class BinaryNode {
+  data int
+  left BinaryNode?
+  right BinaryNode?
+}
+
+function BuildTree(input: BinaryNode) -> Tree {
+  client "openai/gpt-4o"
+  prompt #"
+    Given the input binary tree, transform it into a generic tree using the given schema.
+
+    INPUT:
+    {{ input }}
+
+    {{ ctx.output_format }}    
+  "#
+}
+
+test TestTree {
+  functions [BuildTree]
+  args {
+    input {
+      data 2
+      left {
+        data 1
+        left null
+        right null
+      }
+      right {
+        data 3
+        left null
+        right null
+      }
+    }
+  }
+}
+        "##,
+        )?;
+
+        let missing_env_vars = runtime.internal().ir().required_env_vars();
+
+        let ctx = runtime
+            .create_ctx_manager(BamlValue::String("test".to_string()), None)
+            .create_ctx_with_default(missing_env_vars.iter());
+
+        let function_name = "BuildTree";
+        let test_name = "TestTree";
+        let params = runtime.get_test_params(function_name, test_name, &ctx)?;
+        let render_prompt_future =
+            runtime
+                .internal()
+                .render_prompt(function_name, &ctx, &params, None);
+        let (prompt, scope, _) = runtime.async_runtime.block_on(render_prompt_future)?;
+
+        Ok(())
+    }
 }

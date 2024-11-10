@@ -9,7 +9,7 @@ use indexmap::IndexMap;
 use internal_baml_diagnostics::Span;
 use internal_baml_prompt_parser::ast::{ChatBlock, PrinterBlock, Variable};
 use internal_baml_schema_ast::ast::{
-    self, Expression, FieldId, RawString, TypeExpId, ValExpId, WithIdentifier, WithName, WithSpan,
+    self, Expression, FieldId, RawString, ValExpId, WithIdentifier, WithName, WithSpan,
 };
 
 mod configurations;
@@ -224,6 +224,18 @@ pub(super) struct Types {
     pub(super) class_attributes: HashMap<ast::TypeExpId, ClassAttributes>,
     pub(super) class_dependencies: HashMap<ast::TypeExpId, HashSet<String>>,
     pub(super) enum_dependencies: HashMap<ast::TypeExpId, HashSet<String>>,
+
+    /// Strongly connected components of the dependency graph.
+    ///
+    /// Basically contains all the different cycles. This allows us to find a
+    /// class in O(n) time and get all its recursive dependencies. Note that
+    /// infinite cycles are already discarded as errors at the validation
+    /// pipeline stage, so all cycles here have a termination point.
+    ///
+    /// TODO: There's probably some data structure other than [`Vec`] which can
+    /// get us a class with its dependencies faster than O(n), maybe a
+    /// Merge-Find Set or something like that.
+    pub(super) finite_recursive_cycles: Vec<Vec<ast::TypeExpId>>,
 
     pub(super) function: HashMap<ast::ValExpId, FunctionType>,
 

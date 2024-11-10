@@ -33,14 +33,16 @@ mod coerce_expression;
 mod context;
 mod interner;
 mod names;
+mod tarjan;
 mod types;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub use coerce_expression::{coerce, coerce_array, coerce_opt};
 use either::Either;
 pub use internal_baml_schema_ast::ast;
-use internal_baml_schema_ast::ast::{SchemaAst, WithIdentifier, WithName, WithSpan};
+use internal_baml_schema_ast::ast::SchemaAst;
+pub use tarjan::Tarjan;
 pub use types::{
     Attributes, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType, PromptAst,
     PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType,
@@ -129,85 +131,47 @@ impl ParserDatabase {
     }
 
     fn finalize_dependencies(&mut self, diag: &mut Diagnostics) {
-        let mut deps = self
-            .types
-            .class_dependencies
-            .iter()
-            .map(|f| {
-                (
-                    *f.0,
-                    f.1.iter()
-                        .fold((0, 0, 0), |prev, i| match self.find_type_by_str(i) {
-                            Some(Either::Left(_)) => (prev.0 + 1, prev.1 + 1, prev.2),
-                            Some(Either::Right(_)) => (prev.0 + 1, prev.1, prev.2 + 1),
-                            _ => prev,
-                        }),
-                )
-            })
-            .collect::<Vec<_>>();
+        // NOTE: Class dependency cycles are already checked at
+        // baml-lib/baml-core/src/validate/validation_pipeline/validations/cycle.rs
+        //
+        // The validation pipeline runs before this code. Check
+        // baml-lib/baml-core/src/lib.rs
+        //
+        // Here we'll just rebuild the cycles because the validation pipeline
+        // does not consider optional dependencies as part of the graph to allow
+        // finite rucursive types to pass the validation. But we need the cycles
+        // in order to render the LLM prompt correctly.
+        //
+        // TODO: Check if it's possible to build all the cycles considering
+        // optional dependencies as part of the graph but detecting such
+        // cycles with finite recursion during validation. That would optimize
+        // away one of the calls to the Tarjan's algorithm, which is linear,
+        // O(|V| + |E|), but still, if we can avoid the second call that would
+        // be great. Additionally, refactor `class_dependencies` to be the same
+        // type as the one expected by Tarjan::components, IDs that point to IDs
+        // instead of strings (class names). That requires less conversions when
+        // working with the graph. Once the work is done, IDs can be converted
+        // to names where needed.
+        let cycles = Tarjan::components(&HashMap::from_iter(
+            self.types.class_dependencies.iter().map(|(id, deps)| {
+                let deps =
+                    HashSet::from_iter(deps.iter().filter_map(
+                        |dep| match self.find_type_by_str(dep) {
+                            Some(Either::Left(cls)) => Some(cls.id),
+                            Some(Either::Right(_)) => None,
+                            None => panic!("Unknown class `{dep}`"),
+                        },
+                    ));
+                (*id, deps)
+            }),
+        ));
 
-        // Can only process deps which have 0 class dependencies.
-        let mut max_loops = 100;
-        while !deps.is_empty() && max_loops > 0 {
-            max_loops -= 1;
-            // Remove all the ones which have 0 class dependencies.
-            let removed = deps
-                .iter()
-                .filter(|(_, v)| v.1 == 0)
-                .map(|(k, _)| *k)
-                .collect::<Vec<_>>();
-            deps.retain(|(_, v)| v.1 > 0);
-            for cls in removed {
-                let child_deps = self
-                    .types
-                    .class_dependencies
-                    .get(&cls)
-                    // These must exist by definition so safe to unwrap.
-                    .unwrap()
-                    .iter()
-                    .filter_map(|f| match self.find_type_by_str(f) {
-                        Some(Either::Left(walker)) => {
-                            Some(walker.dependencies().iter().cloned().collect::<Vec<_>>())
-                        }
-                        Some(Either::Right(walker)) => Some(vec![walker.name().to_string()]),
-                        _ => panic!("Unknown class `{}`", f),
-                    })
-                    .flatten()
-                    .collect::<HashSet<_>>();
-                let name = self.ast[cls].name();
-                deps.iter_mut()
-                    .filter(|(k, _)| self.types.class_dependencies[k].contains(name))
-                    .for_each(|(_, v)| {
-                        v.1 -= 1;
-                    });
-
-                // Get the dependencies of all my dependencies.
-                self.types
-                    .class_dependencies
-                    .get_mut(&cls)
-                    .unwrap()
-                    .extend(child_deps);
-            }
-        }
-
-        if max_loops == 0 && !deps.is_empty() {
-            let circular_deps = deps
-                .iter()
-                .map(|(k, _)| self.ast[*k].name())
-                .collect::<Vec<_>>()
-                .join(" -> ");
-
-            deps.iter().for_each(|(k, _)| {
-                diag.push_error(DatamodelError::new_validation_error(
-                    &format!(
-                        "Circular dependency detected for class `{}`.\n{}",
-                        self.ast[*k].name(),
-                        circular_deps
-                    ),
-                    self.ast[*k].identifier().span().clone(),
-                ));
-            });
-        }
+        // Inject finite cycles into parser DB. This will then be passed into
+        // the IR and then into the Jinja output format.
+        self.types.finite_recursive_cycles = cycles
+            .into_iter()
+            .map(|cycle| cycle.into_iter().collect())
+            .collect();
 
         // Additionally ensure the same thing for functions, but since we've already handled classes,
         // this should be trivial.
@@ -269,5 +233,250 @@ impl std::ops::Index<StringId> for ParserDatabase {
 
     fn index(&self, index: StringId) -> &Self::Output {
         self.interner.get(index).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::path::PathBuf;
+
+    use super::*;
+    use internal_baml_diagnostics::{Diagnostics, SourceFile};
+    use internal_baml_schema_ast::parse_schema;
+
+    fn assert_finite_cycles(baml: &'static str, expected: &[&[&str]]) -> Result<(), Diagnostics> {
+        let mut db = ParserDatabase::new();
+        let source = SourceFile::new_static(PathBuf::from("test.baml"), baml);
+        let (ast, mut diag) = parse_schema(&source.path_buf(), &source)?;
+
+        db.add_ast(ast);
+        db.validate(&mut diag)?;
+        db.finalize(&mut diag);
+
+        assert_eq!(
+            db.finite_recursive_cycles()
+                .iter()
+                .map(|ids| Vec::from_iter(ids.iter().map(|id| db.ast()[*id].name.to_string())))
+                .collect::<Vec<_>>(),
+            expected
+                .iter()
+                .map(|cycle| Vec::from_iter(cycle.iter().map(ToString::to_string)))
+                .collect::<Vec<_>>()
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn find_simple_recursive_class() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class Node {
+                    data int
+                    next Node?
+                }
+
+                class LinkedList {
+                    head Node?
+                    len int
+                }
+            "#,
+            &[&["Node"]],
+        )
+    }
+
+    #[test]
+    fn find_mutually_recursive_classes() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class Tree {
+                    data int
+                    children Forest
+                }
+
+                class Forest {
+                    trees Tree[]
+                }
+
+                class A {
+                    b B
+                }
+
+                class B {
+                    a A?
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["Tree", "Forest"], &["A", "B"]],
+        )
+    }
+
+    #[test]
+    fn find_long_cycles() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    b B
+                }
+
+                class B {
+                    c C
+                }
+
+                class C {
+                    d D
+                }
+
+                class D {
+                    a A?
+                }
+
+                class One {
+                    two Two
+                }
+
+                class Two {
+                    three Three
+                }
+
+                class Three {
+                    one One?
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A", "B", "C", "D"], &["One", "Two", "Three"]],
+        )
+    }
+
+    #[test]
+    fn find_interconnected_long_cycles() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    b B
+                }
+
+                class B {
+                    c C
+                }
+
+                class C {
+                    d D
+                }
+
+                class D {
+                    a A?
+                    one One
+                }
+
+                class One {
+                    two Two
+                }
+
+                class Two {
+                    three Three
+                }
+
+                class Three {
+                    one One?
+                    A A
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A", "B", "C", "D", "One", "Two", "Three"]],
+        )
+    }
+
+    #[test]
+    fn find_simple_union_cycle() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    recursion int | string | A
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A"]],
+        )
+    }
+
+    #[test]
+    fn find_nested_union_cycle() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    recursion int | string | (Other | A)
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A"]],
+        )
+    }
+
+    #[test]
+    fn find_mutually_recursive_unions() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    recursion int | string | B
+                }
+
+                class B {
+                    recursion int | string | A
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A", "B"]],
+        )
+    }
+
+    #[test]
+    fn find_mutually_recursive_nested_unions() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class A {
+                    recursion int | string | (bool | B)
+                }
+
+                class B {
+                    recursion int | string | (bool | A)
+                }
+
+                class Other {
+                    dummy int
+                }
+            "#,
+            &[&["A", "B"]],
+        )
+    }
+
+    #[test]
+    fn find_self_referential_map() -> Result<(), Diagnostics> {
+        assert_finite_cycles(
+            r#"
+                class RecMap {
+                    recursion map<string, RecMap>
+                }
+            "#,
+            &[&["RecMap"]],
+        )
     }
 }

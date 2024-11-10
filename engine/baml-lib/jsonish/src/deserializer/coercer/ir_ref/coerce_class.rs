@@ -28,6 +28,34 @@ impl TypeCoercer for Class {
             scope = ctx.display_scope(),
             current = value.map(|v| v.r#type()).unwrap_or("<null>".into())
         );
+
+        // If value is not None then we'll update the context to store the
+        // current class in the visited set and we'll use that to stop recursion
+        // when dealing with recursive classes.
+        let mut nested_ctx = None;
+
+        if let Some(v) = value {
+            let cls_value_pair = (self.name.real_name().to_string(), v.to_owned());
+
+            // If this combination has been visited bail out.
+            if ctx.visited.contains(&cls_value_pair) {
+                return Err(ctx.error_circular_reference(self.name.real_name(), v));
+            }
+
+            // Mark this class as visited for the duration of this function
+            // call. Further recursion from within this function will see that
+            // the class has already been visited and stop recursing. Different
+            // calls to this function for other fields pointing to the same
+            // recursive class should start from scratch with an empty visited
+            // set so they will not fail because this class has already been
+            // coerced for a different field.
+            nested_ctx = Some(ctx.visit_class_value_pair(cls_value_pair));
+        }
+
+        // Now just maintain the previous context or get the new one and proceed
+        // normally.
+        let ctx = nested_ctx.as_ref().unwrap_or(ctx);
+
         let (optional, required): (Vec<_>, Vec<_>) =
             self.fields.iter().partition(|f| f.1.is_optional());
         let constraints = ctx

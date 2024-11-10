@@ -274,6 +274,10 @@ impl PredefinedTypes {
                                 "always_hoist_enums".into(),
                                 Type::merge(vec![Type::Bool, Type::None]),
                             ),
+                            (
+                                "hoisted_class_prefix".into(),
+                                Type::merge(vec![Type::String, Type::None]),
+                            ),
                         ],
                     ),
                 ),
