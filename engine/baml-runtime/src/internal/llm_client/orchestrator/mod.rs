@@ -9,7 +9,6 @@ use crate::{
     RuntimeContext,
 };
 
-use super::properties_hander::FinishReasonOptions;
 use super::traits::{WithClientProperties, WithRenderRawCurl};
 use super::LLMCompleteResponse;
 use super::{
@@ -82,15 +81,6 @@ impl OrchestratorNode {
             ExecutionScope::Retry(_, _, delay) if !delay.is_zero() => Some(delay),
             _ => None,
         })
-    }
-
-    pub fn is_valid_finish_reason(&self, response: &LLMCompleteResponse) -> bool {
-        let Some(finish_reason) = response.metadata.finish_reason.as_deref() else {
-            return true;
-        };
-        self.provider
-            .finish_reason_handling()
-            .map_or(true, |options| options.is_allowed(finish_reason))
     }
 }
 

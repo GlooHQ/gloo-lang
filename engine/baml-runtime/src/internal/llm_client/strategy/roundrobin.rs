@@ -58,10 +58,8 @@ fn resolve_strategy(
     _ctx: &RuntimeContext,
 ) -> Result<(Vec<ClientSpec>, usize)> {
     let strategy = properties
-        .remove("strategy")?
-        .map(|v| serde_json::from_value::<Vec<String>>(v))
-        .transpose()
-        .context("Failed to resolve strategy into string[]")?;
+        .remove_serde::<Vec<String>>("strategy")
+        .context("Failed to parse strategy into string[]")?;
 
     let strategy = if let Some(strategy) = strategy {
         if strategy.is_empty() {
@@ -73,10 +71,8 @@ fn resolve_strategy(
     };
 
     let start = properties
-        .remove("start")?
-        .map(|v| serde_json::from_value::<usize>(v))
-        .transpose()
-        .context("Invalid start index (not a number)")?;
+        .remove_serde::<usize>("start")
+        .context("Failed to parse start: not a number")?;
 
     let properties = properties.finalize();
     if !properties.is_empty() {

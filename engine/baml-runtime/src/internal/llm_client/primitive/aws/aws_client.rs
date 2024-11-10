@@ -18,7 +18,6 @@ use serde_json::Map;
 use web_time::Instant;
 use web_time::SystemTime;
 
-use crate::internal::llm_client::properties_hander::FinishReasonOptions;
 use crate::internal::llm_client::traits::{ToProviderMessageExt, WithClientProperties};
 use crate::internal::llm_client::AllowedMetadata;
 use crate::internal::llm_client::{
@@ -42,7 +41,6 @@ struct RequestProperties {
     default_role: String,
     inference_config: Option<bedrock::types::InferenceConfiguration>,
     allowed_metadata: AllowedMetadata,
-    finish_reason: Option<FinishReasonOptions>,
 
     request_options: HashMap<String, serde_json::Value>,
     ctx_env: HashMap<String, String>,
@@ -68,18 +66,13 @@ fn resolve_properties(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Req
         //    "openai/gpt-4o", they'll expect to be able to use `model gpt-4o`
         //  - if I were on the bedrock team, I would be _very_ hesitant to add a new request field
         //    `model` if I already have `model_id`, so I think using `model` isn't too risky
-        let maybe_model_id = properties.remove("model_id");
-        let maybe_model = properties.remove("model");
+        let maybe_model_id = properties.remove_str("model_id")?;
+        let maybe_model = properties.remove_str("model")?;
 
         match (maybe_model_id, maybe_model) {
-            (Some(model_id), _) => model_id
-                .as_str()
-                .context("model_id should be a string")?
-                .to_string(),
-            (None, Some(model)) => model
-                .as_str()
-                .context("model should be a string")?
-                .to_string(),
+            (Some(model_id), Some(model)) => anyhow::bail!("model_id and model cannot both be provided"),
+            (Some(model_id), None) => model_id,
+            (None, Some(model)) => model,
             _ => anyhow::bail!("model_id or model is required"),
         }
     };
@@ -87,19 +80,13 @@ fn resolve_properties(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Req
     let default_role = properties.pull_default_role("user")?;
     let allowed_metadata = properties.pull_allowed_role_metadata()?;
 
-    let inference_config = match properties.remove("inference_configuration")? {
-        Some(v) => Some(
-            super::types::InferenceConfiguration::deserialize(v)
-                .context("Failed to parse inference_configuration")?
-                .into(),
-        ),
-        None => None,
-    };
-    let finish_reason = properties.pull_finish_reason_options()?;
+    let inference_config = properties
+        .remove_serde::<super::types::InferenceConfiguration>("inference_configuration")?
+        .map(|c| c.into());
 
     let aws_region = properties
-        .remove("region")
-        .and_then(|v| v.as_str().map(str::to_owned));
+        .remove_str("region")
+        .unwrap_or_else(|_| ctx.env.get("AWS_REGION").map(|s| s.to_string()));
 
     Ok(RequestProperties {
         model_id,
@@ -107,7 +94,6 @@ fn resolve_properties(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Req
         default_role,
         inference_config,
         allowed_metadata,
-        finish_reason,
         request_options: properties.finalize(),
         ctx_env: ctx.env.clone(),
     })
@@ -314,9 +300,6 @@ impl WithClientProperties for AwsClient {
     }
     fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
         &self.properties.allowed_metadata
-    }
-    fn finish_reason_handling(&self) -> Option<&FinishReasonOptions> {
-        self.properties.finish_reason.as_ref()
     }
 }
 

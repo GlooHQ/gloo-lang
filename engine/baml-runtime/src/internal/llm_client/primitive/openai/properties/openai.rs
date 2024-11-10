@@ -23,7 +23,6 @@ pub fn resolve_properties(
         .or_else(|| ctx.env.get("OPENAI_API_KEY").map(|s| s.to_string()));
 
     let allowed_metadata = properties.pull_allowed_role_metadata()?;
-    let finish_reason = properties.pull_finish_reason_options()?;
     let headers = properties.pull_headers()?;
 
     Ok(PostRequestProperties {
@@ -33,7 +32,6 @@ pub fn resolve_properties(
         headers,
         properties: properties.finalize(),
         allowed_metadata,
-        finish_reason,
         // Replace proxy_url with code below to disable proxying
         // proxy_url: None,
         proxy_url: ctx

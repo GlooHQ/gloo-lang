@@ -27,7 +27,6 @@ pub fn resolve_properties(
         Some(api_key) if !api_key.is_empty() => Some(api_key),
         _ => None,
     };
-    let finish_reason = properties.pull_finish_reason_options()?;
 
     let properties = properties.finalize();
 
@@ -37,7 +36,6 @@ pub fn resolve_properties(
         api_key,
         headers,
         properties,
-        finish_reason,
         proxy_url: ctx
             .env
             .get("BOUNDARY_PROXY_URL")

@@ -44,7 +44,6 @@ struct PostRequestProperities {
     headers: HashMap<String, String>,
     proxy_url: Option<String>,
     allowed_metadata: AllowedMetadata,
-    finish_reason: Option<crate::internal::llm_client::properties_hander::FinishReasonOptions>,
     // These are passed directly to the Anthropic API.
     properties: HashMap<String, serde_json::Value>,
 }
@@ -82,7 +81,6 @@ fn resolve_properties(
     headers
         .entry("anthropic-version".to_string())
         .or_insert("2023-06-01".to_string());
-    let finish_reason = properties.pull_finish_reason_options()?;
 
     let mut properties = properties.finalize();
     // Anthropic has a very low max_tokens by default, so we increase it to 4096.
@@ -97,7 +95,6 @@ fn resolve_properties(
         api_key,
         headers,
         allowed_metadata,
-        finish_reason,
         properties,
         proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),
     })
@@ -116,12 +113,6 @@ impl WithClientProperties for AnthropicClient {
     }
     fn client_properties(&self) -> &HashMap<String, serde_json::Value> {
         &self.properties.properties
-    }
-
-    fn finish_reason_handling(
-        &self,
-    ) -> Option<&crate::internal::llm_client::properties_hander::FinishReasonOptions> {
-        self.properties.finish_reason.as_ref()
     }
 }
 

@@ -48,8 +48,6 @@ pub fn resolve_properties(
         query_params.insert("api-version".to_string(), v.to_string());
     };
 
-    let finish_reason = properties.pull_finish_reason_options()?;
-
     let mut properties = properties.finalize();
     properties
         .entry("max_tokens".into())
@@ -63,7 +61,6 @@ pub fn resolve_properties(
         headers,
         properties,
         allowed_metadata,
-        finish_reason,
         // Replace proxy_url with code below to disable proxying
         // proxy_url: None,
         proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),

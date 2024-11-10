@@ -19,7 +19,6 @@ pub fn resolve_properties(
         .unwrap_or_else(|| "http://localhost:11434/v1".to_string());
     let allowed_metadata = properties.pull_allowed_role_metadata()?;
     let headers = properties.pull_headers()?;
-    let finish_reason = properties.pull_finish_reason_options()?;
 
     Ok(PostRequestProperties {
         default_role,
@@ -28,7 +27,6 @@ pub fn resolve_properties(
         headers,
         properties: properties.finalize(),
         allowed_metadata,
-        finish_reason,
         proxy_url: ctx
             .env
             .get("BOUNDARY_PROXY_URL")

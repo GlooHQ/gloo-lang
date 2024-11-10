@@ -1,5 +1,5 @@
 use crate::client_registry::ClientProperty;
-use crate::internal::llm_client::properties_hander::{FinishReasonOptions, PropertiesHandler};
+use crate::internal::llm_client::properties_hander::{ PropertiesHandler};
 use crate::internal::llm_client::traits::{
     ToProviderMessage, ToProviderMessageExt, WithClientProperties,
 };
@@ -63,7 +63,6 @@ struct PostRequestProperties {
     model_id: Option<String>,
     location: Option<String>,
     allowed_metadata: AllowedMetadata,
-    finish_reason: Option<FinishReasonOptions>,
 }
 
 pub struct VertexClient {
@@ -101,7 +100,7 @@ fn resolve_properties(
 
     let service_account_details = {
         let authz = properties.remove_str("authorization")?;
-        let creds = properties.remove("credentials")?;
+        let creds = properties.remove_serde::<serde_json::Value>("credentials")?;
         let creds_content = properties.remove_str("credentials_content")?;
 
         // Ensure that at most one of authz, creds, and creds_content is provided
@@ -144,7 +143,6 @@ fn resolve_properties(
         }
     };
     let headers = properties.pull_headers()?;
-    let finish_reason = properties.pull_finish_reason_options()?;
 
     let project_id = properties.remove_str("project_id")?;
     let model_id = properties.remove_str("model")?;
@@ -170,7 +168,6 @@ fn resolve_properties(
         service_account_details,
         headers,
         properties: properties.finalize(),
-        finish_reason,
         project_id: Some(project_id),
         model_id: Some(model_id),
         location: Some(location),
@@ -191,9 +188,6 @@ impl WithClientProperties for VertexClient {
     }
     fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
         &self.properties.allowed_metadata
-    }
-    fn finish_reason_handling(&self) -> Option<&FinishReasonOptions> {
-        self.properties.finish_reason.as_ref()
     }
 }
 

@@ -50,6 +50,7 @@ where
                     node.scope,
                     LLMResponse::InternalFailure(e.to_string()),
                     None,
+                    None,
                 ));
                 continue;
             }
@@ -98,16 +99,7 @@ where
         };
 
         let parsed_response = match &final_response {
-            LLMResponse::Success(s) => {
-                if node.is_valid_finish_reason(s) {
-                    Some(parse_fn(&s.content))
-                } else {
-                    Some(Err(anyhow::anyhow!(
-                        "Non-terminal finish reason: {}",
-                        s.metadata.finish_reason.as_deref().unwrap_or("<empty>")
-                    )))
-                }
-            }
+            LLMResponse::Success(s) => Some(parse_fn(&s.content)),
             _ => None,
         };
         let (parsed_response, response_value) = match parsed_response {

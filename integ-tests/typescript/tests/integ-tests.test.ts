@@ -619,7 +619,7 @@ describe('Integ tests', () => {
 
   it('should raise an error when appropriate', async () => {
     await expect(async () => {
-      await b.TestCaching(111 as unknown as string) // intentionally passing an int instead of a string
+      await b.TestCaching(111 as unknown as string, "fiction") // intentionally passing an int instead of a string
     }).rejects.toThrow('BamlInvalidArgumentError')
 
     await expect(async () => {
@@ -710,7 +710,7 @@ describe('Integ tests', () => {
     cr.setPrimary('MyClient')
 
     try {
-      await b.TestCaching('Tell me a story about food!', {
+      await b.TestCaching('Tell me a story about food!', "fiction", {
         clientRegistry: cr,
       })
       fail('Expected BamlValidationError to be thrown')
@@ -730,7 +730,7 @@ describe('Integ tests', () => {
     cr.setPrimary('MyClient')
 
     try {
-      const stream = b.stream.TestCaching('Tell me a story about food!', {
+      const stream = b.stream.TestCaching('Tell me a story about food!', "fiction", {
         clientRegistry: cr,
       })
       for await (const msg of stream) {
@@ -746,6 +746,8 @@ describe('Integ tests', () => {
         fail('Expected error to be an instance of BamlValidationError')
       }
     }
+  });
+
   it('should use aliases when serializing input objects - classes', async () => {
     const res = await b.AliasedInputClass({ key: 'hello', key2: 'world' })
     expect(res).toContain('color')
@@ -801,14 +803,9 @@ describe('Integ tests', () => {
     console.log(JSON.stringify(res))
     expect(res.nbc.checks.cross_field.status).toBe('succeeded')
   })
-})
 
-interface MyInterface {
-  key: string
-  key_two: boolean
-  key_three: number
-}
+  afterAll(async () => {
+    flush()
+  });
 
-afterAll(async () => {
-  flush()
 })

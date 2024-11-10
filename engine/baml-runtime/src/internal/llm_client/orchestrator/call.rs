@@ -43,22 +43,14 @@ pub async fn orchestrate(
                     node.scope,
                     LLMResponse::InternalFailure(e.to_string()),
                     None,
+                    None,
                 ));
                 continue;
             }
         };
         let response = node.single_call(&ctx, &prompt).await;
         let parsed_response = match &response {
-            LLMResponse::Success(s) => {
-                if node.is_valid_finish_reason(s) {
-                    Some(parse_fn(&s.content))
-                } else {
-                    Some(Err(anyhow::anyhow!(
-                        "Non-terminal finish reason: {}",
-                        s.metadata.finish_reason.as_deref().unwrap_or("<empty>")
-                    )))
-                }
-            }
+            LLMResponse::Success(s) => Some(parse_fn(&s.content)),
             _ => None,
         };
 

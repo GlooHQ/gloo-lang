@@ -1,5 +1,5 @@
 use crate::client_registry::ClientProperty;
-use crate::internal::llm_client::properties_hander::{FinishReasonOptions, PropertiesHandler};
+use crate::internal::llm_client::properties_hander::{PropertiesHandler};
 use crate::internal::llm_client::traits::{
     ToProviderMessage, ToProviderMessageExt, WithClientProperties,
 };
@@ -38,7 +38,6 @@ struct PostRequestProperities {
     model_id: Option<String>,
     properties: HashMap<String, serde_json::Value>,
     allowed_metadata: AllowedMetadata,
-    finish_reason: Option<FinishReasonOptions>,
 }
 
 pub struct GoogleAIClient {
@@ -69,7 +68,6 @@ fn resolve_properties(
 
     let allowed_metadata = properties.pull_allowed_role_metadata()?;
     let headers = properties.pull_headers()?;
-    let finish_reason = properties.pull_finish_reason_options()?;
 
     Ok(PostRequestProperities {
         default_role,
@@ -78,7 +76,6 @@ fn resolve_properties(
         properties: properties.finalize(),
         base_url,
         model_id: Some(model_id),
-        finish_reason,
         proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),
         allowed_metadata,
     })
@@ -96,9 +93,6 @@ impl WithClientProperties for GoogleAIClient {
     }
     fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
         &self.properties.allowed_metadata
-    }
-    fn finish_reason_handling(&self) -> Option<&FinishReasonOptions> {
-        self.properties.finish_reason.as_ref()
     }
 }
 

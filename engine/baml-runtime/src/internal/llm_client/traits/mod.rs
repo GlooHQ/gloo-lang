@@ -11,7 +11,7 @@ pub use self::{
     completion::{WithCompletion, WithNoCompletion, WithStreamCompletion},
 };
 use super::{
-    primitive::request::RequestBuilder, properties_hander::FinishReasonOptions, LLMResponse,
+    primitive::request::RequestBuilder, LLMResponse,
     ModelFeatures,
 };
 use crate::{internal::llm_client::ResolveMediaUrls, RenderCurlSettings};
@@ -38,7 +38,6 @@ pub trait WithRetryPolicy {
 pub trait WithClientProperties {
     fn client_properties(&self) -> &HashMap<String, serde_json::Value>;
     fn allowed_metadata(&self) -> &super::AllowedMetadata;
-    fn finish_reason_handling(&self) -> Option<&FinishReasonOptions>;
 }
 
 pub trait WithSingleCallable {

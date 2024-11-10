@@ -57,11 +57,6 @@ impl WithClientProperties for OpenAIClient {
     fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
         &self.properties.allowed_metadata
     }
-    fn finish_reason_handling(
-        &self,
-    ) -> Option<&crate::internal::llm_client::properties_hander::FinishReasonOptions> {
-        self.properties.finish_reason.as_ref()
-    }
 }
 
 impl WithClient for OpenAIClient {
