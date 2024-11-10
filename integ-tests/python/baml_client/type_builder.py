@@ -20,9 +20,9 @@ from baml_py.type_builder import TypeBuilder as _TypeBuilder, ClassPropertyBuild
 class TypeBuilder(_TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["Blah","BookOrder","ClassOptionalOutput","ClassOptionalOutput2","ClassWithImage","CustomTaskResult","DummyOutput","DynInputOutput","DynamicClassOne","DynamicClassTwo","DynamicOutput","Education","Email","Event","FakeImage","FlightConfirmation","GroceryReceipt","InnerClass","InnerClass2","NamedArgsSingleClass","Nested","Nested2","OptionalTest_Prop1","OptionalTest_ReturnType","OrderInfo","Person","Quantity","RaysData","ReceiptInfo","ReceiptItem","Recipe","Resume","Schema","SearchParams","SomeClassNestedDynamic","StringToClassEntry","TestClassAlias","TestClassNested","TestClassWithEnum","TestOutputClass","UnionTest_ReturnType","WithReasoning",]
+          ["BigNumbers","Blah","BlockConstraint","BlockConstraintForParam","BookOrder","ClassOptionalOutput","ClassOptionalOutput2","ClassWithImage","CompoundBigNumbers","ContactInfo","CustomTaskResult","DummyOutput","DynInputOutput","DynamicClassOne","DynamicClassTwo","DynamicOutput","Earthling","Education","Email","EmailAddress","Event","FakeImage","FlightConfirmation","FooAny","GroceryReceipt","InnerClass","InnerClass2","InputClass","InputClassNested","LiteralClassHello","LiteralClassOne","LiteralClassTwo","MalformedConstraints","MalformedConstraints2","Martian","NamedArgsSingleClass","Nested","Nested2","NestedBlockConstraint","NestedBlockConstraintForParam","OptionalTest_Prop1","OptionalTest_ReturnType","OrderInfo","OriginalA","OriginalB","Person","PhoneNumber","Quantity","RaysData","ReceiptInfo","ReceiptItem","Recipe","Resume","Schema","SearchParams","SomeClassNestedDynamic","StringToClassEntry","TestClassAlias","TestClassNested","TestClassWithEnum","TestOutputClass","TwoStoriesOneTitle","UnionTest_ReturnType","WithReasoning",]
         ), enums=set(
-          ["Category","Category2","Category3","Color","DataType","DynEnumOne","DynEnumTwo","EnumInClass","EnumOutput","Hobby","NamedArgsSingleEnum","NamedArgsSingleEnumList","OptionalTest_CategoryType","OrderStatus","Tag","TestEnum",]
+          ["AliasedEnum","Category","Category2","Category3","Color","DataType","DynEnumOne","DynEnumTwo","EnumInClass","EnumOutput","Hobby","NamedArgsSingleEnum","NamedArgsSingleEnumList","OptionalTest_CategoryType","OrderStatus","Tag","TestEnum",]
         ))
 
 
@@ -57,7 +57,12 @@ class TypeBuilder(_TypeBuilder):
 
 
     
+    def OriginalB(self) -> "OriginalBBuilder":
+        return OriginalBBuilder(self)
+
+
     @property
+    
     def Person(self) -> "PersonBuilder":
         return PersonBuilder(self)
 
@@ -284,7 +289,42 @@ class DynamicOutputProperties:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+class OriginalBBuilder:
+    def __init__(self, tb: _TypeBuilder):
+        self.__bldr = tb._tb.class_("OriginalB")
+        self.__properties = set([ "value", ])
+        self.__props = OriginalBProperties(self.__bldr, self.__properties)
 
+    def type(self) -> FieldType:
+        return self.__bldr.field()
+
+    @property
+    def props(self) -> "OriginalBProperties":
+        return self.__props
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
+        return [(name, self.__bldr.property(name)) for name in self.__properties]
+
+    def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
+        if name in self.__properties:
+            raise ValueError(f"Property {name} already exists.")
+        return ClassPropertyBuilder(self.__bldr.property(name).type(type))
+
+class OriginalBProperties:
+    def __init__(self, cls_bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = cls_bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def value(self) -> ClassPropertyBuilder:
+        return self.__bldr.property("value")
+
+    def __getattr__(self, name: str) -> ClassPropertyBuilder:
+        if name not in self.__properties:
+            raise AttributeError(f"Property {name} not found.")
+        return ClassPropertyBuilder(self.__bldr.property(name))
 class PersonBuilder:
     def __init__(self, tb: _TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)

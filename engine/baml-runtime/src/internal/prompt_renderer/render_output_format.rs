@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use anyhow::Result;
-use baml_types::BamlValue;
+use baml_types::{BamlValue, Constraint};
 use indexmap::IndexSet;
 use internal_baml_core::ir::{
     repr::IntermediateRepr, ClassWalker, EnumWalker, FieldType, IRHelper,
@@ -66,7 +66,7 @@ fn find_new_class_field<'a>(
     field_name: &str,
     class_walker: &Result<ClassWalker<'_>>,
     overrides: &'a RuntimeClassOverride,
-    ctx: &RuntimeContext,
+    _ctx: &RuntimeContext,
 ) -> Result<(Name, FieldType, Option<String>)> {
     let Some(field_overrides) = overrides.new_fields.get(field_name) else {
         anyhow::bail!("Class {} does not have a field: {}", class_name, field_name);
@@ -205,11 +205,11 @@ fn relevant_data_models<'a>(
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     while let Some(output) = start.pop() {
-        match &output {
-            FieldType::Enum(enm) => {
+        match ir.distribute_constraints(&output) {
+            (FieldType::Enum(enm), constraints) => {
                 if checked_types.insert(output.to_string()) {
                     let overrides = ctx.enum_overrides.get(enm);
-                    let walker = ir.find_enum(enm);
+                    let walker = ir.find_enum(&enm);
 
                     let real_values = walker
                         .as_ref()
@@ -226,7 +226,7 @@ fn relevant_data_models<'a>(
                         .collect::<IndexSet<_>>()
                         .into_iter()
                         .map(|value| {
-                            let meta = find_enum_value(enm, &value, &walker, &overrides, ctx)?;
+                            let meta = find_enum_value(&enm, &value, &walker, &overrides, ctx)?;
                             Ok(meta.map(|m| m))
                         })
                         .filter_map(|v| v.transpose())
@@ -246,15 +246,16 @@ fn relevant_data_models<'a>(
                     enums.push(Enum {
                         name: Name::new_with_alias(enm.to_string(), alias.value()),
                         values,
+                        constraints,
                     });
                 }
             }
-            FieldType::List(inner) | FieldType::Optional(inner) => {
+            (FieldType::List(inner), _) | (FieldType::Optional(inner), _) => {
                 if !checked_types.contains(&inner.to_string()) {
                     start.push(inner.as_ref().clone());
                 }
             }
-            FieldType::Map(k, v) => {
+            (FieldType::Map(k, v), _) => {
                 if checked_types.insert(output.to_string()) {
                     if !checked_types.contains(&k.to_string()) {
                         start.push(k.as_ref().clone());
@@ -264,7 +265,7 @@ fn relevant_data_models<'a>(
                     }
                 }
             }
-            FieldType::Tuple(options) | FieldType::Union(options) => {
+            (FieldType::Tuple(options), _) | (FieldType::Union(options), _) => {
                 if checked_types.insert((&output).to_string()) {
                     for inner in options {
                         if !checked_types.contains(&inner.to_string()) {
@@ -273,7 +274,7 @@ fn relevant_data_models<'a>(
                     }
                 }
             }
-            FieldType::Class(cls) => {
+            (FieldType::Class(cls), constraints) => {
                 if checked_types.insert(output.to_string()) {
                     let overrides = ctx.class_override.get(cls);
                     let walker = ir.find_class(&cls);
@@ -330,10 +331,15 @@ fn relevant_data_models<'a>(
                     classes.push(Class {
                         name: Name::new_with_alias(cls.to_string(), alias.value()),
                         fields,
+                        constraints,
                     });
                 }
             }
-            FieldType::Primitive(_) => {}
+            (FieldType::Literal(_), _) => {}
+            (FieldType::Primitive(_), _) => {}
+            (FieldType::Constrained{..}, _)=> {
+                unreachable!("It is guaranteed that a call to distribute_constraints will not return FieldType::Constrained")
+            },
         }
     }
 
@@ -342,9 +348,10 @@ fn relevant_data_models<'a>(
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use super::*;
     use crate::BamlRuntime;
-    use std::collections::HashMap;
 
     #[test]
     fn skipped_variants_are_not_rendered() {
@@ -371,4 +378,5 @@ mod tests {
         assert_eq!(foo_enum.values[0].0.real_name(), "Bar".to_string());
         assert_eq!(foo_enum.values.len(), 1);
     }
+
 }

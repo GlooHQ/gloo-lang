@@ -1,3 +1,5 @@
+use baml_types::{Constraint, ConstraintLevel};
+
 use super::{
     deserialize_flags::{DeserializerConditions, Flag},
     types::{BamlValueWithFlags, ValueWithFlags},
@@ -56,12 +58,17 @@ impl WithScore for Flag {
             Flag::FirstMatch(_, _) => 1,
             // No penalty for picking an option from a union
             Flag::UnionMatch(_, _) => 0,
-            Flag::EnumOneFromMany(i) => i.into_iter().map(|(i, _)| *i as i32).sum::<i32>(),
+            Flag::StrMatchOneFromMany(values) => values
+                .into_iter()
+                .map(|(_, count)| *count as i32)
+                .sum::<i32>(),
             Flag::StringToBool(_) => 1,
             Flag::StringToNull(_) => 1,
             Flag::StringToChar(_) => 1,
             Flag::FloatToInt(_) => 1,
             Flag::NoFields(_) => 1,
+            // No scores for contraints
+            Flag::ConstraintResults(_) => 0,
         }
     }
 }

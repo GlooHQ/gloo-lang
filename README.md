@@ -1,7 +1,7 @@
 <a href="https://boundaryml.com?utm_source=github" target="_blank" rel="noopener noreferrer">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/baml-lamb-white.png">
-    <img src="docs/assets/baml-lamb-white.png" height="64">
+    <img src="docs/assets/baml-lamb-white.png" height="64" id="top">
   </picture>
   
 </a>
@@ -14,7 +14,7 @@ An LLM function is a prompt template with some defined input variables, and a sp
 
 BAML LLM functions plug into python, TS, and other languages, which makes it easy to focus more on engineering and less on prompting.
 
-BAML outperforms all other current methods of getting structured data, even when using it with GPT3.5. It also outperforms models fine-tuned for tool-use. See the [Berkeley Function Calling Benchmark](https://gorilla.cs.berkeley.edu/leaderboard.html) results. [Read more on our Schema-Aligned Parser](https://www.boundaryml.com/blog/schema-aligned-parsing).
+BAML outperforms all other current methods of obtaining structured data, even when using it with GPT3.5. It also outperforms models fine-tuned for tool-use. See the [Berkeley Function Calling Benchmark](https://gorilla.cs.berkeley.edu/leaderboard.html) results. [Read more on our Schema-Aligned Parser](https://www.boundaryml.com/blog/schema-aligned-parsing).
 
 <img src="docs/assets/bfcl-baml-latest.png" width="80%" alt="Boundary Studio">
 
@@ -27,12 +27,12 @@ Share your creations and ask questions in our [Discord](https://discord.gg/BTNBe
 ## Features
 
 - **Python and Typescript support**: Plug-and-play BAML with other languages
-- **Type validation**: more resilient to common LLM mistakes than Pydantic or Zod
+- **Type validation**: More resilient to common LLM mistakes than Pydantic or Zod
 - **Wide model support**: Ollama, Openai, Anthropic. Tested on small models like Llama2
 - **Streaming**: Stream structured partial outputs.
-- **Realtime Prompt Previews**: See the full prompt always, even if it has loops and conditionals
-- **Testing support**: Test functions in the playground with 1 click.
-- **Resilience and fallback features**: Add retries, redundancy, to your LLM calls
+- **Realtime Prompt Previews**: Always see the full prompt, even if it contains loops and conditionals
+- **Testing support**: Test functions in the playground with a single click.
+- **Resilience and fallback features**: Add retries and redundancy to your LLM calls
 - **Observability Platform**: Use Boundary Studio to visualize your functions and replay production requests with 1 click.
 
 ## Resources
@@ -330,6 +330,10 @@ Boundary takes security issues very seriously. If you have any concerns about BA
 
 Note that this security address should be used only for undisclosed vulnerabilities. Please report any security problems to us before disclosing it publicly.
 
+## Contributing
+Checkout our [guide on getting started](/CONTRIBUTING.md)
+
+
 <hr />
 
 Made with ❤️ by Boundary
@@ -337,3 +341,9 @@ Made with ❤️ by Boundary
 HQ in Seattle, WA
 
 P.S. We're hiring for software engineers. [Email us](founders@boundaryml.com) or reach out on [discord](https://discord.gg/ENtBB6kkXH)!
+
+<div align="left" style="align-items: left;">
+        <a href="#top">
+            <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+        </a>
+</div>

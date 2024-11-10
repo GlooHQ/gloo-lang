@@ -1,5 +1,9 @@
+# to enable json logging we need this serialization feaure. https://docs.rs/tracing-subscriber/latest/tracing_subscriber/#unstable-features
+[build]
+rustflags = ["--cfg", "tracing_unstable"]
+
 # https://github.com/rust-lang/cargo/issues/8607
 [target.x86_64-unknown-linux-musl]
-rustflags = ["-C", "target-feature=-crt-static"]
+rustflags = ["-C", "target-feature=-crt-static", "--cfg", "tracing_unstable"]
 [target.aarch64-unknown-linux-musl]
-rustflags = ["-C", "target-feature=-crt-static"]
+rustflags = ["-C", "target-feature=-crt-static", "--cfg", "tracing_unstable"]

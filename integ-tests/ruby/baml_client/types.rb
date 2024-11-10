@@ -18,6 +18,12 @@ require "sorbet-runtime"
 module Baml
   
   module Types
+    class AliasedEnum < T::Enum
+      enums do
+        KEY_ONE = new("KEY_ONE")
+        KEY_TWO = new("KEY_TWO")
+      end
+    end
     class Category < T::Enum
       enums do
         Refund = new("Refund")
@@ -130,32 +136,53 @@ module Baml
         G = new("G")
       end
     end
+    class BigNumbers < T::Struct; end
     class Blah < T::Struct; end
+    class BlockConstraint < T::Struct; end
+    class BlockConstraintForParam < T::Struct; end
     class BookOrder < T::Struct; end
     class ClassOptionalOutput < T::Struct; end
     class ClassOptionalOutput2 < T::Struct; end
     class ClassWithImage < T::Struct; end
+    class CompoundBigNumbers < T::Struct; end
+    class ContactInfo < T::Struct; end
     class CustomTaskResult < T::Struct; end
     class DummyOutput < T::Struct; end
     class DynInputOutput < T::Struct; end
     class DynamicClassOne < T::Struct; end
     class DynamicClassTwo < T::Struct; end
     class DynamicOutput < T::Struct; end
+    class Earthling < T::Struct; end
     class Education < T::Struct; end
     class Email < T::Struct; end
+    class EmailAddress < T::Struct; end
     class Event < T::Struct; end
     class FakeImage < T::Struct; end
     class FlightConfirmation < T::Struct; end
+    class FooAny < T::Struct; end
     class GroceryReceipt < T::Struct; end
     class InnerClass < T::Struct; end
     class InnerClass2 < T::Struct; end
+    class InputClass < T::Struct; end
+    class InputClassNested < T::Struct; end
+    class LiteralClassHello < T::Struct; end
+    class LiteralClassOne < T::Struct; end
+    class LiteralClassTwo < T::Struct; end
+    class MalformedConstraints < T::Struct; end
+    class MalformedConstraints2 < T::Struct; end
+    class Martian < T::Struct; end
     class NamedArgsSingleClass < T::Struct; end
     class Nested < T::Struct; end
     class Nested2 < T::Struct; end
+    class NestedBlockConstraint < T::Struct; end
+    class NestedBlockConstraintForParam < T::Struct; end
     class OptionalTest_Prop1 < T::Struct; end
     class OptionalTest_ReturnType < T::Struct; end
     class OrderInfo < T::Struct; end
+    class OriginalA < T::Struct; end
+    class OriginalB < T::Struct; end
     class Person < T::Struct; end
+    class PhoneNumber < T::Struct; end
     class Quantity < T::Struct; end
     class RaysData < T::Struct; end
     class ReceiptInfo < T::Struct; end
@@ -170,8 +197,23 @@ module Baml
     class TestClassNested < T::Struct; end
     class TestClassWithEnum < T::Struct; end
     class TestOutputClass < T::Struct; end
+    class TwoStoriesOneTitle < T::Struct; end
     class UnionTest_ReturnType < T::Struct; end
     class WithReasoning < T::Struct; end
+    class BigNumbers < T::Struct
+      include Baml::Sorbet::Struct
+      const :a, Integer
+      const :b, Float
+
+      def initialize(props)
+        super(
+          a: props[:a],
+          b: props[:b],
+        )
+
+        @props = props
+      end
+    end
     class Blah < T::Struct
       include Baml::Sorbet::Struct
       const :prop4, T.nilable(String)
@@ -179,6 +221,34 @@ module Baml
       def initialize(props)
         super(
           prop4: props[:prop4],
+        )
+
+        @props = props
+      end
+    end
+    class BlockConstraint < T::Struct
+      include Baml::Sorbet::Struct
+      const :foo, Integer
+      const :bar, String
+
+      def initialize(props)
+        super(
+          foo: props[:foo],
+          bar: props[:bar],
+        )
+
+        @props = props
+      end
+    end
+    class BlockConstraintForParam < T::Struct
+      include Baml::Sorbet::Struct
+      const :bcfp, Integer
+      const :bcfp2, String
+
+      def initialize(props)
+        super(
+          bcfp: props[:bcfp],
+          bcfp2: props[:bcfp2],
         )
 
         @props = props
@@ -243,6 +313,36 @@ module Baml
           myImage: props[:myImage],
           param2: props[:param2],
           fake_image: props[:fake_image],
+        )
+
+        @props = props
+      end
+    end
+    class CompoundBigNumbers < T::Struct
+      include Baml::Sorbet::Struct
+      const :big, Baml::Types::BigNumbers
+      const :big_nums, T::Array[Baml::Types::BigNumbers]
+      const :another, Baml::Types::BigNumbers
+
+      def initialize(props)
+        super(
+          big: props[:big],
+          big_nums: props[:big_nums],
+          another: props[:another],
+        )
+
+        @props = props
+      end
+    end
+    class ContactInfo < T::Struct
+      include Baml::Sorbet::Struct
+      const :primary, T.any(Baml::Types::PhoneNumber, Baml::Types::EmailAddress)
+      const :secondary, T.any(Baml::Types::PhoneNumber, Baml::Types::EmailAddress, NilClass)
+
+      def initialize(props)
+        super(
+          primary: props[:primary],
+          secondary: props[:secondary],
         )
 
         @props = props
@@ -326,6 +426,18 @@ module Baml
         @props = props
       end
     end
+    class Earthling < T::Struct
+      include Baml::Sorbet::Struct
+      const :age, Baml::Checked[Integer]
+
+      def initialize(props)
+        super(
+          age: props[:age],
+        )
+
+        @props = props
+      end
+    end
     class Education < T::Struct
       include Baml::Sorbet::Struct
       const :institution, String
@@ -357,6 +469,18 @@ module Baml
           subject: props[:subject],
           body: props[:body],
           from_address: props[:from_address],
+        )
+
+        @props = props
+      end
+    end
+    class EmailAddress < T::Struct
+      include Baml::Sorbet::Struct
+      const :value, String
+
+      def initialize(props)
+        super(
+          value: props[:value],
         )
 
         @props = props
@@ -412,6 +536,22 @@ module Baml
         @props = props
       end
     end
+    class FooAny < T::Struct
+      include Baml::Sorbet::Struct
+      const :planetary_age, T.any(Baml::Types::Martian, Baml::Types::Earthling)
+      const :certainty, Baml::Checked[Integer]
+      const :species, Baml::Checked[String]
+
+      def initialize(props)
+        super(
+          planetary_age: props[:planetary_age],
+          certainty: props[:certainty],
+          species: props[:species],
+        )
+
+        @props = props
+      end
+    end
     class GroceryReceipt < T::Struct
       include Baml::Sorbet::Struct
       const :receiptId, String
@@ -455,6 +595,106 @@ module Baml
         super(
           prop2: props[:prop2],
           prop3: props[:prop3],
+        )
+
+        @props = props
+      end
+    end
+    class InputClass < T::Struct
+      include Baml::Sorbet::Struct
+      const :key, String
+      const :key2, String
+
+      def initialize(props)
+        super(
+          key: props[:key],
+          key2: props[:key2],
+        )
+
+        @props = props
+      end
+    end
+    class InputClassNested < T::Struct
+      include Baml::Sorbet::Struct
+      const :key, String
+      const :nested, Baml::Types::InputClass
+
+      def initialize(props)
+        super(
+          key: props[:key],
+          nested: props[:nested],
+        )
+
+        @props = props
+      end
+    end
+    class LiteralClassHello < T::Struct
+      include Baml::Sorbet::Struct
+      const :prop, String
+
+      def initialize(props)
+        super(
+          prop: props[:prop],
+        )
+
+        @props = props
+      end
+    end
+    class LiteralClassOne < T::Struct
+      include Baml::Sorbet::Struct
+      const :prop, String
+
+      def initialize(props)
+        super(
+          prop: props[:prop],
+        )
+
+        @props = props
+      end
+    end
+    class LiteralClassTwo < T::Struct
+      include Baml::Sorbet::Struct
+      const :prop, String
+
+      def initialize(props)
+        super(
+          prop: props[:prop],
+        )
+
+        @props = props
+      end
+    end
+    class MalformedConstraints < T::Struct
+      include Baml::Sorbet::Struct
+      const :foo, Baml::Checked[Integer]
+
+      def initialize(props)
+        super(
+          foo: props[:foo],
+        )
+
+        @props = props
+      end
+    end
+    class MalformedConstraints2 < T::Struct
+      include Baml::Sorbet::Struct
+      const :foo, Integer
+
+      def initialize(props)
+        super(
+          foo: props[:foo],
+        )
+
+        @props = props
+      end
+    end
+    class Martian < T::Struct
+      include Baml::Sorbet::Struct
+      const :age, Baml::Checked[Integer]
+
+      def initialize(props)
+        super(
+          age: props[:age],
         )
 
         @props = props
@@ -506,6 +746,30 @@ module Baml
         @props = props
       end
     end
+    class NestedBlockConstraint < T::Struct
+      include Baml::Sorbet::Struct
+      const :nbc, Baml::Checked[Baml::Types::BlockConstraint]
+
+      def initialize(props)
+        super(
+          nbc: props[:nbc],
+        )
+
+        @props = props
+      end
+    end
+    class NestedBlockConstraintForParam < T::Struct
+      include Baml::Sorbet::Struct
+      const :nbcfp, Baml::Types::BlockConstraintForParam
+
+      def initialize(props)
+        super(
+          nbcfp: props[:nbcfp],
+        )
+
+        @props = props
+      end
+    end
     class OptionalTest_Prop1 < T::Struct
       include Baml::Sorbet::Struct
       const :omega_a, String
@@ -552,6 +816,30 @@ module Baml
         @props = props
       end
     end
+    class OriginalA < T::Struct
+      include Baml::Sorbet::Struct
+      const :value, Integer
+
+      def initialize(props)
+        super(
+          value: props[:value],
+        )
+
+        @props = props
+      end
+    end
+    class OriginalB < T::Struct
+      include Baml::Sorbet::Struct
+      const :value, Integer
+
+      def initialize(props)
+        super(
+          value: props[:value],
+        )
+
+        @props = props
+      end
+    end
     class Person < T::Struct
       include Baml::Sorbet::Struct
       const :name, T.nilable(String)
@@ -561,6 +849,18 @@ module Baml
         super(
           name: props[:name],
           hair_color: props[:hair_color],
+        )
+
+        @props = props
+      end
+    end
+    class PhoneNumber < T::Struct
+      include Baml::Sorbet::Struct
+      const :value, String
+
+      def initialize(props)
+        super(
+          value: props[:value],
         )
 
         @props = props
@@ -598,11 +898,13 @@ module Baml
       include Baml::Sorbet::Struct
       const :items, T::Array[Baml::Types::ReceiptItem]
       const :total_cost, T.nilable(Float)
+      const :venue, T.any(String, String)
 
       def initialize(props)
         super(
           items: props[:items],
           total_cost: props[:total_cost],
+          venue: props[:venue],
         )
 
         @props = props
@@ -629,10 +931,12 @@ module Baml
     class Recipe < T::Struct
       include Baml::Sorbet::Struct
       const :ingredients, T::Hash[String, Baml::Types::Quantity]
+      const :recipe_type, T.any(String, String)
 
       def initialize(props)
         super(
           ingredients: props[:ingredients],
+          recipe_type: props[:recipe_type],
         )
 
         @props = props
@@ -792,6 +1096,22 @@ module Baml
         @props = props
       end
     end
+    class TwoStoriesOneTitle < T::Struct
+      include Baml::Sorbet::Struct
+      const :title, String
+      const :story_a, String
+      const :story_b, String
+
+      def initialize(props)
+        super(
+          title: props[:title],
+          story_a: props[:story_a],
+          story_b: props[:story_b],
+        )
+
+        @props = props
+      end
+    end
     class UnionTest_ReturnType < T::Struct
       include Baml::Sorbet::Struct
       const :prop1, T.any(String, T::Boolean)
@@ -822,5 +1142,6 @@ module Baml
         @props = props
       end
     end
+
   end
 end

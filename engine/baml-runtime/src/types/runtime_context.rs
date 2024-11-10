@@ -8,7 +8,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use crate::internal::llm_client::llm_provider::LLMProvider;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SpanCtx {
     pub span_id: uuid::Uuid,
     pub name: String,

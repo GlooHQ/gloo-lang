@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet};
 
-use base64::write;
 use colored::*;
 pub mod llm_provider;
 pub mod orchestrator;
@@ -13,16 +12,37 @@ pub mod traits;
 
 use anyhow::Result;
 
+use baml_types::{BamlValueWithMeta, JinjaExpression, ResponseCheck};
 use internal_baml_core::ir::ClientWalker;
-use internal_baml_jinja::{ChatMessagePart, RenderedChatMessage, RenderedPrompt};
+use internal_baml_jinja::RenderedPrompt;
+use jsonish::BamlValueWithFlags;
 use serde::{Deserialize, Serialize};
-use serde_json::Map;
 use std::error::Error;
 
 use reqwest::StatusCode;
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsValue;
+
+pub type ResponseBamlValue = BamlValueWithMeta<Vec<ResponseCheck>>;
+
+/// Validate a parsed value, checking asserts and checks.
+pub fn parsed_value_to_response(baml_value: &BamlValueWithFlags) -> Result<ResponseBamlValue> {
+    let baml_value_with_meta: BamlValueWithMeta<Vec<(String, JinjaExpression, bool)>> =
+        baml_value.clone().into();
+    Ok(baml_value_with_meta.map_meta(|cs| {
+        cs.iter()
+            .map(|(label, expr, result)| {
+                let status = (if *result { "succeeded" } else { "failed" }).to_string();
+                ResponseCheck {
+                    name: label.clone(),
+                    expression: expr.0.clone(),
+                    status,
+                }
+            })
+            .collect()
+    }))
+}
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum ResolveMediaUrls {
@@ -85,7 +105,7 @@ pub struct RetryLLMResponse {
     pub failed: Vec<LLMResponse>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum LLMResponse {
     /// BAML was able to successfully make the HTTP request and got a 2xx
     /// response from the model provider
@@ -149,12 +169,13 @@ impl LLMResponse {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct LLMErrorResponse {
     pub client: String,
     pub model: Option<String>,
     pub prompt: RenderedPrompt,
     pub request_options: HashMap<String, serde_json::Value>,
+    #[cfg_attr(target_arch = "wasm32", serde(skip_serializing))]
     pub start_time: web_time::SystemTime,
     pub latency: web_time::Duration,
 
@@ -163,7 +184,7 @@ pub struct LLMErrorResponse {
     pub code: ErrorCode,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum ErrorCode {
     InvalidAuthentication, // 401
     NotSupported,          // 403
@@ -231,13 +252,14 @@ impl ErrorCode {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct LLMCompleteResponse {
     pub client: String,
     pub model: String,
     pub prompt: RenderedPrompt,
     pub request_options: HashMap<String, serde_json::Value>,
     pub content: String,
+    #[cfg_attr(target_arch = "wasm32", serde(skip_serializing))]
     pub start_time: web_time::SystemTime,
     pub latency: web_time::Duration,
     pub metadata: LLMCompleteResponseMetadata,
@@ -252,6 +274,7 @@ pub struct LLMCompleteResponseMetadata {
     pub total_tokens: Option<u64>,
 }
 
+// This is how the response gets logged if you print the result to the console.
 impl std::fmt::Display for LLMCompleteResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
@@ -273,17 +296,26 @@ impl std::fmt::Display for LLMCompleteResponse {
     }
 }
 
+// This is the one that gets logged by BAML_LOG, for baml_events log.
 impl crate::tracing::Visualize for LLMCompleteResponse {
     fn visualize(&self, max_chunk_size: usize) -> String {
         let s = vec![
             format!(
                 "{}",
                 format!(
-                    "Client: {} ({}) - {}ms. StopReason: {}",
+                    "Client: {} ({}) - {}ms. StopReason: {}. Tokens(in/out): {}/{}",
                     self.client,
                     self.model,
                     self.latency.as_millis(),
-                    self.metadata.finish_reason.as_deref().unwrap_or("unknown")
+                    self.metadata.finish_reason.as_deref().unwrap_or("unknown"),
+                    self.metadata
+                        .prompt_tokens
+                        .map(|t| t.to_string())
+                        .unwrap_or_else(|| "unknown".to_string()),
+                    self.metadata
+                        .output_tokens
+                        .map(|t| t.to_string())
+                        .unwrap_or_else(|| "unknown".to_string()),
                 )
                 .yellow()
             ),

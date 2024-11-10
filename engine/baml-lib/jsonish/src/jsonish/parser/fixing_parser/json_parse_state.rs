@@ -74,6 +74,7 @@ impl JsonParseState {
             | JsonCollection::TripleQuotedString(s)
             | JsonCollection::BlockComment(s)
             | JsonCollection::SingleQuotedString(s)
+            | JsonCollection::BacktickString(s)
             | JsonCollection::UnquotedString(s)
             | JsonCollection::TrailingComment(s) => {
                 // println!("Consuming: {s} + {:?}", token);
@@ -215,7 +216,7 @@ impl JsonParseState {
                                                     log::debug!("Closing due to: new key after space + comma");
                                                     return Some(idx);
                                                 }
-                                                x => {
+                                                _x => {
                                                     break;
                                                 }
                                             }
@@ -254,6 +255,7 @@ impl JsonParseState {
                         }
                     }
                 }
+                counter += 1; // Indicate that we called next() one time after the final `Some`.
                 Some(counter)
             }
             _ => unreachable!("Invalid position"),
@@ -483,6 +485,22 @@ impl JsonParseState {
                         _ => self.consume(token),
                     }
                 }
+                JsonCollection::BacktickString(_) => {
+                    // We could be expecting:
+                    // - A closing backtick
+                    // - A character
+                    match token {
+                        '`' => {
+                            if self.should_close_string(next, '`') {
+                                self.complete_collection();
+                                Ok(0)
+                            } else {
+                                self.consume(token)
+                            }
+                        }
+                        _ => self.consume(token),
+                    }
+                }
                 JsonCollection::SingleQuotedString(_) => {
                     // We could be expecting:
                     // - A closing quote
@@ -573,12 +591,10 @@ impl JsonParseState {
             }
             '"' => {
                 // Peek if next 2 characters are also quotes
-                let is_triple_quoted = match next.peek() {
-                    Some((_, '"')) => match next.peek() {
-                        Some((_, '"')) => true,
-                        _ => false,
-                    },
-                    _ => false,
+                let is_triple_quoted = {
+                    next.next_if(|&(_, c)| c == '"')
+                        .and_then(|_| next.next_if(|&(_, c)| c == '"'))
+                        .is_some()
                 };
 
                 if is_triple_quoted {
@@ -600,6 +616,12 @@ impl JsonParseState {
                     Default::default(),
                 ));
             }
+            '`' => {
+                self.collection_stack.push((
+                    JsonCollection::BacktickString(String::new()),
+                    Default::default(),
+                ));
+            }
             '/' => {
                 // Could be a comment
                 match next.peek() {
@@ -617,7 +639,20 @@ impl JsonParseState {
                         ));
                         return Ok(1);
                     }
-                    _ => {}
+                    _ => {
+                        // if we're in an object, this could be the beginning of a string
+                        // say a path?
+                        if matches!(
+                            self.collection_stack.last(),
+                            Some((JsonCollection::Object(_, _), _))
+                        ) {
+                            self.collection_stack.push((
+                                JsonCollection::UnquotedString(token.into()),
+                                Default::default(),
+                            ));
+                            return Ok(0);
+                        }
+                    }
                 }
             }
             x if x.is_whitespace() => {}

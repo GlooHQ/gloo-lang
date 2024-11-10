@@ -6,9 +6,15 @@ authors.workspace = true
 description.workspace = true
 license-file.workspace = true
 
+[lints.rust]
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+
 [dependencies]
 anyhow.workspace = true
 baml-types = { path = "../baml-types" }
+bstd.workspace = true
 chrono = "0.4.31"
 derive_builder.workspace = true
 either.workspace = true
@@ -16,10 +22,11 @@ enumflags2 = "0.7"
 log = "0.4.20"
 indexmap.workspace = true
 internal-baml-diagnostics = { path = "../diagnostics" }
-internal-baml-jinja.workspace = true
+internal-baml-jinja-types = { path = "../jinja" }
 internal-baml-parser-database = { path = "../parser-database" }
 internal-baml-prompt-parser = { path = "../prompt-parser" }
 internal-baml-schema-ast = { path = "../schema-ast" }
+minijinja.workspace = true
 rayon = "1.8.0"
 regex = "1.10.3"
 semver = "1.0.20"
@@ -30,6 +37,7 @@ strsim = "0.10.0"
 strum.workspace = true
 textwrap = "0.16.0"
 whoami = "1.4.1"
+itertools = "0.13.0"
 
 
 [dev-dependencies]

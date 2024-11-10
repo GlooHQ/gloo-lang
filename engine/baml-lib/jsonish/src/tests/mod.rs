@@ -6,8 +6,12 @@ pub mod macros;
 
 mod test_basics;
 mod test_class;
+mod test_class_2;
+mod test_code;
+mod test_constraints;
 mod test_enum;
 mod test_lists;
+mod test_literals;
 mod test_maps;
 mod test_partials;
 mod test_unions;
@@ -17,7 +21,7 @@ use std::{
     path::PathBuf,
 };
 
-use baml_types::BamlValue;
+use baml_types::{BamlValue, Constraint, ConstraintLevel, JinjaExpression};
 use internal_baml_core::{
     internal_baml_diagnostics::SourceFile,
     ir::{repr::IntermediateRepr, ClassWalker, EnumWalker, FieldType, IRHelper, TypeValue},
@@ -104,22 +108,24 @@ fn find_enum_value(
     Ok(Some((name, desc)))
 }
 
+// TODO: (Greg) Is the use of `String` as a hash key safe? Is there some way to
+// get a collision that results in some type not getting put onto the stack?
 fn relevant_data_models<'a>(
     ir: &'a IntermediateRepr,
     output: &'a FieldType,
     env_values: &HashMap<String, String>,
 ) -> Result<(Vec<Enum>, Vec<Class>)> {
-    let mut checked_types = HashSet::new();
+    let mut checked_types: HashSet<String> = HashSet::new();
     let mut enums = Vec::new();
-    let mut classes = Vec::new();
+    let mut classes: Vec<Class> = Vec::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     while !start.is_empty() {
         let output = start.pop().unwrap();
-        match &output {
-            FieldType::Enum(enm) => {
+        match ir.distribute_constraints(&output) {
+            (FieldType::Enum(enm), constraints) => {
                 if checked_types.insert(output.to_string()) {
-                    let walker = ir.find_enum(enm);
+                    let walker = ir.find_enum(&enm);
 
                     let real_values = walker
                         .as_ref()
@@ -130,7 +136,7 @@ fn relevant_data_models<'a>(
                         .flatten()
                         .into_iter()
                         .map(|value| {
-                            let meta = find_enum_value(enm, &value, &walker, env_values)?;
+                            let meta = find_enum_value(enm.as_str(), &value, &walker, env_values)?;
                             Ok(meta.map(|m| m))
                         })
                         .filter_map(|v| v.transpose())
@@ -139,15 +145,16 @@ fn relevant_data_models<'a>(
                     enums.push(Enum {
                         name: Name::new_with_alias(enm.to_string(), walker?.alias(env_values)?),
                         values,
+                        constraints,
                     });
                 }
             }
-            FieldType::List(inner) | FieldType::Optional(inner) => {
+            (FieldType::List(inner), _constraints) | (FieldType::Optional(inner), _constraints) => {
                 if !checked_types.contains(&inner.to_string()) {
                     start.push(inner.as_ref().clone());
                 }
             }
-            FieldType::Map(k, v) => {
+            (FieldType::Map(k, v), _constraints) => {
                 if checked_types.insert(output.to_string()) {
                     if !checked_types.contains(&k.to_string()) {
                         start.push(k.as_ref().clone());
@@ -157,7 +164,8 @@ fn relevant_data_models<'a>(
                     }
                 }
             }
-            FieldType::Tuple(options) | FieldType::Union(options) => {
+            (FieldType::Tuple(options), _constraints)
+            | (FieldType::Union(options), _constraints) => {
                 if checked_types.insert((&output).to_string()) {
                     for inner in options {
                         if !checked_types.contains(&inner.to_string()) {
@@ -166,7 +174,7 @@ fn relevant_data_models<'a>(
                     }
                 }
             }
-            FieldType::Class(cls) => {
+            (FieldType::Class(cls), constraints) => {
                 if checked_types.insert(output.to_string()) {
                     let walker = ir.find_class(&cls);
 
@@ -191,10 +199,15 @@ fn relevant_data_models<'a>(
                     classes.push(Class {
                         name: Name::new_with_alias(cls.to_string(), walker?.alias(env_values)?),
                         fields,
+                        constraints,
                     });
                 }
             }
-            FieldType::Primitive(_) => {}
+            (FieldType::Literal(_), _) => {}
+            (FieldType::Primitive(_), _constraints) => {}
+            (FieldType::Constrained { .. }, _) => {
+                unreachable!("It is guaranteed that a call to distribute_constraints will not return FieldType::Constrained")
+            }
         }
     }
 
@@ -686,3 +699,68 @@ test_deserializer!(
       "four": "four"
     })
 );
+
+#[test]
+/// Test that when partial parsing, if we encounter an int in a context
+/// where it could possibly be extended further, it must be returned
+/// as Null.
+fn singleton_list_int_deleted() {
+    let target = FieldType::List(Box::new(FieldType::Primitive(TypeValue::Int)));
+    let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
+    let res = from_str(&output_format, &target, "[123", true).expect("Can parse");
+    let baml_value: BamlValue = res.into();
+    assert_eq!(baml_value, BamlValue::List(vec![]));
+}
+
+#[test]
+/// Test that when partial parsing, if we encounter an int in a context
+/// where it could possibly be extended further, it must be returned
+/// as Null.
+fn list_int_deleted() {
+    let target = FieldType::List(Box::new(FieldType::Primitive(TypeValue::Int)));
+    let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
+    let res = from_str(&output_format, &target, "[123, 456", true).expect("Can parse");
+    let baml_value: BamlValue = res.into();
+    assert_eq!(baml_value, BamlValue::List(vec![BamlValue::Int(123)]));
+}
+
+#[test]
+/// Test that when partial parsing, if we encounter an int in a context
+/// where it could possibly be extended further, it must be returned
+/// as Null.
+fn list_int_not_deleted() {
+    let target = FieldType::List(Box::new(FieldType::Primitive(TypeValue::Int)));
+    let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
+    let res = from_str(&output_format, &target, "[123, 456 // Done", true).expect("Can parse");
+    let baml_value: BamlValue = res.into();
+    assert_eq!(
+        baml_value,
+        BamlValue::List(vec![BamlValue::Int(123), BamlValue::Int(456)])
+    );
+}
+
+#[test]
+/// Test that when partial parsing, if we encounter an int in a context
+/// where it could possibly be extended further, it must be returned
+/// as Null.
+fn partial_int_deleted() {
+    let target = FieldType::Optional(Box::new(FieldType::Primitive(TypeValue::Int)));
+    let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
+    let res = from_str(&output_format, &target, "123", true).expect("Can parse");
+    let baml_value: BamlValue = res.into();
+    // Note: This happens to parse as a List, but Null also seems appropriate.
+    assert_eq!(baml_value, BamlValue::Null);
+}
+
+#[test]
+/// Test that when partial parsing, if we encounter an int in a context
+/// where it could possibly be extended further, it must be returned
+/// as Null.
+fn partial_int_not_deleted() {
+    let target = FieldType::List(Box::new(FieldType::Primitive(TypeValue::Int)));
+    let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
+    let res = from_str(&output_format, &target, "123", true).expect("Can parse");
+    let baml_value: BamlValue = res.into();
+    // Note: This happens to parse as a List, but Null also seems appropriate.
+    assert_eq!(baml_value, BamlValue::List(vec![]));
+}

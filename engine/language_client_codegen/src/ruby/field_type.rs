@@ -1,4 +1,7 @@
+
 use baml_types::{BamlMediaType, FieldType, TypeValue};
+
+use crate::field_type_attributes;
 
 use super::ruby_language_features::ToRuby;
 
@@ -7,6 +10,8 @@ impl ToRuby for FieldType {
         match self {
             FieldType::Class(name) => format!("Baml::Types::{}", name.clone()),
             FieldType::Enum(name) => format!("T.any(Baml::Types::{}, String)", name.clone()),
+            // TODO: Temporary solution until we figure out Ruby literals.
+            FieldType::Literal(value) => value.literal_base_type().to_ruby(),
             // https://sorbet.org/docs/stdlib-generics
             FieldType::List(inner) => format!("T::Array[{}]", inner.to_ruby()),
             FieldType::Map(key, value) => {
@@ -43,6 +48,17 @@ impl ToRuby for FieldType {
                     .join(", ")
             ),
             FieldType::Optional(inner) => format!("T.nilable({})", inner.to_ruby()),
+            FieldType::Constrained{base,..} => {
+                match field_type_attributes(self) {
+                    Some(_) => {
+                        let base_type_ref = base.to_ruby();
+                        format!("Baml::Checked[{base_type_ref}]")
+                    }
+                    None => {
+                        base.to_ruby()
+                    }
+                }
+            }
         }
     }
 }

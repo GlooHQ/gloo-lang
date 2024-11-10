@@ -1,5 +1,5 @@
-use internal_baml_diagnostics::DatamodelWarning;
-use internal_baml_schema_ast::ast::ArguementId;
+use internal_baml_diagnostics::{DatamodelWarning, Span};
+use internal_baml_schema_ast::ast::{Argument, ArgumentId, Attribute};
 
 use crate::{
     ast, ast::WithName, interner::StringInterner, names::Names, types::Types, DatamodelError,
@@ -83,10 +83,13 @@ impl<'db> Context<'db> {
     ///
     /// - When you are done validating an attribute, you must call `discard_arguments()` or
     ///   `validate_visited_arguments()`. Otherwise, Context will helpfully panic.
-    pub(super) fn visit_attributes(&mut self, ast_attributes: ast::AttributeContainer) {
+    pub(super) fn assert_all_attributes_processed(
+        &mut self,
+        ast_attributes: ast::AttributeContainer,
+    ) {
         if self.attributes.attributes.is_some() || !self.attributes.unused_attributes.is_empty() {
             panic!(
-                "`ctx.visit_attributes() called with {:?} while the Context is still validating previous attribute set on {:?}`",
+                "`ctx.assert_all_attributes_processed() called with {:?} while the Context is still validating previous attribute set on {:?}`",
                 ast_attributes,
                 self.attributes.attributes
             );
@@ -98,7 +101,7 @@ impl<'db> Context<'db> {
     /// Extract an attribute that can occur zero or more times. Example: @@index on models.
     ///
     /// Returns `true` as long as a next attribute is found.
-    pub(crate) fn visit_repeated_attr(&mut self, name: &'static str) -> bool {
+    pub(crate) fn _visit_repeated_attr(&mut self, name: &'static str) -> bool {
         let mut has_valid_attribute = false;
 
         while !has_valid_attribute {
@@ -115,6 +118,35 @@ impl<'db> Context<'db> {
         }
 
         has_valid_attribute
+    }
+
+    /// Extract an attribute that can occur zero or more times. Example: @assert on types.
+    /// Argument is a list of names that are all valid for this attribute.
+    ///
+    /// Returns Some(name_match) if name_match is the attribute name and is in the
+    /// `names` argument.
+    pub(crate) fn visit_repeated_attr_from_names(
+        &mut self,
+        names: &'static [&'static str],
+    ) -> Option<(String, Span)> {
+        let mut has_valid_attribute = false;
+        let mut matching_attr: Option<(String, Span)> = None;
+
+        while !has_valid_attribute {
+            let first_attr = iter_attributes(self.attributes.attributes.as_ref(), self.ast)
+                .filter(|(_, attr)| names.contains(&attr.name.name()))
+                .find(|(attr_id, _)| self.attributes.unused_attributes.contains(attr_id));
+            let (attr_id, attr) = if let Some(first_attr) = first_attr {
+                first_attr
+            } else {
+                break;
+            };
+            self.attributes.unused_attributes.remove(&attr_id);
+            has_valid_attribute = self.set_attribute(attr_id, attr);
+            matching_attr = Some((attr.name.to_string(), attr.span.clone()));
+        }
+
+        matching_attr
     }
 
     /// Validate an _optional_ attribute that should occur only once. Returns whether the attribute
@@ -155,7 +187,7 @@ impl<'db> Context<'db> {
     pub(crate) fn visit_default_arg_with_idx(
         &mut self,
         name: &str,
-    ) -> Result<(ArguementId, &'db ast::Expression), DatamodelError> {
+    ) -> Result<(ArgumentId, &'db ast::Expression), DatamodelError> {
         match self.attributes.args.pop_front() {
             Some(arg_idx) => {
                 let arg = self.arg_at(arg_idx);
@@ -166,6 +198,14 @@ impl<'db> Context<'db> {
                 self.current_attribute().span.clone(),
             )),
         }
+    }
+
+    pub (crate) fn get_all_args(&mut self) -> Vec<(ArgumentId, &'db ast::Expression)> {
+        let args = self.attributes.args.iter().map(|arg_id| {
+            (arg_id.clone(), &self.arg_at(*arg_id).value)
+        }).collect();
+        self.attributes.args.clear();
+        args
     }
 
     /// This must be called at the end of arguments validation. It will report errors for each argument that was not used by the validators. The Drop impl will helpfully panic
@@ -186,7 +226,7 @@ impl<'db> Context<'db> {
         self.discard_arguments();
     }
 
-    /// Counterpart to visit_attributes(). This must be called at the end of the validation of the
+    /// Counterpart to assert_all_attributes_processed(). This must be called at the end of the validation of the
     /// attribute set. The Drop impl will helpfully panic otherwise.
     pub(crate) fn validate_visited_attributes(&mut self) {
         if !self.attributes.args.is_empty() || self.attributes.attribute.is_some() {
@@ -216,7 +256,7 @@ impl<'db> Context<'db> {
         &self.ast[id]
     }
 
-    fn arg_at(&self, idx: ArguementId) -> &'db ast::Argument {
+    fn arg_at(&self, idx: ArgumentId) -> &'db ast::Argument {
         &self.current_attribute().arguments[idx]
     }
 

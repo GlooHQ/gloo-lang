@@ -16,7 +16,7 @@ import type { BamlVSCodePlugin } from '../types'
 import { URI } from 'vscode-uri'
 import StatusBarPanel from '../../panels/StatusBarPanel'
 
-const packageJson = require('../../../package.json') // eslint-disable-line
+const packageJson = require('../../../../package.json') // eslint-disable-line
 
 const BamlConfig = z.optional(
   z.object({
@@ -157,7 +157,7 @@ const activateClient = (
       // need to append line for the show to work for some reason.
       // dont delete this.
       client.outputChannel.appendLine('\n')
-      client.outputChannel.show()
+      client.outputChannel.show(true)
     })
     client.onNotification('baml/message', (message: BAMLMessage) => {
       client.outputChannel.appendLine('baml/message' + JSON.stringify(message, null, 2))

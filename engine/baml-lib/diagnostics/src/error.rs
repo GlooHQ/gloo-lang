@@ -260,6 +260,13 @@ impl DatamodelError {
         Self::new(msg, span)
     }
 
+    pub fn new_invalid_function_syntax_error(func_name: &str, span: Span) -> DatamodelError {
+        Self::new(
+            format!("Invalid syntax for function \"{func_name}\". Use:\nfunction {func_name}(params...) -> ReturnType {{ ... }}"),
+            span,
+        )
+    }
+
     pub fn new_duplicate_enum_value_error(
         enum_name: &str,
         value_name: &str,

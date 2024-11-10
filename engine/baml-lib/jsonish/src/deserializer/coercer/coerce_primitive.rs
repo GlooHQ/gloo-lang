@@ -79,7 +79,7 @@ fn coerce_string(
     }
 }
 
-fn coerce_int(
+pub(super) fn coerce_int(
     ctx: &ParsingContext,
     target: &FieldType,
     value: Option<&crate::jsonish::Value>,
@@ -215,7 +215,7 @@ fn coerce_float(
     }
 }
 
-fn coerce_bool(
+pub(super) fn coerce_bool(
     ctx: &ParsingContext,
     target: &FieldType,
     value: Option<&crate::jsonish::Value>,
@@ -223,26 +223,42 @@ fn coerce_bool(
     if let Some(value) = value {
         match value {
             crate::jsonish::Value::Boolean(b) => Ok(BamlValueWithFlags::Bool((*b).into())),
-            crate::jsonish::Value::String(s) => match s.as_str() {
+            crate::jsonish::Value::String(s) => match s.to_lowercase().as_str() {
                 "true" => Ok(BamlValueWithFlags::Bool(
                     (true, Flag::StringToBool(s.clone())).into(),
                 )),
                 "false" => Ok(BamlValueWithFlags::Bool(
-                    (true, Flag::StringToBool(s.clone())).into(),
+                    (false, Flag::StringToBool(s.clone())).into(),
                 )),
-                _ => match s.to_ascii_lowercase().trim() {
-                    "true" => Ok(BamlValueWithFlags::Bool(
-                        (true, Flag::StringToBool(s.clone())).into(),
-                    )),
-                    "false" => Ok(BamlValueWithFlags::Bool(
-                        (false, Flag::StringToBool(s.clone())).into(),
-                    )),
-                    _ => Err(ctx.error_unexpected_type(target, value)),
-                },
+                _ => {
+                    match super::match_string::match_string(
+                        ctx,
+                        target,
+                        Some(value),
+                        &[
+                            ("true", vec!["true".into(), "True".into(), "TRUE".into()]),
+                            (
+                                "false",
+                                vec!["false".into(), "False".into(), "FALSE".into()],
+                            ),
+                        ],
+                    ) {
+                        Ok(val) => match val.value().as_str() {
+                            "true" => Ok(BamlValueWithFlags::Bool(
+                                (true, Flag::StringToBool(val.value().clone())).into(),
+                            )),
+                            "false" => Ok(BamlValueWithFlags::Bool(
+                                (false, Flag::StringToBool(val.value().clone())).into(),
+                            )),
+                            _ => Err(ctx.error_unexpected_type(target, value)),
+                        },
+                        Err(_) => Err(ctx.error_unexpected_type(target, value)),
+                    }
+                }
             },
             crate::jsonish::Value::Array(items) => {
                 coerce_array_to_singular(ctx, target, &items.iter().collect::<Vec<_>>(), &|value| {
-                    coerce_float(ctx, target, Some(value))
+                    coerce_bool(ctx, target, Some(value))
                 })
             }
             _ => Err(ctx.error_unexpected_type(target, value)),

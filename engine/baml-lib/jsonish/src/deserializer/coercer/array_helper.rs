@@ -2,7 +2,7 @@ use std::any::Any;
 
 use crate::deserializer::{deserialize_flags::Flag, types::BamlValueWithFlags};
 use anyhow::Result;
-use internal_baml_core::ir::FieldType;
+use internal_baml_core::{ast::Field, ir::FieldType};
 
 use super::{ParsingContext, ParsingError};
 
@@ -13,10 +13,8 @@ pub fn coerce_array_to_singular(
     coercion: &dyn (Fn(&crate::jsonish::Value) -> Result<BamlValueWithFlags, ParsingError>),
 ) -> Result<BamlValueWithFlags, ParsingError> {
     let parsed = items.iter().map(|item| coercion(item)).collect::<Vec<_>>();
-    match pick_best(ctx, target, &parsed) {
-        Ok(v) => Ok(v),
-        Err(e) => Err(e),
-    }
+
+    pick_best(ctx, target, &parsed)
 }
 
 pub(super) fn pick_best(
@@ -31,7 +29,7 @@ pub(super) fn pick_best(
         return first.clone();
     }
 
-    let mut res_index = (0..res.len())
+    let res_index = (0..res.len())
         .map(|i| match res[i] {
             Ok(ref v) => (i, v.score()),
             Err(_) => (i, i32::max_value()),
@@ -61,7 +59,12 @@ pub(super) fn pick_best(
     // Sort by (false, score, index)
     all_valid_scores.sort_by(
         |&(a, a_score, a_default, a_val), &(b, b_score, b_default, b_val)| {
-            if a_val.r#type() == b_val.r#type() && matches!(a_val, BamlValueWithFlags::List(_, _)) {
+            // TODO: This is a bit of a hack. We should likely use some is_subtype_of logic here
+            // to ensure that we're accepting the "best" type.
+            // E.g. if a is a subtype of b, we should prefer a over b. (empty list is a subtype of any list)
+            if matches!(a_val, BamlValueWithFlags::List(_, _))
+                && matches!(b_val, BamlValueWithFlags::List(_, _))
+            {
                 let a_is_single = a_val
                     .conditions()
                     .flags
@@ -78,8 +81,105 @@ pub(super) fn pick_best(
                     (true, false) => return std::cmp::Ordering::Greater,
                     // Return A
                     (false, true) => return std::cmp::Ordering::Less,
-                    _ => {}
+                    _ => {
+                        if let (
+                            BamlValueWithFlags::List(_, items_a),
+                            BamlValueWithFlags::List(_, items_b),
+                        ) = (a_val, b_val)
+                        {
+                            let unparseables_a = a_val
+                                .conditions()
+                                .flags
+                                .iter()
+                                .filter(|f| matches!(f, Flag::ArrayItemParseError(..)))
+                                .count();
+                            let unparseables_b = b_val
+                                .conditions()
+                                .flags
+                                .iter()
+                                .filter(|f| matches!(f, Flag::ArrayItemParseError(..)))
+                                .count();
+                            match (unparseables_a, unparseables_b) {
+                                // If A has no unparseables and B has unparseables and B is empty, prefer A
+                                (0, b) if b > 0 && items_b.is_empty() => {
+                                    return std::cmp::Ordering::Less
+                                }
+                                // If A has unparseables and B has no unparseables and A is empty, prefer B
+                                (a, 0) if a > 0 && items_a.is_empty() => {
+                                    return std::cmp::Ordering::Greater
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
                 }
+            }
+
+            // De-value default values when comparing
+            match (a_val, b_val) {
+                (
+                    BamlValueWithFlags::Class(_, a_conds, a_props),
+                    BamlValueWithFlags::Class(_, b_conds, b_props),
+                ) => {
+                    // If matching on a union, and one of the choices is picking an object that only
+                    // had a single string coerced from JSON, prefer the other one
+                    // (since string cost is low, its better to pick the other one if possible)
+                    if matches!(target, FieldType::Union(_)) {
+                        let a_is_coerced_string = a_props.len() == 1
+                            && a_props.iter().all(|(_, cond)| {
+                                matches!(cond, BamlValueWithFlags::String(..))
+                                    && cond
+                                        .conditions()
+                                        .flags
+                                        .iter()
+                                        .any(|f| matches!(f, Flag::ImpliedKey(..)))
+                            });
+
+                        let b_is_coerced_string = b_props.len() == 1
+                            && b_props.iter().all(|(_, cond)| {
+                                matches!(cond, BamlValueWithFlags::String(..))
+                                    && cond
+                                        .conditions()
+                                        .flags
+                                        .iter()
+                                        .any(|f| matches!(f, Flag::ImpliedKey(..)))
+                            });
+
+                        match (a_is_coerced_string, b_is_coerced_string) {
+                            // Return B
+                            (true, false) => return std::cmp::Ordering::Greater,
+                            // Return A
+                            (false, true) => return std::cmp::Ordering::Less,
+                            _ => {}
+                        }
+                    }
+
+                    let a_is_default = a_props.iter().all(|(k, cond)| {
+                        cond.conditions().flags.iter().any(|f| {
+                            matches!(
+                                f,
+                                Flag::OptionalDefaultFromNoValue | Flag::DefaultFromNoValue
+                            )
+                        })
+                    });
+                    let b_is_default = b_props.iter().all(|(k, cond)| {
+                        cond.conditions().flags.iter().any(|f| {
+                            matches!(
+                                f,
+                                Flag::OptionalDefaultFromNoValue | Flag::DefaultFromNoValue
+                            )
+                        })
+                    });
+
+                    match (a_is_default, b_is_default) {
+                        // Return B
+                        (true, false) => return std::cmp::Ordering::Greater,
+                        // Return A
+                        (false, true) => return std::cmp::Ordering::Less,
+                        _ => {}
+                    }
+                }
+                _ => {}
             }
 
             match a_default.cmp(&b_default) {

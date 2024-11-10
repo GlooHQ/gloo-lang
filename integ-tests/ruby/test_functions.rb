@@ -12,6 +12,15 @@ describe "ruby<->baml integration tests" do
     res = b.TestFnNamedArgsSingleBool(myBool: true)
     assert_equal res, "true"
 
+    res = b.TestNamedArgsLiteralInt(myInt: 1)
+    assert_includes res, "1"
+
+    res = b.TestNamedArgsLiteralBool(myBool: true)
+    assert_includes res, "true"
+
+    res = b.TestNamedArgsLiteralString(myString: "My String")
+    assert_includes res, "My String"
+
     res = b.TestFnNamedArgsSingleStringList(myArg: ["a", "b", "c"])
     assert_includes res, "a"
     assert_includes res, "b"
@@ -68,6 +77,18 @@ describe "ruby<->baml integration tests" do
     res = b.FnOutputBool(input: "a")
     assert_equal true, res
 
+    integer = b.FnOutputInt(input: "a")
+    assert_equal integer, 5
+
+    literal_integer = b.FnOutputLiteralInt(input: "a")
+    assert_equal literal_integer, 5
+    
+    literal_bool = b.FnOutputLiteralBool(input: "a")
+    assert_equal literal_bool, false
+
+    literal_string = b.FnOutputLiteralString(input: "a")
+    assert_equal literal_string, "example output"
+
     list = b.FnOutputClassList(input: "a")
     assert list.size > 0
     assert list.first.prop1.size > 0
@@ -114,6 +135,7 @@ describe "ruby<->baml integration tests" do
       b.TestRetryExponential()
     end
   end
+
 
   it "works with fallbacks" do
     res = b.TestFallbackClient()
@@ -168,7 +190,6 @@ describe "ruby<->baml integration tests" do
     stream = b.stream.FnOutputClassNested(input: "a")
     msgs = []
     stream.each do |msg|
-      puts msg
       msgs << msg
     end
     final = stream.get_final_response
@@ -287,4 +308,38 @@ describe "ruby<->baml integration tests" do
     )
     assert_match(/london/, capitol.downcase)
   end
+
+  it "uses constraints for unions" do
+    res = b.ExtractContactInfo(document: "reach me at 888-888-8888, or try to email hello@boundaryml.com")
+    assert_equal res['primary']['value'], "888-888-8888"
+  end
+
+  it "uses constraints" do
+    res = b.PredictAge(name: "Greg")
+    assert_equal res["certainty"].checks[:unreasonably_certain].status, "failed"
+  end
+
+  it "uses block_level constraints" do
+    res = b.MakeBlockConstraint()
+    assert_equal res.checks[:cross_field].status, "failed"
+  end
+
+  it "uses nested_block_level constraints" do
+      res = b.MakeNestedBlockConstraint()
+      assert_equal res["nbc"].checks[:cross_field].status, "succeeded"
+  end
+
+  it "uses block_level constraints in function parameters" do
+    block_constraint = Baml::Types::BlockConstraintForParam.new(bcfp: 1, bcfp2: "too long!")
+    assert_raises Exception do
+      res = b.UseBlockConstraint(inp: block_constraint)
+    end
+    nested_block_constraint = Baml::Types::NestedBlockConstraintForParam.new(
+      nbcfp: block_constraint
+    )
+    assert_raises Exception do
+      res = b.UseNestedBlockConstraint(inp: nested_block_constraint)
+    end
+  end
+
 end

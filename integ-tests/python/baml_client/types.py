@@ -16,8 +16,33 @@
 import baml_py
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
-from typing import Dict, List, Optional, Union
+from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union
 
+
+T = TypeVar('T')
+CheckName = TypeVar('CheckName', bound=str)
+
+class Check(BaseModel):
+    name: str
+    expression: str
+    status: str
+
+class Checked(BaseModel, Generic[T,CheckName]):
+    value: T
+    checks: Dict[CheckName, Check]
+
+def get_checks(checks: Dict[CheckName, Check]) -> List[Check]:
+    return list(checks.values())
+
+def all_succeeded(checks: Dict[CheckName, Check]) -> bool:
+    return all(check.status == "succeeded" for check in get_checks(checks))
+
+
+
+class AliasedEnum(str, Enum):
+    
+    KEY_ONE = "KEY_ONE"
+    KEY_TWO = "KEY_TWO"
 
 class Category(str, Enum):
     
@@ -119,10 +144,28 @@ class TestEnum(str, Enum):
     F = "F"
     G = "G"
 
+class BigNumbers(BaseModel):
+    
+    
+    a: int
+    b: float
+
 class Blah(BaseModel):
     
     
     prop4: Optional[str] = None
+
+class BlockConstraint(BaseModel):
+    
+    
+    foo: int
+    bar: str
+
+class BlockConstraintForParam(BaseModel):
+    
+    
+    bcfp: int
+    bcfp2: str
 
 class BookOrder(BaseModel):
     
@@ -151,6 +194,19 @@ class ClassWithImage(BaseModel):
     myImage: baml_py.Image
     param2: str
     fake_image: "FakeImage"
+
+class CompoundBigNumbers(BaseModel):
+    
+    
+    big: "BigNumbers"
+    big_nums: List["BigNumbers"]
+    another: "BigNumbers"
+
+class ContactInfo(BaseModel):
+    
+    
+    primary: Union["PhoneNumber", "EmailAddress"]
+    secondary: Union["PhoneNumber", "EmailAddress", None]
 
 class CustomTaskResult(BaseModel):
     
@@ -190,6 +246,11 @@ class DynamicOutput(BaseModel):
     model_config = ConfigDict(extra='allow')
     
 
+class Earthling(BaseModel):
+    
+    
+    age: Checked[int,Literal["earth_aged", "no_infants"]]
+
 class Education(BaseModel):
     
     
@@ -205,6 +266,11 @@ class Email(BaseModel):
     subject: str
     body: str
     from_address: str
+
+class EmailAddress(BaseModel):
+    
+    
+    value: str
 
 class Event(BaseModel):
     
@@ -228,6 +294,13 @@ class FlightConfirmation(BaseModel):
     arrivalTime: str
     seatNumber: str
 
+class FooAny(BaseModel):
+    
+    
+    planetary_age: Union["Martian", "Earthling"]
+    certainty: Checked[int,Literal["unreasonably_certain"]]
+    species: Checked[str,Literal["regex_bad", "regex_good", "trivial"]]
+
 class GroceryReceipt(BaseModel):
     
     
@@ -249,6 +322,48 @@ class InnerClass2(BaseModel):
     prop2: int
     prop3: float
 
+class InputClass(BaseModel):
+    
+    
+    key: str
+    key2: str
+
+class InputClassNested(BaseModel):
+    
+    
+    key: str
+    nested: "InputClass"
+
+class LiteralClassHello(BaseModel):
+    
+    
+    prop: Literal["hello"]
+
+class LiteralClassOne(BaseModel):
+    
+    
+    prop: Literal["one"]
+
+class LiteralClassTwo(BaseModel):
+    
+    
+    prop: Literal["two"]
+
+class MalformedConstraints(BaseModel):
+    
+    
+    foo: Checked[int,Literal["foo_check"]]
+
+class MalformedConstraints2(BaseModel):
+    
+    
+    foo: int
+
+class Martian(BaseModel):
+    
+    
+    age: Checked[int,Literal["young_enough"]]
+
 class NamedArgsSingleClass(BaseModel):
     
     
@@ -268,6 +383,16 @@ class Nested2(BaseModel):
     
     prop11: Union[str, Optional[None]]
     prop12: Union[str, Optional[None]]
+
+class NestedBlockConstraint(BaseModel):
+    
+    
+    nbc: Checked["BlockConstraint",Literal["cross_field"]]
+
+class NestedBlockConstraintForParam(BaseModel):
+    
+    
+    nbcfp: "BlockConstraintForParam"
 
 class OptionalTest_Prop1(BaseModel):
     
@@ -289,12 +414,28 @@ class OrderInfo(BaseModel):
     tracking_number: Optional[str] = None
     estimated_arrival_date: Optional[str] = None
 
+class OriginalA(BaseModel):
+    
+    
+    value: int
+
+class OriginalB(BaseModel):
+    
+    model_config = ConfigDict(extra='allow')
+    
+    value: int
+
 class Person(BaseModel):
     
     model_config = ConfigDict(extra='allow')
     
     name: Optional[str] = None
     hair_color: Optional[Union["Color", str]] = None
+
+class PhoneNumber(BaseModel):
+    
+    
+    value: str
 
 class Quantity(BaseModel):
     
@@ -313,6 +454,7 @@ class ReceiptInfo(BaseModel):
     
     items: List["ReceiptItem"]
     total_cost: Optional[float] = None
+    venue: Union[Literal["barisa"], Literal["ox_burger"]]
 
 class ReceiptItem(BaseModel):
     
@@ -326,6 +468,7 @@ class Recipe(BaseModel):
     
     
     ingredients: Dict[str, "Quantity"]
+    recipe_type: Union[Literal["breakfast"], Literal["dinner"]]
 
 class Resume(BaseModel):
     
@@ -395,6 +538,13 @@ class TestOutputClass(BaseModel):
     
     prop1: str
     prop2: int
+
+class TwoStoriesOneTitle(BaseModel):
+    
+    
+    title: str
+    story_a: str
+    story_b: str
 
 class UnionTest_ReturnType(BaseModel):
     

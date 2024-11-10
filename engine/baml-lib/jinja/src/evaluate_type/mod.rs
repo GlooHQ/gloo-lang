@@ -15,9 +15,11 @@ use minijinja::machinery::{ast::Expr, Span};
 
 pub use self::types::Type;
 
-pub use self::types::PredefinedTypes;
+pub use self::types::{JinjaContext, PredefinedTypes};
 
 pub use self::stmt::get_variable_types;
+
+pub use self::expr::evaluate_type;
 
 #[derive(Debug, Clone)]
 pub struct TypeError {
@@ -202,7 +204,7 @@ impl TypeError {
             message: format!(
                 "'{}' is {}, expected {}",
                 pretty_print::pretty_print(expr),
-                if *got == Type::Undefined {
+                if got.is_subtype_of(&Type::Undefined) {
                     "undefined".to_string()
                 } else {
                     format!("a {}", got.name())

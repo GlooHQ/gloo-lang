@@ -18,8 +18,8 @@ module Baml
     class TypeBuilder
         def initialize
             @registry = Baml::Ffi::TypeBuilder.new
-            @classes = Set[ "Blah",  "BookOrder",  "ClassOptionalOutput",  "ClassOptionalOutput2",  "ClassWithImage",  "CustomTaskResult",  "DummyOutput",  "DynInputOutput",  "DynamicClassOne",  "DynamicClassTwo",  "DynamicOutput",  "Education",  "Email",  "Event",  "FakeImage",  "FlightConfirmation",  "GroceryReceipt",  "InnerClass",  "InnerClass2",  "NamedArgsSingleClass",  "Nested",  "Nested2",  "OptionalTest_Prop1",  "OptionalTest_ReturnType",  "OrderInfo",  "Person",  "Quantity",  "RaysData",  "ReceiptInfo",  "ReceiptItem",  "Recipe",  "Resume",  "Schema",  "SearchParams",  "SomeClassNestedDynamic",  "StringToClassEntry",  "TestClassAlias",  "TestClassNested",  "TestClassWithEnum",  "TestOutputClass",  "UnionTest_ReturnType",  "WithReasoning", ]
-            @enums = Set[ "Category",  "Category2",  "Category3",  "Color",  "DataType",  "DynEnumOne",  "DynEnumTwo",  "EnumInClass",  "EnumOutput",  "Hobby",  "NamedArgsSingleEnum",  "NamedArgsSingleEnumList",  "OptionalTest_CategoryType",  "OrderStatus",  "Tag",  "TestEnum", ]
+            @classes = Set[ "BigNumbers",  "Blah",  "BlockConstraint",  "BlockConstraintForParam",  "BookOrder",  "ClassOptionalOutput",  "ClassOptionalOutput2",  "ClassWithImage",  "CompoundBigNumbers",  "ContactInfo",  "CustomTaskResult",  "DummyOutput",  "DynInputOutput",  "DynamicClassOne",  "DynamicClassTwo",  "DynamicOutput",  "Earthling",  "Education",  "Email",  "EmailAddress",  "Event",  "FakeImage",  "FlightConfirmation",  "FooAny",  "GroceryReceipt",  "InnerClass",  "InnerClass2",  "InputClass",  "InputClassNested",  "LiteralClassHello",  "LiteralClassOne",  "LiteralClassTwo",  "MalformedConstraints",  "MalformedConstraints2",  "Martian",  "NamedArgsSingleClass",  "Nested",  "Nested2",  "NestedBlockConstraint",  "NestedBlockConstraintForParam",  "OptionalTest_Prop1",  "OptionalTest_ReturnType",  "OrderInfo",  "OriginalA",  "OriginalB",  "Person",  "PhoneNumber",  "Quantity",  "RaysData",  "ReceiptInfo",  "ReceiptItem",  "Recipe",  "Resume",  "Schema",  "SearchParams",  "SomeClassNestedDynamic",  "StringToClassEntry",  "TestClassAlias",  "TestClassNested",  "TestClassWithEnum",  "TestOutputClass",  "TwoStoriesOneTitle",  "UnionTest_ReturnType",  "WithReasoning", ]
+            @enums = Set[ "AliasedEnum",  "Category",  "Category2",  "Category3",  "Color",  "DataType",  "DynEnumOne",  "DynEnumTwo",  "EnumInClass",  "EnumOutput",  "Hobby",  "NamedArgsSingleEnum",  "NamedArgsSingleEnumList",  "OptionalTest_CategoryType",  "OrderStatus",  "Tag",  "TestEnum", ]
         end
 
         def string
@@ -133,6 +133,10 @@ module Baml
         
         def DynamicOutput
             ClassBuilder.new(@registry, "DynamicOutput", Set[])
+        end
+        
+        def OriginalB
+            ClassBuilder.new(@registry, "OriginalB", Set[ "value", ])
         end
         
         def Person

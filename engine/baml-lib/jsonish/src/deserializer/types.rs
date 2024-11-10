@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use baml_types::{BamlMap, BamlMedia, BamlValue};
+use baml_types::{BamlMap, BamlMedia, BamlValue, BamlValueWithMeta, Constraint, JinjaExpression};
 use serde_json::json;
 use strsim::jaro;
 
@@ -229,8 +229,14 @@ impl BamlValueWithFlags {
 
 #[derive(Debug, Clone)]
 pub struct ValueWithFlags<T> {
-    value: T,
+    pub value: T,
     pub(super) flags: DeserializerConditions,
+}
+
+impl<T> ValueWithFlags<T> {
+    pub fn value(&self) -> &T {
+        &self.value
+    }
 }
 
 impl<T> From<T> for ValueWithFlags<T> {
@@ -432,5 +438,35 @@ impl std::fmt::Display for BamlValueWithFlags {
         };
 
         Ok(())
+    }
+}
+
+impl From<BamlValueWithFlags> for BamlValueWithMeta<Vec<(String, JinjaExpression, bool)>> {
+    fn from(baml_value: BamlValueWithFlags) -> Self {
+        use BamlValueWithFlags::*;
+        let c = baml_value.conditions().constraint_results();
+        match baml_value {
+            String(ValueWithFlags { value, .. }) => BamlValueWithMeta::String(value, c),
+            Int(ValueWithFlags { value, .. }) => BamlValueWithMeta::Int(value, c),
+            Float(ValueWithFlags { value, .. }) => BamlValueWithMeta::Float(value, c),
+            Bool(ValueWithFlags { value, .. }) => BamlValueWithMeta::Bool(value, c),
+            Map(_, values) => BamlValueWithMeta::Map(
+                values.into_iter().map(|(k, v)| (k, v.1.into())).collect(),
+                c,
+            ), // TODO: (Greg) I discard the DeserializerConditions tupled up with the value of the BamlMap. I'm not sure why BamlMap value is (DeserializerContitions, BamlValueWithFlags) in the first place.
+            List(_, values) => {
+                BamlValueWithMeta::List(values.into_iter().map(|v| v.into()).collect(), c)
+            }
+            Media(ValueWithFlags { value, .. }) => BamlValueWithMeta::Media(value, c),
+            Enum(enum_name, ValueWithFlags { value, .. }) => {
+                BamlValueWithMeta::Enum(enum_name, value, c)
+            }
+            Class(class_name, _, fields) => BamlValueWithMeta::Class(
+                class_name,
+                fields.into_iter().map(|(k, v)| (k, v.into())).collect(),
+                c,
+            ),
+            Null(_) => BamlValueWithMeta::Null(c),
+        }
     }
 }

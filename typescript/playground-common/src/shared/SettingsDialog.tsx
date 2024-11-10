@@ -27,7 +27,11 @@ import {
   SettingsIcon,
   Trash2Icon,
 } from 'lucide-react'
-import { envKeyValuesAtom, runtimeRequiredEnvVarsAtom } from '../baml_wasm_web/EventListener'
+import {
+  envKeyValuesAtom,
+  hasClosedEnvVarsDialogAtom,
+  runtimeRequiredEnvVarsAtom,
+} from '../baml_wasm_web/EventListener'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip'
 import clsx from 'clsx'
@@ -112,12 +116,19 @@ const requiredButUnsetAtom = atom((get) => {
   )
 })
 
+const requiredAndSetCountAtom = atom((get) => {
+  const envvars = get(envvarsAtom)
+  return get(runtimeRequiredEnvVarsAtom).filter((k) =>
+    envvars.some(({ key, value }) => k === key && value && value.length > 0),
+  ).length
+})
+
 type EnvVar = { key: string; value: string; type: 'baml' | 'tracing' | 'user' | 'config'; index: number | null }
 const EnvvarInput: React.FC<{ envvar: EnvVar }> = ({ envvar }) => {
   const [showEnvvarValues] = useAtom(showEnvvarValuesAtom)
   const setEnvKeyValue = useSetAtom(envKeyValuesAtom)
   return (
-    <div className='flex flex-row items-center gap-2 my-2'>
+    <div className='flex flex-row gap-2 items-center my-2'>
       <Input
         type='text'
         value={envvar.key}
@@ -173,7 +184,24 @@ const EnvvarInput: React.FC<{ envvar: EnvVar }> = ({ envvar }) => {
 export const ShowSettingsButton: React.FC<{ iconClassName: string }> = ({ iconClassName }) => {
   const setShowSettings = useSetAtom(showSettingsAtom)
   const requiredButUnset = useAtomValue(requiredButUnsetAtom)
+  const requiredAndSetCount = useAtomValue(requiredAndSetCountAtom)
+  const requiredEnvVars = useAtomValue(runtimeRequiredEnvVarsAtom)
   const requiredButUnsetCount = requiredButUnset.length
+  const hasClosedEnvVarsDialog = useAtomValue(hasClosedEnvVarsDialogAtom)
+  useEffect(() => {
+    if ((window as any).next?.version) {
+      // dont run in nextjs
+      return
+    }
+    if (requiredAndSetCount === 0 && requiredEnvVars.length > 0) {
+      // no env vars have been set at all pop up the dialog
+      // but only if we haven't already closed the dialog
+      if (!hasClosedEnvVarsDialog) {
+        setShowSettings(true)
+      }
+    }
+  }, [requiredAndSetCount, requiredEnvVars, setShowSettings])
+
   if ((window as any).next?.version) {
     // dont run in nextjs
     return null
@@ -186,7 +214,7 @@ export const ShowSettingsButton: React.FC<{ iconClassName: string }> = ({ iconCl
     >
       <SettingsIcon className='w-4' /> Env Vars
       {requiredButUnsetCount > 0 && (
-        <div className='absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-yellow-500 border-2 border-white rounded-full -top-2 -end-3 dark:border-gray-900'>
+        <div className='inline-flex absolute -top-2 justify-center items-center w-6 h-6 text-xs font-bold text-white bg-yellow-500 rounded-full border-2 border-white -end-3 dark:border-gray-900'>
           {requiredButUnsetCount}
         </div>
       )}
@@ -219,16 +247,23 @@ export const SettingsDialog: React.FC = () => {
   const [enableObservability, setEnableObservability] = useState(
     envvars.some((t) => t.type === 'tracing' && t.value.length > 0),
   )
+  const [hasClosedEnvVarsDialog, setHasClosedEnvVarsDialog] = useAtom(hasClosedEnvVarsDialogAtom)
 
   return (
-    <Dialog open={showSettings} onOpenChange={setShowSettings}>
+    <Dialog
+      open={showSettings}
+      onOpenChange={(open) => {
+        setShowSettings(open)
+        setHasClosedEnvVarsDialog(true)
+      }}
+    >
       <DialogContent className=' min-h-[550px] max-h-[550px] overflow-y-auto bg-vscode-editorWidget-background flex flex-col border-vscode-textSeparator-foreground overflow-x-clip'>
-        <DialogHeader className='flex flex-row items-end gap-x-4'>
+        <DialogHeader className='flex flex-row gap-x-4 items-end'>
           <DialogTitle className='font-semibold'>Environment variables</DialogTitle>
           <Button
             variant='ghost'
             size='icon'
-            className='flex flex-row items-center p-1 py-0 text-xs w-fit h-fit gap-x-2 hover:bg-vscode-descriptionForeground'
+            className='flex flex-row gap-x-2 items-center p-1 py-0 text-xs w-fit h-fit hover:bg-vscode-descriptionForeground'
             onClick={() => setShowEnvvarValues((prev) => !prev)}
           >
             {showEnvvarValues ? <ShowIcon className='h-4' /> : <HideIcon className='h-4' />}
@@ -248,7 +283,12 @@ export const SettingsDialog: React.FC = () => {
               <>
                 <p className='text-xs italic text-vscode-descriptionForeground'>
                   You can get these from{' '}
-                  <a className='text-blue-400 underline' target='_blank' href='https://app.boundaryml.com'>
+                  <a
+                    className='text-blue-400 underline'
+                    target='_blank'
+                    href='https://app.boundaryml.com'
+                    rel='noreferrer'
+                  >
                     Boundary Studio
                   </a>
                 </p>
@@ -263,7 +303,8 @@ export const SettingsDialog: React.FC = () => {
           <div className='flex flex-col gap-1'>
             <span className='text-sm text-vscode-foreground'>From .baml files</span>
             <p className='text-xs italic text-vscode-descriptionForeground'>
-              Environment variables are loaded lazily, only set any you want to use.
+              Environment variables are loaded lazily, only set any you want to use. They are stored locally in your
+              machine.
             </p>
             {envvars
               .filter((t) => t.type === 'baml')
@@ -281,7 +322,7 @@ export const SettingsDialog: React.FC = () => {
             <Button
               variant='ghost'
               size='icon'
-              className='flex flex-row items-center p-1 text-xs w-fit h-fit gap-x-2 hover:bg-vscode-descriptionForeground'
+              className='flex flex-row gap-x-2 items-center p-1 text-xs w-fit h-fit hover:bg-vscode-descriptionForeground'
               onClick={() => setEnvKeyValue({ itemIndex: null, key: 'NEW_ENV_VAR' })}
             >
               <PlusIcon size={14} /> <div>Add item</div>

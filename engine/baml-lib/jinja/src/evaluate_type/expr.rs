@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
+use baml_types::LiteralValue;
 use minijinja::machinery::ast;
+use std::str::FromStr;
 
 use super::{
     pretty_print::pretty_print,
@@ -128,7 +130,7 @@ fn tracker_visit_expr<'a>(
 
             match expr.op {
                 ast::BinOpKind::Add => {
-                    if lhs == Type::String || rhs == Type::String {
+                    if lhs.is_subtype_of(&Type::String) || rhs.is_subtype_of(&Type::String) {
                         Type::String
                     } else {
                         Type::Number
@@ -200,6 +202,7 @@ fn tracker_visit_expr<'a>(
                 "max",
                 "min",
                 "pprint",
+                "regex_match",
                 "reject",
                 "rejectattr",
                 "replace",
@@ -220,7 +223,7 @@ fn tracker_visit_expr<'a>(
             ];
             match expr.name {
                 "abs" => {
-                    if inner.matches(&Type::Number) {
+                    if Type::Number.is_subtype_of(&inner) {
                         ensure_type("number");
                     }
                     Type::Number
@@ -229,7 +232,7 @@ fn tracker_visit_expr<'a>(
                 "batch" => Type::Unknown,
                 "bool" => Type::Bool,
                 "capitalize" | "escape" => {
-                    if inner.matches(&Type::String) {
+                    if Type::String.is_subtype_of(&inner) {
                         ensure_type("string");
                     }
                     Type::String
@@ -267,7 +270,7 @@ fn tracker_visit_expr<'a>(
                 },
                 "list" => Type::List(Box::new(Type::Unknown)),
                 "lower" | "upper" => {
-                    if inner.matches(&Type::String) {
+                    if Type::String.is_subtype_of(&inner) {
                         ensure_type("string");
                     }
                     Type::String
@@ -276,6 +279,7 @@ fn tracker_visit_expr<'a>(
                 "max" => Type::Unknown,
                 "min" => Type::Unknown,
                 "pprint" => Type::Unknown,
+                "regex_match" => Type::Bool,
                 "reject" => Type::Unknown,
                 "rejectattr" => Type::Unknown,
                 "replace" => Type::String,
@@ -368,8 +372,13 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
     match v.kind() {
         minijinja::value::ValueKind::Undefined => Type::Undefined,
         minijinja::value::ValueKind::None => Type::None,
-        minijinja::value::ValueKind::Bool => Type::Bool,
-        minijinja::value::ValueKind::String => Type::String,
+        minijinja::value::ValueKind::Bool => {
+            match bool::from_str(&v.to_string()) {
+                Ok(b) => Type::Literal(LiteralValue::Bool(b)),
+                Err(_) => Type::Bool,
+            }
+        },
+        minijinja::value::ValueKind::String => Type::Literal(LiteralValue::String(v.to_string())),
         minijinja::value::ValueKind::Seq => {
             let list = v.as_seq().unwrap();
             match list.item_count() {
@@ -380,16 +389,21 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
                         .map(|x| infer_const_type(&x))
                         .fold(None, |acc, x| match acc {
                             None => Some(x),
-                            Some(Type::Union(mut acc)) => {
-                                if acc.contains(&x) {
-                                    Some(Type::Union(acc))
+                            Some(Type::Union(acc)) => {
+                                let t = Type::Union(acc);
+                                if x.is_subtype_of(&t) {
+                                    Some(t)
                                 } else {
-                                    acc.push(x);
-                                    Some(Type::Union(acc))
+                                    if let Type::Union(mut acc) = t {
+                                        acc.push(x);
+                                        Some(Type::Union(acc))
+                                    } else {
+                                        unreachable!()
+                                    }
                                 }
                             }
                             Some(acc) => {
-                                if acc == x {
+                                if x.is_subtype_of(&acc) {
                                     Some(acc)
                                 } else {
                                     Some(Type::Union(vec![acc, x]))
@@ -403,15 +417,17 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
         }
         minijinja::value::ValueKind::Map => Type::Unknown,
         // We don't handle these types
-        minijinja::value::ValueKind::Number => Type::Number,
+        minijinja::value::ValueKind::Number => {
+            match i64::from_str(&v.to_string()) {
+                Ok(i) => Type::Literal(LiteralValue::Int(i)),
+                Err(_) => Type::Number,
+            }
+        },
         minijinja::value::ValueKind::Bytes => Type::Undefined,
     }
 }
 
-pub(super) fn evaluate_type(
-    expr: &ast::Expr,
-    types: &PredefinedTypes,
-) -> Result<Type, Vec<TypeError>> {
+pub fn evaluate_type(expr: &ast::Expr, types: &PredefinedTypes) -> Result<Type, Vec<TypeError>> {
     let mut state = ScopeTracker::new();
     let result = tracker_visit_expr(expr, &mut state, types);
 

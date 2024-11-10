@@ -11,12 +11,12 @@
     },
     "@gloo-ai/baml-schema-wasm-node#build": {
       "dependsOn": ["^build"],
-      "inputs": ["../../engine/**/*.rs", "../../engine/**/*.toml", "../../engine/**/*.j2"],
+      "inputs": ["../../engine/**/*.rs", "../../engine/**/*.toml", "../../engine/**/*.j2", "../../engine/**/*.pest"],
       "outputs": ["dist/**"]
     },
     "@gloo-ai/baml-schema-wasm-web#build": {
       "dependsOn": ["^build", "@gloo-ai/baml-schema-wasm-node#build"],
-      "inputs": ["../../engine/**/*.rs", "../../engine/**/*.toml", "../../engine/**/*.j2"],
+      "inputs": ["../../engine/**/*.rs", "../../engine/**/*.toml", "../../engine/**/*.j2", "../../engine/**/*.pest"],
       "outputs": ["dist/**"]
     },
     "@gloo-ai/web-panel#build": {

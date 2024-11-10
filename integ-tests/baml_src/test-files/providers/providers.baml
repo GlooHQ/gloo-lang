@@ -55,6 +55,13 @@ function TestAws(input: string) -> string {
   "#
 }
 
+function TestAwsInvalidRegion(input: string) -> string {
+  client AwsBedrockInvalidRegion
+  prompt #"
+    Write a nice short story about {{ input }}
+  "#
+}
+
 function TestOpenAIShorthand(input: string) -> string {
   client "openai/gpt-4o-mini"
   prompt #"
@@ -72,6 +79,7 @@ function TestAnthropicShorthand(input: string) -> string {
 test TestProvider {
   functions [
     TestAnthropic, TestVertex, PromptTestOpenAI, TestAzure, TestOllama, TestGemini, TestAws,
+    TestAwsInvalidRegion,
     TestOpenAIShorthand,
     TestAnthropicShorthand
   ]
@@ -81,10 +89,12 @@ test TestProvider {
 }
 
 
-function TestCaching(input: string) -> string {
+function TestCaching(input: string, not_cached: string) -> string {
   client ClaudeWithCaching
   prompt #"
-    {{ _.role('user', cache_control={"type": "ephemeral"}) }}
+    {{ _.role('system', cache_control={"type": "ephemeral"}) }}
     Describe this in 5 words: {{ input }}
+    {{ _.role('user') }}
+    {{ not_cached }}
   "#
 }

@@ -1,16 +1,16 @@
-use std::{path::PathBuf, process::Command};
+use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use baml_types::{BamlMediaType, FieldType, TypeValue};
+use baml_types::{BamlMediaType, FieldType, LiteralValue, TypeValue};
 use indexmap::IndexMap;
 use internal_baml_core::ir::{
     repr::{Function, IntermediateRepr, Node, Walker},
     ClassWalker, EnumWalker,
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::json;
 
-use crate::dir_writer::{FileCollector, LanguageFeatures, RemoveDirBehavior};
+use crate::{dir_writer::{FileCollector, LanguageFeatures, RemoveDirBehavior}, field_type_attributes, TypeCheckAttributes};
 
 #[derive(Default)]
 pub(super) struct OpenApiLanguageFeatures {}
@@ -60,7 +60,7 @@ impl LanguageFeatures for OpenApiLanguageFeatures {
     );
 }
 
-struct OpenApiSchema<'ir> {
+pub struct OpenApiSchema<'ir> {
     paths: Vec<OpenApiMethodDef<'ir>>,
     schemas: IndexMap<&'ir str, TypeSpecWithMeta>,
 }
@@ -70,46 +70,6 @@ impl Serialize for OpenApiSchema<'_> {
         &self,
         serializer: S,
     ) -> core::result::Result<S::Ok, S::Error> {
-        let baml_image_schema = TypeSpecWithMeta {
-            meta: TypeMetadata {
-                title: Some("BamlImage".to_string()),
-                r#enum: None,
-                r#const: None,
-                nullable: false,
-            },
-            type_spec: TypeSpec::Inline(TypeDef::Class {
-                properties: vec![
-                    (
-                        "base64".to_string(),
-                        TypeSpecWithMeta {
-                            meta: TypeMetadata {
-                                title: None,
-                                r#enum: None,
-                                r#const: None,
-                                nullable: false,
-                            },
-                            type_spec: TypeSpec::Inline(TypeDef::String),
-                        },
-                    ),
-                    (
-                        "media_type".to_string(),
-                        TypeSpecWithMeta {
-                            meta: TypeMetadata {
-                                title: None,
-                                r#enum: None,
-                                r#const: None,
-                                nullable: true,
-                            },
-                            type_spec: TypeSpec::Inline(TypeDef::String),
-                        },
-                    ),
-                ]
-                .into_iter()
-                .collect(),
-                required: vec!["base64".to_string()],
-                additional_properties: false,
-            }),
-        };
         let schemas = match self
             .schemas
             .iter()
@@ -271,6 +231,17 @@ impl Serialize for OpenApiSchema<'_> {
                             },
                             "required": ["name", "provider", "options"]
                         })
+                    ),
+                    (  "Check",
+                        json!({
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "expr": { "type": "string" },
+                                "status": { "type": "string" }
+                            }
+
+                        })
                     )
                 ]
                 .into_iter()
@@ -373,6 +344,29 @@ impl<'ir> TryFrom<(&'ir IntermediateRepr, &'_ crate::GeneratorArgs)> for OpenApi
     }
 }
 
+fn check() -> TypeSpecWithMeta {
+    TypeSpecWithMeta {
+        meta: TypeMetadata::default(),
+        type_spec: TypeSpec::Ref{ r#ref: "#components/schemas/Check".to_string() },
+    }
+}
+
+/// The type definition for a single "Checked_*" type. Note that we don't
+/// produce a named type for each of these the way we do for SDK
+/// codegeneration.
+fn type_def_for_checks(checks: TypeCheckAttributes) -> TypeSpecWithMeta {
+    TypeSpecWithMeta {
+        meta: TypeMetadata::default(),
+        type_spec: TypeSpec::Inline(
+            TypeDef::Class {
+                properties: checks.0.iter().map(|check_name| (check_name.clone(), check())).collect(),
+                required: checks.0.into_iter().collect(),
+                additional_properties: false,
+            }
+        )
+    }
+}
+
 impl<'ir> TryFrom<Walker<'ir, &'ir Node<Function>>> for OpenApiMethodDef<'ir> {
     type Error = anyhow::Error;
 
@@ -401,8 +395,10 @@ impl<'ir> TryFrom<Walker<'ir, &'ir Node<Function>>> for OpenApiMethodDef<'ir> {
                     r#const: None,
                     nullable: true,
                 },
-                type_spec: TypeSpec::Ref { r#ref: "#/components/schemas/BamlOptions".into() }
-            }
+                type_spec: TypeSpec::Ref {
+                    r#ref: "#/components/schemas/BamlOptions".into(),
+                },
+            },
         );
         Ok(Self {
             function_name,
@@ -538,6 +534,19 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                     r#ref: format!("#/components/schemas/{}", name),
                 },
             },
+            FieldType::Literal(v) => TypeSpecWithMeta {
+                meta: TypeMetadata {
+                    title: None,
+                    r#enum: None,
+                    r#const: None,
+                    nullable: false,
+                },
+                type_spec: match v {
+                    LiteralValue::Int(_) => TypeSpec::Inline(TypeDef::Int),
+                    LiteralValue::Bool(_) => TypeSpec::Inline(TypeDef::Bool),
+                    LiteralValue::String(_) => TypeSpec::Inline(TypeDef::String),
+                },
+            },
             FieldType::List(inner) => TypeSpecWithMeta {
                 meta: TypeMetadata {
                     title: None,
@@ -590,19 +599,19 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                     },
                 },
             },
-            FieldType::Union(inner) => {
+            FieldType::Union(union) => {
                 let (_nulls, nonnull_types): (Vec<_>, Vec<_>) =
-                    inner.into_iter().partition(|t| t.is_null());
-
-                // dbg!(&null_types);
+                    union.into_iter().partition(|t| t.is_null());
 
                 let one_of = nonnull_types
                     .iter()
                     .map(|t| t.to_type_spec(ir))
                     .collect::<Result<Vec<_>>>()?;
+
                 if one_of.is_empty() {
                     anyhow::bail!("BAML<->OpenAPI unions must have at least one non-null type")
                 }
+
                 TypeSpecWithMeta {
                     meta: TypeMetadata {
                         title: None,
@@ -617,16 +626,37 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                 anyhow::bail!("BAML<->OpenAPI tuple support is not implemented")
             }
             FieldType::Optional(inner) => {
-                let mut type_spec = inner.to_type_spec(ir)?;
+                let type_spec = inner.to_type_spec(ir)?;
                 // TODO: if type_spec is of an enum, consider adding "null" to the list of values
                 // something i saw suggested doing this
                 type_spec
             }
+            FieldType::Constrained{base,..} => {
+                match field_type_attributes(self) {
+                    Some(checks) => {
+                        let base_type_ref = base.to_type_spec(ir)?;
+                        let checks_type_spec = type_def_for_checks(checks);
+                        TypeSpecWithMeta {
+                            meta: TypeMetadata::default(),
+                            type_spec: TypeSpec::Inline(
+                                TypeDef::Class {
+                                    properties: vec![("value".to_string(), base_type_ref),("checks".to_string(), checks_type_spec)].into_iter().collect(),
+                                    required: vec!["value".to_string(), "checks".to_string()],
+                                    additional_properties: false,
+                                }
+                            )
+                        }
+                    }
+                    None => {
+                        base.to_type_spec(ir)?
+                    }
+                }
+            },
         })
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 struct TypeSpecWithMeta {
     #[serde(flatten)]
     meta: TypeMetadata,
@@ -656,7 +686,18 @@ struct TypeMetadata {
     nullable: bool,
 }
 
-#[derive(Debug, Serialize)]
+impl Default for TypeMetadata {
+    fn default() -> Self {
+        TypeMetadata {
+            title: None,
+            r#enum: None,
+            r#const: None,
+            nullable: false,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
 enum TypeSpec {
     Ref {
@@ -673,7 +714,7 @@ enum TypeSpec {
     },
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(tag = "type")]
 enum TypeDef {
     #[serde(rename = "string")]

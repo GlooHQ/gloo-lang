@@ -7,9 +7,14 @@ description.workspace = true
 
 license-file.workspace = true
 
+[lints.rust]
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+
 [dependencies]
 baml-types = { path = "../baml-types" }
-internal-baml-jinja = { path = "../jinja" }
+internal-baml-jinja-types = { path = "../jinja" }
 internal-baml-diagnostics = { path = "../diagnostics" }
 internal-baml-schema-ast = { path = "../schema-ast" }
 internal-baml-prompt-parser = { path = "../prompt-parser" }
@@ -25,6 +30,7 @@ serde.workspace = true
 serde_json.workspace = true
 regex = "1.10.2"
 anyhow.workspace = true
+itertools = "0.13.0"
 
 [features]
 default = []

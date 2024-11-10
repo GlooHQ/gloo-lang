@@ -1,13 +1,16 @@
 {
   "folders": [
     {
-      "path": ".baml"
+      "path": "."
     },
     {
       "path": ".github"
     },
     {
       "path": "docs"
+    },
+    {
+      "path": "fern"
     },
     {
       "path": "engine"

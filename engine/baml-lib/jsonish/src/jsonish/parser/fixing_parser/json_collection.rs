@@ -10,6 +10,7 @@ pub enum JsonCollection {
     QuotedString(String),
     TripleQuotedString(String),
     SingleQuotedString(String),
+    BacktickString(String),
     // Handles numbers, booleans, null, and unquoted strings
     UnquotedString(String),
     // Starting with // or #
@@ -25,6 +26,7 @@ impl JsonCollection {
             JsonCollection::Array(_) => "Array",
             JsonCollection::QuotedString(_) => "String",
             JsonCollection::SingleQuotedString(_) => "String",
+            JsonCollection::BacktickString(_) => "String",
             JsonCollection::TripleQuotedString(_) => "TripleQuotedString",
             JsonCollection::UnquotedString(_) => "UnquotedString",
             JsonCollection::TrailingComment(_) => "Comment",
@@ -39,9 +41,9 @@ impl From<JsonCollection> for Option<Value> {
             JsonCollection::TrailingComment(_) | JsonCollection::BlockComment(_) => return None,
             JsonCollection::Object(keys, values) => {
                 // log::debug!("keys: {:?}", keys);
-                let mut object = BamlMap::new();
+                let mut object = Vec::new();
                 for (key, value) in keys.into_iter().zip(values.into_iter()) {
-                    object.insert(key, value);
+                    object.push((key, value));
                 }
                 Value::Object(object)
             }
@@ -49,6 +51,7 @@ impl From<JsonCollection> for Option<Value> {
             JsonCollection::QuotedString(s) => Value::String(s),
             JsonCollection::TripleQuotedString(s) => Value::String(s),
             JsonCollection::SingleQuotedString(s) => Value::String(s),
+            JsonCollection::BacktickString(s) => Value::String(s),
             JsonCollection::UnquotedString(s) => {
                 let s = s.trim();
                 if s == "true" {

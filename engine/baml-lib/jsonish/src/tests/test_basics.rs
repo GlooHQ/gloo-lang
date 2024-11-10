@@ -42,6 +42,52 @@ test_deserializer!(test_bool_3, EMPTY_FILE, "false", FieldType::bool(), false);
 test_deserializer!(test_bool_4, EMPTY_FILE, "False", FieldType::bool(), false);
 
 test_deserializer!(
+    test_bool_wrapped,
+    EMPTY_FILE,
+    "The answer is true",
+    FieldType::bool().as_list(),
+    [true]
+);
+
+test_deserializer!(
+    test_bool_wrapped_mismatched_case,
+    EMPTY_FILE,
+    "The answer is True",
+    FieldType::bool().as_list(),
+    [true]
+);
+
+test_deserializer!(
+    test_bool_wrapped_mismatched_case_preceded_by_text,
+    EMPTY_FILE,
+    "The tax return you provided has section for dependents.\n\nAnswer: **True**",
+    FieldType::bool(),
+    true
+);
+
+test_deserializer!(
+    test_bool_mismatched_case_followed_by_text,
+    EMPTY_FILE,
+    r#"False.\n\nThe statement "2 + 2 = 5" is mathematically incorrect. The correct sum of 2 + 2 is 4, not 5."#,
+    FieldType::bool(),
+    false
+);
+
+test_failing_deserializer!(
+    test_ambiguous_bool,
+    EMPTY_FILE,
+    "The answer is true or false",
+    FieldType::bool()
+);
+
+test_failing_deserializer!(
+    test_elaborate_ambiguous_bool,
+    EMPTY_FILE,
+    r#"False. The statement "2 + 2 = 5" is not accurate according to basic arithmetic. In standard arithmetic, the sum of 2 and 2 is equal to 4, not 5. Therefore, the statement does not hold true."#,
+    FieldType::bool()
+);
+
+test_deserializer!(
     test_float,
     EMPTY_FILE,
     "12111.123",
@@ -729,7 +775,7 @@ FieldType::class("Test"),
       "field10": null,
       "field11": null,
       "field12": null,
-      "field13": null,
+      "field13": "null{\n\"foo1\": {\n\"field1\": \"A thing has been going on poorly\"",
       "field14": null,
       "field15": null,
       "field16": null,

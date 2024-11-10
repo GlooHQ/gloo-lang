@@ -1,0 +1,338 @@
+---
+title: TypeBuilder
+---
+
+
+`TypeBuilder` is used to create or modify output schemas at runtime. It's particularly useful when you have dynamic output structures that can't be determined at compile time - like categories from a database or user-provided schemas.
+
+Here's a simple example of using TypeBuilder to add new enum values before calling a BAML function:
+
+**BAML Code**
+```baml {4}
+enum Category {
+  RED
+  BLUE
+  @@dynamic  // Makes this enum modifiable at runtime
+}
+
+function Categorize(text: string) -> Category {
+  prompt #"
+    Categorize this text:
+    {{ text }}
+
+    {{ ctx.output_format }}
+  "#
+}
+```
+
+**Runtime Usage**
+<CodeBlocks>
+```python Python
+from baml_client.type_builder import TypeBuilder
+from baml_client import b
+
+# Create a TypeBuilder instance
+tb = TypeBuilder()
+
+# Add new values to the Category enum
+tb.Category.add_value('GREEN') 
+tb.Category.add_value('YELLOW')
+
+# Pass the typebuilder when calling the function
+result = await b.Categorize("The sun is bright", {"tb": tb})
+# result can now be RED, BLUE, GREEN, or YELLOW
+```
+```typescript TypeScript
+import { TypeBuilder } from '../baml_client/type_builder'
+import { b } from '../baml_client'
+
+// Create a TypeBuilder instance
+const tb = new TypeBuilder()
+
+// Add new values to the Category enum
+tb.Category.addValue('GREEN')
+tb.Category.addValue('YELLOW')
+
+// Pass the typebuilder when calling the function
+const result = await b.Categorize("The sun is bright", { tb })
+// result can now be RED, BLUE, GREEN, or YELLOW
+```
+```ruby Ruby
+require_relative 'baml_client/client'
+
+# Create a TypeBuilder instance
+tb = Baml::TypeBuilder.new
+
+# Add new values to the Category enum
+tb.Category.add_value('GREEN')
+tb.Category.add_value('YELLOW')
+
+# Pass the typebuilder when calling the function
+result = Baml::Client.categorize(text: "The sun is bright", baml_options: { tb: tb })
+# result can now be RED, BLUE, GREEN, or YELLOW
+```
+</CodeBlocks>
+
+## Dynamic Types
+
+There are two ways to use TypeBuilder:
+1. Modifying existing BAML types marked with `@@dynamic`
+2. Creating entirely new types at runtime
+
+### Modifying Existing Types
+
+To modify an existing BAML type, mark it with `@@dynamic`:
+
+<ParamField path="Classes" type="example">
+```baml
+class User {
+  name string
+  age int
+  @@dynamic  // Allow adding more properties
+}
+```
+
+**Runtime Usage**
+<CodeBlocks>
+```python Python
+tb = TypeBuilder()
+tb.User.add_property('email', tb.string())
+tb.User.add_property('address', tb.string())
+```
+```typescript TypeScript
+const tb = new TypeBuilder()
+tb.User.addProperty('email', tb.string())
+tb.User.addProperty('address', tb.string())
+```
+```ruby Ruby
+tb = Baml::TypeBuilder.new
+tb.User.add_property('email', tb.string)
+tb.User.add_property('address', tb.string)
+```
+</CodeBlocks>
+</ParamField>
+
+<ParamField path="Enums" type="example">
+```baml
+enum Category {
+  VALUE1
+  VALUE2
+  @@dynamic  // Allow adding more values
+}
+```
+
+**Runtime Usage**
+<CodeBlocks>
+```python Python
+tb = TypeBuilder()
+tb.Category.add_value('VALUE3')
+tb.Category.add_value('VALUE4')
+```
+```typescript TypeScript
+const tb = new TypeBuilder()
+tb.Category.addValue('VALUE3')
+tb.Category.addValue('VALUE4')
+```
+```ruby Ruby
+tb = Baml::TypeBuilder.new
+tb.Category.add_value('VALUE3')
+tb.Category.add_value('VALUE4')
+```
+</CodeBlocks>
+</ParamField>
+
+### Creating New Types
+
+You can also create entirely new types at runtime:
+
+<CodeBlocks>
+```python Python
+tb = TypeBuilder()
+
+# Create a new enum
+hobbies = tb.add_enum("Hobbies")
+hobbies.add_value("Soccer")
+hobbies.add_value("Reading")
+
+# Create a new class
+address = tb.add_class("Address") 
+address.add_property("street", tb.string())
+address.add_property("city", tb.string())
+
+# Attach new types to existing BAML type
+tb.User.add_property("hobbies", hobbies.type().list())
+tb.User.add_property("address", address.type())
+```
+```typescript TypeScript
+const tb = new TypeBuilder()
+
+// Create a new enum
+const hobbies = tb.addEnum("Hobbies")
+hobbies.addValue("Soccer")
+hobbies.addValue("Reading")
+
+// Create a new class
+const address = tb.addClass("Address")
+address.addProperty("street", tb.string())
+address.addProperty("city", tb.string())
+
+// Attach new types to existing BAML type
+tb.User.addProperty("hobbies", hobbies.type().list())
+tb.User.addProperty("address", address.type())
+```
+```ruby Ruby
+tb = Baml::TypeBuilder.new
+
+# Create a new enum
+hobbies = tb.add_enum("Hobbies")
+hobbies.add_value("Soccer")
+hobbies.add_value("Reading")
+
+# Create a new class
+address = tb.add_class("Address")
+address.add_property("street", tb.string)
+address.add_property("city", tb.string)
+
+# Attach new types to existing BAML type
+tb.User.add_property("hobbies", hobbies.type.list)
+tb.User.add_property("address", address.type)
+```
+</CodeBlocks>
+
+## Type Builders
+
+TypeBuilder provides methods for building different kinds of types:
+
+| Method | Description | Example |
+|--------|-------------|---------|
+| `string()` | Creates a string type | `tb.string()` |
+| `int()` | Creates an integer type | `tb.int()` |
+| `float()` | Creates a float type | `tb.float()` |
+| `bool()` | Creates a boolean type | `tb.bool()` |
+| `list()` | Makes a type into a list | `tb.string().list()` |
+| `optional()` | Makes a type optional | `tb.string().optional()` |
+
+## Adding Descriptions
+
+You can add descriptions to properties and enum values to help guide the LLM:
+
+<CodeBlocks>
+```python Python
+tb = TypeBuilder()
+
+# Add description to a property
+tb.User.add_property("email", tb.string()) \
+   .description("User's primary email address")
+
+# Add description to an enum value 
+tb.Category.add_value("URGENT") \
+   .description("Needs immediate attention")
+```
+```typescript TypeScript
+const tb = new TypeBuilder()
+
+// Add description to a property
+tb.User.addProperty("email", tb.string())
+   .description("User's primary email address")
+
+// Add description to an enum value
+tb.Category.addValue("URGENT")
+   .description("Needs immediate attention")
+```
+```ruby Ruby
+tb = Baml::TypeBuilder.new
+
+# Add description to a property
+tb.User.add_property("email", tb.string)
+   .description("User's primary email address")
+
+# Add description to an enum value
+tb.Category.add_value("URGENT")
+   .description("Needs immediate attention")
+```
+</CodeBlocks>
+
+## Common Patterns
+
+Here are some common patterns when using TypeBuilder:
+
+1. **Dynamic Categories**: When categories come from a database or external source
+<CodeBlocks>
+```python Python
+categories = fetch_categories_from_db()
+tb = TypeBuilder()
+for category in categories:
+    tb.Category.add_value(category)
+```
+```typescript TypeScript
+const categories = await fetchCategoriesFromDb()
+const tb = new TypeBuilder()
+categories.forEach(category => {
+    tb.Category.addValue(category)
+})
+```
+```ruby Ruby
+categories = fetch_categories_from_db
+tb = Baml::TypeBuilder.new
+categories.each do |category|
+    tb.Category.add_value(category)
+end
+```
+</CodeBlocks>
+
+2. **Form Fields**: When extracting dynamic form fields
+<CodeBlocks>
+```python Python
+fields = get_form_fields()
+tb = TypeBuilder()
+form = tb.add_class("Form")
+for field in fields:
+    form.add_property(field.name, tb.string())
+```
+```typescript TypeScript
+const fields = getFormFields()
+const tb = new TypeBuilder()
+const form = tb.addClass("Form")
+fields.forEach(field => {
+    form.addProperty(field.name, tb.string())
+})
+```
+```ruby Ruby
+fields = get_form_fields
+tb = Baml::TypeBuilder.new
+form = tb.add_class("Form")
+fields.each do |field|
+    form.add_property(field.name, tb.string)
+end
+```
+</CodeBlocks>
+
+3. **Optional Properties**: When some fields might not be present
+<CodeBlocks>
+```python Python
+tb = TypeBuilder()
+tb.User.add_property("middle_name", tb.string().optional())
+```
+```typescript TypeScript
+const tb = new TypeBuilder()
+tb.User.addProperty("middle_name", tb.string().optional())
+```
+```ruby Ruby
+tb = Baml::TypeBuilder.new
+tb.User.add_property("middle_name", tb.string.optional)
+```
+</CodeBlocks>
+
+<Warning>
+All types added through TypeBuilder must be connected to the return type of your BAML function. Standalone types that aren't referenced won't affect the output schema.
+</Warning>
+
+## Future Features
+
+We're working on additional features for TypeBuilder:
+
+- JSON Schema support (awaiting use cases)
+- OpenAPI schema integration  
+- Pydantic model support
+
+If you're interested in these features, please join the discussion in our GitHub issues.

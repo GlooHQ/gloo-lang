@@ -13,13 +13,17 @@ use baml_runtime::{
     internal::llm_client::LLMResponse, BamlRuntime, DiagnosticsError, IRHelper, RenderedPrompt,
 };
 use baml_types::{BamlMediaType, BamlValue, GeneratorOutputType, TypeValue};
+use indexmap::IndexMap;
 use internal_baml_codegen::version_check::GeneratorType;
 use internal_baml_codegen::version_check::{check_version, VersionCheckMode};
+use jsonish::deserializer::deserialize_flags::Flag;
+use jsonish::BamlValueWithFlags;
 
 use baml_runtime::internal::llm_client::orchestrator::ExecutionScope;
 use js_sys::Promise;
 use js_sys::Uint8Array;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -55,6 +59,8 @@ pub fn on_wasm_init() {
             const LOG_LEVEL: log::Level = log::Level::Warn;
         }
     };
+    // This line is required if we want to see normal log::info! messages in JS console logs.
+    wasm_logger::init(wasm_logger::Config::new(LOG_LEVEL));
     match console_log::init_with_level(LOG_LEVEL) {
         Ok(_) => web_sys::console::log_1(
             &format!("Initialized BAML runtime logging as log::{}", LOG_LEVEL).into(),
@@ -140,6 +146,7 @@ impl WasmDiagnosticError {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
+#[derive(Debug)]
 pub struct WasmError {
     #[wasm_bindgen(readonly)]
     pub r#type: String,
@@ -282,7 +289,7 @@ pub struct WasmRuntime {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmFunction {
     #[wasm_bindgen(readonly)]
     pub name: String,
@@ -297,7 +304,7 @@ pub struct WasmFunction {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmSpan {
     #[wasm_bindgen(readonly)]
     pub file_path: String,
@@ -312,7 +319,7 @@ pub struct WasmSpan {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmGeneratorConfig {
     #[wasm_bindgen(readonly)]
     pub output_type: String,
@@ -348,7 +355,7 @@ impl Default for WasmSpan {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmParentFunction {
     #[wasm_bindgen(readonly)]
     pub start: usize,
@@ -359,7 +366,7 @@ pub struct WasmParentFunction {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmTestCase {
     #[wasm_bindgen(readonly)]
     pub name: String,
@@ -374,7 +381,7 @@ pub struct WasmTestCase {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WasmParam {
     #[wasm_bindgen(readonly)]
     pub name: String,
@@ -400,6 +407,8 @@ pub struct WasmTestResponse {
 pub struct WasmParsedTestResponse {
     #[wasm_bindgen(readonly)]
     pub value: String,
+    #[wasm_bindgen(readonly)]
+    pub check_count: usize,
     #[wasm_bindgen(readonly)]
     /// JSON-string of the explanation, if there were any ParsingErrors
     pub explanation: Option<String>,
@@ -469,7 +478,7 @@ impl WasmLLMResponse {
 impl WasmFunctionResponse {
     pub fn parsed_response(&self) -> Option<String> {
         self.function_response
-            .parsed_content()
+            .result_with_constraints_content()
             .map(|p| serde_json::to_string(&BamlValue::from(p)))
             .map_or_else(|_| None, |s| s.ok())
     }
@@ -490,6 +499,78 @@ impl WasmFunctionResponse {
         )
             .into_wasm()
     }
+}
+
+fn flatten_checks(value: &BamlValueWithFlags) -> (serde_json::Value, usize) {
+    type J = serde_json::Value;
+
+    let checks = value
+        .conditions()
+        .flags()
+        .iter()
+        .flat_map(|f| match f {
+            Flag::ConstraintResults(c) => c
+                .iter()
+                .map(|(label, _expr, b)| {
+                    (
+                        label.clone(),
+                        *b,
+                    )
+                })
+                .collect::<Vec<_>>(),
+            _ => vec![],
+        })
+        .collect::<IndexMap<_, _>>();
+
+    let (retval, sub_check_count) = match value {
+        BamlValueWithFlags::String(s) => (J::String(s.value.clone()), 0),
+        BamlValueWithFlags::Int(i) => (i.value.into(), 0),
+        BamlValueWithFlags::Float(f) => (f.value.into(), 0),
+        BamlValueWithFlags::Bool(b) => (J::Bool(b.value), 0),
+        BamlValueWithFlags::List(_, v) => {
+            let (values, counts): (Vec<_>, Vec<_>) = v.iter().map(|e| flatten_checks(e)).unzip();
+            (J::Array(values), counts.iter().sum())
+        }
+        BamlValueWithFlags::Map(_, m) => {
+            let (values, counts): (serde_json::Map<String, J>, Vec<_>) = m
+                .iter()
+                .map(|(k, (_, v))| {
+                    let (value, count) = flatten_checks(v);
+                    ((k.clone(), value), count)
+                })
+                .unzip();
+            (J::Object(values), counts.iter().sum())
+        }
+        BamlValueWithFlags::Enum(_, v) => (J::String(v.value.clone()), 0),
+        BamlValueWithFlags::Class(_, _, m) => {
+            let (values, counts): (serde_json::Map<String, J>, Vec<_>) = m
+                .iter()
+                .map(|(k, v)| {
+                    let (value, count) = flatten_checks(v);
+                    ((k.clone(), value), count)
+                })
+                .unzip();
+            (J::Object(values), counts.iter().sum())
+        }
+        BamlValueWithFlags::Null(_) => (J::Null, 0),
+        BamlValueWithFlags::Media(_) => (
+            serde_json::Value::String("media type not supported".to_string()),
+            0,
+        ),
+    };
+
+    let check_count = checks.len() + sub_check_count;
+
+    let final_value = if checks.is_empty() {
+        retval
+    } else {
+        json!({
+            "value": retval,
+            "checks": checks,
+        })
+    };
+
+    (final_value, check_count)
 }
 
 #[wasm_bindgen]
@@ -517,8 +598,10 @@ impl WasmTestResponse {
             .context("No test response")?
             .function_response
             .parsed_content()?;
+        let (flattened_checks, check_count) = flatten_checks(&parsed_response);
         Ok(WasmParsedTestResponse {
-            value: serde_json::to_string(&BamlValue::from(parsed_response))?,
+            value: serde_json::to_string(&flattened_checks)?,
+            check_count,
             explanation: {
                 let j = parsed_response.explanation_json();
                 if j.is_empty() {
@@ -730,6 +813,7 @@ fn get_dummy_value(
 
             Some(dummy)
         }
+        baml_runtime::FieldType::Literal(_) => None,
         baml_runtime::FieldType::Enum(_) => None,
         baml_runtime::FieldType::Class(_) => None,
         baml_runtime::FieldType::List(item) => {
@@ -782,6 +866,9 @@ fn get_dummy_value(
             Some(format!("({},)", dummy))
         }
         baml_runtime::FieldType::Optional(_) => None,
+        baml_runtime::FieldType::Constrained { base, .. } => {
+            get_dummy_value(indent, allow_multiline, base)
+        }
     }
 }
 
@@ -804,7 +891,7 @@ impl WasmRuntime {
         Ok(self
             .runtime
             // convert the input_files into HashMap(PathBuf, string)
-            .run_generators(
+            .run_codegen(
                 &input_files
                     .iter()
                     .map(|(k, v)| (PathBuf::from(k), v.clone()))
@@ -963,12 +1050,8 @@ impl WasmRuntime {
     #[wasm_bindgen]
     pub fn list_generators(&self) -> Vec<WasmGeneratorConfig> {
         self.runtime
-            .internal()
-            .ir()
-            .configuration()
-            .generators
-            .iter()
-            .map(|(generator, _)| WasmGeneratorConfig {
+            .codegen_generators()
+            .map(|generator| WasmGeneratorConfig {
                 output_type: generator.output_type.clone().to_string(),
                 version: generator.version.clone(),
                 span: WasmSpan {

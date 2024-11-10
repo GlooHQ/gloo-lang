@@ -2,8 +2,19 @@ use std::{env, fs, io::Write as _, path};
 
 const VALIDATIONS_ROOT_DIR: &str = "tests/validation_files";
 const CARGO_MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
+const BAML_CLI_INIT_DIR: &str = concat!("/../../baml-runtime/src/cli/initial_project/baml_src");
+const PROMPT_FIDDLE_EXAMPLE_DIR: &str =
+    concat!("/../../../typescript/fiddle-frontend/public/_examples/all-projects/baml_src");
 
 fn main() {
+    build_folder_tests(
+        &BAML_CLI_INIT_DIR,
+        "tests/validation_files/baml_cli_init.baml",
+    );
+    build_folder_tests(
+        &PROMPT_FIDDLE_EXAMPLE_DIR,
+        "tests/validation_files/prompt_fiddle_example.baml",
+    );
     build_validation_tests();
     // build_reformat_tests();
 }
@@ -23,6 +34,21 @@ fn build_validation_tests() {
             "#[test] fn {test_name}() {{ run_validation_test(\"{file_path}\"); }}"
         )
         .unwrap();
+    }
+}
+
+fn build_folder_tests(dir: &'static str, out_file_name: &str) {
+    println!("cargo:rerun-if-changed={dir}");
+    let mut all_schemas = Vec::new();
+    find_all_schemas("", &mut all_schemas, dir);
+
+    // concatenate all the files in the directory into a single file
+    let mut out_file = fs::File::create(format!("{CARGO_MANIFEST_DIR}/{out_file_name}")).unwrap();
+    for schema_path in &all_schemas {
+        let file_path = format!("{CARGO_MANIFEST_DIR}/{dir}{schema_path}");
+        println!("Reading file: {}", file_path);
+        let file_content = fs::read_to_string(&file_path).unwrap();
+        writeln!(out_file, "{}", file_content).unwrap();
     }
 }
 

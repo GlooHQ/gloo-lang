@@ -281,4 +281,160 @@ mod internal_tests {
 
         Ok(())
     }
+
+    fn make_test_runtime(file_content: &str) -> anyhow::Result<BamlRuntime> {
+        let mut files = HashMap::new();
+        files.insert("main.baml", file_content);
+        BamlRuntime::from_file_content(
+            "baml_src",
+            &files,
+            [("OPENAI_API_KEY", "OPENAI_API_KEY")].into(),
+        )
+    }
+
+    #[test]
+    fn test_with_image_union() -> anyhow::Result<()> {
+        let runtime = make_test_runtime(
+            r##"
+class Receipt {
+  establishment_name string
+  date string @description("ISO8601 formatted date")
+  total int @description("The total amount of the receipt")
+  currency string
+  items Item[] @description("The items on the receipt")
+}
+
+class Item {
+  name string
+  price float
+  quantity int @description("If not specified, assume 1")
+}
+ 
+// This is our LLM function we can call in Python or Typescript
+// the receipt can be an image OR text here!
+function ExtractReceipt(receipt: image | string) -> Receipt {
+  // see clients.baml
+  client "openai/gpt-4o"
+  prompt #"
+    {# start a user message #}
+    {{ _.role("user") }}
+
+    Extract info from this receipt:
+    {{ receipt }}
+
+    {# special macro to print the output schema instructions. #}
+    {{ ctx.output_format }}
+  "#
+}
+
+// Test when the input is an image
+test ImageReceiptTest {
+  functions [ExtractReceipt]
+  args {
+    receipt { url "https://i.redd.it/adzt4bz4llfc1.jpeg"}
+  }
+}
+        "##,
+        )?;
+
+        let missing_env_vars = runtime.internal().ir().required_env_vars();
+
+        let ctx = runtime
+            .create_ctx_manager(BamlValue::String("test".to_string()), None)
+            .create_ctx_with_default(missing_env_vars.iter());
+
+        let function_name = "ExtractReceipt";
+        let test_name = "ImageReceiptTest";
+        let params = runtime.get_test_params(function_name, test_name, &ctx)?;
+        let render_prompt_future =
+            runtime
+                .internal()
+                .render_prompt(function_name, &ctx, &params, None);
+        let (prompt, scope, _) = runtime.async_runtime.block_on(render_prompt_future)?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_literals() -> anyhow::Result<()> {
+        let runtime = make_test_runtime(
+            r##"
+// My first tool
+class GetWeather {
+  name "weather"
+  // any other params
+}
+
+class CheckCalendar {
+  name "check_calendar"
+  // any other params
+}
+
+class GetDelivery {
+  name "get_delivery_date" @description(#"Get the delivery date for a customer's order. Call this whenever you need to know the delivery date, for example when a customer asks 'Where is my package'"#)
+  order_id string
+}
+
+class Response {
+  name "reply_to_user"
+  response string
+}
+
+class Message {
+  role "user" | "assistant"
+  message string
+}
+
+function Bot(convo: Message[]) -> GetWeather | CheckCalendar | GetDelivery | Response {
+  client "openai/gpt-4o"
+  prompt #"
+    You are a helpful assistant.
+    {{ ctx.output_format }}
+
+    {% for m in convo %}
+    {{ _.role(m.role) }}
+    {{ m.message }}
+    {% endfor %}
+  "#
+}
+
+test TestName {
+  functions [Bot]
+  args {
+    convo [
+      {
+        role "user"
+        message "Hi, can you tell me the delivery date for my order?"
+      }
+    {
+      role "assistant"
+      message "Hi there! I can help with that. Can you please provide your order ID?"
+    }
+    {
+      role "user"
+      message "i think it is order_12345"
+    }
+    ]
+  }
+}
+        "##,
+        )?;
+
+        let missing_env_vars = runtime.internal().ir().required_env_vars();
+
+        let ctx = runtime
+            .create_ctx_manager(BamlValue::String("test".to_string()), None)
+            .create_ctx_with_default(missing_env_vars.iter());
+
+        let function_name = "Bot";
+        let test_name = "TestName";
+        let params = runtime.get_test_params(function_name, test_name, &ctx)?;
+        let render_prompt_future =
+            runtime
+                .internal()
+                .render_prompt(function_name, &ctx, &params, None);
+        let (prompt, scope, _) = runtime.async_runtime.block_on(render_prompt_future)?;
+
+        Ok(())
+    }
 }

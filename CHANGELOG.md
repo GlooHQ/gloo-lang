@@ -2,6 +2,147 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.67.0](https://github.com/boundaryml/baml/compare/0.66.0..0.67.0) - 2024-11-05
+
+### Bug Fixes
+- URGENT: fix generated typescript code (#1147) - ([bd9da16](https://github.com/boundaryml/baml/commit/bd9da1683112d849595580866382cba2c6bed8be)) - hellovai
+
+
+### Features
+- Parser improvement: handle code within backticks (`) (#1146) - ([3d8ef34](https://github.com/boundaryml/baml/commit/3d8ef34af15a7f2b957876ffa71314ce38da2a01)) - hellovai
+
+## [0.66.0](https://github.com/boundaryml/baml/compare/0.65.0..0.66.0) - 2024-11-04
+
+### Features
+
+- BAML_LOG supports JSON mode (#1137) - ([f140767](https://github.com/boundaryml/baml/commit/f1407674fc0d91c079fd93b655ff097a05475740)) - aaronvg
+- Block-level constraints (#1124) - ([e931acb](https://github.com/boundaryml/baml/commit/e931acb7f765e86a70cb33cd86728aabe058024b)) - Greg Hale
+- Parser improvement! Streaming arrays is much more stable and parsing file paths improved (#1134) - ([56570f0](https://github.com/boundaryml/baml/commit/56570f0fe6c4c09594eb757c8a78158cf0e73fcd)) - hellovai
+
+
+### Documentation
+
+- Improvements to Reference Documentation (#1125) - ([12c8fa7](https://github.com/boundaryml/baml/commit/12c8fa7ec5aea8571f27fb65b8f2a327a1a5e0ce)) - hellovai
+- README.md: typo/readability fixes (#1092) - ([cb67e31](https://github.com/boundaryml/baml/commit/cb67e316dce2c4ee29b6fd625316f5df4409335f)) - Prathamesh Pawar
+- README.md: Correct Promptfiddle link (#1108) - ([b296c4c](https://github.com/boundaryml/baml/commit/b296c4cf6104513e40ef89f17d534d6d8858f223)) - Sagar Sharma
+- Fix broken links (#1133) - ([e0bfc94](https://github.com/boundaryml/baml/commit/e0bfc94f453f35971e871a4b121a1f35fa0b17cc)) - aaronvg
+
+
+### Bug-fix
+
+- Improve syntax highlighting for template strings (#1130) - ([54de4b6](https://github.com/boundaryml/baml/commit/54de4b6ed9144a68fe0a84d916679f9aec46fe28)) - hellovai
+- Improved static analysis for literals in jinja (#1132) - ([b8a221f](https://github.com/boundaryml/baml/commit/b8a221ff44668e2b1d9fa75100c270ce5a227ed4)) - Greg Hale
+- Adds missing imports to the sync_client template (#1131) - ([823f74c](https://github.com/boundaryml/baml/commit/823f74c88df3cc7b9ebb4b19b74b5ee6edbafd9c)) - Jesus Lizama
+- Add `Checked` in baml client typescript (#1135) - ([ad759cd](https://github.com/boundaryml/baml/commit/ad759cdb67cb0b6a6d2bd0d16575e3e1bc847a68)) - Greg Hale
+- Produce syntax error when user misses return type on functions (#1129) - ([034d6eb](https://github.com/boundaryml/baml/commit/034d6ebda38aded1c6a93321d363575156b0ecc6)) - hellovai
+
+## [0.65.0](https://github.com/boundaryml/baml/compare/0.64.0..0.65.0) - 2024-10-31
+
+### Documentation
+
+- **New Documentation Structure**: Introduced version 3 of the documentation, enhancing clarity and organization. ([#1118](https://github.com/boundaryml/baml/commit/bab2767414172dd632437a57631c4cee04910518))
+
+Co-authored by: Vaibhav Gupta <vbv@boundaryml.com>, Antonio Sarosi <sarosiantonio@gmail.com>
+
+### Bug Fixes
+
+- **Python Type Handling**: Moved Python Checked and Check types into `baml_client` for better type management. ([#1122](https://github.com/boundaryml/baml/commit/0ccf473fd821d25d431bbf4341c4e837967104bf))
+- **Literal Input Type Checking**: Fixed an issue where literal inputs were not being type-checked correctly. ([#1121](https://github.com/boundaryml/baml/commit/aa5dc85026a175216b5caae6320d09a1fcd35752))
+
+
+## [0.64.0](https://github.com/boundaryml/baml/compare/0.63.0..0.64.0) - 2024-10-29
+
+### Bug Fixes
+- **Playground Stability:** Prevented crashes in the playground due to malformed vertex credentials ([#1107](https://github.com/boundaryml/baml/commit/e665346fbc84a9b969a979cfdf1c70d530201e93)) - _Samuel Lijin_
+- **Union Handling:** Addressed an issue with union types in the schema ([#1096](https://github.com/boundaryml/baml/commit/cb5ce7623d3e95464fb5e5152c4d2339458caa26)) - _Greg Hale_
+- **WASM Function Signatures:** Resolved stack overflow when computing WASM function signatures ([#1100](https://github.com/boundaryml/baml/commit/aa736ed2d7386cae78421c22d5669c73d8921085)) - _aaronvg_
+- **VSCode Extension:** Fixed crashes in the VSCode extension that caused the output panel to open unexpectedly ([#1103](https://github.com/boundaryml/baml/commit/cb5a266bc68f15483f3ec3fa0f4edbc8d176287a)) - _hellovai_
+- **Static Analysis Improvements:** Enhanced static analysis on Jinja expressions and `regex_match` functions ([#1102](https://github.com/boundaryml/baml/commit/7ca8136ffbc690877091627415941674f6f14b2f), [#1104](https://github.com/boundaryml/baml/commit/83ddb1cfe81c9b5f6ae620c331c4eefe512c78bd)) - _hellovai_
+- **Codegen Enhancements:** Fixed code generation for Python boolean literals and updated integration tests ([#1099](https://github.com/boundaryml/baml/commit/635976238fd9246bfb8764875358a36b4ec6a7f5)) - _Antonio Sarosi_
+- **Enum Handling:** Improved substring alias handling for enums ([#1098](https://github.com/boundaryml/baml/commit/0c5cbd4ae03d2bc836ee4b61a7df638855bb72ca)) - _Miguel Cárdenas_
+- **Syntax Highlighting:** Refined span calculations for Jinja expressions and improved VSCode syntax highlighting with Lezer ([#1110](https://github.com/boundaryml/baml/commit/a53072f5fe9fe83a0accb36e43a06550602a3c65)) - _hellovai_
+- **Ruby Support:** Fixed literal boolean tests for Ruby ([#1109](https://github.com/boundaryml/baml/commit/23e590b0b2fdb51f80e7eced769baabd12b3be22)) - _Antonio Sarosi_
+
+### Features
+- **Constraint Support:** Added the ability to define constraints using Jinja expressions ([#1006](https://github.com/boundaryml/baml/commit/d794f28b4f8830b1a40cd08043ecdc562938d36e)) - _Greg Hale_
+- **VSCode & Fiddle UI:** Introduced a new "Intro to Checks" UI for easier onboarding ([#1106](https://github.com/boundaryml/baml/commit/11efa5e97f8e9b8f385b7fb0e823f5ff2bc4c314)) - _Samuel Lijin_
+- **Dev Container Configurations:** Added Dev Container configurations for streamlined development environments ([#1112](https://github.com/boundaryml/baml/commit/5790393d7ad320e9e257c09e461c9bc39310a834)) - _Antonio Sarosi_
+
+### Documentation
+- **Constraints Documentation:** Published new documentation for defining constraints in BAML ([#1113](https://github.com/boundaryml/baml/commit/6332021a59661d3931934adc2afbf4f99f6f4bee)) - _Greg Hale_
+- **Dynamic Types Linking:** Added cross-links to dynamic types documentation for easier navigation ([#1116](https://github.com/boundaryml/baml/commit/8ce0a539d74d05438e8047e4e02022ddd7121e21)) - _Greg Hale_
+
+### Miscellaneous
+- **Code Quality:** Improved style and fixed typos in the codebase ([#1115](https://github.com/boundaryml/baml/commit/4c3970a6e6ce998a784e682f4c218ba2a69cf86a)) - _Greg Hale_
+- **Parsing Stability:** Added logic to prevent assertions from parsing errors and ensured checks no longer affect parsing ([#1101](https://github.com/boundaryml/baml/commit/5ec89c92ab14622afddc3ce348c5b981b4840492)) - _hellovai_
+- **Version Bump:** Bumped version to 0.64.0 ([#1114](https://github.com/boundaryml/baml/commit/90d3c17ba67bc1467ee5973ff6cf257069e265b9), [#ff7e152](https://github.com/boundaryml/baml/commit/ff7e152510395bab1d38afa60211226070d12cc2)) - _Vaibhav Gupta_
+
+
+## [0.63.0](https://github.com/boundaryml/baml/compare/0.62.0..0.63.0) - 2024-10-23
+
+### Bug Fixes
+- Fix dynamic enums which already are defined in BAML (#1080) - ([22d0f1c](https://github.com/boundaryml/baml/commit/22d0f1cff3428c2cd58ea78c50c4fc7ea39c8d0c)) - hellovai
+
+### Features
+- Updated clients.baml to use the latest sonnet model (#1081) - ([71df0b7](https://github.com/boundaryml/baml/commit/71df0b7b627ba218d581d2c21be01fea4e4993c1)) - aaronvg
+- Improved clients.baml generated via baml init (#1089) - ([682dd66](https://github.com/boundaryml/baml/commit/682dd66f4adab8c4fad13bfe32a3fc0268d8b511)) - hellovai
+
+## [0.62.0](https://github.com/boundaryml/baml/compare/0.61.1..0.62.0) - 2024-10-21
+
+### Features
+
+- Support serializing/deserializing `baml_py.Image`, `baml_py.Audio` for pydantic (#1062) - ([11cb699](https://github.com/boundaryml/baml/commit/11cb69903dce1ae348c68f88a82b4731da3977a7)) - Samuel Lijin
+- Support rendering input classes with aliases (#1045) - ([3824cda](https://github.com/boundaryml/baml/commit/3824cda75524105f3401e5c7e4c21e604d639f76)) - aaronvg
+- Add unstable_internal_repr on FunctionResult in python (#1068) - ([00082e8](https://github.com/boundaryml/baml/commit/00082e8b941d3648ec499215d2c38091f36db944)) - hellovai
+- Add literal support for type_builder (#1069) - ([c0085d9](https://github.com/boundaryml/baml/commit/c0085d908cbf8696623fd70f49de5ca8325de06c)) - hellovai
+
+### Bug Fixes
+
+- Surface errors in fallbacks containing only erroneous clients (#1061) - ([b69ef79](https://github.com/boundaryml/baml/commit/b69ef79542ec818b8779f9710dad65d33166c862)) - Greg Hale
+- Fix parser so that we are able to correctly detect sequences of empty strings. (#1048) - ([977e277](https://github.com/boundaryml/baml/commit/977e2776119a6f1e79f29cbe596b1c31697becb5)) - hellovai
+- Make substring match algorithm case insensitive (#1056) - ([fa2c477](https://github.com/boundaryml/baml/commit/fa2c4770791297a7a37a3f0c837ede4bb709f0ef)) - Antonio Sarosi
+- Fix vertex-ai citation data being optional (#1058) - ([5eae0a7](https://github.com/boundaryml/baml/commit/5eae0a73be6cc8286ce045185537aeed0b9feb7d)) - aaronvg
+- Fix bug to correctly cast to pydantic types in ambiguous scenarios where BAML knows better (#1059) - ([830b0cb](https://github.com/boundaryml/baml/commit/830b0cb194b99fa6f019928e7466dcf3e3992596)) - hellovai
+- Parser: Prefer case sensitive match over case insensitive (#1063) - ([cd6b141](https://github.com/boundaryml/baml/commit/cd6b141020ec8dfd2514c82ffffaebc5678a025b)) - Antonio Sarosi
+- Only popup the vscode env var dialog once (#1066) - ([1951474](https://github.com/boundaryml/baml/commit/19514745cfc8efeb8bda0be655e0fa2f216e4b29)) - aaronvg
+
+### Documentation
+
+- Docs for literal types (#1030) - ([55e5964](https://github.com/boundaryml/baml/commit/55e596419055c8da52b841b9ecbf16e328bc1033)) - Antonio Sarosi
+- Contribution guide (#1055) - ([f09d943](https://github.com/boundaryml/baml/commit/f09d9432d95c876f5e63f3abdb47a40417c5c45a)) - aaronvg
+
+### Misc
+
+- Fix VSCode metrics (#1044) - ([a131336](https://github.com/boundaryml/baml/commit/a13133656e1610cac9a92aa4b4459c78340c7304)) - hellovai
+- Add more test cases for unquoted strings in objects (#1054) - ([2d1b700](https://github.com/boundaryml/baml/commit/2d1b700e82604e444d904cfeb67f46ced97153a5)) - hellovai
+
+## [0.61.1](https://github.com/boundaryml/baml/compare/0.61.0..0.61.1) - 2024-10-15
+
+### Bug Fixes
+
+- add musl to the ts release artifacts (#1042) - ([e74f3e9](https://github.com/boundaryml/baml/commit/e74f3e90489a403e38b39cc694d30d038ad38b8d)) - Samuel Lijin
+
+## [0.61.0](https://github.com/boundaryml/baml/compare/0.60.0..0.61.0) - 2024-10-14
+
+### Features
+
+- Implement literal types (#978) - ([9e7431f](https://github.com/boundaryml/baml/commit/9e7431f43b74d4428e6a20b9aa3a1e93768ff905)) - Antonio Sarosi
+- allow installing the TS library on node-alpine (#1029) - ([1c37a0d](https://github.com/boundaryml/baml/commit/1c37a0d71d921d13f05340ff6727255ba6074152)) - Samuel Lijin
+- Add WYSIWYG UI (Swagger UI) to baml-cli dev (#1019) - ([0c73cab](https://github.com/boundaryml/baml/commit/0c73cab3d6ac3bbb04cc898ac102900ca9b17f86)) - Greg Hale
+- Suppress streaming for Numbers (#1032) - ([3f4621b](https://github.com/boundaryml/baml/commit/3f4621b36555062312aabd9ba8435b965ba8fd92)) - Greg Hale
+
+### Bug Fixes
+
+- Add limit on connection pool to prevent stalling issues in pyo3 and other ffi boundaries (#1027) - ([eb90e62](https://github.com/boundaryml/baml/commit/eb90e62ffe21109e0da1bd74439d36bb37246ec3)) - hellovai
+- Update docs (#1025) - ([2dd1bb6](https://github.com/boundaryml/baml/commit/2dd1bb6cf743c20af53d7147db8a4573de9cdbe0)) - Farookh Zaheer Siddiqui
+- Fix parsing for streaming of objects more stable (#1031) - ([8aa9c00](https://github.com/boundaryml/baml/commit/8aa9c00b8f26a8c30178ff25aecc1c3b47b6696e)) - hellovai
+- Fix python BamlValidationError type (#1036) - ([59a9510](https://github.com/boundaryml/baml/commit/59a9510c9d2c1216df01b0701cc23afb02e3f700)) - aaronvg
+
+### Miscellaneous
+
+- Popup settings dialog when no env vars set (#1033) - ([b9fa52a](https://github.com/boundaryml/baml/commit/b9fa52aea8686f8095878e7f210c2d937b533c63)) - aaronvg
+- Bump version to 0.61.0 - ([ca2242b](https://github.com/boundaryml/baml/commit/ca2242b26214699268fda9e9ac07338c6491026d)) - Aaron Villalpando
+
 ## [0.60.0](https://github.com/boundaryml/baml/compare/0.59.0..0.60.0) - 2024-10-09
 
 ### Miscellaneous Chores

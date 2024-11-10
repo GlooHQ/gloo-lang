@@ -14,6 +14,13 @@ function Bar(a: string, b: int | bool) -> int {
 //  5 | 
 //  6 | function Bar(a: string, b: int | bool) -> int {
 //    | 
+// error: Invalid syntax for function "Bar". Use:
+// function Bar(params...) -> ReturnType { ... }
+//   -->  functions_v2/duplicate_names.baml:1
+//    | 
+//    | 
+//  1 | function Bar {
+//    | 
 // error: Error validating: Unknown field `input` in function
 //   -->  functions_v2/duplicate_names.baml:2
 //    | 

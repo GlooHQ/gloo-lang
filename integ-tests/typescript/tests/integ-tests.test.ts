@@ -13,6 +13,7 @@ import {
   setTags,
   TestClassNested,
   onLogEvent,
+  AliasedEnum,
 } from '../baml_client'
 import { RecursivePartialNull } from '../baml_client/async_client'
 import { b as b_sync } from '../baml_client/sync_client'
@@ -20,6 +21,7 @@ import { config } from 'dotenv'
 import { BamlLogEvent, BamlRuntime } from '@boundaryml/baml/native'
 import { AsyncLocalStorage } from 'async_hooks'
 import { DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME, resetBamlEnvVars } from '../baml_client/globals'
+import exp from 'constants'
 config()
 
 describe('Integ tests', () => {
@@ -34,6 +36,11 @@ describe('Integ tests', () => {
       expect(res).toContain('a')
       expect(res).toContain('b')
       expect(res).toContain('c')
+    })
+
+    it('return literal union', async () => {
+      const res = await b.LiteralUnionsTest('a')
+      expect(res == 1 || res == true || res == 'string output').toBeTruthy()
     })
 
     it('single class', async () => {
@@ -79,6 +86,31 @@ describe('Integ tests', () => {
       expect(res).toContain('3566')
     })
 
+    it('single literal int', async () => {
+      const res = await b.TestNamedArgsLiteralInt(1)
+      expect(res).toContain('1')
+    })
+
+    it('single literal bool', async () => {
+      const res = await b.TestNamedArgsLiteralBool(true)
+      expect(res).toContain('true')
+    })
+
+    it('single literal string', async () => {
+      const res = await b.TestNamedArgsLiteralString('My String')
+      expect(res).toContain('My String')
+    })
+
+    it('single class with literal prop', async () => {
+      const res = await b.FnLiteralClassInputOutput({ prop: 'hello' })
+      expect(res).toEqual({ prop: 'hello' })
+    })
+
+    it('single class with literal union prop', async () => {
+      const res = await b.FnLiteralUnionClassInputOutput({ prop: 'one' })
+      expect(res).toEqual({ prop: 'one' })
+    })
+
     it('single optional string', async () => {
       // TODO fix the fact it's required.
       const res = await b.FnNamedArgsSingleStringOptional()
@@ -102,8 +134,20 @@ describe('Integ tests', () => {
 
   it('should work for all outputs', async () => {
     const a = 'a' // dummy
-    let res = await b.FnOutputBool(a)
-    expect(res).toEqual(true)
+    let bool = await b.FnOutputBool(a)
+    expect(bool).toEqual(true)
+
+    let int = await b.FnOutputInt(a)
+    expect(int).toEqual(5)
+
+    let literal_integer = await b.FnOutputLiteralInt(a)
+    expect(literal_integer).toEqual(5)
+
+    let literal_bool = await b.FnOutputLiteralBool(a)
+    expect(literal_bool).toEqual(false)
+
+    let literal_string = await b.FnOutputLiteralString(a)
+    expect(literal_string).toEqual('example output')
 
     const list = await b.FnOutputClassList(a)
     expect(list.length).toBeGreaterThan(0)
@@ -235,6 +279,12 @@ describe('Integ tests', () => {
       expect(msgs[i + 1].startsWith(msgs[i])).toBeTruthy()
     }
     expect(msgs.at(-1)).toEqual(final)
+  })
+
+  it('should allow overriding the region', async () => {
+    await expect(async () => {
+      await b.TestAwsInvalidRegion('Dr. Pepper')
+    }).rejects.toThrow('DispatchFailure')
   })
 
   it('should support OpenAI shorthand', async () => {
@@ -401,6 +451,18 @@ describe('Integ tests', () => {
       fieldEnum.addValue(animal.toUpperCase())
     }
     tb.Person.addProperty('animalLiked', fieldEnum.type())
+    const res = await b.ExtractPeople(
+      "My name is Harrison. My hair is black and I'm 6 feet tall. I'm pretty good around the hoop. I like giraffes.",
+      { tb },
+    )
+    expect(res.length).toBeGreaterThan(0)
+    expect(res[0]['animalLiked']).toEqual('GIRAFFE')
+  })
+
+  it('should work with dynamic literals', async () => {
+    let tb = new TypeBuilder()
+    const animals = tb.union(['giraffe', 'elephant', 'lion'].map((animal) => tb.literalString(animal.toUpperCase())))
+    tb.Person.addProperty('animalLiked', animals)
     const res = await b.ExtractPeople(
       "My name is Harrison. My hair is black and I'm 6 feet tall. I'm pretty good around the hoop. I like giraffes.",
       { tb },
@@ -684,6 +746,60 @@ describe('Integ tests', () => {
         fail('Expected error to be an instance of BamlValidationError')
       }
     }
+  it('should use aliases when serializing input objects - classes', async () => {
+    const res = await b.AliasedInputClass({ key: 'hello', key2: 'world' })
+    expect(res).toContain('color')
+
+    const res2 = await b.AliasedInputClassNested({
+      key: 'hello',
+      nested: { key: 'nested-hello', key2: 'nested-world' },
+    })
+    expect(res2).toContain('interesting-key')
+  })
+
+  it('should use aliases when serializing, but still have original keys in jinja', async () => {
+    const res = await b.AliasedInputClass2({ key: 'tiger', key2: 'world' })
+    expect(res).toContain('tiger')
+
+    const res2 = await b.AliasedInputClassNested({
+      key: 'hello',
+      nested: { key: 'nested-hello', key2: 'nested-world' },
+    })
+    expect(res2).toContain('interesting-key')
+  })
+
+  // TODO: Enum aliases are not supported
+  it('should use aliases when serializing input objects - enums', async () => {
+    const res = await b.AliasedInputEnum(AliasedEnum.KEY_ONE)
+    expect(res).not.toContain('tiger')
+  })
+
+  // TODO: enum aliases are not supported
+  it('should use aliases when serializing input objects - lists', async () => {
+    const res = await b.AliasedInputList([AliasedEnum.KEY_ONE, AliasedEnum.KEY_TWO])
+    expect(res).not.toContain('tiger')
+  })
+
+  it('constraints: should handle checks in return types', async () => {
+    const res = await b.PredictAge('Greg')
+    expect(res.certainty.checks.unreasonably_certain.status).toBe('failed')
+  })
+
+  it('constraints: should handle checks in returned unions', async () => {
+    const res = await b.ExtractContactInfo('Reach me at 111-222-3333, or robert@boundaryml.com if needed')
+    expect(res.primary.value).toBe('111-222-3333')
+    expect(res.secondary?.value).toBe('robert@boundaryml.com')
+  })
+
+  it('constraints: should handle block-level checks', async () => {
+    const res = await b.MakeBlockConstraint()
+    expect(res.checks.cross_field.status).toBe('failed')
+  })
+
+  it('constraints: should handle nested-block-level checks', async () => {
+    const res = await b.MakeNestedBlockConstraint()
+    console.log(JSON.stringify(res))
+    expect(res.nbc.checks.cross_field.status).toBe('succeeded')
   })
 })
 

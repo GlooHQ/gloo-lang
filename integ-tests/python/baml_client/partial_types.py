@@ -16,9 +16,10 @@
 import baml_py
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Literal
 
 from . import types
+from .types import Checked, Check
 
 ###############################################################################
 #
@@ -28,10 +29,28 @@ from . import types
 ###############################################################################
 
 
+class BigNumbers(BaseModel):
+    
+    
+    a: Optional[int] = None
+    b: Optional[float] = None
+
 class Blah(BaseModel):
     
     
     prop4: Optional[str] = None
+
+class BlockConstraint(BaseModel):
+    
+    
+    foo: Optional[int] = None
+    bar: Optional[str] = None
+
+class BlockConstraintForParam(BaseModel):
+    
+    
+    bcfp: Optional[int] = None
+    bcfp2: Optional[str] = None
 
 class BookOrder(BaseModel):
     
@@ -60,6 +79,19 @@ class ClassWithImage(BaseModel):
     myImage: Optional[baml_py.Image] = None
     param2: Optional[str] = None
     fake_image: Optional["FakeImage"] = None
+
+class CompoundBigNumbers(BaseModel):
+    
+    
+    big: Optional["BigNumbers"] = None
+    big_nums: List["BigNumbers"]
+    another: Optional["BigNumbers"] = None
+
+class ContactInfo(BaseModel):
+    
+    
+    primary: Optional[Union["PhoneNumber", "EmailAddress"]] = None
+    secondary: Optional[Union["PhoneNumber", "EmailAddress", Optional[None]]] = None
 
 class CustomTaskResult(BaseModel):
     
@@ -99,6 +131,11 @@ class DynamicOutput(BaseModel):
     model_config = ConfigDict(extra='allow')
     
 
+class Earthling(BaseModel):
+    
+    
+    age: Checked[Optional[int],Literal["earth_aged", "no_infants"]]
+
 class Education(BaseModel):
     
     
@@ -114,6 +151,11 @@ class Email(BaseModel):
     subject: Optional[str] = None
     body: Optional[str] = None
     from_address: Optional[str] = None
+
+class EmailAddress(BaseModel):
+    
+    
+    value: Optional[str] = None
 
 class Event(BaseModel):
     
@@ -137,6 +179,13 @@ class FlightConfirmation(BaseModel):
     arrivalTime: Optional[str] = None
     seatNumber: Optional[str] = None
 
+class FooAny(BaseModel):
+    
+    
+    planetary_age: Optional[Union["Martian", "Earthling"]] = None
+    certainty: Checked[Optional[int],Literal["unreasonably_certain"]]
+    species: Checked[Optional[str],Literal["regex_bad", "regex_good", "trivial"]]
+
 class GroceryReceipt(BaseModel):
     
     
@@ -158,6 +207,48 @@ class InnerClass2(BaseModel):
     prop2: Optional[int] = None
     prop3: Optional[float] = None
 
+class InputClass(BaseModel):
+    
+    
+    key: Optional[str] = None
+    key2: Optional[str] = None
+
+class InputClassNested(BaseModel):
+    
+    
+    key: Optional[str] = None
+    nested: Optional["InputClass"] = None
+
+class LiteralClassHello(BaseModel):
+    
+    
+    prop: Literal["hello"]
+
+class LiteralClassOne(BaseModel):
+    
+    
+    prop: Literal["one"]
+
+class LiteralClassTwo(BaseModel):
+    
+    
+    prop: Literal["two"]
+
+class MalformedConstraints(BaseModel):
+    
+    
+    foo: Checked[Optional[int],Literal["foo_check"]]
+
+class MalformedConstraints2(BaseModel):
+    
+    
+    foo: Optional[int] = None
+
+class Martian(BaseModel):
+    
+    
+    age: Checked[Optional[int],Literal["young_enough"]]
+
 class NamedArgsSingleClass(BaseModel):
     
     
@@ -177,6 +268,16 @@ class Nested2(BaseModel):
     
     prop11: Optional[Union[Optional[str], Optional[None]]] = None
     prop12: Optional[Union[Optional[str], Optional[None]]] = None
+
+class NestedBlockConstraint(BaseModel):
+    
+    
+    nbc: Checked[Optional["BlockConstraint"],Literal["cross_field"]]
+
+class NestedBlockConstraintForParam(BaseModel):
+    
+    
+    nbcfp: Optional["BlockConstraintForParam"] = None
 
 class OptionalTest_Prop1(BaseModel):
     
@@ -198,12 +299,28 @@ class OrderInfo(BaseModel):
     tracking_number: Optional[str] = None
     estimated_arrival_date: Optional[str] = None
 
+class OriginalA(BaseModel):
+    
+    
+    value: Optional[int] = None
+
+class OriginalB(BaseModel):
+    
+    model_config = ConfigDict(extra='allow')
+    
+    value: Optional[int] = None
+
 class Person(BaseModel):
     
     model_config = ConfigDict(extra='allow')
     
     name: Optional[str] = None
     hair_color: Optional[Union[types.Color, str]] = None
+
+class PhoneNumber(BaseModel):
+    
+    
+    value: Optional[str] = None
 
 class Quantity(BaseModel):
     
@@ -222,6 +339,7 @@ class ReceiptInfo(BaseModel):
     
     items: List["ReceiptItem"]
     total_cost: Optional[float] = None
+    venue: Optional[Union[Literal["barisa"], Literal["ox_burger"]]] = None
 
 class ReceiptItem(BaseModel):
     
@@ -235,6 +353,7 @@ class Recipe(BaseModel):
     
     
     ingredients: Dict[str, Optional["Quantity"]]
+    recipe_type: Optional[Union[Literal["breakfast"], Literal["dinner"]]] = None
 
 class Resume(BaseModel):
     
@@ -304,6 +423,13 @@ class TestOutputClass(BaseModel):
     
     prop1: Optional[str] = None
     prop2: Optional[int] = None
+
+class TwoStoriesOneTitle(BaseModel):
+    
+    
+    title: Optional[str] = None
+    story_a: Optional[str] = None
+    story_b: Optional[str] = None
 
 class UnionTest_ReturnType(BaseModel):
     
