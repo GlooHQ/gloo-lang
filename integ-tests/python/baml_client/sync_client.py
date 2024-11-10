@@ -77,7 +77,7 @@ class BamlSyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -100,7 +100,7 @@ class BamlSyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -123,7 +123,7 @@ class BamlSyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -146,7 +146,7 @@ class BamlSyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -169,7 +169,7 @@ class BamlSyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -422,7 +422,7 @@ class BamlSyncClient:
     ) -> Union[types.OriginalA, types.OriginalB]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -560,7 +560,7 @@ class BamlSyncClient:
     ) -> types.ContactInfo:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -583,7 +583,7 @@ class BamlSyncClient:
     ) -> List[Union[types.Hobby, str]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -813,7 +813,7 @@ class BamlSyncClient:
     ) -> types.LiteralClassHello:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -836,7 +836,7 @@ class BamlSyncClient:
     ) -> Union[types.LiteralClassOne, types.LiteralClassTwo]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -997,7 +997,7 @@ class BamlSyncClient:
     ) -> int:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1020,7 +1020,7 @@ class BamlSyncClient:
     ) -> Literal[False]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1043,7 +1043,7 @@ class BamlSyncClient:
     ) -> Literal[5]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1066,7 +1066,7 @@ class BamlSyncClient:
     ) -> Literal["example output"]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1250,7 +1250,7 @@ class BamlSyncClient:
     ) -> Union[Literal[1], Literal[True], Literal["string output"]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1273,7 +1273,7 @@ class BamlSyncClient:
     ) -> Checked[types.BlockConstraint,types.Literal["cross_field"]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1296,7 +1296,7 @@ class BamlSyncClient:
     ) -> types.NestedBlockConstraint:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1365,7 +1365,7 @@ class BamlSyncClient:
     ) -> types.FooAny:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1388,7 +1388,7 @@ class BamlSyncClient:
     ) -> Checked[int,types.Literal["too_big"]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1572,7 +1572,7 @@ class BamlSyncClient:
     ) -> int:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1595,7 +1595,7 @@ class BamlSyncClient:
     ) -> types.MalformedConstraints:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1641,7 +1641,7 @@ class BamlSyncClient:
     ) -> types.BigNumbers:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1664,7 +1664,7 @@ class BamlSyncClient:
     ) -> types.TwoStoriesOneTitle:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1687,7 +1687,7 @@ class BamlSyncClient:
     ) -> int:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1710,7 +1710,7 @@ class BamlSyncClient:
     ) -> List[Union[int, str]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1733,7 +1733,7 @@ class BamlSyncClient:
     ) -> types.CompoundBigNumbers:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -1825,7 +1825,7 @@ class BamlSyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2308,7 +2308,7 @@ class BamlSyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2331,7 +2331,7 @@ class BamlSyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2354,7 +2354,7 @@ class BamlSyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2492,7 +2492,7 @@ class BamlSyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2561,7 +2561,7 @@ class BamlSyncClient:
     ) -> int:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2584,7 +2584,7 @@ class BamlSyncClient:
     ) -> int:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2607,7 +2607,7 @@ class BamlSyncClient:
     ) -> int:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2672,7 +2672,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2702,7 +2702,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2732,7 +2732,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2762,7 +2762,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -2792,7 +2792,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -3125,7 +3125,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[Union[partial_types.OriginalA, partial_types.OriginalB]], Union[types.OriginalA, types.OriginalB]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -3303,7 +3303,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[partial_types.ContactInfo, types.ContactInfo]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -3333,7 +3333,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[List[Optional[Union[types.Hobby, str]]], List[Union[types.Hobby, str]]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -3635,7 +3635,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[partial_types.LiteralClassHello, types.LiteralClassHello]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -3665,7 +3665,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[Union[partial_types.LiteralClassOne, partial_types.LiteralClassTwo]], Union[types.LiteralClassOne, types.LiteralClassTwo]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -3875,7 +3875,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[int], int]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -3905,7 +3905,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Literal[False], Literal[False]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -3935,7 +3935,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Literal[5], Literal[5]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -3965,7 +3965,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Literal["example output"], Literal["example output"]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4205,7 +4205,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[Union[Literal[1], Literal[True], Literal["string output"]]], Union[Literal[1], Literal[True], Literal["string output"]]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4235,7 +4235,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Checked[partial_types.BlockConstraint,types.Literal["cross_field"]], Checked[types.BlockConstraint,types.Literal["cross_field"]]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4264,7 +4264,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[partial_types.NestedBlockConstraint, types.NestedBlockConstraint]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4353,7 +4353,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[partial_types.FooAny, types.FooAny]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4383,7 +4383,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Checked[Optional[int],types.Literal["too_big"]], Checked[int,types.Literal["too_big"]]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4623,7 +4623,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[int], int]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4653,7 +4653,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[partial_types.MalformedConstraints, types.MalformedConstraints]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4713,7 +4713,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[partial_types.BigNumbers, types.BigNumbers]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4743,7 +4743,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[partial_types.TwoStoriesOneTitle, types.TwoStoriesOneTitle]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4774,7 +4774,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[int], int]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4804,7 +4804,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[List[Optional[Union[Optional[int], Optional[str]]]], List[Union[int, str]]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4834,7 +4834,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[partial_types.CompoundBigNumbers, types.CompoundBigNumbers]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -4955,7 +4955,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -5586,7 +5586,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -5616,7 +5616,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -5646,7 +5646,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -5824,7 +5824,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -5913,7 +5913,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[int], int]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -5943,7 +5943,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[int], int]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -5973,7 +5973,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlSyncStream[Optional[int], int]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)

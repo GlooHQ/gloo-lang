@@ -26,9 +26,7 @@ fn resolve_strategy(
     _ctx: &RuntimeContext,
 ) -> Result<Vec<ClientSpec>> {
     let strategy = properties
-        .remove("strategy")?
-        .map(|v| serde_json::from_value::<Vec<String>>(v))
-        .transpose()
+        .remove_serde::<Vec<String>>("strategy")
         .context("Failed to resolve strategy into string[]")?;
 
     let strategy = if let Some(strategy) = strategy {

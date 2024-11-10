@@ -57,12 +57,13 @@ class TypeBuilder(_TypeBuilder):
 
 
     
+    @property
     def OriginalB(self) -> "OriginalBBuilder":
         return OriginalBBuilder(self)
 
 
-    @property
     
+    @property
     def Person(self) -> "PersonBuilder":
         return PersonBuilder(self)
 
@@ -289,10 +290,12 @@ class DynamicOutputProperties:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+
 class OriginalBBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.class_("OriginalB")
-        self.__properties = set([ "value", ])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("OriginalB")
+        self.__properties: typing.Set[str] = set([ "value", ])
         self.__props = OriginalBProperties(self.__bldr, self.__properties)
 
     def type(self) -> FieldType:
@@ -303,7 +306,7 @@ class OriginalBBuilder:
         return self.__props
     
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, self.__bldr.property(name)) for name in self.__properties]
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
     def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
         if name in self.__properties:
@@ -319,12 +322,13 @@ class OriginalBProperties:
 
     @property
     def value(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("value")
+        return ClassPropertyBuilder(self.__bldr.property("value"))
 
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+
 class PersonBuilder:
     def __init__(self, tb: _TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)
