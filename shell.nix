@@ -16,6 +16,8 @@ let
     dependencies = [ ];
   };
 
+  clang = pkgs.llvmPackages_19.clang;
+
   appleDeps = with pkgs.darwin.apple_sdk.frameworks; [
     CoreServices
     SystemConfiguration
@@ -40,18 +42,19 @@ in pkgs.mkShell {
       ruby
       nixfmt-classic
       swc
-      lld_18
+      lld_19
+      turbo # js packaging
       wasm-pack
     ] ++ (if pkgs.stdenv.isDarwin then appleDeps else [ ]);
 
   LIBCLANG_PATH = pkgs.libclang.lib + "/lib/";
   BINDGEN_EXTRA_CLANG_ARGS = if pkgs.stdenv.isDarwin then
-    "-I${pkgs.llvmPackages_18.libclang.lib}/lib/clang/18/headers "
+    "-I${pkgs.llvmPackages_19.libclang.lib}/lib/clang/19/headers "
   else
-    "-isystem ${pkgs.llvmPackages_18.libclang.lib}/lib/clang/18/include -isystem ${pkgs.glibc.dev}/include";
+    "-isystem ${pkgs.llvmPackages_19.libclang.lib}/lib/clang/19/include -isystem ${pkgs.glibc.dev}/include";
 
   shellHook = ''
     export PROJECT_ROOT=/$(pwd)
-    export PATH=/$PROJECT_ROOT/tools:$PROJECT_ROOT/integ-tests/typescript/node_modules/.bin:$PATH
+    export PATH=${clang}/bin:/$PROJECT_ROOT/tools:$PROJECT_ROOT/integ-tests/typescript/node_modules/.bin:$PATH
   '';
 }

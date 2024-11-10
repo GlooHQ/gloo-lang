@@ -4,6 +4,8 @@ use crate::internal::llm_client::traits::{
     ToProviderMessage, ToProviderMessageExt, WithClientProperties,
 };
 use crate::internal::llm_client::{AllowedMetadata, ResolveMediaUrls, SupportedRequestModes};
+#[cfg(target_arch = "wasm32")]
+use crate::internal::wasm_jwt::{encode_jwt, JwtError};
 use crate::RuntimeContext;
 use crate::{
     internal::llm_client::{
@@ -23,6 +25,7 @@ use crate::{
 use anyhow::{Context, Result};
 use chrono::{Duration, Utc};
 use futures::StreamExt;
+#[cfg(not(target_arch = "wasm32"))]
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -381,9 +384,18 @@ async fn get_access_token(service_account: &ServiceAccount) -> Result<String> {
     };
 
     // Create the JWT
-    let header = Header::new(Algorithm::RS256);
-    let key = EncodingKey::from_rsa_pem(service_account.private_key.as_bytes())?;
-    let jwt = encode(&header, &claims, &key)?;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let jwt = encode(
+        &Header::new(Algorithm::RS256),
+        &claims,
+        &EncodingKey::from_rsa_pem(service_account.private_key.as_bytes())?,
+    )?;
+
+    #[cfg(target_arch = "wasm32")]
+    let jwt = encode_jwt(&serde_json::to_value(claims)?, &service_account.private_key)
+        .await
+        .map_err(|e| anyhow::anyhow!(format!("{e:?}")))?;
 
     // Make the token request
     let client = reqwest::Client::new();
