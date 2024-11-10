@@ -41,6 +41,7 @@ fn build_folder_tests(dir: &'static str, out_file_name: &str) {
     println!("cargo:rerun-if-changed={dir}");
     let mut all_schemas = Vec::new();
     find_all_schemas("", &mut all_schemas, dir);
+    all_schemas.sort();
 
     // concatenate all the files in the directory into a single file
     let mut out_file = fs::File::create(format!("{CARGO_MANIFEST_DIR}/{out_file_name}")).unwrap();
