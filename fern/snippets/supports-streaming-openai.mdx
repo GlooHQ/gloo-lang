@@ -33,6 +33,7 @@
   ```python
   # This will be streamed from your python code perspective, 
   # but under the hood it will call the non-streaming HTTP API
+  # and then return a streamable response with a single event
   b.stream.MyFunction()
 
   # This will work exactly the same as before
