@@ -127,7 +127,15 @@ You can always set it to ` | ` or something else for a specific model you use.
 Prefix of hoisted classes in the prompt. **Default: `<none>`**
 
 Recursive classes are hoisted in the prompt so that any class field can
-reference them using their name.
+reference them using their name. This parameter controls the prefix used for
+hoisted classes as well as the word used in the render message to refer to the
+output type, which defaults to `"schema"`:
+
+```
+Answer in JSON using this schema:
+```
+
+See examples below.
 
 **Recursive BAML Prompt Example**
 
@@ -176,7 +184,7 @@ interface Node {
   next: Node or null
 }
 
-Answer in JSON using this schema:
+Answer in JSON using this interface:
 {
   head: Node or null,
   len: int
