@@ -220,7 +220,7 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
 /// Just syntactic sugar for the recursive check.
 ///
 /// See [`NestedChecks::has_checks_nested`].
-fn has_checks_nested(ctx: &Context<'_>, field_type: &FieldType) -> bool {
+pub(super) fn has_checks_nested(ctx: &Context<'_>, field_type: &FieldType) -> bool {
     NestedChecks::new(ctx).has_checks_nested(field_type)
 }
 

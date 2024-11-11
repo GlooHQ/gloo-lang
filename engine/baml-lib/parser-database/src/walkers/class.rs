@@ -128,6 +128,8 @@ impl<'db> ClassWalker<'db> {
         }
     }
 }
+
+/// An argument of a function.
 pub type ArgWalker<'db> = super::Walker<'db, (ast::TypeExpId, bool, ArgumentId)>;
 
 impl<'db> ArgWalker<'db> {

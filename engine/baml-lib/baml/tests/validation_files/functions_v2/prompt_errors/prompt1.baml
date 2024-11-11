@@ -50,3 +50,9 @@ function Bar1(a: string) -> int {
 // 23 |   prompt #"
 // 24 |     {{ Foo(a) }}
 //    | 
+// warning: Variable `b` does not exist. Did you mean one of these: `_`, `ctx`?
+//   -->  functions_v2/prompt_errors/prompt1.baml:6
+//    | 
+//  5 | template_string Foo() #"
+//  6 |   This! {{ b}}
+//    | 
