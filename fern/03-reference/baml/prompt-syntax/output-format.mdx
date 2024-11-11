@@ -123,6 +123,67 @@ BAML renders it as `property: string or null` as we have observed some LLMs have
 You can always set it to ` | ` or something else for a specific model you use.
 </ParamField>
 
+<ParamField path="hoisted_class_prefix" type="string"> 
+Prefix of hoisted classes in the prompt. **Default: `<none>`**
+
+Recursive classes are hoisted in the prompt so that any class field can
+reference them using their name.
+
+**Recursive BAML Prompt Example**
+
+```baml
+class Node {
+  data int
+  next Node?
+}
+
+class LinkedList {
+  head Node?
+  len int
+}
+
+function BuildLinkedList(input: int[]) -> LinkedList {
+  prompt #"
+    Build a linked list from the input array of integers.
+
+    INPUT: {{ input }}
+
+    {{ ctx.output_format }}    
+  "#
+}
+```
+
+**Default `hoisted_class_prefix` (none)**
+
+```
+Node {
+  data: int,
+  next: Node or null
+}
+
+Answer in JSON using this schema:
+{
+  head: Node or null,
+  len: int
+}
+```
+
+**Custom Prefix: `hoisted_class_prefix="interface"`**
+
+```
+interface Node {
+  data: int,
+  next: Node or null
+}
+
+Answer in JSON using this schema:
+{
+  head: Node or null,
+  len: int
+}
+```
+</ParamField>
+
 ## Why BAML doesn't use JSON schema format in prompts
 BAML uses "type definitions" or "jsonish" format instead of the long-winded json-schema format.
 The tl;dr is that json schemas are
