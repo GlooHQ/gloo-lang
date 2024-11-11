@@ -281,6 +281,12 @@ describe('Integ tests', () => {
     expect(msgs.at(-1)).toEqual(final)
   })
 
+  it('should allow overriding the region', async () => {
+    await expect(async () => {
+      await b.TestAwsInvalidRegion('Dr. Pepper')
+    }).rejects.toThrow('DispatchFailure')
+  })
+
   it('should support OpenAI shorthand', async () => {
     const res = await b.TestOpenAIShorthand('Dr. Pepper')
     expect(res.length).toBeGreaterThan(0)
@@ -613,7 +619,7 @@ describe('Integ tests', () => {
 
   it('should raise an error when appropriate', async () => {
     await expect(async () => {
-      await b.TestCaching(111 as unknown as string) // intentionally passing an int instead of a string
+      await b.TestCaching(111 as unknown as string, "fiction") // intentionally passing an int instead of a string
     }).rejects.toThrow('BamlInvalidArgumentError')
 
     await expect(async () => {
@@ -698,6 +704,50 @@ describe('Integ tests', () => {
     expect(people.length).toBeGreaterThan(0)
   })
 
+  it('should handle non-terminal finish reason', async () => {
+    const cr = new ClientRegistry()
+    cr.addLlmClient('MyClient', 'openai', { model: 'gpt-4o-mini', max_tokens: 1, finish_reason_allowlist: ['stop'] })
+    cr.setPrimary('MyClient')
+
+    try {
+      await b.TestCaching('Tell me a story about food!', "fiction", {
+        clientRegistry: cr,
+      })
+      fail('Expected BamlValidationError to be thrown')
+    } catch (error: any) {
+      if (error instanceof BamlValidationError) {
+        console.log('Exception message:', error)
+        expect(error.message).toContain('Non-terminal finish reason')
+      } else {
+        fail('Expected error to be an instance of BamlValidationError')
+      }
+    }
+  })
+
+  it('should handle non-terminal finish reason in streaming', async () => {
+    const cr = new ClientRegistry()
+    cr.addLlmClient('MyClient', 'openai', { model: 'gpt-4o-mini', max_tokens: 1, finish_reason_allowlist: ['stop'] })
+    cr.setPrimary('MyClient')
+
+    try {
+      const stream = b.stream.TestCaching('Tell me a story about food!', "fiction", {
+        clientRegistry: cr,
+      })
+      for await (const msg of stream) {
+        console.log('streamed', msg)
+      }
+      await stream.getFinalResponse()
+      fail('Expected BamlValidationError to be thrown')
+    } catch (error: any) {
+      if (error instanceof BamlValidationError) {
+        console.log('Exception message:', error)
+        expect(error.message).toContain('Non-terminal finish reason')
+      } else {
+        fail('Expected error to be an instance of BamlValidationError')
+      }
+    }
+  });
+
   it('should use aliases when serializing input objects - classes', async () => {
     const res = await b.AliasedInputClass({ key: 'hello', key2: 'world' })
     expect(res).toContain('color')
@@ -750,17 +800,124 @@ describe('Integ tests', () => {
 
   it('constraints: should handle nested-block-level checks', async () => {
     const res = await b.MakeNestedBlockConstraint()
-    console.log(JSON.stringify(res));
+    console.log(JSON.stringify(res))
     expect(res.nbc.checks.cross_field.status).toBe('succeeded')
+  })
+
+  it('simple recursive type', async () => {
+    const res = await b.BuildLinkedList([1, 2, 3, 4, 5])
+    expect(res).toEqual({
+      head: {
+        data: 1,
+        next: {
+          data: 2,
+          next: {
+            data: 3,
+            next: {
+              data: 4,
+              next: {
+                data: 5,
+                next: null,
+              },
+            },
+          },
+        },
+      },
+      len: 5,
+    })
+  })
+
+  it('mutually recursive type', async () => {
+    const res = await b.BuildTree({
+      data: 5,
+      left: {
+        data: 3,
+        left: {
+          data: 1,
+          left: null,
+          right: {
+            data: 2,
+            left: null,
+            right: null,
+          },
+        },
+        right: {
+          data: 4,
+          left: null,
+          right: null,
+        },
+      },
+      right: {
+        data: 7,
+        left: {
+          data: 6,
+          left: null,
+          right: null,
+        },
+        right: {
+          data: 8,
+          left: null,
+          right: null,
+        },
+      },
+    })
+    expect(res).toEqual({
+      data: 5,
+      children: {
+        trees: [
+          {
+            data: 3,
+            children: {
+              trees: [
+                {
+                  data: 1,
+                  children: {
+                    trees: [
+                      {
+                        data: 2,
+                        children: {
+                          trees: [],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  data: 4,
+                  children: {
+                    trees: [],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            data: 7,
+            children: {
+              trees: [
+                {
+                  data: 6,
+                  children: {
+                    trees: [],
+                  },
+                },
+                {
+                  data: 8,
+                  children: {
+                    trees: [],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    })
   })
 })
 
-interface MyInterface {
-  key: string
-  key_two: boolean
-  key_three: number
-}
+  afterAll(async () => {
+    flush()
+  });
 
-afterAll(async () => {
-  flush()
 })

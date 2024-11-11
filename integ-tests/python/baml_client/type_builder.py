@@ -14,64 +14,65 @@
 # pylint: disable=unused-import,line-too-long
 # fmt: off
 import typing
-from baml_py.type_builder import FieldType, TypeBuilder as _TypeBuilder, ClassPropertyBuilder, EnumValueBuilder, EnumBuilder, ClassBuilder
+from baml_py.baml_py import FieldType, EnumValueBuilder, EnumBuilder, ClassBuilder
+from baml_py.type_builder import TypeBuilder as _TypeBuilder, ClassPropertyBuilder
 
 class TypeBuilder(_TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["BigNumbers","Blah","BlockConstraint","BlockConstraintForParam","BookOrder","ClassOptionalOutput","ClassOptionalOutput2","ClassWithImage","CompoundBigNumbers","ContactInfo","CustomTaskResult","DummyOutput","DynInputOutput","DynamicClassOne","DynamicClassTwo","DynamicOutput","Earthling","Education","Email","EmailAddress","Event","FakeImage","FlightConfirmation","FooAny","GroceryReceipt","InnerClass","InnerClass2","InputClass","InputClassNested","LiteralClassHello","LiteralClassOne","LiteralClassTwo","MalformedConstraints","MalformedConstraints2","Martian","NamedArgsSingleClass","Nested","Nested2","NestedBlockConstraint","NestedBlockConstraintForParam","OptionalTest_Prop1","OptionalTest_ReturnType","OrderInfo","OriginalA","OriginalB","Person","PhoneNumber","Quantity","RaysData","ReceiptInfo","ReceiptItem","Recipe","Resume","Schema","SearchParams","SomeClassNestedDynamic","StringToClassEntry","TestClassAlias","TestClassNested","TestClassWithEnum","TestOutputClass","TwoStoriesOneTitle","UnionTest_ReturnType","WithReasoning",]
+          ["BigNumbers","BinaryNode","Blah","BlockConstraint","BlockConstraintForParam","BookOrder","ClassOptionalOutput","ClassOptionalOutput2","ClassWithImage","CompoundBigNumbers","ContactInfo","CustomTaskResult","DummyOutput","DynInputOutput","DynamicClassOne","DynamicClassTwo","DynamicOutput","Earthling","Education","Email","EmailAddress","Event","FakeImage","FlightConfirmation","FooAny","Forest","GroceryReceipt","InnerClass","InnerClass2","InputClass","InputClassNested","LinkedList","LiteralClassHello","LiteralClassOne","LiteralClassTwo","MalformedConstraints","MalformedConstraints2","Martian","NamedArgsSingleClass","Nested","Nested2","NestedBlockConstraint","NestedBlockConstraintForParam","Node","OptionalTest_Prop1","OptionalTest_ReturnType","OrderInfo","OriginalA","OriginalB","Person","PhoneNumber","Quantity","RaysData","ReceiptInfo","ReceiptItem","Recipe","Resume","Schema","SearchParams","SomeClassNestedDynamic","StringToClassEntry","TestClassAlias","TestClassNested","TestClassWithEnum","TestOutputClass","Tree","TwoStoriesOneTitle","UnionTest_ReturnType","WithReasoning",]
         ), enums=set(
           ["AliasedEnum","Category","Category2","Category3","Color","DataType","DynEnumOne","DynEnumTwo","EnumInClass","EnumOutput","Hobby","NamedArgsSingleEnum","NamedArgsSingleEnumList","OptionalTest_CategoryType","OrderStatus","Tag","TestEnum",]
         ))
 
 
-
-    @property
     
+    @property
     def DummyOutput(self) -> "DummyOutputBuilder":
         return DummyOutputBuilder(self)
 
 
-    @property
     
+    @property
     def DynInputOutput(self) -> "DynInputOutputBuilder":
         return DynInputOutputBuilder(self)
 
 
-    @property
     
+    @property
     def DynamicClassOne(self) -> "DynamicClassOneBuilder":
         return DynamicClassOneBuilder(self)
 
 
-    @property
     
+    @property
     def DynamicClassTwo(self) -> "DynamicClassTwoBuilder":
         return DynamicClassTwoBuilder(self)
 
 
-    @property
     
+    @property
     def DynamicOutput(self) -> "DynamicOutputBuilder":
         return DynamicOutputBuilder(self)
 
 
-    @property
     
+    @property
     def OriginalB(self) -> "OriginalBBuilder":
         return OriginalBBuilder(self)
 
 
-    @property
     
+    @property
     def Person(self) -> "PersonBuilder":
         return PersonBuilder(self)
 
 
-    @property
     
+    @property
     def SomeClassNestedDynamic(self) -> "SomeClassNestedDynamicBuilder":
         return SomeClassNestedDynamicBuilder(self)
+
 
 
 
@@ -98,8 +99,9 @@ class TypeBuilder(_TypeBuilder):
 
 class DummyOutputBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.class_("DummyOutput")
-        self.__properties = set([ "nonce",  "nonce2", ])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("DummyOutput")
+        self.__properties: typing.Set[str] = set([ "nonce",  "nonce2", ])
         self.__props = DummyOutputProperties(self.__bldr, self.__properties)
 
     def type(self) -> FieldType:
@@ -110,7 +112,7 @@ class DummyOutputBuilder:
         return self.__props
     
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, self.__bldr.property(name)) for name in self.__properties]
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
     def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
         if name in self.__properties:
@@ -126,20 +128,22 @@ class DummyOutputProperties:
 
     @property
     def nonce(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("nonce")
+        return ClassPropertyBuilder(self.__bldr.property("nonce"))
 
     @property
     def nonce2(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("nonce2")
+        return ClassPropertyBuilder(self.__bldr.property("nonce2"))
 
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+
 class DynInputOutputBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.class_("DynInputOutput")
-        self.__properties = set([ "testKey", ])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("DynInputOutput")
+        self.__properties: typing.Set[str] = set([ "testKey", ])
         self.__props = DynInputOutputProperties(self.__bldr, self.__properties)
 
     def type(self) -> FieldType:
@@ -150,7 +154,7 @@ class DynInputOutputBuilder:
         return self.__props
     
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, self.__bldr.property(name)) for name in self.__properties]
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
     def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
         if name in self.__properties:
@@ -166,16 +170,18 @@ class DynInputOutputProperties:
 
     @property
     def testKey(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("testKey")
+        return ClassPropertyBuilder(self.__bldr.property("testKey"))
 
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+
 class DynamicClassOneBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.class_("DynamicClassOne")
-        self.__properties = set([])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("DynamicClassOne")
+        self.__properties: typing.Set[str] = set([])
         self.__props = DynamicClassOneProperties(self.__bldr, self.__properties)
 
     def type(self) -> FieldType:
@@ -186,7 +192,7 @@ class DynamicClassOneBuilder:
         return self.__props
     
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, self.__bldr.property(name)) for name in self.__properties]
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
     def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
         if name in self.__properties:
@@ -204,10 +210,12 @@ class DynamicClassOneProperties:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+
 class DynamicClassTwoBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.class_("DynamicClassTwo")
-        self.__properties = set([ "hi",  "some_class",  "status", ])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("DynamicClassTwo")
+        self.__properties: typing.Set[str] = set([ "hi",  "some_class",  "status", ])
         self.__props = DynamicClassTwoProperties(self.__bldr, self.__properties)
 
     def type(self) -> FieldType:
@@ -218,7 +226,7 @@ class DynamicClassTwoBuilder:
         return self.__props
     
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, self.__bldr.property(name)) for name in self.__properties]
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
     def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
         if name in self.__properties:
@@ -234,24 +242,26 @@ class DynamicClassTwoProperties:
 
     @property
     def hi(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("hi")
+        return ClassPropertyBuilder(self.__bldr.property("hi"))
 
     @property
     def some_class(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("some_class")
+        return ClassPropertyBuilder(self.__bldr.property("some_class"))
 
     @property
     def status(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("status")
+        return ClassPropertyBuilder(self.__bldr.property("status"))
 
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+
 class DynamicOutputBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.class_("DynamicOutput")
-        self.__properties = set([])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("DynamicOutput")
+        self.__properties: typing.Set[str] = set([])
         self.__props = DynamicOutputProperties(self.__bldr, self.__properties)
 
     def type(self) -> FieldType:
@@ -262,7 +272,7 @@ class DynamicOutputBuilder:
         return self.__props
     
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, self.__bldr.property(name)) for name in self.__properties]
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
     def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
         if name in self.__properties:
@@ -280,10 +290,12 @@ class DynamicOutputProperties:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+
 class OriginalBBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.class_("OriginalB")
-        self.__properties = set([ "value", ])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("OriginalB")
+        self.__properties: typing.Set[str] = set([ "value", ])
         self.__props = OriginalBProperties(self.__bldr, self.__properties)
 
     def type(self) -> FieldType:
@@ -294,7 +306,7 @@ class OriginalBBuilder:
         return self.__props
     
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, self.__bldr.property(name)) for name in self.__properties]
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
     def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
         if name in self.__properties:
@@ -310,16 +322,18 @@ class OriginalBProperties:
 
     @property
     def value(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("value")
+        return ClassPropertyBuilder(self.__bldr.property("value"))
 
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+
 class PersonBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.class_("Person")
-        self.__properties = set([ "name",  "hair_color", ])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("Person")
+        self.__properties: typing.Set[str] = set([ "name",  "hair_color", ])
         self.__props = PersonProperties(self.__bldr, self.__properties)
 
     def type(self) -> FieldType:
@@ -330,7 +344,7 @@ class PersonBuilder:
         return self.__props
     
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, self.__bldr.property(name)) for name in self.__properties]
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
     def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
         if name in self.__properties:
@@ -346,20 +360,22 @@ class PersonProperties:
 
     @property
     def name(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("name")
+        return ClassPropertyBuilder(self.__bldr.property("name"))
 
     @property
     def hair_color(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("hair_color")
+        return ClassPropertyBuilder(self.__bldr.property("hair_color"))
 
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+
 class SomeClassNestedDynamicBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.class_("SomeClassNestedDynamic")
-        self.__properties = set([ "hi", ])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("SomeClassNestedDynamic")
+        self.__properties: typing.Set[str] = set([ "hi", ])
         self.__props = SomeClassNestedDynamicProperties(self.__bldr, self.__properties)
 
     def type(self) -> FieldType:
@@ -370,7 +386,7 @@ class SomeClassNestedDynamicBuilder:
         return self.__props
     
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, self.__bldr.property(name)) for name in self.__properties]
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
     def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
         if name in self.__properties:
@@ -386,7 +402,7 @@ class SomeClassNestedDynamicProperties:
 
     @property
     def hi(self) -> ClassPropertyBuilder:
-        return self.__bldr.property("hi")
+        return ClassPropertyBuilder(self.__bldr.property("hi"))
 
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
@@ -395,10 +411,12 @@ class SomeClassNestedDynamicProperties:
 
 
 
+
 class ColorBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.enum("Color")
-        self.__values = set([ "RED",  "BLUE",  "GREEN",  "YELLOW",  "BLACK",  "WHITE", ])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.enum("Color")
+        self.__values: typing.Set[str] = set([ "RED",  "BLUE",  "GREEN",  "YELLOW",  "BLACK",  "WHITE", ])
         self.__vals = ColorValues(self.__bldr, self.__values)
 
     def type(self) -> FieldType:
@@ -461,8 +479,9 @@ class ColorValues:
 
 class DynEnumOneBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.enum("DynEnumOne")
-        self.__values = set([])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.enum("DynEnumOne")
+        self.__values: typing.Set[str] = set([])
         self.__vals = DynEnumOneValues(self.__bldr, self.__values)
 
     def type(self) -> FieldType:
@@ -495,8 +514,9 @@ class DynEnumOneValues:
 
 class DynEnumTwoBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.enum("DynEnumTwo")
-        self.__values = set([])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.enum("DynEnumTwo")
+        self.__values: typing.Set[str] = set([])
         self.__vals = DynEnumTwoValues(self.__bldr, self.__values)
 
     def type(self) -> FieldType:
@@ -529,8 +549,9 @@ class DynEnumTwoValues:
 
 class HobbyBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.enum("Hobby")
-        self.__values = set([ "SPORTS",  "MUSIC",  "READING", ])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.enum("Hobby")
+        self.__values: typing.Set[str] = set([ "SPORTS",  "MUSIC",  "READING", ])
         self.__vals = HobbyValues(self.__bldr, self.__values)
 
     def type(self) -> FieldType:

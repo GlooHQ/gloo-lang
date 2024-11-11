@@ -11,9 +11,12 @@ use internal_baml_core::ir::{repr::ClientSpec, ClientWalker};
 
 use crate::{
     client_registry::ClientProperty,
-    internal::llm_client::orchestrator::{
-        ExecutionScope, IterOrchestrator, OrchestrationScope, OrchestrationState,
-        OrchestratorNodeIterator,
+    internal::llm_client::{
+        orchestrator::{
+            ExecutionScope, IterOrchestrator, OrchestrationScope, OrchestrationState,
+            OrchestratorNodeIterator,
+        },
+        properties_hander::PropertiesHandler,
     },
     runtime_interface::InternalClientLookup,
     RuntimeContext,
@@ -51,14 +54,12 @@ impl RoundRobinStrategy {
 }
 
 fn resolve_strategy(
-    mut properties: HashMap<String, serde_json::Value>,
+    mut properties: PropertiesHandler,
     _ctx: &RuntimeContext,
 ) -> Result<(Vec<ClientSpec>, usize)> {
     let strategy = properties
-        .remove("strategy")
-        .map(|v| serde_json::from_value::<Vec<String>>(v))
-        .transpose()
-        .context("Failed to resolve strategy into string[]")?;
+        .remove_serde::<Vec<String>>("strategy")
+        .context("Failed to parse strategy into string[]")?;
 
     let strategy = if let Some(strategy) = strategy {
         if strategy.is_empty() {
@@ -70,11 +71,10 @@ fn resolve_strategy(
     };
 
     let start = properties
-        .remove("start")
-        .map(|v| serde_json::from_value::<usize>(v))
-        .transpose()
-        .context("Invalid start index (not a number)")?;
+        .remove_serde::<usize>("start")
+        .context("Failed to parse start: not a number")?;
 
+    let properties = properties.finalize();
     if !properties.is_empty() {
         let supported_keys = ["strategy", "start"];
         let unknown_keys = properties.keys().map(String::from).collect::<Vec<_>>();
@@ -114,14 +114,7 @@ impl TryFrom<(&ClientProperty, &RuntimeContext)> for RoundRobinStrategy {
     fn try_from(
         (client, ctx): (&ClientProperty, &RuntimeContext),
     ) -> std::result::Result<Self, Self::Error> {
-        let (strategy, start) = resolve_strategy(
-            client
-                .options
-                .iter()
-                .map(|(k, v)| Ok((k.clone(), serde_json::json!(v))))
-                .collect::<Result<HashMap<_, _>>>()?,
-            ctx,
-        )?;
+        let (strategy, start) = resolve_strategy(client.property_handler()?, ctx)?;
 
         Ok(RoundRobinStrategy {
             name: client.name.clone(),

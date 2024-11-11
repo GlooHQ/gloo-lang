@@ -204,6 +204,7 @@ impl WithChat for OpenAIClient {
                 finish_reason: match response.choices.get(0) {
                     Some(c) => match c.finish_reason {
                         Some(FinishReason::Stop) => Some(FinishReason::Stop.to_string()),
+                        Some(other) => Some(other.to_string()),
                         _ => None,
                     },
                     None => None,
@@ -485,14 +486,7 @@ impl OpenAIClient {
     }
 
     pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<OpenAIClient> {
-        let properties = properties::openai::resolve_properties(
-            client
-                .options
-                .iter()
-                .map(|(k, v)| Ok((k.clone(), json!(v))))
-                .collect::<Result<HashMap<_, _>>>()?,
-            &ctx,
-        )?;
+        let properties = properties::openai::resolve_properties(client.property_handler()?, &ctx)?;
         make_openai_client!(client, properties, "openai", dynamic)
     }
 
@@ -500,14 +494,7 @@ impl OpenAIClient {
         client: &ClientProperty,
         ctx: &RuntimeContext,
     ) -> Result<OpenAIClient> {
-        let properties = properties::generic::resolve_properties(
-            client
-                .options
-                .iter()
-                .map(|(k, v)| Ok((k.clone(), json!(v))))
-                .collect::<Result<HashMap<_, _>>>()?,
-            ctx,
-        )?;
+        let properties = properties::generic::resolve_properties(client.property_handler()?, ctx)?;
         make_openai_client!(client, properties, "openai-generic", dynamic)
     }
 
@@ -515,14 +502,7 @@ impl OpenAIClient {
         client: &ClientProperty,
         ctx: &RuntimeContext,
     ) -> Result<OpenAIClient> {
-        let properties = properties::ollama::resolve_properties(
-            client
-                .options
-                .iter()
-                .map(|(k, v)| Ok((k.clone(), json!(v))))
-                .collect::<Result<HashMap<_, _>>>()?,
-            ctx,
-        )?;
+        let properties = properties::ollama::resolve_properties(client.property_handler()?, ctx)?;
         make_openai_client!(client, properties, "ollama", dynamic)
     }
 
@@ -530,14 +510,7 @@ impl OpenAIClient {
         client: &ClientProperty,
         ctx: &RuntimeContext,
     ) -> Result<OpenAIClient> {
-        let properties = properties::azure::resolve_properties(
-            client
-                .options
-                .iter()
-                .map(|(k, v)| Ok((k.clone(), json!(v))))
-                .collect::<Result<HashMap<_, _>>>()?,
-            ctx,
-        )?;
+        let properties = properties::azure::resolve_properties(client.property_handler()?, ctx)?;
         make_openai_client!(client, properties, "azure", dynamic)
     }
 }

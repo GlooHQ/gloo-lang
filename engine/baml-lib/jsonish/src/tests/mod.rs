@@ -7,6 +7,7 @@ pub mod macros;
 mod test_basics;
 mod test_class;
 mod test_class_2;
+mod test_code;
 mod test_constraints;
 mod test_enum;
 mod test_lists;
@@ -15,12 +16,13 @@ mod test_maps;
 mod test_partials;
 mod test_unions;
 
+use indexmap::IndexSet;
 use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
 };
 
-use baml_types::{BamlValue, Constraint, ConstraintLevel, JinjaExpression};
+use baml_types::BamlValue;
 use internal_baml_core::{
     internal_baml_diagnostics::SourceFile,
     ir::{repr::IntermediateRepr, ClassWalker, EnumWalker, FieldType, IRHelper, TypeValue},
@@ -53,8 +55,13 @@ fn render_output_format(
     output: &FieldType,
     env_values: &HashMap<String, String>,
 ) -> Result<OutputFormatContent> {
-    let (enums, classes) = relevant_data_models(ir, output, env_values)?;
-    return Ok(OutputFormatContent::new(enums, classes, output.clone()));
+    let (enums, classes, recursive_classes) = relevant_data_models(ir, output, env_values)?;
+
+    Ok(OutputFormatContent::target(output.clone())
+        .enums(enums)
+        .classes(classes)
+        .recursive_classes(recursive_classes)
+        .build())
 }
 
 fn find_existing_class_field<'a>(
@@ -107,16 +114,22 @@ fn find_enum_value(
     Ok(Some((name, desc)))
 }
 
+// TODO: This function is "almost" a duplicate of `relevant_data_models` at
+// baml-runtime/src/internal/prompt_renderer/render_output_format.rs
+//
+// Should be refactored.
+//
 // TODO: (Greg) Is the use of `String` as a hash key safe? Is there some way to
 // get a collision that results in some type not getting put onto the stack?
 fn relevant_data_models<'a>(
     ir: &'a IntermediateRepr,
     output: &'a FieldType,
     env_values: &HashMap<String, String>,
-) -> Result<(Vec<Enum>, Vec<Class>)> {
+) -> Result<(Vec<Enum>, Vec<Class>, IndexSet<String>)> {
     let mut checked_types: HashSet<String> = HashSet::new();
     let mut enums = Vec::new();
     let mut classes: Vec<Class> = Vec::new();
+    let mut recursive_classes = IndexSet::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     while !start.is_empty() {
@@ -195,6 +208,22 @@ fn relevant_data_models<'a>(
                         }
                     }
 
+                    // TODO: O(n) algorithm. Maybe a Merge-Find Set can optimize
+                    // this to O(log n) or something like that
+                    // (maybe, IDK though ¯\_(ツ)_/¯)
+                    //
+                    // Also there's a lot of cloning in this process of going
+                    // from Parser DB to IR to Jinja Output Format, not only
+                    // with recursive classes but also the rest of models.
+                    // There's room for optimization here.
+                    //
+                    // Also take a look at the TODO on top of this function.
+                    for cycle in ir.finite_recursive_cycles() {
+                        if cycle.contains(cls) {
+                            recursive_classes.extend(cycle.iter().map(ToOwned::to_owned));
+                        }
+                    }
+
                     classes.push(Class {
                         name: Name::new_with_alias(cls.to_string(), walker?.alias(env_values)?),
                         fields,
@@ -210,7 +239,7 @@ fn relevant_data_models<'a>(
         }
     }
 
-    Ok((enums, classes))
+    Ok((enums, classes, recursive_classes))
 }
 
 const EMPTY_FILE: &str = r#"
@@ -705,7 +734,7 @@ test_deserializer!(
 /// as Null.
 fn singleton_list_int_deleted() {
     let target = FieldType::List(Box::new(FieldType::Primitive(TypeValue::Int)));
-    let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
+    let output_format = OutputFormatContent::target(target.clone()).build();
     let res = from_str(&output_format, &target, "[123", true).expect("Can parse");
     let baml_value: BamlValue = res.into();
     assert_eq!(baml_value, BamlValue::List(vec![]));
@@ -717,7 +746,7 @@ fn singleton_list_int_deleted() {
 /// as Null.
 fn list_int_deleted() {
     let target = FieldType::List(Box::new(FieldType::Primitive(TypeValue::Int)));
-    let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
+    let output_format = OutputFormatContent::target(target.clone()).build();
     let res = from_str(&output_format, &target, "[123, 456", true).expect("Can parse");
     let baml_value: BamlValue = res.into();
     assert_eq!(baml_value, BamlValue::List(vec![BamlValue::Int(123)]));
@@ -729,7 +758,7 @@ fn list_int_deleted() {
 /// as Null.
 fn list_int_not_deleted() {
     let target = FieldType::List(Box::new(FieldType::Primitive(TypeValue::Int)));
-    let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
+    let output_format = OutputFormatContent::target(target.clone()).build();
     let res = from_str(&output_format, &target, "[123, 456 // Done", true).expect("Can parse");
     let baml_value: BamlValue = res.into();
     assert_eq!(
@@ -744,7 +773,7 @@ fn list_int_not_deleted() {
 /// as Null.
 fn partial_int_deleted() {
     let target = FieldType::Optional(Box::new(FieldType::Primitive(TypeValue::Int)));
-    let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
+    let output_format = OutputFormatContent::target(target.clone()).build();
     let res = from_str(&output_format, &target, "123", true).expect("Can parse");
     let baml_value: BamlValue = res.into();
     // Note: This happens to parse as a List, but Null also seems appropriate.
@@ -757,7 +786,7 @@ fn partial_int_deleted() {
 /// as Null.
 fn partial_int_not_deleted() {
     let target = FieldType::List(Box::new(FieldType::Primitive(TypeValue::Int)));
-    let output_format = OutputFormatContent::new(Vec::new(), Vec::new(), target.clone());
+    let output_format = OutputFormatContent::target(target.clone()).build();
     let res = from_str(&output_format, &target, "123", true).expect("Can parse");
     let baml_value: BamlValue = res.into();
     // Note: This happens to parse as a List, but Null also seems appropriate.

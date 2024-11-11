@@ -9,7 +9,8 @@ use crate::{
     RuntimeContext,
 };
 
-use super::traits::WithRenderRawCurl;
+use super::traits::{WithClientProperties, WithRenderRawCurl};
+use super::LLMCompleteResponse;
 use super::{
     strategy::roundrobin::RoundRobinStrategy,
     traits::{StreamResponse, WithPrompt, WithSingleCallable, WithStreamable},

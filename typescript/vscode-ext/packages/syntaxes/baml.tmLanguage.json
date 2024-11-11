@@ -83,13 +83,25 @@
         "1": { "name": "storage.type.declaration.function" },
         "2": { "name": "entity.name.function" }
       },
-      "end": "(\")(#)",
+      "end": "(\")(#{1,3})",
       "endCaptures": {
-        "1": { "name": "string.quoted.block.baml" },
-        "2": { "name": "string.quoted.block.baml" }
+        "0": { "name": "string.quoted.block.baml" }
       },
-      "name": "string.quoted.block.baml",
-      "patterns": [{ "include": "#comment" }, { "include": "#function_parameters" }, { "include": "#block_string" }]
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#function_parameters" },
+        {
+          "begin": "(#{1,3}\")",
+          "beginCaptures": {
+            "0": { "name": "string.quoted.block.baml" }
+          },
+          "end": "(?=\"#{1,3})",
+          "contentName": "string.quoted.block.baml",
+          "patterns": [
+            { "include": "source.baml-jinja" }
+          ]
+        }
+      ]
     },
     "function_declaration": {
       "comment": "Function declaration",
@@ -575,18 +587,6 @@
           "include": "source.ts"
         }
       ]
-    },
-    "block_string": {
-      "begin": "(#(\"){1,3})",
-      "beginCaptures": {
-        "1": { "name": "string.quoted.block.baml.startquote" }
-      },
-      "end": "((\"){1,3}#)",
-      "endCaptures": {
-        "1": { "name": "string.quoted.block.baml.endquote" }
-      },
-      "contentName": "string.quoted.block.baml",
-      "patterns": [{ "include": "source.baml-jinja" }]
     },
     "block_string_pair": {
       "begin": "(\\w+)?\\s+(#(\"){1,3})",

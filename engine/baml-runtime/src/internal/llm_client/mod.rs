@@ -5,6 +5,7 @@ pub mod llm_provider;
 pub mod orchestrator;
 pub mod primitive;
 
+mod properties_hander;
 pub mod retry_policy;
 mod strategy;
 pub mod traits;
@@ -371,9 +372,9 @@ impl crate::tracing::Visualize for LLMErrorResponse {
 fn resolve_properties_walker(
     client: &ClientWalker,
     ctx: &crate::RuntimeContext,
-) -> Result<std::collections::HashMap<String, serde_json::Value>> {
+) -> Result<properties_hander::PropertiesHandler> {
     use anyhow::Context;
-    (&client.item.elem.options)
+    let result = (&client.item.elem.options)
         .iter()
         .map(|(k, v)| {
             Ok((
@@ -386,5 +387,7 @@ fn resolve_properties_walker(
                     ))?,
             ))
         })
-        .collect::<Result<std::collections::HashMap<_, _>>>()
+        .collect::<Result<std::collections::HashMap<_, _>>>()?;
+
+    Ok(properties_hander::PropertiesHandler::new(result))
 }

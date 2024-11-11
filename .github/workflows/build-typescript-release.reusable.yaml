@@ -3,7 +3,7 @@ name: Release language_client_typescript
 on:
   workflow_call: {}
   push:
-    branches: [sam/alpine-warnings]
+    branches: [sam/alpine-warnings, aaron-fix]
 
 concurrency:
   # suffix is important to prevent a concurrency deadlock with the calling workflow
@@ -57,6 +57,7 @@ jobs:
               CC_x86_64_unknown_linux_musl=x86_64-linux-musl-gcc
               CXX_x86_64_unknown_linux_musl=x86_64-linux-musl-g++
               AR_x86_64_unknown_linux_musl=x86_64-linux-musl-ar
+              RUSTFLAGS=-C target-feature=-crt-static --cfg tracing_unstable
               EOF
             node_build: pnpm build:napi-release --target x86_64-unknown-linux-musl --use-napi-cross
 
@@ -66,6 +67,9 @@ jobs:
               curl -LO https://musl.cc/aarch64-linux-musl-cross.tgz
               tar -xzf aarch64-linux-musl-cross.tgz
               echo "$PWD/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
+              cat >>$GITHUB_ENV <<EOF
+              RUSTFLAGS=-C target-feature=-crt-static --cfg tracing_unstable
+              EOF
             node_build: pnpm build:napi-release --target aarch64-unknown-linux-musl --use-napi-cross
 
     name: ${{ matrix._.target }}
@@ -101,7 +105,7 @@ jobs:
       - name: PNPM Install
         run: pnpm install --frozen-lockfile
         working-directory: engine/language_client_typescript
-      
+
       # per-matrix-entry dependency setup
       - name: Build tools setup
         run: ${{ matrix._.before }}
@@ -110,7 +114,7 @@ jobs:
       - name: PNPM Build
         run: ${{ matrix._.node_build }}
         working-directory: engine/language_client_typescript
-      
+
       - name: Build TS
         run: pnpm build:ts_build
         working-directory: engine/language_client_typescript

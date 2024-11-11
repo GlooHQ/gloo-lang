@@ -102,7 +102,10 @@ fn test_ifexpr() {
 
     assert_eq!(
         assert_evaluates_to!("1 if true else '2'", &types),
-        Type::Union(vec![Type::Literal(LiteralValue::String("2".to_string())), Type::Literal(LiteralValue::Int(1))])
+        Type::Union(vec![
+            Type::Literal(LiteralValue::String("2".to_string())),
+            Type::Literal(LiteralValue::Int(1))
+        ])
     );
 
     assert_eq!(
@@ -165,7 +168,9 @@ fn test_call_function() {
 
     assert_eq!(
         assert_fails_to!("AnotherFunc(arg='true', arg2='1')", &types),
-        vec![r#"Function 'AnotherFunc' expects argument 'arg' to be of type bool, but got literal["true"]"#]
+        vec![
+            r#"Function 'AnotherFunc' expects argument 'arg' to be of type bool, but got literal["true"]"#
+        ]
     );
 
     assert_eq!(
@@ -212,21 +217,19 @@ fn test_call_function() {
     types.add_function(
         "TakesLiteralFoo",
         Type::Float,
-        vec![
-            ("arg".to_string(),
-                Type::Union(vec![
-                    Type::Literal(LiteralValue::String("Foo".to_string())),
-                    Type::Literal(LiteralValue::String("Bar".to_string()))
-                ])
-            )
-        ]
+        vec![(
+            "arg".to_string(),
+            Type::Union(vec![
+                Type::Literal(LiteralValue::String("Foo".to_string())),
+                Type::Literal(LiteralValue::String("Bar".to_string())),
+            ]),
+        )],
     );
 
     assert_eq!(
         assert_evaluates_to!("TakesLiteralFoo('Foo')", &types),
         Type::Float
     );
-
 }
 
 #[test]
@@ -256,6 +259,14 @@ fn test_output_format() {
             &types
         ),
         vec!["Function 'baml::OutputFormat' expects argument 'always_hoist_enums' to be of type (none | bool), but got literal[1]"]
+    );
+
+    assert_eq!(
+        assert_fails_to!(
+            "ctx.output_format(prefix='1', hoisted_class_prefix=1)",
+            &types
+        ),
+        vec!["Function 'baml::OutputFormat' expects argument 'hoisted_class_prefix' to be of type (none | string), but got literal[1]"]
     );
 
     assert_eq!(

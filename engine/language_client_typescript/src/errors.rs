@@ -34,7 +34,7 @@ pub fn from_anyhow_error(err: anyhow::Error) -> napi::Error {
                     napi::Status::GenericFailure,
                     format!(
                         "BamlError: BamlClientError: Something went wrong with the LLM client: {}",
-                        err
+                        failed.message
                     ),
                 ),
                 baml_runtime::internal::llm_client::ErrorCode::Other(_)

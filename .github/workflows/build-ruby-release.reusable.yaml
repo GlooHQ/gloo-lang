@@ -2,6 +2,8 @@ name: Release engine/language_client_ruby
 
 on:
   workflow_call: {}
+  push:
+    branches: [aaron-fix]
 
 permissions:
   contents: read
@@ -72,6 +74,9 @@ jobs:
           mkdir -p "$rb_sys_dock_cache_dir"
           echo "RB_SYS_DOCK_CACHE_DIR=$rb_sys_dock_cache_dir" >> $GITHUB_ENV
           echo "rb_sys_version=$rb_sys_version" >> $GITHUB_OUTPUT
+          cat >>$GITHUB_ENV <<EOF
+          RUSTFLAGS=--cfg tracing_unstable
+          EOF
 
       - name: Setup rb-sys
         shell: bash

@@ -3,9 +3,8 @@ pub(crate) mod generic;
 pub(crate) mod ollama;
 pub(crate) mod openai;
 
-use std::collections::HashMap;
-
 use crate::internal::llm_client::AllowedMetadata;
+use std::collections::HashMap;
 
 pub struct PostRequestProperties {
     pub default_role: String,

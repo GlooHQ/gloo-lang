@@ -4,6 +4,7 @@ use magnus::{class, function, method, prelude::*, Error, RHash, Ruby};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tracing_subscriber::EnvFilter;
 
 use function_result::FunctionResult;
 use function_result_stream::FunctionResultStream;
@@ -201,13 +202,35 @@ fn invoke_runtime_cli(ruby: &Ruby, argv0: String, argv: Vec<String>) -> Result<(
 
 #[magnus::init(name = "ruby_ffi")]
 fn init(ruby: &Ruby) -> Result<()> {
-    if let Err(e) = env_logger::try_init_from_env(
-        env_logger::Env::new()
-            .filter("BAML_LOG")
-            .write_style("BAML_LOG_STYLE"),
-    ) {
-        eprintln!("Failed to initialize BAML logger: {:#}", e);
+    let use_json = match std::env::var("BAML_LOG_JSON") {
+        Ok(val) => val.trim().eq_ignore_ascii_case("true") || val.trim() == "1",
+        Err(_) => false,
     };
+
+    if use_json {
+        // JSON formatting
+        tracing_subscriber::fmt()
+            .with_target(false)
+            .with_file(false)
+            .with_line_number(false)
+            .json()
+            .with_env_filter(
+                EnvFilter::try_from_env("BAML_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
+            )
+            .flatten_event(true)
+            .with_current_span(false)
+            .with_span_list(false)
+            .init();
+    } else {
+        // Regular formatting
+        if let Err(e) = env_logger::try_init_from_env(
+            env_logger::Env::new()
+                .filter("BAML_LOG")
+                .write_style("BAML_LOG_STYLE"),
+        ) {
+            eprintln!("Failed to initialize BAML logger: {:#}", e);
+        }
+    }
 
     let module = ruby.define_module("Baml")?.define_module("Ffi")?;
 

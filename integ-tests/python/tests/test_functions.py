@@ -30,6 +30,11 @@ from ..baml_client.types import (
     MalformedConstraints2,
     LiteralClassHello,
     LiteralClassOne,
+    LinkedList,
+    Node,
+    BinaryNode,
+    Tree,
+    Forest,
     all_succeeded,
     BlockConstraintForParam,
     NestedBlockConstraintForParam,
@@ -116,7 +121,9 @@ class TestAllInputs:
 
     @pytest.mark.asyncio
     async def test_constraint_union_variant_checking(self):
-        res = await b.ExtractContactInfo("Reach me at help@boundaryml.com, or 111-222-3333 if needed.")
+        res = await b.ExtractContactInfo(
+            "Reach me at help@boundaryml.com, or 111-222-3333 if needed."
+        )
         assert res.primary.value is not None
         assert res.primary.value == "help@boundaryml.com"
         assert res.secondary.value is not None
@@ -741,7 +748,7 @@ async def test_dynamic_class_output():
         baml_options={"tb": tb},
     )
     print(output.model_dump_json())
-    assert output.hair_color == "black"
+    assert output.hair_color == "black" # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -827,7 +834,7 @@ async def test_stream_dynamic_class_output():
     print("final ", final)
     print("final ", final.model_dump())
     print("final ", final.model_dump_json())
-    assert final.hair_color == "black"
+    assert final.hair_color == "black" # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -861,12 +868,12 @@ async def test_dynamic_inputs_list2():
         ],
         {"tb": tb},
     )
-    assert res[0].new_key == "hi1"
+    assert res[0].new_key == "hi1" # type: ignore (dynamic property)
     assert res[0].testKey == "myTest"
-    assert res[0].blah["nestedKey1"] == "nestedVal"
-    assert res[1].new_key == "hi"
+    assert res[0].blah["nestedKey1"] == "nestedVal" # type: ignore (dynamic property)
+    assert res[1].new_key == "hi" # type: ignore (dynamic property)
     assert res[1].testKey == "myTest"
-    assert res[1].blah["nestedKey1"] == "nestedVal"
+    assert res[1].blah["nestedKey1"] == "nestedVal" # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -947,12 +954,12 @@ async def test_dynamic_inputs_list():
         ],
         {"tb": tb},
     )
-    assert res[0].new_key == "hi"
+    assert res[0].new_key == "hi" # type: ignore (dynamic property)
     assert res[0].testKey == "myTest"
-    assert res[0].blah["nestedKey1"] == "nestedVal"
-    assert res[1].new_key == "hi"
+    assert res[0].blah["nestedKey1"] == "nestedVal" # type: ignore (dynamic property)
+    assert res[1].new_key == "hi" # type: ignore (dynamic property)
     assert res[1].testKey == "myTest"
-    assert res[1].blah["nestedKey1"] == "nestedVal"
+    assert res[1].blah["nestedKey1"] == "nestedVal" # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -974,9 +981,9 @@ async def test_dynamic_output_map():
     print("final ", res)
     print("final ", res.model_dump())
     print("final ", res.model_dump_json())
-    assert res.hair_color == "black"
-    assert res.attributes["eye_color"] == "blue"
-    assert res.attributes["facial_hair"] == "beard"
+    assert res.hair_color == "black" # type: ignore (dynamic property)
+    assert res.attributes["eye_color"] == "blue" # type: ignore (dynamic property)
+    assert res.attributes["facial_hair"] == "beard" # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -1008,10 +1015,10 @@ async def test_dynamic_output_union():
     print("final ", res)
     print("final ", res.model_dump())
     print("final ", res.model_dump_json())
-    assert res.hair_color == "black"
-    assert res.attributes["eye_color"] == "blue"
-    assert res.attributes["facial_hair"] == "beard"
-    assert res.height["feet"] == 6
+    assert res.hair_color == "black" # type: ignore (dynamic property)
+    assert res.attributes["eye_color"] == "blue" # type: ignore (dynamic property)
+    assert res.attributes["facial_hair"] == "beard" # type: ignore (dynamic property)
+    assert res.height["feet"] == 6 # type: ignore (dynamic property)
 
     res = await b.MyFunc(
         input="My name is Harrison. My hair is black and I'm 1.8 meters tall. I have blue eyes and a beard. I am 30 years old.",
@@ -1021,10 +1028,10 @@ async def test_dynamic_output_union():
     print("final ", res)
     print("final ", res.model_dump())
     print("final ", res.model_dump_json())
-    assert res.hair_color == "black"
-    assert res.attributes["eye_color"] == "blue"
-    assert res.attributes["facial_hair"] == "beard"
-    assert res.height["meters"] == 1.8
+    assert res.hair_color == "black" # type: ignore (dynamic property)
+    assert res.attributes["eye_color"] == "blue" # type: ignore (dynamic property)
+    assert res.attributes["facial_hair"] == "beard" # type: ignore (dynamic property)
+    assert res.height["meters"] == 1.8 # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -1117,8 +1124,8 @@ async def test_event_log_hook():
 @pytest.mark.asyncio
 async def test_aws_bedrock():
     ## unstreamed
-    # res = await b.TestAws("lightning in a rock")
-    # print("unstreamed", res)
+    res = await b.TestAws("lightning in a rock")
+    print("unstreamed", res)
 
     ## streamed
     stream = b.stream.TestAws("lightning in a rock")
@@ -1130,6 +1137,16 @@ async def test_aws_bedrock():
     res = await stream.get_final_response()
     print("streamed final", res)
     assert len(res) > 0, "Expected non-empty result but got empty."
+
+
+@pytest.mark.asyncio
+async def test_aws_bedrock_invalid_region():
+    ## unstreamed
+    with pytest.raises(errors.BamlClientError) as excinfo:
+        res = await b.TestAwsInvalidRegion("lightning in a rock")
+        print("unstreamed", res)
+
+    assert "DispatchFailure" in str(excinfo)
 
 
 @pytest.mark.asyncio
@@ -1187,6 +1204,7 @@ async def test_descriptions():
     assert res.prop2.prop4 == "four"
 
     # Check Nested2 values
+    assert not isinstance(res.prop2, str)
     assert res.prop2.prop20.prop11 == "three"
     assert res.prop2.prop20.prop12 == "four"
 
@@ -1390,16 +1408,84 @@ async def test_failing_assert_can_stream():
         final = await stream.get_final_response()
         assert "Yoshimi" in final.story_a
 
+
 @pytest.mark.asyncio
+async def test_simple_recursive_type():
+    res = await b.BuildLinkedList([1, 2, 3, 4, 5])
+    assert res == LinkedList(
+        len=5,
+        head=Node(
+            data=1,
+            next=Node(
+                data=2,
+                next=Node(data=3, next=Node(data=4, next=Node(data=5, next=None))),
+            ),
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_mutually_recursive_type():
+    res = await b.BuildTree(
+        BinaryNode(
+            data=5,
+            left=BinaryNode(
+                data=3,
+                left=BinaryNode(
+                    data=1, left=BinaryNode(data=2, left=None, right=None), right=None
+                ),
+                right=BinaryNode(data=4, left=None, right=None),
+            ),
+            right=BinaryNode(
+                data=7,
+                left=BinaryNode(data=6, left=None, right=None),
+                right=BinaryNode(data=8, left=None, right=None),
+            ),
+        )
+    )
+    assert res == Tree(
+        data=5,
+        children=Forest(
+            trees=[
+                Tree(
+                    data=3,
+                    children=Forest(
+                        trees=[
+                            Tree(
+                                data=1,
+                                children=Forest(
+                                    trees=[Tree(data=2, children=Forest(trees=[]))]
+                                ),
+                            ),
+                            Tree(data=4, children=Forest(trees=[])),
+                        ]
+                    ),
+                ),
+                Tree(
+                    data=7,
+                    children=Forest(
+                        trees=[
+                            Tree(data=6, children=Forest(trees=[])),
+                            Tree(data=8, children=Forest(trees=[])),
+                        ]
+                    ),
+                ),
+            ]
+        ),
+    )
+
+
 async def test_block_constraints():
     ret = await b.MakeBlockConstraint()
     assert ret.checks["cross_field"].status == "failed"
+
 
 @pytest.mark.asyncio
 async def test_nested_block_constraints():
     ret = await b.MakeNestedBlockConstraint()
     print(ret)
     assert ret.nbc.checks["cross_field"].status == "succeeded"
+
 
 @pytest.mark.asyncio
 async def test_block_constraint_arguments():

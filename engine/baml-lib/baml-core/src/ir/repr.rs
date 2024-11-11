@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use anyhow::{anyhow, Result};
 use baml_types::{Constraint, ConstraintLevel, FieldType};
 use either::Either;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use internal_baml_parser_database::{
     walkers::{
         ClassWalker, ClientSpec as AstClientSpec, ClientWalker, ConfigurationWalker,
@@ -27,6 +27,8 @@ use crate::Configuration;
 pub struct IntermediateRepr {
     enums: Vec<Node<Enum>>,
     classes: Vec<Node<Class>>,
+    /// Strongly connected components of the dependency graph (finite cycles).
+    finite_recursive_cycles: Vec<IndexSet<String>>,
     functions: Vec<Node<Function>>,
     clients: Vec<Node<Client>>,
     retry_policies: Vec<Node<RetryPolicy>>,
@@ -50,6 +52,7 @@ impl IntermediateRepr {
         IntermediateRepr {
             enums: vec![],
             classes: vec![],
+            finite_recursive_cycles: vec![],
             functions: vec![],
             clients: vec![],
             retry_policies: vec![],
@@ -70,6 +73,14 @@ impl IntermediateRepr {
             .flat_map(|c| c.elem.options.iter())
             .flat_map(|(_, expr)| expr.required_env_vars())
             .collect::<HashSet<&str>>()
+    }
+
+    /// Returns a list of all the recursive cycles in the IR.
+    ///
+    /// Each cycle is represented as a set of strings, where each string is the
+    /// name of a class.
+    pub fn finite_recursive_cycles(&self) -> &[IndexSet<String>] {
+        &self.finite_recursive_cycles
     }
 
     pub fn walk_enums<'a>(&'a self) -> impl ExactSizeIterator<Item = Walker<'a, &'a Node<Enum>>> {
@@ -139,6 +150,15 @@ impl IntermediateRepr {
                 .walk_classes()
                 .map(|e| e.node(db))
                 .collect::<Result<Vec<_>>>()?,
+            finite_recursive_cycles: db
+                .finite_recursive_cycles()
+                .iter()
+                .map(|ids| {
+                    ids.iter()
+                        .map(|id| db.ast()[*id].name().to_string())
+                        .collect()
+                })
+                .collect(),
             functions: db
                 .walk_functions()
                 .map(|e| e.node(db))
@@ -312,7 +332,6 @@ fn type_with_arity(t: FieldType, arity: &FieldArity) -> FieldType {
 }
 
 impl WithRepr<FieldType> for ast::FieldType {
-
     // TODO: (Greg) This code only extracts constraints, and ignores any
     // other types of attributes attached to the type directly.
     fn attributes(&self, _db: &ParserDatabase) -> NodeAttributes {
@@ -323,20 +342,29 @@ impl WithRepr<FieldType> for ast::FieldType {
                 let level = match attr.name.to_string().as_str() {
                     "assert" => Some(ConstraintLevel::Assert),
                     "check" => Some(ConstraintLevel::Check),
-                    _ => None
+                    _ => None,
                 }?;
                 let (label, expression) = match attr.arguments.arguments.as_slice() {
                     [arg1, arg2] => match (arg1.clone().value, arg2.clone().value) {
-                        (ast::Expression::Identifier(ast::Identifier::Local(s, _)), ast::Expression::JinjaExpressionValue(j,_)) => Some((Some(s), j)),
-                        _ => None
+                        (
+                            ast::Expression::Identifier(ast::Identifier::Local(s, _)),
+                            ast::Expression::JinjaExpressionValue(j, _),
+                        ) => Some((Some(s), j)),
+                        _ => None,
                     },
                     [arg1] => match arg1.clone().value {
-                        ast::Expression::JinjaExpressionValue(JinjaExpression(j),_) => Some((None, JinjaExpression(j.clone()))),
-                        _ => None
-                    }
+                        ast::Expression::JinjaExpressionValue(JinjaExpression(j), _) => {
+                            Some((None, JinjaExpression(j.clone())))
+                        }
+                        _ => None,
+                    },
                     _ => None,
                 }?;
-                Some(Constraint{ level, expression, label })
+                Some(Constraint {
+                    level,
+                    expression,
+                    label,
+                })
             })
             .collect::<Vec<Constraint>>();
         let attributes = NodeAttributes {
@@ -438,7 +466,10 @@ impl WithRepr<FieldType> for ast::FieldType {
         };
 
         let with_constraints = if has_constraints {
-            FieldType::Constrained { base: Box::new(base.clone()), constraints }
+            FieldType::Constrained {
+                base: Box::new(base.clone()),
+                constraints,
+            }
         } else {
             base
         };
@@ -1128,18 +1159,24 @@ impl WithRepr<Prompt> for PromptAst<'_> {
 /// Generate an IntermediateRepr from a single block of BAML source code.
 /// This is useful for generating IR test fixtures.
 pub fn make_test_ir(source_code: &str) -> anyhow::Result<IntermediateRepr> {
-    use std::path::PathBuf;
-    use internal_baml_diagnostics::SourceFile;
-    use crate::ValidatedSchema;
     use crate::validate;
+    use crate::ValidatedSchema;
+    use internal_baml_diagnostics::SourceFile;
+    use std::path::PathBuf;
 
     let path: PathBuf = "fake_file.baml".into();
     let source_file: SourceFile = (path.clone(), source_code).into();
     let validated_schema: ValidatedSchema = validate(&path, vec![source_file]);
     let diagnostics = &validated_schema.diagnostics;
     if diagnostics.has_errors() {
-        return Err(anyhow::anyhow!("Source code was invalid: \n{:?}", diagnostics.errors()))
+        return Err(anyhow::anyhow!(
+            "Source code was invalid: \n{:?}",
+            diagnostics.errors()
+        ));
     }
-    let ir = IntermediateRepr::from_parser_database(&validated_schema.db, validated_schema.configuration)?;
+    let ir = IntermediateRepr::from_parser_database(
+        &validated_schema.db,
+        validated_schema.configuration,
+    )?;
     Ok(ir)
 }

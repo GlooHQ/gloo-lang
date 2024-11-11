@@ -3,7 +3,7 @@ name: Release language_client_python
 on:
   workflow_call: {}
   push:
-    branches: [manylinux-x86]
+    branches: [manylinux-x86, aaron-fix]
 
 concurrency:
   # suffix is important to prevent a concurrency deadlock with the calling workflow
@@ -44,13 +44,13 @@ jobs:
 
           - target: x86_64-apple-darwin
             runs_on: macos-latest
-            
+
           - target: aarch64-apple-darwin
             runs_on: macos-latest
-            
+
           - target: x86_64-pc-windows-msvc
             runs_on: windows-latest
-            
+
     name: ${{ matrix._.target }}
     runs-on: ${{ matrix._.runs_on }}
     steps:

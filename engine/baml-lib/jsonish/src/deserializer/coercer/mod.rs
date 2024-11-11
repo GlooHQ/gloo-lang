@@ -9,6 +9,8 @@ mod field_type;
 mod ir_ref;
 mod match_string;
 
+use std::collections::{HashMap, HashSet};
+
 use anyhow::Result;
 
 use baml_types::{BamlValue, Constraint, JinjaExpression};
@@ -16,10 +18,13 @@ use internal_baml_jinja::types::OutputFormatContent;
 
 use internal_baml_core::ir::{jinja_helpers::evaluate_predicate, FieldType};
 
+use crate::jsonish;
+
 use super::types::BamlValueWithFlags;
 
 pub struct ParsingContext<'a> {
     pub scope: Vec<String>,
+    visited: HashSet<(String, jsonish::Value)>,
     pub of: &'a OutputFormatContent,
     pub allow_partials: bool,
 }
@@ -35,6 +40,7 @@ impl ParsingContext<'_> {
     pub(crate) fn new<'a>(of: &'a OutputFormatContent, allow_partials: bool) -> ParsingContext<'a> {
         ParsingContext {
             scope: Vec::new(),
+            visited: HashSet::new(),
             of,
             allow_partials,
         }
@@ -45,6 +51,24 @@ impl ParsingContext<'_> {
         new_scope.push(scope.to_string());
         ParsingContext {
             scope: new_scope,
+            visited: self.visited.clone(),
+            of: self.of,
+            allow_partials: self.allow_partials,
+        }
+    }
+
+    // TODO: This function and `enter_scope` are clonning both the scope vector
+    // and visited hash set each time. Maybe it can be optimized with interior
+    // mutability or something.
+    pub(crate) fn visit_class_value_pair(
+        &self,
+        cls_value_pair: (String, jsonish::Value),
+    ) -> ParsingContext {
+        let mut new_visited = self.visited.clone();
+        new_visited.insert(cls_value_pair);
+        ParsingContext {
+            scope: self.scope.clone(),
+            visited: new_visited,
             of: self.of,
             allow_partials: self.allow_partials,
         }
@@ -175,6 +199,18 @@ impl ParsingContext<'_> {
     pub(crate) fn error_internal<T: std::fmt::Display>(&self, error: T) -> ParsingError {
         ParsingError {
             reason: format!("Internal error: {}", error),
+            scope: self.scope.clone(),
+            causes: vec![],
+        }
+    }
+
+    pub(crate) fn error_circular_reference(
+        &self,
+        cls: &str,
+        value: &jsonish::Value,
+    ) -> ParsingError {
+        ParsingError {
+            reason: format!("Circular reference detected for class-value pair {cls} <-> {value}"),
             scope: self.scope.clone(),
             causes: vec![],
         }
