@@ -285,6 +285,16 @@ impl<'s> std::fmt::Display for MapRender<'s> {
     }
 }
 
+/// Basic grammar for "a" VS "an" indefinite articles.
+///
+/// It does NOT cover all rules & exceptions.
+fn indefinite_article_a_or_an(word: &str) -> &str {
+    match word.chars().next() {
+        Some(c) if matches!(c.to_ascii_lowercase(), 'a' | 'e' | 'i' | 'o' | 'u') => "an",
+        _ => "a",
+    }
+}
+
 struct RenderState {
     hoisted_enums: IndexSet<String>,
 }
@@ -302,7 +312,10 @@ impl OutputFormatContent {
         ) -> Option<String> {
             match ft {
                 FieldType::Primitive(TypeValue::String) => None,
-                FieldType::Primitive(_) => Some(String::from("Answer as a: ")),
+                FieldType::Primitive(p) => Some(format!(
+                    "Answer as {article} ",
+                    article = indefinite_article_a_or_an(&p.to_string())
+                )),
                 FieldType::Literal(_) => Some(String::from("Answer using this specific value:\n")),
                 FieldType::Enum(_) => Some(String::from("Answer with any of the categories:\n")),
                 FieldType::Class(cls) => {
@@ -657,6 +670,20 @@ mod tests {
         let content = OutputFormatContent::new_string();
         let rendered = content.render(RenderOptions::default()).unwrap();
         assert_eq!(rendered, None);
+    }
+
+    #[test]
+    fn render_int() {
+        let content = OutputFormatContent::target(FieldType::int()).build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        assert_eq!(rendered, Some("Answer as an int".into()));
+    }
+
+    #[test]
+    fn render_float() {
+        let content = OutputFormatContent::target(FieldType::float()).build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        assert_eq!(rendered, Some("Answer as a float".into()));
     }
 
     #[test]
