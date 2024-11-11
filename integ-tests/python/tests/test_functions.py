@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from typing import List, Callable, Awaitable, TypeVar
+from typing import List
 import pytest
 from assertpy import assert_that
 from dotenv import load_dotenv
@@ -48,39 +48,6 @@ import datetime
 import concurrent.futures
 import asyncio
 import random
-
-
-class RateLimiter:
-    def __init__(
-        self, *, name: str, max_requests_per_period: int, period_duration_secs: int
-    ):
-        self.__name = name
-        self.__max_requests_per_period = max_requests_per_period
-        self.__semaphore = asyncio.Semaphore(max_requests_per_period)
-        self.__period_duration_secs = period_duration_secs
-
-    T = TypeVar("T")
-
-    async def call(self, coroutine: T | Awaitable[T]) -> T:
-        print(
-            f"Acquiring rate-limit token for {self.__name} (max {self.__max_requests_per_period} per {self.__period_duration_secs} secs)"
-        )
-        await self.__semaphore.acquire()
-        asyncio.create_task(self.__wait_and_release())
-        if isinstance(coroutine, Awaitable):
-            return await coroutine
-        return coroutine
-
-    async def __wait_and_release(self):
-        await asyncio.sleep(self.__period_duration_secs)
-        self.__semaphore.release()
-
-
-# Client-side rate limiter, since we currently have a 5x/minute rate limit on AWS Bedrock
-# https://gloo-global.slack.com/archives/C03KV1PJ6EM/p1731353768431689
-max_five_times_per_minute = RateLimiter(
-    name="AWS Bedrock", max_requests_per_period=5, period_duration_secs=60
-)
 
 
 @pytest.mark.asyncio
@@ -414,7 +381,7 @@ async def test_gemini_streaming():
 
 @pytest.mark.asyncio
 async def test_aws():
-    res = await max_five_times_per_minute.call(b.TestAws(input="Mt Rainier is tall"))
+    res = await b.TestAws(input="Mt Rainier is tall")
     assert len(res) > 0, "Expected non-empty result but got empty."
 
 
@@ -454,9 +421,7 @@ async def test_fallback_to_shorthand():
 
 @pytest.mark.asyncio
 async def test_aws_streaming():
-    res = await max_five_times_per_minute.call(
-        b.stream.TestAws(input="Mt Rainier is tall").get_final_response()
-    )
+    res = await b.stream.TestAws(input="Mt Rainier is tall").get_final_response()
     assert len(res) > 0, "Expected non-empty result but got empty."
 
 
@@ -1159,13 +1124,11 @@ async def test_event_log_hook():
 @pytest.mark.asyncio
 async def test_aws_bedrock():
     ## unstreamed
-    res = await max_five_times_per_minute.call(b.TestAws(input="lightning in a rock"))
+    res = await b.TestAws("lightning in a rock")
     print("unstreamed", res)
 
     ## streamed
-    stream = await max_five_times_per_minute.call(
-        b.stream.TestAws(input="lightning in a rock")
-    )
+    stream = b.stream.TestAws("lightning in a rock")
 
     async for msg in stream:
         if msg:
@@ -1180,9 +1143,7 @@ async def test_aws_bedrock():
 async def test_aws_bedrock_invalid_region():
     ## unstreamed
     with pytest.raises(errors.BamlClientError) as excinfo:
-        res = await max_five_times_per_minute.call(
-            b.TestAwsInvalidRegion(input="lightning in a rock")
-        )
+        res = await b.TestAwsInvalidRegion("lightning in a rock")
         print("unstreamed", res)
 
     assert "DispatchFailure" in str(excinfo)
