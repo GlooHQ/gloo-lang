@@ -1,7 +1,7 @@
 use crate::internal::llm_client::{
     properties_hander::PropertiesHandler,
     traits::{ToProviderMessage, ToProviderMessageExt, WithClientProperties},
-    AllowedMetadata, ResolveMediaUrls,
+    AllowedMetadata, ResolveMediaUrls, SupportedRequestModes,
 };
 use std::collections::HashMap;
 
@@ -46,6 +46,7 @@ struct PostRequestProperities {
     allowed_metadata: AllowedMetadata,
     // These are passed directly to the Anthropic API.
     properties: HashMap<String, serde_json::Value>,
+    supported_request_modes: SupportedRequestModes,
 }
 
 // represents client that interacts with the Anthropic API
@@ -82,12 +83,15 @@ fn resolve_properties(
         .entry("anthropic-version".to_string())
         .or_insert("2023-06-01".to_string());
 
+        let supported_request_modes = properties.pull_supported_request_modes()?;
+
     let mut properties = properties.finalize();
     // Anthropic has a very low max_tokens by default, so we increase it to 4096.
     properties
         .entry("max_tokens".into())
         .or_insert_with(|| 4096.into());
     let properties = properties;
+
 
     Ok(PostRequestProperities {
         default_role,
@@ -97,6 +101,7 @@ fn resolve_properties(
         allowed_metadata,
         properties,
         proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),
+        supported_request_modes,
     })
 }
 
@@ -113,6 +118,9 @@ impl WithClientProperties for AnthropicClient {
     }
     fn client_properties(&self) -> &HashMap<String, serde_json::Value> {
         &self.properties.properties
+    }
+    fn supports_streaming(&self) -> bool {
+        self.properties.supported_request_modes.stream.unwrap_or(true)
     }
 }
 
@@ -351,7 +359,7 @@ impl RequestBuilder for AnthropicClient {
             self.properties
                 .proxy_url
                 .as_ref()
-                .unwrap_or(&self.properties.base_url)
+                .unwrap_or_else(|| &self.properties.base_url)
         } else {
             &self.properties.base_url
         };

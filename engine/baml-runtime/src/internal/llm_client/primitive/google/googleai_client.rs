@@ -3,7 +3,7 @@ use crate::internal::llm_client::properties_hander::{PropertiesHandler};
 use crate::internal::llm_client::traits::{
     ToProviderMessage, ToProviderMessageExt, WithClientProperties,
 };
-use crate::internal::llm_client::{AllowedMetadata, ResolveMediaUrls};
+use crate::internal::llm_client::{AllowedMetadata, ResolveMediaUrls, SupportedRequestModes};
 use crate::RuntimeContext;
 use crate::{
     internal::llm_client::{
@@ -38,6 +38,7 @@ struct PostRequestProperities {
     model_id: Option<String>,
     properties: HashMap<String, serde_json::Value>,
     allowed_metadata: AllowedMetadata,
+    supported_request_modes: SupportedRequestModes,
 }
 
 pub struct GoogleAIClient {
@@ -69,15 +70,18 @@ fn resolve_properties(
     let allowed_metadata = properties.pull_allowed_role_metadata()?;
     let headers = properties.pull_headers()?;
 
+    let supported_request_modes = properties.pull_supported_request_modes()?;
+
     Ok(PostRequestProperities {
         default_role,
         api_key,
         headers,
-        properties: properties.finalize(),
         base_url,
-        model_id: Some(model_id),
         proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),
+        model_id: Some(model_id),
+        properties: properties.finalize(),
         allowed_metadata,
+        supported_request_modes,
     })
 }
 
@@ -93,6 +97,9 @@ impl WithClientProperties for GoogleAIClient {
     }
     fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
         &self.properties.allowed_metadata
+    }
+    fn supports_streaming(&self) -> bool {
+        self.properties.supported_request_modes.stream.unwrap_or(true)
     }
 }
 

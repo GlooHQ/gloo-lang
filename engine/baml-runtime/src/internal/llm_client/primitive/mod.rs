@@ -93,6 +93,9 @@ impl WithClientProperties for LLMPrimitiveProvider {
     fn allowed_metadata(&self) -> &super::AllowedMetadata {
         match_llm_provider!(self, allowed_metadata)
     }
+    fn supports_streaming(&self) -> bool {
+        match_llm_provider!(self, supports_streaming)
+    }
 }
 
 impl TryFrom<(&ClientProperty, &RuntimeContext)> for LLMPrimitiveProvider {

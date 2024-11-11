@@ -88,6 +88,12 @@ pub enum AllowedMetadata {
     Only(HashSet<String>),
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct SupportedRequestModes {
+    // If unset, treat as auto
+    pub stream: Option<bool>,
+}
+
 impl AllowedMetadata {
     pub fn is_allowed(&self, key: &str) -> bool {
         match self {

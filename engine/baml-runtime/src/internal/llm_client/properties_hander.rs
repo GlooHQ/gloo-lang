@@ -1,8 +1,7 @@
 use anyhow::{Context, Result};
 use std::collections::HashMap;
 
-use super::AllowedMetadata;
-
+use super::{AllowedMetadata, SupportedRequestModes};
 
 pub(super) struct PropertiesHandler {
     properties: HashMap<String, serde_json::Value>,
@@ -25,6 +24,7 @@ impl PropertiesHandler {
         // Ban certain keys
         match key {
             "allowed_role_metadata"
+            | "supports_streaming"
             | "base_url"
             | "api_key"
             | "headers"
@@ -37,7 +37,9 @@ impl PropertiesHandler {
 
     pub fn remove_serde<T: serde::de::DeserializeOwned>(&mut self, key: &str) -> Result<Option<T>> {
         match self.remove(key) {
-            Some(value) => Ok(Some(serde_json::from_value(value).context(format!("Failed to parse: {key}"))?)),
+            Some(value) => Ok(Some(
+                serde_json::from_value(value).context(format!("Failed to parse: {key}"))?,
+            )),
             None => Ok(None),
         }
     }
@@ -129,6 +131,25 @@ impl PropertiesHandler {
             Some(Err(e)) => Err(e),
             None => Ok(None),
         }
+    }
+
+    pub fn pull_supported_request_modes(&mut self) -> Result<SupportedRequestModes> {
+        let supports_streaming = match self.get("supports_streaming") {
+            Some(v) => match v {
+                serde_json::Value::Bool(s) => Some(s),
+                _ => {
+                    return Err(anyhow::anyhow!(
+                        "supports_streaming must be a bool: Got {:?}",
+                        v
+                    ))
+                }
+            },
+            None => None,
+        };
+
+        Ok(SupportedRequestModes {
+            stream: supports_streaming,
+        })
     }
 }
 

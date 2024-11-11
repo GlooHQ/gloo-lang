@@ -19,7 +19,7 @@ use web_time::Instant;
 use web_time::SystemTime;
 
 use crate::internal::llm_client::traits::{ToProviderMessageExt, WithClientProperties};
-use crate::internal::llm_client::AllowedMetadata;
+use crate::internal::llm_client::{AllowedMetadata, SupportedRequestModes};
 use crate::internal::llm_client::{
     primitive::request::RequestBuilder,
     traits::{
@@ -44,6 +44,7 @@ struct RequestProperties {
 
     request_options: HashMap<String, serde_json::Value>,
     ctx_env: HashMap<String, String>,
+    supported_request_modes: SupportedRequestModes,
 }
 
 // represents client that interacts with the Anthropic API
@@ -88,6 +89,8 @@ fn resolve_properties(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Req
         .remove_str("region")
         .unwrap_or_else(|_| ctx.env.get("AWS_REGION").map(|s| s.to_string()));
 
+    let supported_request_modes = properties.pull_supported_request_modes()?;
+
     Ok(RequestProperties {
         model_id,
         aws_region,
@@ -96,6 +99,7 @@ fn resolve_properties(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Req
         allowed_metadata,
         request_options: properties.finalize(),
         ctx_env: ctx.env.clone(),
+        supported_request_modes,
     })
 }
 
@@ -300,6 +304,9 @@ impl WithClientProperties for AwsClient {
     }
     fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
         &self.properties.allowed_metadata
+    }
+    fn supports_streaming(&self) -> bool {
+        self.properties.supported_request_modes.stream.unwrap_or(true)
     }
 }
 

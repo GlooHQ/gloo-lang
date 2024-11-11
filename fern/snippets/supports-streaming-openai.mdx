@@ -1,0 +1,42 @@
+<ParamField
+  path="supports_streaming"
+  type="boolean"
+>
+  Whether the internal LLM client should use the streaming API. **Default: `<auto>`**
+
+  | Model | Supports Streaming |
+  | --- | --- |
+  | `o1-preview` | false |
+  | `o1-mini` | false |
+  | `o1-*` | false |
+  | `gpt-4o` | true |
+  | `gpt-4o-mini` | true |
+  | `*` | true |
+
+  Then in your prompt you can use something like:
+  ```baml
+  client<llm> MyClientWithoutStreaming {
+    provider openai
+    options {
+      model gpt-4o
+      api_key env.OPENAI_API_KEY
+      supports_streaming false 
+    }
+  }
+
+  function MyFunction() -> string {
+    client MyClientWithoutStreaming
+    prompt #"Write a short story"#
+  }
+  ```
+
+  ```python
+  # This will be streamed from your python code perspective, 
+  # but under the hood it will call the non-streaming HTTP API
+  b.stream.MyFunction()
+
+  # This will work exactly the same as before
+  b.MyFunction()
+  ```
+
+</ParamField>

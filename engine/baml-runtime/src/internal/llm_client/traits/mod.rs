@@ -10,10 +10,7 @@ pub use self::{
     chat::{WithChat, WithStreamChat},
     completion::{WithCompletion, WithNoCompletion, WithStreamCompletion},
 };
-use super::{
-    primitive::request::RequestBuilder, LLMResponse,
-    ModelFeatures,
-};
+use super::{primitive::request::RequestBuilder, LLMResponse, ModelFeatures};
 use crate::{internal::llm_client::ResolveMediaUrls, RenderCurlSettings};
 use crate::{internal::prompt_renderer::PromptRenderer, RuntimeContext};
 use baml_types::{BamlMedia, BamlMediaContent, BamlMediaType, BamlValue, MediaBase64, MediaUrl};
@@ -38,6 +35,7 @@ pub trait WithRetryPolicy {
 pub trait WithClientProperties {
     fn client_properties(&self) -> &HashMap<String, serde_json::Value>;
     fn allowed_metadata(&self) -> &super::AllowedMetadata;
+    fn supports_streaming(&self) -> bool;
 }
 
 pub trait WithSingleCallable {
@@ -267,7 +265,7 @@ where
 
 impl<T> WithRenderRawCurl for T
 where
-    T: WithClient + WithChat + WithCompletion + RequestBuilder,
+    T: WithClient + WithChat + WithCompletion + RequestBuilder + WithClientProperties,
 {
     async fn render_raw_curl(
         &self,
@@ -275,7 +273,7 @@ where
         prompt: &Vec<internal_baml_jinja::RenderedChatMessage>,
         render_settings: RenderCurlSettings,
     ) -> Result<String> {
-        let chat_messages = process_media_urls(
+        let chat_messages: Vec<RenderedChatMessage> = process_media_urls(
             self.model_features().resolve_media_urls,
             true,
             Some(render_settings),
@@ -285,7 +283,7 @@ where
         .await?;
 
         let request_builder = self
-            .build_request(either::Right(&chat_messages), false, render_settings.stream)
+            .build_request(either::Right(&chat_messages), false, render_settings.stream && self.supports_streaming())
             .await?;
         let mut request = request_builder.build()?;
         let url_header_value = {
@@ -336,33 +334,55 @@ pub trait WithStreamable {
 
 impl<T> WithStreamable for T
 where
-    T: WithClient + WithStreamChat + WithStreamCompletion,
+    T: WithClient + WithStreamChat + WithStreamCompletion + WithClientProperties + WithChat + WithCompletion,
 {
     #[allow(async_fn_in_trait)]
     async fn stream(&self, ctx: &RuntimeContext, prompt: &RenderedPrompt) -> StreamResponse {
-        if let RenderedPrompt::Chat(ref chat) = prompt {
-            match process_media_urls(
-                self.model_features().resolve_media_urls,
-                true,
-                None,
-                ctx,
-                chat,
-            )
-            .await
-            {
-                Ok(messages) => return self.stream_chat(ctx, &messages).await,
-                Err(e) => {
-                    return Err(LLMResponse::InternalFailure(format!(
-                        "Error occurred:\n\n{:?}",
-                        e
-                    )))
+        let prompt = {
+            if let RenderedPrompt::Chat(ref chat) = prompt {
+                match process_media_urls(
+                    self.model_features().resolve_media_urls,
+                    true,
+                    None,
+                    ctx,
+                    chat,
+                )
+                .await
+                {
+                    Ok(messages) => &RenderedPrompt::Chat(messages),
+                    Err(e) => {
+                        return Err(LLMResponse::InternalFailure(format!(
+                            "Error occurred:\n\n{:?}",
+                            e
+                        )))
+                    }
                 }
+            } else {
+                prompt
             }
-        }
+        };
 
         match prompt {
-            RenderedPrompt::Chat(p) => self.stream_chat(ctx, p).await,
-            RenderedPrompt::Completion(p) => self.stream_completion(ctx, p).await,
+            RenderedPrompt::Chat(p) => {
+                if self.supports_streaming() {
+                    self.stream_chat(ctx, p).await
+                } else {
+                    let res = self.chat(ctx, p).await;
+                    Ok(Box::pin(futures::stream::once(async move {
+                        res
+                    })))
+                }
+            },
+            RenderedPrompt::Completion(p) => {
+                if self.supports_streaming() {
+                    self.stream_completion(ctx, p).await
+                } else {
+                    let res = self.completion(ctx, p).await;
+                    Ok(Box::pin(futures::stream::once(async move {
+                        res
+                    })))
+                }
+            }
         }
     }
 }

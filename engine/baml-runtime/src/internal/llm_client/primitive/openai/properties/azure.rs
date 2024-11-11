@@ -48,11 +48,18 @@ pub fn resolve_properties(
         query_params.insert("api-version".to_string(), v.to_string());
     };
 
-    let mut properties = properties.finalize();
-    properties
-        .entry("max_tokens".into())
+    let supported_request_modes = properties.pull_supported_request_modes()?;
+
+
+    let properties = {
+        let mut properties = properties.finalize();
+        // Azure has very low default max_tokens, so we set it to 4096
+        properties
+            .entry("max_tokens".into())
         .or_insert_with(|| 4096.into());
-    let properties = properties;
+        properties
+    };
+
 
     Ok(PostRequestProperties {
         default_role,
@@ -61,9 +68,8 @@ pub fn resolve_properties(
         headers,
         properties,
         allowed_metadata,
-        // Replace proxy_url with code below to disable proxying
-        // proxy_url: None,
         proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),
         query_params,
+        supported_request_modes,
     })
 }

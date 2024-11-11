@@ -3,7 +3,7 @@ use crate::internal::llm_client::properties_hander::{ PropertiesHandler};
 use crate::internal::llm_client::traits::{
     ToProviderMessage, ToProviderMessageExt, WithClientProperties,
 };
-use crate::internal::llm_client::{AllowedMetadata, ResolveMediaUrls};
+use crate::internal::llm_client::{AllowedMetadata, ResolveMediaUrls, SupportedRequestModes};
 use crate::RuntimeContext;
 use crate::{
     internal::llm_client::{
@@ -63,6 +63,7 @@ struct PostRequestProperties {
     model_id: Option<String>,
     location: Option<String>,
     allowed_metadata: AllowedMetadata,
+    supported_request_modes: SupportedRequestModes,
 }
 
 pub struct VertexClient {
@@ -162,6 +163,8 @@ fn resolve_properties(
         None => anyhow::bail!("location must be provided"),
     };
 
+    let supported_request_modes = properties.pull_supported_request_modes()?;
+
     Ok(PostRequestProperties {
         default_role,
         base_url,
@@ -173,6 +176,7 @@ fn resolve_properties(
         location: Some(location),
         proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),
         allowed_metadata,
+        supported_request_modes,
     })
 }
 
@@ -188,6 +192,9 @@ impl WithClientProperties for VertexClient {
     }
     fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
         &self.properties.allowed_metadata
+    }
+    fn supports_streaming(&self) -> bool {
+        self.properties.supported_request_modes.stream.unwrap_or(true)
     }
 }
 

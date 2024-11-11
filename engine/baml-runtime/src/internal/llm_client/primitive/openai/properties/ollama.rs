@@ -20,6 +20,8 @@ pub fn resolve_properties(
     let allowed_metadata = properties.pull_allowed_role_metadata()?;
     let headers = properties.pull_headers()?;
 
+    let supported_request_modes = properties.pull_supported_request_modes()?;
+
     Ok(PostRequestProperties {
         default_role,
         base_url,
@@ -33,5 +35,6 @@ pub fn resolve_properties(
             .map(|s| Some(s.to_string()))
             .unwrap_or(None),
         query_params: Default::default(),
+        supported_request_modes,
     })
 }

@@ -8,8 +8,16 @@ class LinkedList {
   len int
 }
 
+client<llm> O1 {
+  provider "openai"
+  options {
+    model "o1-mini"
+    default_role "user"
+  }
+}
+
 function BuildLinkedList(input: int[]) -> LinkedList {
-  client GPT35
+  client O1
   prompt #"
     Build a linked list from the input array of integers.
 

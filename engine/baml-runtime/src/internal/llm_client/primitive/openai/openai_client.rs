@@ -57,6 +57,20 @@ impl WithClientProperties for OpenAIClient {
     fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
         &self.properties.allowed_metadata
     }
+    fn supports_streaming(&self) -> bool {
+        match self.properties.supported_request_modes.stream {
+            Some(v) => v,
+            None => {
+                match self.properties.properties.get("model") {
+                    Some(serde_json::Value::String(model)) => {
+                        // OpenAI's streaming is not available for o1-* models
+                        !model.starts_with("o1-")
+                    }
+                    _ => true,
+                }
+            }
+        }
+    }
 }
 
 impl WithClient for OpenAIClient {
@@ -228,16 +242,11 @@ impl RequestBuilder for OpenAIClient {
         allow_proxy: bool,
         stream: bool,
     ) -> Result<reqwest::RequestBuilder> {
-        // Never proxy requests to Ollama
-        let allow_proxy = allow_proxy
-            && self.properties.proxy_url.is_some()
-            && !self.properties.base_url.starts_with("http://localhost");
-
         let destination_url = if allow_proxy {
             self.properties
                 .proxy_url
                 .as_ref()
-                .unwrap_or(&self.properties.base_url)
+                .unwrap_or_else(|| &self.properties.base_url)
         } else {
             &self.properties.base_url
         };

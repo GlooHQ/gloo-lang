@@ -27,6 +27,7 @@ pub fn resolve_properties(
         Some(api_key) if !api_key.is_empty() => Some(api_key),
         _ => None,
     };
+    let supported_request_modes = properties.pull_supported_request_modes()?;
 
     let properties = properties.finalize();
 
@@ -36,12 +37,9 @@ pub fn resolve_properties(
         api_key,
         headers,
         properties,
-        proxy_url: ctx
-            .env
-            .get("BOUNDARY_PROXY_URL")
-            .map(|s| Some(s.to_string()))
-            .unwrap_or(None),
+        proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),
         query_params: Default::default(),
         allowed_metadata,
+        supported_request_modes,
     })
 }
