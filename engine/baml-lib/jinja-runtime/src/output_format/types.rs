@@ -165,6 +165,7 @@ impl Default for RenderOptions {
 
 impl RenderOptions {
     const DEFAULT_OR_SPLITTER: &'static str = " or ";
+    const DEFAULT_TYPE_PREFIX_IN_RENDER_MESSAGE: &'static str = "schema";
 
     pub(crate) fn new(
         prefix: Option<Option<String>>,
@@ -293,38 +294,51 @@ impl OutputFormatContent {
         Builder::new(target)
     }
 
-    fn prefix<'a>(&self, options: &'a RenderOptions) -> Option<&'a str> {
+    fn prefix<'a>(&self, options: &'a RenderOptions) -> Option<String> {
         fn auto_prefix(
             ft: &FieldType,
+            options: &RenderOptions,
             output_format_content: &OutputFormatContent,
-        ) -> Option<&'static str> {
+        ) -> Option<String> {
             match ft {
                 FieldType::Primitive(TypeValue::String) => None,
-                FieldType::Primitive(_) => Some("Answer as a: "),
-                FieldType::Literal(_) => Some("Answer using this specific value:\n"),
-                FieldType::Enum(_) => Some("Answer with any of the categories:\n"),
-                // TODO: Func returns &str we can't format!, do something to
-                // avoid duplicating the string.
+                FieldType::Primitive(_) => Some(String::from("Answer as a: ")),
+                FieldType::Literal(_) => Some(String::from("Answer using this specific value:\n")),
+                FieldType::Enum(_) => Some(String::from("Answer with any of the categories:\n")),
                 FieldType::Class(cls) => {
-                    Some(if output_format_content.recursive_classes.contains(cls) {
-                        "Answer in JSON using this schema: "
+                    let type_prefix = match &options.hoisted_class_prefix {
+                        RenderSetting::Always(prefix) if !prefix.is_empty() => prefix,
+                        _ => RenderOptions::DEFAULT_TYPE_PREFIX_IN_RENDER_MESSAGE,
+                    };
+
+                    // Line break if schema else just inline the name.
+                    let end = if output_format_content.recursive_classes.contains(cls) {
+                        " "
                     } else {
-                        "Answer in JSON using this schema:\n"
-                    })
+                        "\n"
+                    };
+
+                    Some(format!("Answer in JSON using this {type_prefix}:{end}"))
                 }
-                FieldType::List(_) => Some("Answer with a JSON Array using this schema:\n"),
-                FieldType::Union(_) => Some("Answer in JSON using any of these schemas:\n"),
-                FieldType::Optional(_) => Some("Answer in JSON using this schema:\n"),
-                FieldType::Map(_, _) => Some("Answer in JSON using this schema:\n"),
+                FieldType::List(_) => Some(String::from(
+                    "Answer with a JSON Array using this schema:\n",
+                )),
+                FieldType::Union(_) => {
+                    Some(String::from("Answer in JSON using any of these schemas:\n"))
+                }
+                FieldType::Optional(_) => Some(String::from("Answer in JSON using this schema:\n")),
+                FieldType::Map(_, _) => Some(String::from("Answer in JSON using this schema:\n")),
                 FieldType::Tuple(_) => None,
-                FieldType::Constrained { base, .. } => auto_prefix(base, output_format_content),
+                FieldType::Constrained { base, .. } => {
+                    auto_prefix(base, options, output_format_content)
+                }
             }
         }
 
         match &options.prefix {
-            RenderSetting::Always(prefix) => Some(prefix.as_str()),
+            RenderSetting::Always(prefix) => Some(prefix.to_owned()),
             RenderSetting::Never => None,
-            RenderSetting::Auto => auto_prefix(&self.target, self),
+            RenderSetting::Auto => auto_prefix(&self.target, options, self),
         }
     }
 
@@ -587,7 +601,7 @@ impl OutputFormatContent {
         }
 
         if let Some(p) = prefix {
-            output.push_str(p);
+            output.push_str(&p);
         }
 
         if let Some(m) = message {
@@ -1662,7 +1676,7 @@ interface C {
   pointer: A or null,
 }
 
-Answer in JSON using this schema:
+Answer in JSON using this interface:
 {
   pointer: A,
   data: int,
