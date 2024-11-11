@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from typing import List
+from typing import List, Callable, Awaitable, TypeVar
 import pytest
 from assertpy import assert_that
 from dotenv import load_dotenv
@@ -48,6 +48,39 @@ import datetime
 import concurrent.futures
 import asyncio
 import random
+
+
+class RateLimiter:
+    def __init__(
+        self, *, name: str, max_requests_per_period: int, period_duration_secs: int
+    ):
+        self.__name = name
+        self.__max_requests_per_period = max_requests_per_period
+        self.__semaphore = asyncio.Semaphore(max_requests_per_period)
+        self.__period_duration_secs = period_duration_secs
+
+    T = TypeVar("T")
+
+    async def call(self, coroutine: T | Awaitable[T]) -> T:
+        print(
+            f"Acquiring rate-limit token for {self.__name} (max {self.__max_requests_per_period} per {self.__period_duration_secs} secs)"
+        )
+        await self.__semaphore.acquire()
+        asyncio.create_task(self.__wait_and_release())
+        if isinstance(coroutine, Awaitable):
+            return await coroutine
+        return coroutine
+
+    async def __wait_and_release(self):
+        await asyncio.sleep(self.__period_duration_secs)
+        self.__semaphore.release()
+
+
+# Client-side rate limiter, since we currently have a 5x/minute rate limit on AWS Bedrock
+# https://gloo-global.slack.com/archives/C03KV1PJ6EM/p1731353768431689
+max_five_times_per_minute = RateLimiter(
+    name="AWS Bedrock", max_requests_per_period=5, period_duration_secs=60
+)
 
 
 @pytest.mark.asyncio
@@ -381,7 +414,7 @@ async def test_gemini_streaming():
 
 @pytest.mark.asyncio
 async def test_aws():
-    res = await b.TestAws(input="Mt Rainier is tall")
+    res = await max_five_times_per_minute.call(b.TestAws(input="Mt Rainier is tall"))
     assert len(res) > 0, "Expected non-empty result but got empty."
 
 
@@ -421,7 +454,9 @@ async def test_fallback_to_shorthand():
 
 @pytest.mark.asyncio
 async def test_aws_streaming():
-    res = await b.stream.TestAws(input="Mt Rainier is tall").get_final_response()
+    res = await max_five_times_per_minute.call(
+        b.stream.TestAws(input="Mt Rainier is tall").get_final_response()
+    )
     assert len(res) > 0, "Expected non-empty result but got empty."
 
 
@@ -748,7 +783,7 @@ async def test_dynamic_class_output():
         baml_options={"tb": tb},
     )
     print(output.model_dump_json())
-    assert output.hair_color == "black" # type: ignore (dynamic property)
+    assert output.hair_color == "black"  # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -834,7 +869,7 @@ async def test_stream_dynamic_class_output():
     print("final ", final)
     print("final ", final.model_dump())
     print("final ", final.model_dump_json())
-    assert final.hair_color == "black" # type: ignore (dynamic property)
+    assert final.hair_color == "black"  # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -868,12 +903,12 @@ async def test_dynamic_inputs_list2():
         ],
         {"tb": tb},
     )
-    assert res[0].new_key == "hi1" # type: ignore (dynamic property)
+    assert res[0].new_key == "hi1"  # type: ignore (dynamic property)
     assert res[0].testKey == "myTest"
-    assert res[0].blah["nestedKey1"] == "nestedVal" # type: ignore (dynamic property)
-    assert res[1].new_key == "hi" # type: ignore (dynamic property)
+    assert res[0].blah["nestedKey1"] == "nestedVal"  # type: ignore (dynamic property)
+    assert res[1].new_key == "hi"  # type: ignore (dynamic property)
     assert res[1].testKey == "myTest"
-    assert res[1].blah["nestedKey1"] == "nestedVal" # type: ignore (dynamic property)
+    assert res[1].blah["nestedKey1"] == "nestedVal"  # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -954,12 +989,12 @@ async def test_dynamic_inputs_list():
         ],
         {"tb": tb},
     )
-    assert res[0].new_key == "hi" # type: ignore (dynamic property)
+    assert res[0].new_key == "hi"  # type: ignore (dynamic property)
     assert res[0].testKey == "myTest"
-    assert res[0].blah["nestedKey1"] == "nestedVal" # type: ignore (dynamic property)
-    assert res[1].new_key == "hi" # type: ignore (dynamic property)
+    assert res[0].blah["nestedKey1"] == "nestedVal"  # type: ignore (dynamic property)
+    assert res[1].new_key == "hi"  # type: ignore (dynamic property)
     assert res[1].testKey == "myTest"
-    assert res[1].blah["nestedKey1"] == "nestedVal" # type: ignore (dynamic property)
+    assert res[1].blah["nestedKey1"] == "nestedVal"  # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -981,9 +1016,9 @@ async def test_dynamic_output_map():
     print("final ", res)
     print("final ", res.model_dump())
     print("final ", res.model_dump_json())
-    assert res.hair_color == "black" # type: ignore (dynamic property)
-    assert res.attributes["eye_color"] == "blue" # type: ignore (dynamic property)
-    assert res.attributes["facial_hair"] == "beard" # type: ignore (dynamic property)
+    assert res.hair_color == "black"  # type: ignore (dynamic property)
+    assert res.attributes["eye_color"] == "blue"  # type: ignore (dynamic property)
+    assert res.attributes["facial_hair"] == "beard"  # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -1015,10 +1050,10 @@ async def test_dynamic_output_union():
     print("final ", res)
     print("final ", res.model_dump())
     print("final ", res.model_dump_json())
-    assert res.hair_color == "black" # type: ignore (dynamic property)
-    assert res.attributes["eye_color"] == "blue" # type: ignore (dynamic property)
-    assert res.attributes["facial_hair"] == "beard" # type: ignore (dynamic property)
-    assert res.height["feet"] == 6 # type: ignore (dynamic property)
+    assert res.hair_color == "black"  # type: ignore (dynamic property)
+    assert res.attributes["eye_color"] == "blue"  # type: ignore (dynamic property)
+    assert res.attributes["facial_hair"] == "beard"  # type: ignore (dynamic property)
+    assert res.height["feet"] == 6  # type: ignore (dynamic property)
 
     res = await b.MyFunc(
         input="My name is Harrison. My hair is black and I'm 1.8 meters tall. I have blue eyes and a beard. I am 30 years old.",
@@ -1028,10 +1063,10 @@ async def test_dynamic_output_union():
     print("final ", res)
     print("final ", res.model_dump())
     print("final ", res.model_dump_json())
-    assert res.hair_color == "black" # type: ignore (dynamic property)
-    assert res.attributes["eye_color"] == "blue" # type: ignore (dynamic property)
-    assert res.attributes["facial_hair"] == "beard" # type: ignore (dynamic property)
-    assert res.height["meters"] == 1.8 # type: ignore (dynamic property)
+    assert res.hair_color == "black"  # type: ignore (dynamic property)
+    assert res.attributes["eye_color"] == "blue"  # type: ignore (dynamic property)
+    assert res.attributes["facial_hair"] == "beard"  # type: ignore (dynamic property)
+    assert res.height["meters"] == 1.8  # type: ignore (dynamic property)
 
 
 @pytest.mark.asyncio
@@ -1124,11 +1159,13 @@ async def test_event_log_hook():
 @pytest.mark.asyncio
 async def test_aws_bedrock():
     ## unstreamed
-    res = await b.TestAws("lightning in a rock")
+    res = await max_five_times_per_minute.call(b.TestAws(input="lightning in a rock"))
     print("unstreamed", res)
 
     ## streamed
-    stream = b.stream.TestAws("lightning in a rock")
+    stream = await max_five_times_per_minute.call(
+        b.stream.TestAws(input="lightning in a rock")
+    )
 
     async for msg in stream:
         if msg:
@@ -1143,7 +1180,9 @@ async def test_aws_bedrock():
 async def test_aws_bedrock_invalid_region():
     ## unstreamed
     with pytest.raises(errors.BamlClientError) as excinfo:
-        res = await b.TestAwsInvalidRegion("lightning in a rock")
+        res = await max_five_times_per_minute.call(
+            b.TestAwsInvalidRegion(input="lightning in a rock")
+        )
         print("unstreamed", res)
 
     assert "DispatchFailure" in str(excinfo)
