@@ -398,6 +398,10 @@ impl JsonParseState {
                 JsonCollection::TripleQuotedString(_) => {
                     // We should be expecting:
                     if token == '"' {
+                        // TODO: this logic is busted. peekable.peek() does not
+                        // advance the iterator (this is easily verified with
+                        // a unit test), but to fix this we need to do a bit of
+                        // refactoring, so for now we'll live with it.
                         let is_triple_quoted = match next.peek() {
                             Some((_, '"')) => match next.peek() {
                                 Some((_, '"')) => true,
@@ -491,6 +495,10 @@ impl JsonParseState {
                     // - A closing backtick
                     // - A character
                     if token == '`' {
+                        // TODO: this logic is busted. peekable.peek() does not
+                        // advance the iterator (this is easily verified with
+                        // a unit test), but to fix this we need to do a bit of
+                        // refactoring, so for now we'll live with it.
                         let is_triple_quoted = match next.peek() {
                             Some((_, '`')) => match next.peek() {
                                 Some((_, '`')) => true,
