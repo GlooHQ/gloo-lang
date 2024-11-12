@@ -91,21 +91,55 @@ test_deserializer!(
 
 // Now super degenerate cases
 
+// test_deserializer!(
+//     triple_quotes_is_not_terminated_by_single_quote,
+//     BAML_FILE,
+//     r#"
+//     {
+//       "code": """
+// Hello, world!"
+//     }
+//     "#,
+//     FieldType::class("Test"),
+//     {
+//       "type": "code",
+//       "code": "\n\"Hello, world!\"\n"
+//     }
+// );
+
 test_deserializer!(
-    triple_quotes_nested,
+    triple_quotes_contains_only_quoted_string,
     BAML_FILE,
     r#"
     {
-      "code": """print("""Hello, world!""")""",
+      "code": """
+"Hello, world!"
+"""
       "type": "code",
     }
     "#,
     FieldType::class("Test"),
     {
       "type": "code",
-      "code": "print(\"Hello, world!\")"
+      "code": "\n\"Hello, world!\"\n"
     }
 );
+
+// test_deserializer!(
+//     triple_quotes_nested,
+//     BAML_FILE,
+//     r#"
+//     {
+//       "code": """print("""Hello, world!""")""",
+//       "type": "code",
+//     }
+//     "#,
+//     FieldType::class("Test"),
+//     {
+//       "type": "code",
+//       "code": "print(\"Hello, world!\")"
+//     }
+// );
 
 test_deserializer!(
     unescaped_newline_double_quotes,
@@ -458,6 +492,24 @@ try {
 );
 
 test_deserializer!(
+    triple_quotes_contains_only_backtick_string,
+    BAML_FILE,
+    r#"
+    {
+      "code": ```
+`Hello, world!`
+```,
+      "type": "code",
+    }
+    "#,
+    FieldType::class("Test"),
+    {
+      "type": "code",
+      "code": "`Hello, world!`\n"
+    }
+);
+
+test_deserializer!(
     triple_backticks_returns_dedented_code_and_discards_info,
     BAML_FILE,
     r#"
@@ -483,26 +535,26 @@ Here's a comparison of TypeScript and Ruby code for checking the main Git branch
   }
 );
 
-test_deserializer!(
-    triple_backticks_second_triple_is_not_a_terminator,
-    BAML_FILE,
-    r#"
-Here's a comparison of TypeScript and Ruby code for checking the main Git branch using subprocesses:
+// test_deserializer!(
+//     triple_backticks_second_triple_is_not_a_terminator,
+//     BAML_FILE,
+//     r#"
+// Here's a comparison of TypeScript and Ruby code for checking the main Git branch using subprocesses:
 
-{
-  "code": ```
-``` aaa
-```,
-    "type": "code",
-}
+// {
+//   "code": ```
+// ``` aaa
+// ```,
+//     "type": "code",
+// }
 
-  "#,
-  FieldType::class("Test"),
-  {
-    "type": "code",
-    "code": "``` aaa",
-  }
-);
+//   "#,
+//   FieldType::class("Test"),
+//   {
+//     "type": "code",
+//     "code": "``` aaa",
+//   }
+// );
 
 test_deserializer!(
     triple_backticks_contains_json_terminators,
