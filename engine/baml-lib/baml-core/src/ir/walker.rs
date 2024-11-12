@@ -4,14 +4,40 @@ use indexmap::IndexMap;
 
 use internal_baml_parser_database::RetryPolicyStrategy;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-use crate::ir::jinja_helpers::render_expression;
 use super::{
-    repr::{self, FunctionConfig},
-    Class, Client, Enum, EnumValue, Expression, Field, FunctionNode, Identifier, Impl, RetryPolicy,
-    TemplateString, TestCase, Walker,
+    repr::{self, FunctionConfig, WithRepr},
+    Class, Client, Enum, EnumValue, Expression, Field, FunctionNode, IRHelper, Identifier, Impl,
+    RetryPolicy, TemplateString, TestCase, Walker,
 };
+use crate::ir::jinja_helpers::render_expression;
+
+fn provider_to_env_vars(
+    provider: &str,
+) -> impl IntoIterator<Item = (Option<&'static str>, &'static str)> {
+    match provider {
+        "aws-bedrock" => vec![
+            (None, "AWS_ACCESS_KEY_ID"),
+            (None, "AWS_SECRET_ACCESS_KEY"),
+            (Some("region"), "AWS_REGION"),
+        ],
+        "openai" => vec![(Some("api_key"), "OPENAI_API_KEY")],
+        "anthropic" => vec![(Some("api_key"), "ANTHROPIC_API_KEY")],
+        "google-ai" => vec![(Some("api_key"), "GOOGLE_API_KEY")],
+        "vertex-ai" => vec![
+            (Some("credentials"), "GOOGLE_APPLICATION_CREDENTIALS"),
+            (
+                Some("credentials_content"),
+                "GOOGLE_APPLICATION_CREDENTIALS_CONTENT",
+            ),
+        ],
+        "azure-openai" => vec![(Some("api_key"), "AZURE_OPENAI_API_KEY")],
+        "openai-generic" => vec![(Some("api_key"), "OPENAI_API_KEY")],
+        "ollama" => vec![],
+        other => vec![],
+    }
+}
 
 impl<'a> Walker<'a, &'a FunctionNode> {
     pub fn name(&self) -> &'a str {
@@ -26,13 +52,30 @@ impl<'a> Walker<'a, &'a FunctionNode> {
         true
     }
 
-    pub fn client_name(&self) -> Option<&'a str> {
+    pub fn client_name(&self) -> Option<String> {
         if let Some(c) = self.elem().configs.first() {
             return Some(c.client.as_str());
         }
-
         None
     }
+
+    pub fn required_env_vars(&'a self) -> Result<HashSet<String>> {
+        if let Some(c) = self.elem().configs.first() {
+            match &c.client {
+                repr::ClientSpec::Named(n) => {
+                    let client: super::ClientWalker<'a> = self.db.find_client(n)?;
+                    Ok(client.required_env_vars())
+                }
+                repr::ClientSpec::Shorthand(provider, _) => {
+                    let env_vars = provider_to_env_vars(provider);
+                    Ok(env_vars.into_iter().map(|(_, v)| v.to_string()).collect())
+                }
+            }
+        } else {
+            anyhow::bail!("Function {} has no client", self.name())
+        }
+    }
+
     pub fn walk_impls(
         &'a self,
     ) -> impl Iterator<Item = Walker<'a, (&'a repr::Function, &'a FunctionConfig)>> {
@@ -228,7 +271,6 @@ impl Expression {
     }
 }
 
-
 impl<'a> Walker<'a, (&'a FunctionNode, &'a Impl)> {
     #[allow(dead_code)]
     pub fn function(&'a self) -> Walker<'a, &'a FunctionNode> {
@@ -328,11 +370,11 @@ impl<'a> Walker<'a, &'a Class> {
 }
 
 impl<'a> Walker<'a, &'a Client> {
-    pub fn elem(&self) -> &'a repr::Client {
+    pub fn elem(&'a self) -> &'a repr::Client {
         &self.item.elem
     }
 
-    pub fn name(&self) -> &str {
+    pub fn name(&'a self) -> &'a str {
         &self.elem().name
     }
 
@@ -344,8 +386,26 @@ impl<'a> Walker<'a, &'a Client> {
         self.item.attributes.span.as_ref()
     }
 
-    pub fn options(&self) -> &Vec<(String, Expression)> {
+    pub fn options(&'a self) -> &'a Vec<(String, Expression)> {
         &self.elem().options
+    }
+
+    pub fn required_env_vars(&'a self) -> HashSet<String> {
+        let mut env_vars = self
+            .options()
+            .iter()
+            .flat_map(|(_, expr)| expr.required_env_vars())
+            .collect::<HashSet<String>>();
+
+        let options = self.options();
+        for (k, v) in provider_to_env_vars(self.elem().provider.as_str()) {
+            match k {
+                Some(k) if !options.iter().any(|(k2, _)| k2 == k) => env_vars.insert(v.to_string()),
+                None => env_vars.insert(v.to_string()),
+                _ => false,
+            };
+        }
+        env_vars
     }
 }
 

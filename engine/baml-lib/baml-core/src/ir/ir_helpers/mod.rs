@@ -13,7 +13,10 @@ use crate::{
     },
 };
 use anyhow::Result;
-use baml_types::{BamlMap, BamlValue, BamlValueWithMeta, Constraint, ConstraintLevel, FieldType, LiteralValue, TypeValue};
+use baml_types::{
+    BamlMap, BamlValue, BamlValueWithMeta, Constraint, ConstraintLevel, FieldType, LiteralValue,
+    TypeValue,
+};
 pub use to_baml_arg::ArgCoercer;
 
 use super::repr;
@@ -29,12 +32,15 @@ pub type TestCaseWalker<'a> = Walker<'a, (&'a FunctionNode, &'a TestCase)>;
 pub type ClassFieldWalker<'a> = Walker<'a, &'a Field>;
 
 pub trait IRHelper {
-    fn find_enum(&self, enum_name: &str) -> Result<EnumWalker<'_>>;
-    fn find_class(&self, class_name: &str) -> Result<ClassWalker<'_>>;
-    fn find_function(&self, function_name: &str) -> Result<FunctionWalker<'_>>;
-    fn find_client(&self, client_name: &str) -> Result<ClientWalker<'_>>;
-    fn find_retry_policy(&self, retry_policy_name: &str) -> Result<RetryPolicyWalker<'_>>;
-    fn find_template_string(&self, template_string_name: &str) -> Result<TemplateStringWalker<'_>>;
+    fn find_enum<'a>(&'a self, enum_name: &str) -> Result<EnumWalker<'a>>;
+    fn find_class<'a>(&'a self, class_name: &str) -> Result<ClassWalker<'a>>;
+    fn find_function<'a>(&'a self, function_name: &str) -> Result<FunctionWalker<'a>>;
+    fn find_client<'a>(&'a self, client_name: &str) -> Result<ClientWalker<'a>>;
+    fn find_retry_policy<'a>(&'a self, retry_policy_name: &str) -> Result<RetryPolicyWalker<'a>>;
+    fn find_template_string<'a>(
+        &'a self,
+        template_string_name: &str,
+    ) -> Result<TemplateStringWalker<'a>>;
     fn find_test<'a>(
         &'a self,
         function: &'a FunctionWalker<'a>,
@@ -53,16 +59,10 @@ pub trait IRHelper {
     ) -> Result<BamlValueWithMeta<FieldType>>;
     fn distribute_constraints<'a>(
         &'a self,
-        field_type: &'a FieldType
+        field_type: &'a FieldType,
     ) -> (&'a FieldType, Vec<Constraint>);
-    fn type_has_constraints(
-        &self,
-        field_type: &FieldType
-    ) -> bool;
-    fn type_has_checks(
-        &self,
-        field_type: &FieldType
-    ) -> bool;
+    fn type_has_constraints(&self, field_type: &FieldType) -> bool;
+    fn type_has_checks(&self, field_type: &FieldType) -> bool;
 }
 
 impl IRHelper for IntermediateRepr {
@@ -119,14 +119,14 @@ impl IRHelper for IntermediateRepr {
         }
     }
 
-    fn find_client<'ir>(&'ir self, client_name: &str) -> Result<ClientWalker<'ir>> {
-        match self.walk_clients().find(|c| c.elem().name == client_name) {
+    fn find_client<'a>(&'a self, client_name: &str) -> Result<ClientWalker<'a>> {
+        match self.walk_clients().find(|c| c.name() == client_name) {
             Some(c) => Ok(c),
             None => {
                 // Get best match.
                 let clients = self
                     .walk_clients()
-                    .map(|c| c.elem().name.as_str())
+                    .map(|c| c.name().to_string())
                     .collect::<Vec<_>>();
                 error_not_found!("client", client_name, &clients)
             }
@@ -378,7 +378,6 @@ impl IRHelper for IntermediateRepr {
         }
     }
 
-
     /// Constraints may live in several places. A constrained base type stors its
     /// constraints by wrapping itself in the `FieldType::Constrained` constructor.
     /// Additionally, `FieldType::Class` may have constraints stored in its class node,
@@ -390,20 +389,19 @@ impl IRHelper for IntermediateRepr {
     /// possible sources. Whenever querying a type for its constraints, you
     /// should do so with this function, instead of searching manually for all
     /// the places that Constraints can live.
-    fn distribute_constraints<'a>(&'a self, field_type: &'a FieldType) -> (&'a FieldType, Vec<Constraint>) {
+    fn distribute_constraints<'a>(
+        &'a self,
+        field_type: &'a FieldType,
+    ) -> (&'a FieldType, Vec<Constraint>) {
         match field_type {
-            FieldType::Class(class_name) => {
-                match self.find_class(class_name) {
-                    Err(_) => (field_type, Vec::new()),
-                    Ok(class_node) => (field_type, class_node.item.attributes.constraints.clone())
-                }
-            }
-            FieldType::Enum(enum_name) => {
-                match self.find_enum(enum_name) {
-                    Err(_) => (field_type, Vec::new()),
-                    Ok(enum_node) => (field_type, enum_node.item.attributes.constraints.clone())
-                }
-            }
+            FieldType::Class(class_name) => match self.find_class(class_name) {
+                Err(_) => (field_type, Vec::new()),
+                Ok(class_node) => (field_type, class_node.item.attributes.constraints.clone()),
+            },
+            FieldType::Enum(enum_name) => match self.find_enum(enum_name) {
+                Err(_) => (field_type, Vec::new()),
+                Ok(enum_node) => (field_type, enum_node.item.attributes.constraints.clone()),
+            },
             // Check the first level to see if it's constrained.
             FieldType::Constrained { base, constraints } => {
                 match base.as_ref() {
@@ -412,7 +410,8 @@ impl IRHelper for IntermediateRepr {
                     // The recursion here means that arbitrarily nested `FieldType::Constrained`s
                     // will be collapsed before the function returns.
                     FieldType::Constrained { .. } => {
-                        let (sub_base, sub_constraints) = self.distribute_constraints(base.as_ref());
+                        let (sub_base, sub_constraints) =
+                            self.distribute_constraints(base.as_ref());
                         let combined_constraints = vec![constraints.clone(), sub_constraints]
                             .into_iter()
                             .flatten()

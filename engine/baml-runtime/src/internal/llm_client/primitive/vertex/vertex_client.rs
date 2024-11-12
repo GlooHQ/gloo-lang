@@ -568,7 +568,6 @@ impl WithChat for VertexClient {
                 .properties
                 .get("model")
                 .and_then(|v| v.as_str().map(|s| s.to_string()))
-                .or_else(|| _ctx.env.get("default model").map(|s| s.to_string()))
                 .unwrap_or_else(|| "".to_string()),
             metadata: LLMCompleteResponseMetadata {
                 baml_is_complete: match response.candidates[0].finish_reason {

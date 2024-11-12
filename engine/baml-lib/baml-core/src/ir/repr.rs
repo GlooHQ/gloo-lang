@@ -65,14 +65,29 @@ impl IntermediateRepr {
         &self.configuration
     }
 
-    pub fn required_env_vars(&self) -> HashSet<&str> {
+    pub fn required_env_vars(&self) -> HashSet<String> {
         // TODO: We should likely check the full IR.
+        let mut env_vars = HashSet::new();
 
-        self.clients
-            .iter()
-            .flat_map(|c| c.elem.options.iter())
-            .flat_map(|(_, expr)| expr.required_env_vars())
-            .collect::<HashSet<&str>>()
+        for client in self.walk_clients() {
+            client.required_env_vars().iter().for_each(|v| {
+                env_vars.insert(v.to_string());
+            });
+        }
+
+        // self.walk_functions().filter_map(
+        //     |f| f.client_name()
+        // ).map(|c| c.required_env_vars())
+
+        // // for any functions, check for shorthand env vars
+        // self.functions
+        //     .iter()
+        //     .filter_map(|f| f.elem.configs())
+        //     .into_iter()
+        //     .flatten()
+        //     .flat_map(|(expr)| expr.client.required_env_vars())
+        //     .collect()
+        env_vars
     }
 
     /// Returns a list of all the recursive cycles in the IR.
@@ -406,7 +421,7 @@ impl WithRepr<FieldType> for ast::FieldType {
                                 base: Box::new(base_class),
                                 constraints,
                             },
-                            _ => base_class
+                            _ => base_class,
                         }
                     }
                     Some(Either::Right(enum_walker)) => {
@@ -415,9 +430,9 @@ impl WithRepr<FieldType> for ast::FieldType {
                         match maybe_constraints {
                             Some(constraints) if constraints.len() > 0 => FieldType::Constrained {
                                 base: Box::new(base_type),
-                                constraints
+                                constraints,
                             },
-                            _ => base_type
+                            _ => base_type,
                         }
                     }
                     None => return Err(anyhow!("Field type uses unresolvable local identifier")),
@@ -514,9 +529,9 @@ pub enum Expression {
 }
 
 impl Expression {
-    pub fn required_env_vars(&self) -> Vec<&str> {
+    pub fn required_env_vars<'a>(&'a self) -> Vec<String> {
         match self {
-            Expression::Identifier(Identifier::ENV(k)) => vec![k.as_str()],
+            Expression::Identifier(Identifier::ENV(k)) => vec![k.to_string()],
             Expression::List(l) => l.iter().flat_map(Expression::required_env_vars).collect(),
             Expression::Map(m) => m
                 .iter()
@@ -859,22 +874,31 @@ pub struct FunctionConfig {
 #[derive(serde::Serialize, Clone, Debug)]
 pub enum ClientSpec {
     Named(String),
-    Shorthand(String),
+    /// Shorthand for "<provider>/<model>"
+    Shorthand(String, String),
 }
 
 impl ClientSpec {
-    pub fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> String {
         match self {
-            ClientSpec::Named(n) => n,
-            ClientSpec::Shorthand(n) => n,
+            ClientSpec::Named(n) => n.clone(),
+            ClientSpec::Shorthand(provider, model) => format!("{provider}/{model}"),
         }
     }
 
     pub fn new_from_id(arg: String) -> Self {
         if arg.contains("/") {
-            ClientSpec::Shorthand(arg)
+            let (provider, model) = arg.split_once("/").unwrap();
+            ClientSpec::Shorthand(provider.to_string(), model.to_string())
         } else {
             ClientSpec::Named(arg)
+        }
+    }
+
+    pub fn required_env_vars(&self) -> HashSet<String> {
+        match self {
+            ClientSpec::Named(n) => HashSet::new(),
+            ClientSpec::Shorthand(_, _) => HashSet::new(),
         }
     }
 }
@@ -883,7 +907,7 @@ impl From<AstClientSpec> for ClientSpec {
     fn from(spec: AstClientSpec) -> Self {
         match spec {
             AstClientSpec::Named(n) => ClientSpec::Named(n.to_string()),
-            AstClientSpec::Shorthand(n) => ClientSpec::Shorthand(n.to_string()),
+            AstClientSpec::Shorthand(provider, model) => ClientSpec::Shorthand(provider, model),
         }
     }
 }

@@ -126,7 +126,7 @@ pub enum ClientSpec {
     Named(String),
 
     /// Defined inline using shorthand "<provider>/<model>" syntax
-    Shorthand(String),
+    Shorthand(String, String),
 }
 
 impl<'db> FunctionWalker<'db> {
@@ -143,7 +143,7 @@ impl<'db> FunctionWalker<'db> {
         match client.0.split_once("/") {
             // TODO: do this in a more robust way
             // actually validate which clients are and aren't allowed
-            Some((provider, model)) => Ok(ClientSpec::Shorthand(format!("{}/{}", provider, model))),
+            Some((provider, model)) => Ok(ClientSpec::Shorthand(provider.to_string(), model.to_string())),
             None => match self.db.find_client(client.0.as_str()) {
                 Some(client) => Ok(ClientSpec::Named(client.name().to_string())),
                 None => {

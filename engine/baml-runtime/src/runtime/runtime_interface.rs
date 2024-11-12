@@ -43,14 +43,9 @@ impl<'a> InternalClientLookup<'a> for InternalBamlRuntime {
         ctx: &RuntimeContext,
     ) -> Result<Arc<LLMProvider>> {
         match client_spec {
-            ClientSpec::Shorthand(shorthand) => {
-                let (provider, model) = shorthand.split_once("/").context(format!(
-                    "Invalid client shorthand: {} (expected format: provider/model)",
-                    shorthand
-                ))?;
-
+            ClientSpec::Shorthand(provider, model) => {
                 let client_property = ClientProperty {
-                    name: shorthand.clone(),
+                    name: format!("{}/{}", provider, model),
                     provider: provider.into(),
                     retry_policy: None,
                     options: vec![("model".to_string(), BamlValue::String(model.to_string()))]
@@ -60,7 +55,7 @@ impl<'a> InternalClientLookup<'a> for InternalBamlRuntime {
                 // TODO: allow other providers
                 let llm_primitive_provider =
                     LLMPrimitiveProvider::try_from((&client_property, ctx))
-                        .context(format!("Failed to parse client: {}", shorthand))?;
+                        .context(format!("Failed to parse client: {}/{}", provider, model))?;
 
                 Ok(Arc::new(LLMProvider::Primitive(Arc::new(
                     llm_primitive_provider,
