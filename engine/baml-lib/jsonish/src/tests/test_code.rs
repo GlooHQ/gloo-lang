@@ -486,8 +486,7 @@ try {
   console.log(`Main branch is: ${mainBranch}`);
 } catch (error) {
   console.error(`Error: ${error.message}`);
-}
-"#
+}"#
   }
 );
 
@@ -505,7 +504,7 @@ test_deserializer!(
     FieldType::class("Test"),
     {
       "type": "code",
-      "code": "`Hello, world!`\n"
+      "code": "`Hello, world!`"
     }
 );
 
@@ -530,8 +529,7 @@ Here's a comparison of TypeScript and Ruby code for checking the main Git branch
     "type": "code",
     "code": r#"const async function main() {
   console.log("Hello, world!");
-}
-"#
+}"#
   }
 );
 
@@ -573,8 +571,7 @@ Here's a comparison of TypeScript and Ruby code for checking the main Git branch
   FieldType::class("Test"),
   {
     "type": "code",
-    "code": r#"{ type: "code", code: "aaa", closing_terminators: }}}]])) }
-"#,
+    "code": r#"{ type: "code", code: "aaa", closing_terminators: }}}]])) }"#,
   }
 );
 
@@ -597,8 +594,7 @@ Here's a comparison of TypeScript and Ruby code for checking the main Git branch
   FieldType::class("Test"),
   {
     "type": "code",
-    "code": r#"{ type: "code", code: "aaa", closing_terminators: }}}]])) }
-"#,
+    "code": r#"{ type: "code", code: "aaa", closing_terminators: }}}]])) }"#,
   }
 );
 

@@ -42,15 +42,20 @@ pub fn dedent(s: &str) -> DedentedString {
         }
     }
 
-    // We now go over the lines a second time to build the result.
-    let mut result = String::new();
-    for line in s.lines() {
-        if line.starts_with(prefix) && line.chars().any(|c| !c.is_whitespace()) {
-            let (_, tail) = line.split_at(prefix.len());
-            result.push_str(tail);
-        }
-        result.push('\n');
-    }
+    let mut result = s
+        .lines()
+        .map(|l| {
+            if l.starts_with(prefix) && l.chars().any(|c| !c.is_whitespace()) {
+                let (_, tail) = l.split_at(prefix.len());
+                tail
+            } else {
+                ""
+            }
+        })
+        .into_iter()
+        .skip_while(|&l| l.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n");
 
     if result.ends_with('\n') && !s.ends_with('\n') {
         let new_len = result.len() - 1;
@@ -74,8 +79,7 @@ mod tests {
             world
             "#;
         let expected = r#"hello
-world
-"#;
+world"#;
         let result = dedent(input);
         assert_eq!(result.content, expected);
         assert_eq!(result.indent_size, 12);
@@ -90,8 +94,7 @@ world
         "#;
         let expected = r#"first line
     indented line
-back to first level
-"#;
+back to first level"#;
         let result = dedent(input);
         assert_eq!(result.content, expected);
         assert_eq!(result.indent_size, 12);
@@ -99,18 +102,14 @@ back to first level
 
     #[test]
     fn test_empty_lines() {
-        let input = r#"
-            line1
-
-            line2
-        "#;
+        let input = vec!["", "        line1", "", "        ", "        line2"].join("\n");
         let expected = r#"line1
 
-line2
-"#;
-        let result = dedent(input);
+
+line2"#;
+        let result = dedent(input.as_str());
         assert_eq!(result.content, expected);
-        assert_eq!(result.indent_size, 12);
+        assert_eq!(result.indent_size, 8);
     }
 
     #[test]
@@ -131,8 +130,7 @@ line2
             "#;
         let expected = r#"def function():
     # comment
-    print("hello")
-"#;
+    print("hello")"#;
         let result = dedent(input);
         assert_eq!(result.content, expected);
         assert_eq!(result.indent_size, 12);
@@ -140,16 +138,11 @@ line2
 
     #[test]
     fn test_tabs_and_spaces() {
-        let input = r#"
-		    mixed
-		    indentation
-		"#;
-        let expected = r#"mixed
-indentation
-"#;
+        let input = "\n    mixed\n\t\tindentation";
+        let expected = "    mixed\n\t\tindentation";
         let result = dedent(input);
         assert_eq!(result.content, expected);
-        assert_eq!(result.indent_size, 7);
+        assert_eq!(result.indent_size, 0);
     }
 
     #[test]
