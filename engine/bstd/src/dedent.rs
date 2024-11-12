@@ -62,3 +62,102 @@ pub fn dedent(s: &str) -> DedentedString {
         indent_size: prefix.len(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_basic_dedent() {
+        let input = r#"
+            hello
+            world
+            "#;
+        let expected = r#"hello
+world
+"#;
+        let result = dedent(input);
+        assert_eq!(result.content, expected);
+        assert_eq!(result.indent_size, 12);
+    }
+
+    #[test]
+    fn test_mixed_indentation() {
+        let input = r#"
+            first line
+                indented line
+            back to first level
+        "#;
+        let expected = r#"first line
+    indented line
+back to first level
+"#;
+        let result = dedent(input);
+        assert_eq!(result.content, expected);
+        assert_eq!(result.indent_size, 12);
+    }
+
+    #[test]
+    fn test_empty_lines() {
+        let input = r#"
+            line1
+
+            line2
+        "#;
+        let expected = r#"line1
+
+line2
+"#;
+        let result = dedent(input);
+        assert_eq!(result.content, expected);
+        assert_eq!(result.indent_size, 12);
+    }
+
+    #[test]
+    fn test_no_indentation() {
+        let input = "hello\nworld";
+        let expected = "hello\nworld";
+        let result = dedent(input);
+        assert_eq!(result.content, expected);
+        assert_eq!(result.indent_size, 0);
+    }
+
+    #[test]
+    fn test_different_line_starts() {
+        let input = r#"
+            def function():
+                # comment
+                print("hello")
+            "#;
+        let expected = r#"def function():
+    # comment
+    print("hello")
+"#;
+        let result = dedent(input);
+        assert_eq!(result.content, expected);
+        assert_eq!(result.indent_size, 12);
+    }
+
+    #[test]
+    fn test_tabs_and_spaces() {
+        let input = r#"
+		    mixed
+		    indentation
+		"#;
+        let expected = r#"mixed
+indentation
+"#;
+        let result = dedent(input);
+        assert_eq!(result.content, expected);
+        assert_eq!(result.indent_size, 7);
+    }
+
+    #[test]
+    fn test_single_line() {
+        let input = "    single line";
+        let expected = "single line";
+        let result = dedent(input);
+        assert_eq!(result.content, expected);
+        assert_eq!(result.indent_size, 4);
+    }
+}
