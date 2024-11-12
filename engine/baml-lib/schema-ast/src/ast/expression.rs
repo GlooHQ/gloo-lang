@@ -1,6 +1,7 @@
 use baml_types::TypeValue;
 
 use crate::ast::Span;
+use bstd::dedent;
 use std::fmt;
 
 use super::{Identifier, WithName, WithSpan};
@@ -28,74 +29,17 @@ impl WithSpan for RawString {
     }
 }
 
-pub fn dedent(s: &str) -> (String, usize) {
-    let mut prefix = "";
-    let mut lines = s.lines();
-
-    // We first search for a non-empty line to find a prefix.
-    for line in &mut lines {
-        let mut whitespace_idx = line.len();
-        for (idx, ch) in line.char_indices() {
-            if !ch.is_whitespace() {
-                whitespace_idx = idx;
-                break;
-            }
-        }
-
-        // Check if the line had anything but whitespace
-        if whitespace_idx < line.len() {
-            prefix = &line[..whitespace_idx];
-            break;
-        }
-    }
-
-    // We then continue looking through the remaining lines to
-    // possibly shorten the prefix.
-    for line in &mut lines {
-        let mut whitespace_idx = line.len();
-        for ((idx, a), b) in line.char_indices().zip(prefix.chars()) {
-            if a != b {
-                whitespace_idx = idx;
-                break;
-            }
-        }
-
-        // Check if the line had anything but whitespace and if we
-        // have found a shorter prefix
-        if whitespace_idx < line.len() && whitespace_idx < prefix.len() {
-            prefix = &line[..whitespace_idx];
-        }
-    }
-
-    // We now go over the lines a second time to build the result.
-    let mut result = String::new();
-    for line in s.lines() {
-        if line.starts_with(prefix) && line.chars().any(|c| !c.is_whitespace()) {
-            let (_, tail) = line.split_at(prefix.len());
-            result.push_str(tail);
-        }
-        result.push('\n');
-    }
-
-    if result.ends_with('\n') && !s.ends_with('\n') {
-        let new_len = result.len() - 1;
-        result.truncate(new_len);
-    }
-
-    (result, prefix.len())
-}
-
 impl RawString {
     pub(crate) fn new(value: String, span: Span, language: Option<(String, Span)>) -> Self {
         let dedented_value = value.trim_start_matches(|c| c == '\n' || c == '\r');
         let start_trim_count = value.len() - dedented_value.len();
         let dedented_value = dedented_value.trim_end();
-        let (dedented_value, indent_size) = dedent(dedented_value);
+        let dedented = dedent(dedented_value);
         Self {
             raw_span: span,
             raw_value: value,
-            inner_value: dedented_value,
-            indent: indent_size,
+            inner_value: dedented.content,
+            indent: dedented.indent_size,
             inner_span_start: start_trim_count,
             language,
         }
@@ -174,7 +118,7 @@ impl fmt::Display for Expression {
             Expression::RawStringValue(val, ..) => {
                 write!(f, "{}", crate::string_literal(val.value()))
             }
-            Expression::JinjaExpressionValue(val,..) => fmt::Display::fmt(val, f),
+            Expression::JinjaExpressionValue(val, ..) => fmt::Display::fmt(val, f),
             Expression::Array(vals, _) => {
                 let vals = vals
                     .iter()
@@ -196,7 +140,6 @@ impl fmt::Display for Expression {
 }
 
 impl Expression {
-
     pub fn from_json(value: serde_json::Value, span: Span, empty_span: Span) -> Expression {
         match value {
             serde_json::Value::Null => Expression::StringValue("Null".to_string(), empty_span),
@@ -297,7 +240,7 @@ impl Expression {
             Self::NumericValue(_, span) => span,
             Self::StringValue(_, span) => span,
             Self::RawStringValue(r) => r.span(),
-            Self::JinjaExpressionValue(_,span) => span,
+            Self::JinjaExpressionValue(_, span) => span,
             Self::Identifier(id) => id.span(),
             Self::Map(_, span) => span,
             Self::Array(_, span) => span,
@@ -350,32 +293,35 @@ impl Expression {
     pub fn assert_eq_up_to_span(&self, other: &Expression) {
         use Expression::*;
         match (self, other) {
-            (BoolValue(v1,_), BoolValue(v2,_)) => assert_eq!(v1,v2),
-            (BoolValue(_,_), _) => panic!("Types do not match: {:?} and {:?}", self, other),
-            (NumericValue(n1,_), NumericValue(n2,_)) => assert_eq!(n1, n2),
-            (NumericValue(_,_), _) => panic!("Types do not match: {:?} and {:?}", self, other),
-            (Identifier(i1), Identifier(i2)) => assert_eq!(i1,i2),
+            (BoolValue(v1, _), BoolValue(v2, _)) => assert_eq!(v1, v2),
+            (BoolValue(_, _), _) => panic!("Types do not match: {:?} and {:?}", self, other),
+            (NumericValue(n1, _), NumericValue(n2, _)) => assert_eq!(n1, n2),
+            (NumericValue(_, _), _) => panic!("Types do not match: {:?} and {:?}", self, other),
+            (Identifier(i1), Identifier(i2)) => assert_eq!(i1, i2),
             (Identifier(_), _) => panic!("Types do not match: {:?} and {:?}", self, other),
-            (StringValue(s1,_), StringValue(s2,_)) => assert_eq!(s1, s2),
-            (StringValue(_,_), _) => panic!("Types do not match: {:?} and {:?}", self, other),
+            (StringValue(s1, _), StringValue(s2, _)) => assert_eq!(s1, s2),
+            (StringValue(_, _), _) => panic!("Types do not match: {:?} and {:?}", self, other),
             (RawStringValue(s1), RawStringValue(s2)) => s1.assert_eq_up_to_span(s2),
             (RawStringValue(_), _) => panic!("Types do not match: {:?} and {:?}", self, other),
             (JinjaExpressionValue(j1, _), JinjaExpressionValue(j2, _)) => assert_eq!(j1, j2),
-            (JinjaExpressionValue(_,_), _) => panic!("Types do not match: {:?} and {:?}", self, other),
-            (Array(xs,_), Array(ys,_)) => {
+            (JinjaExpressionValue(_, _), _) => {
+                panic!("Types do not match: {:?} and {:?}", self, other)
+            }
+            (Array(xs, _), Array(ys, _)) => {
                 assert_eq!(xs.len(), ys.len());
-                xs.iter().zip(ys).for_each(|(x,y)| { x.assert_eq_up_to_span(y); })
-            },
-            (Array(_,_), _) => panic!("Types do not match: {:?} and {:?}", self, other),
-            (Map(m1,_), Map(m2,_)) => {
+                xs.iter().zip(ys).for_each(|(x, y)| {
+                    x.assert_eq_up_to_span(y);
+                })
+            }
+            (Array(_, _), _) => panic!("Types do not match: {:?} and {:?}", self, other),
+            (Map(m1, _), Map(m2, _)) => {
                 assert_eq!(m1.len(), m2.len());
                 m1.iter().zip(m2).for_each(|((k1, v1), (k2, v2))| {
                     k1.assert_eq_up_to_span(k2);
                     v1.assert_eq_up_to_span(v2);
                 });
-            },
-            (Map(_,_), _) => panic!("Types do not match: {:?} and {:?}", self, other),
-
+            }
+            (Map(_, _), _) => panic!("Types do not match: {:?} and {:?}", self, other),
         }
     }
 }

@@ -1,6 +1,6 @@
 pub struct DedentedString {
     pub content: String,
-    pub indent: usize,
+    pub indent_size: usize,
 }
 
 pub fn dedent(s: &str) -> DedentedString {
@@ -59,6 +59,6 @@ pub fn dedent(s: &str) -> DedentedString {
 
     DedentedString {
         content: result,
-        indent: prefix.len(),
+        indent_size: prefix.len(),
     }
 }
