@@ -38,7 +38,20 @@ pub(crate) fn parse_type_expression_block(
                     match current.as_str() {
                         "class" => sub_type = Some(SubType::Class.clone()),
                         "enum" => sub_type = Some(SubType::Enum.clone()),
-                        _ => sub_type = Some(SubType::Other(current.as_str().to_string())),
+
+                        // Report this as an error, otherwise the syntax will be
+                        // correct but the type will not be registered and the
+                        // user will get a "type" not found error.
+                        other => {
+                            diagnostics.push_error(DatamodelError::new_validation_error(
+                                &format!(
+                                    "Unexpected keyword '{other}' in type definition. Use 'class' or 'enum'.",
+                                ),
+                                diagnostics.span(current.as_span()),
+                            ));
+
+                            sub_type = Some(SubType::Other(other.to_string()))
+                        }
                     }
                 } else {
                     // Subsequent identifier is the name of the block.
@@ -120,7 +133,7 @@ mod tests {
     use super::*;
     use crate::parser::{BAMLParser, Rule};
     use internal_baml_diagnostics::{Diagnostics, SourceFile};
-    use pest::{Parser, consumes_to, fails_with, parses_to};
+    use pest::{consumes_to, fails_with, parses_to, Parser};
 
     #[test]
     fn keyword_name_mandatory_whitespace() {
