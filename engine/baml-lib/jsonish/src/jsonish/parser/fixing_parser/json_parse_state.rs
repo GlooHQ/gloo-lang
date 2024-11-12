@@ -75,12 +75,13 @@ impl JsonParseState {
             | JsonCollection::BlockComment(s)
             | JsonCollection::SingleQuotedString(s)
             | JsonCollection::BacktickString(s)
+            | JsonCollection::TripleBacktickString { content: s, .. }
             | JsonCollection::UnquotedString(s)
             | JsonCollection::TrailingComment(s) => {
                 // println!("Consuming: {s} + {:?}", token);
                 s.push(token);
             }
-            _ => {
+            JsonCollection::Object(_, _) | JsonCollection::Array(_) => {
                 panic!("Unexpected token: {:?} in: {:?}", token, last);
             }
         }
@@ -363,8 +364,8 @@ impl JsonParseState {
         mut next: Peekable<impl Iterator<Item = (usize, char)>>,
     ) -> Result<usize> {
         // println!("Processing: {:?}..{:?}", token, next.peek());
-        if let Some((last, _)) = self.collection_stack.last() {
-            match last {
+        match self.collection_stack.last() {
+            Some((last, _)) => match last {
                 JsonCollection::Object(_, _) => {
                     match token {
                         '}' => {
@@ -485,6 +486,31 @@ impl JsonParseState {
                         _ => self.consume(token),
                     }
                 }
+                JsonCollection::TripleBacktickString { .. } => {
+                    // We could be expecting:
+                    // - A closing backtick
+                    // - A character
+                    if token == '`' {
+                        let is_triple_quoted = match next.peek() {
+                            Some((_, '`')) => match next.peek() {
+                                Some((_, '`')) => true,
+                                None => true,
+                                _ => false,
+                            },
+                            None => true,
+                            _ => false,
+                        };
+
+                        if is_triple_quoted {
+                            self.complete_collection();
+                            Ok(3)
+                        } else {
+                            self.consume(token)
+                        }
+                    } else {
+                        self.consume(token)
+                    }
+                }
                 JsonCollection::BacktickString(_) => {
                     // We could be expecting:
                     // - A closing backtick
@@ -564,13 +590,14 @@ impl JsonParseState {
                         _ => self.consume(token),
                     }
                 }
+            },
+            None => {
+                // We could be expecting:
+                // - A value
+                // - Any leading whitespace
+                let preview = next.peekable();
+                self.find_any_starting_value(token, preview)
             }
-        } else {
-            // We could be expecting:
-            // - A value
-            // - Any leading whitespace
-            let preview = next.peekable();
-            self.find_any_starting_value(token, preview)
         }
     }
 
@@ -617,10 +644,29 @@ impl JsonParseState {
                 ));
             }
             '`' => {
-                self.collection_stack.push((
-                    JsonCollection::BacktickString(String::new()),
-                    Default::default(),
-                ));
+                // Peek if next 2 characters are also quotes
+                let is_triple_quoted = {
+                    next.next_if(|&(_, c)| c == '`')
+                        .and_then(|_| next.next_if(|&(_, c)| c == '`'))
+                        .is_some()
+                };
+
+                if is_triple_quoted {
+                    self.collection_stack.push((
+                        JsonCollection::TripleBacktickString {
+                            lang: None,
+                            path: None,
+                            content: String::new(),
+                        },
+                        Default::default(),
+                    ));
+                    return Ok(2);
+                } else {
+                    self.collection_stack.push((
+                        JsonCollection::BacktickString(String::new()),
+                        Default::default(),
+                    ))
+                }
             }
             '/' => {
                 // Could be a comment

@@ -1,6 +1,8 @@
+mod dedent;
 mod project_fqn;
 mod random_word_id;
 
+pub use dedent::{dedent, DedentedString};
 pub use project_fqn::ProjectFqn;
 pub use random_word_id::random_word_id;
 

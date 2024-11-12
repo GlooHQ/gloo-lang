@@ -21,7 +21,7 @@ test_deserializer!(
     FieldType::class("Test"),
     {
       "type": "code",
-      "code": "print(\"Hello, world!\")"
+      "code": "print(\"Hello, world!\")",
     }
 );
 
@@ -90,6 +90,22 @@ test_deserializer!(
 );
 
 // Now super degenerate cases
+
+test_deserializer!(
+    triple_quotes_nested,
+    BAML_FILE,
+    r#"
+    {
+      "code": """print("""Hello, world!""")""",
+      "type": "code",
+    }
+    "#,
+    FieldType::class("Test"),
+    {
+      "type": "code",
+      "code": "print(\"Hello, world!\")"
+    }
+);
 
 test_deserializer!(
     unescaped_newline_double_quotes,
@@ -355,5 +371,204 @@ export default query(async (ctx) => {
 
   return postsWithDetails;
 })"#
+  }
+);
+
+test_deserializer!(
+    triple_backticks,
+    BAML_FILE,
+    r#"
+Here's a comparison of TypeScript and Ruby code for checking the main Git branch using subprocesses:
+
+{
+  "code": ```
+const { execSync } = require('child_process');
+
+function getMainBranch(): string {
+  try {
+    // Try 'main' first
+    const mainExists = execSync('git rev-parse --verify main 2>/dev/null', { encoding: 'utf8' });
+    if (mainExists) return 'main';
+  } catch {
+    // Try 'master' if 'main' doesn't exist
+    try {
+      const masterExists = execSync('git rev-parse --verify master 2>/dev/null', { encoding: 'utf8' });
+      if (masterExists) return 'master';
+    } catch {
+      throw new Error('Neither main nor master branch found');
+    }
+  }
+  
+  throw new Error('Unable to determine main branch');
+}
+
+// Usage
+try {
+  const mainBranch = getMainBranch();
+  console.log(`Main branch is: ${mainBranch}`);
+} catch (error) {
+  console.error(`Error: ${error.message}`);
+}
+```,
+    "type": "code",
+}
+
+Both versions will:
+1. First check if 'main' exists
+2. If not, check if 'master' exists
+3. Return the appropriate branch name
+4. Throw/raise an error if neither exists
+5. Handle errors gracefully
+
+The main difference is that Ruby uses the special `$?` variable to check command success, while TypeScript relies on try/catch with execSync.
+ 
+  "#,
+  FieldType::class("Test"),
+  {
+    "type": "code",
+    "code": r#"const { execSync } = require('child_process');
+
+function getMainBranch(): string {
+  try {
+    // Try 'main' first
+    const mainExists = execSync('git rev-parse --verify main 2>/dev/null', { encoding: 'utf8' });
+    if (mainExists) return 'main';
+  } catch {
+    // Try 'master' if 'main' doesn't exist
+    try {
+      const masterExists = execSync('git rev-parse --verify master 2>/dev/null', { encoding: 'utf8' });
+      if (masterExists) return 'master';
+    } catch {
+      throw new Error('Neither main nor master branch found');
+    }
+  }
+
+  throw new Error('Unable to determine main branch');
+}
+
+// Usage
+try {
+  const mainBranch = getMainBranch();
+  console.log(`Main branch is: ${mainBranch}`);
+} catch (error) {
+  console.error(`Error: ${error.message}`);
+}
+"#
+  }
+);
+
+test_deserializer!(
+    triple_backticks_returns_dedented_code_and_discards_info,
+    BAML_FILE,
+    r#"
+Here's a comparison of TypeScript and Ruby code for checking the main Git branch using subprocesses:
+
+{
+  "code": ```typescript main.ts
+    const async function main() {
+      console.log("Hello, world!");
+    }
+```,
+    "type": "code",
+}
+
+  "#,
+  FieldType::class("Test"),
+  {
+    "type": "code",
+    "code": r#"const async function main() {
+  console.log("Hello, world!");
+}
+"#
+  }
+);
+
+test_deserializer!(
+    triple_backticks_second_triple_is_not_a_terminator,
+    BAML_FILE,
+    r#"
+Here's a comparison of TypeScript and Ruby code for checking the main Git branch using subprocesses:
+
+{
+  "code": ```
+``` aaa
+```,
+    "type": "code",
+}
+
+  "#,
+  FieldType::class("Test"),
+  {
+    "type": "code",
+    "code": "``` aaa",
+  }
+);
+
+test_deserializer!(
+    triple_backticks_contains_json_terminators,
+    BAML_FILE,
+    r#"
+Here's a comparison of TypeScript and Ruby code for checking the main Git branch using subprocesses:
+
+{
+  "code": ```
+  { type: "code", code: "aaa", closing_terminators: }}}]])) }
+```,
+    "type": "code",
+}
+
+  "#,
+  FieldType::class("Test"),
+  {
+    "type": "code",
+    "code": r#"{ type: "code", code: "aaa", closing_terminators: }}}]])) }
+"#,
+  }
+);
+
+test_deserializer!(
+    triple_backticks_in_json_fenced_codeblock,
+    BAML_FILE,
+    r#"
+Here's a comparison of TypeScript and Ruby code for checking the main Git branch using subprocesses:
+
+```json
+{
+  "code": ```
+  { type: "code", code: "aaa", closing_terminators: }}}]])) }
+```,
+    "type": "code",
+}
+```
+
+  "#,
+  FieldType::class("Test"),
+  {
+    "type": "code",
+    "code": r#"{ type: "code", code: "aaa", closing_terminators: }}}]])) }
+"#,
+  }
+);
+
+test_deserializer!(
+    string_preserves_triple_backticks,
+    BAML_FILE,
+    r#"
+Here's a comparison of TypeScript and Ruby code for checking the main Git branch using subprocesses:
+
+```json
+{
+  "code": "```
+const { execSync } = require('child_process');
+```",
+    "type": "code",
+}
+```
+
+  "#,
+  FieldType::class("Test"),
+  {
+    "type": "code",
+    "code": "```\nconst { execSync } = require('child_process');\n```",
   }
 );
