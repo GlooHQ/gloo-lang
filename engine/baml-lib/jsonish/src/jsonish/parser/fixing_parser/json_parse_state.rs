@@ -173,6 +173,20 @@ impl JsonParseState {
                     counter = idx;
                     match c {
                         ',' => {
+                            // Check if we have just numeric values in the string so far.
+                            let Some((JsonCollection::UnquotedString(current_value), _)) =
+                                self.collection_stack.last()
+                            else {
+                                return Some(idx);
+                            };
+
+                            // current value could be a numeric looking things.
+                            let is_numeric = current_value.trim().parse::<f64>().is_ok();
+                            let is_bool = current_value.trim().eq_ignore_ascii_case("true")
+                                || current_value.trim().eq_ignore_ascii_case("false");
+                            let is_null = current_value.trim().eq_ignore_ascii_case("null");
+                            let is_possible_value = is_numeric || is_bool || is_null;
+
                             if let Some((_, next_c)) = next.peek() {
                                 match next_c {
                                     '\n' => {
@@ -181,6 +195,9 @@ impl JsonParseState {
                                     }
                                     ' ' => {
                                         log::debug!("Testing for comment after space + comma");
+                                        if is_possible_value {
+                                            return Some(idx);
+                                        }
                                         // If after the space we have "//" or "/*" or the beginning of a key, we'll close the string
                                         let mut buffer = ",".to_string();
                                         let mut anything_but_whitespace = false;
@@ -193,7 +210,7 @@ impl JsonParseState {
                                                 '\n' => {
                                                     if anything_but_whitespace {
                                                     } else {
-                                                        // Likely end of the key as the LLM generated a (', ' token by mistake)
+                                                        // Likely end of the key as the LLM generated a ", " token by mistake instead of a ","
                                                         // so drop the comma
                                                         log::debug!("Closing due to: newline after comma + space");
                                                         return Some(idx);
