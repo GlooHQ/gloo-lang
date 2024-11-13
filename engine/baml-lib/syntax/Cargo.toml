@@ -1,0 +1,32 @@
+[package]
+edition = "2021"
+name = "internal-syntax"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+license-file.workspace = true
+
+[lints.rust]
+dead_code = "deny"
+unused_imports = "allow"
+unused_variables = "deny"
+
+[dependencies]
+internal-baml-diagnostics = { path = "../diagnostics" }
+baml-types = { path = "../baml-types" }
+log = "0.4.20"
+serde_json.workspace = true
+serde.workspace = true
+
+
+either = "1.8.1"
+test-log = "0.2.16"
+lalrpop-util = "0.22.0"
+lalrpop = "0.22.0"
+
+[build-dependencies]
+lalrpop = "0.22.0"
+
+[features]
+debug_parser = []
+# default = ["debug_parser"]

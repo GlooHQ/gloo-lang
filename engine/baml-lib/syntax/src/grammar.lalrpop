@@ -1,0 +1,156 @@
+grammar<'err>(
+    src_file: &SourceFile,
+    diagnostics: &mut Diagnostics,
+);
+
+use crate::forms::class::{Class, Field};
+use crate::pos::{mk_pos, empty_pos, WithPos};
+use crate::forms::identifier::Identifier;
+use crate::forms::r#type::{Type, BuiltinType};
+
+use internal_baml_diagnostics::{DatamodelError, Diagnostics, SourceFile, Span};
+
+use std::str::FromStr;
+
+
+WithPos<Rule>: Rule = <l: @L> <t: Rule> <r: @R> => t.with_pos(mk_pos(src_file, l, r));
+
+pub Identifier: Identifier<Span> = WithPos<BareIdentifier>;
+
+BareIdentifier: Identifier<Span> = {
+    <s:r"[a-zA-Z][a-zA-Z0-9_]*"> => {
+        Identifier{name: s.to_string(), meta: empty_pos(src_file)}
+    }
+};
+
+
+// The syntax for a Class definition.
+//
+// ```baml
+// class Foo {
+//   foo int
+//   bar string[]
+// }
+// ```
+pub Class: Class<Span> = {
+    <l: @L> "class" <name:Identifier> "{" <fields:FieldList> "}" <r: @R> => {
+        let span = mk_pos(src_file, l,r);
+        Class {
+            name,
+            fields,
+            meta: span,
+        }
+    }
+};
+
+FieldList: Vec<Field<Span>> = {
+    <fields:Field> => vec![fields],
+    <mut fields:FieldList> <field:Field> => {
+        fields.push(field);
+        fields
+    }
+};
+
+Field: Field<Span> = {
+    <l: @L> <name:Identifier> <type_:Type> <r: @R> => {
+        let span = mk_pos(src_file, l, r);
+        Field {
+            name,
+            r#type: type_,
+            meta: span,
+        }
+    }
+};
+
+PipeSep<T>: Vec<T> = {
+    <mut v:(<T> "|")+> <e:T> => {
+        v.push(e);
+        v
+    }
+}
+
+CommaSep<T>: Vec<T> = {
+    <mut v:(<T> ",")+> <e:T> => {
+        v.push(e);
+        v
+    }
+}
+
+pub Type: Type<Span> = WithPos<BareType>;
+
+BasicType: Type<Span> = {
+    <base:Identifier> => match BuiltinType::from_str(base.to_string().as_str()) {
+        Ok(builtin_type) => Type::Builtin { builtin_type, meta: empty_pos(src_file) },
+        Err(_) => Type::UserDefined { name: base }
+    }
+};
+
+ParenType: Type<Span> = {
+    "(" <t:Type> ")" => t,
+};
+
+TypeAtom: Type<Span> = {
+    BasicType,
+    ParenType,
+};
+
+// Question mark operator can only be applied to type atoms.
+// In other words, `int??` and `int[]?` are disallowed.
+OptionType: Type<Span> = {
+    <t:TypeAtom> "?" => {
+        Type::Option { base_type: Box::new(t), meta: empty_pos(src_file) }
+    },
+    <t:OptionType> <l:@L> "?" <r:@R> => {
+        let span = mk_pos(src_file, l, r);
+        diagnostics.push_error(DatamodelError::new_static("Can't ? a ?", span));
+        Type::Error { meta: empty_pos(src_file )}
+    }
+};
+
+ListType: Type<Span> = {
+    <t:Type> "[" "]" => {
+        Type::List { base_type: Box::new(t), meta: empty_pos(src_file) }
+    }
+};
+
+UnionType: Type<Span> = {
+    <first:TypeAtom> "|" <rest:TypeAtom> => {
+        return Type::Union { variants: vec![first, rest], meta: empty_pos(src_file) };
+    },
+    <first:UnionType> "|" <rest:TypeAtom> => {
+        match first {
+            Type::Union { mut variants, meta } => {
+                variants.push(rest);
+                return Type::Union { variants, meta };
+            }
+            _ => unreachable!("The parser rules this out.")
+        }
+    }
+};
+
+pub BareType: Type<Span> = {
+    TypeAtom,
+    OptionType,
+    ListType,
+    UnionType,   
+};
+
+LLMFunction: LLMFunction<Span> = {
+  "function" <name:Identifier> "(" <args: CommaSep<Argument>> ")" "->" <return_type:Type> "{" <body:LLMFunctionBody> "}" => {
+    return LLMFunction { name, args, return_type, body }
+  }
+};
+
+LLMFunctionBody: LLMFunctionBody<Span> = {
+  "client" <client: Identifier> "\n" "prompt" <prompt: RawString> => {
+    return LLMFunctionBody { client, prompt }
+  }
+}
+
+Argument: Argument<Span> = {
+  <name: Identifier> ":" <r#type: Type> => { return Argument { name, r#type } }
+}
+
+RawString: Expression<Span> = {
+  "#\"\"" <contents:r##"#"(?!#").*"#"#=> { return Expression::RawString { inner: contents } }
+}
