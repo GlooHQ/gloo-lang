@@ -5,6 +5,7 @@ use crate::coerce;
 use crate::types::configurations::visit_test_case;
 use crate::{context::Context, DatamodelError};
 
+use baml_types::Constraint;
 use indexmap::IndexMap;
 use internal_baml_diagnostics::Span;
 use internal_baml_prompt_parser::ast::{ChatBlock, PrinterBlock, Variable};
@@ -138,6 +139,7 @@ pub struct TestCase {
     // The span is the span of the argument (the expression has its own span)
     pub args: IndexMap<String, (Span, Expression)>,
     pub args_field_span: Span,
+    pub constraints: Vec<(Constraint, Span, Span)>,
 }
 
 #[derive(Debug, Clone)]

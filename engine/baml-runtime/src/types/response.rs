@@ -1,5 +1,6 @@
 pub use crate::internal::llm_client::LLMResponse;
 use crate::{
+    constraints::TestConstraintsResult,
     errors::ExposedError,
     internal::llm_client::{orchestrator::OrchestrationScope, ResponseBamlValue},
 };
@@ -182,9 +183,11 @@ impl FunctionResult {
     }
 }
 
+#[derive(Debug)]
 pub struct TestResponse {
     pub function_response: FunctionResult,
     pub function_span: Option<uuid::Uuid>,
+    pub constraints_result: TestConstraintsResult,
 }
 
 impl std::fmt::Display for TestResponse {
@@ -196,6 +199,7 @@ impl std::fmt::Display for TestResponse {
 #[derive(Debug, PartialEq, Eq)]
 pub enum TestStatus<'a> {
     Pass,
+    NeedsHumanEval(Vec<String>),
     Fail(TestFailReason<'a>),
 }
 
@@ -203,6 +207,9 @@ impl From<TestStatus<'_>> for BamlValue {
     fn from(status: TestStatus) -> Self {
         match status {
             TestStatus::Pass => BamlValue::String("pass".to_string()),
+            TestStatus::NeedsHumanEval(checks) => {
+                BamlValue::String(format!("checks need human evaluation: {:?}", checks))
+            }
             TestStatus::Fail(r) => BamlValue::String(format!("failed! {:?}", r)),
         }
     }
@@ -210,9 +217,13 @@ impl From<TestStatus<'_>> for BamlValue {
 
 #[derive(Debug)]
 pub enum TestFailReason<'a> {
-    TestUnspecified(&'a anyhow::Error),
+    TestUnspecified(anyhow::Error),
     TestLLMFailure(&'a LLMResponse),
     TestParseFailure(&'a anyhow::Error),
+    TestConstraintsFailure {
+        checks: Vec<(String, bool)>,
+        failed_assert: Option<String>,
+    },
 }
 
 impl PartialEq for TestFailReason<'_> {
@@ -235,7 +246,26 @@ impl TestResponse {
         let func_res = &self.function_response;
         if let Some(parsed) = func_res.result_with_constraints() {
             if parsed.is_ok() {
-                TestStatus::Pass
+                match self.constraints_result.clone() {
+                    TestConstraintsResult::InternalError { details } => {
+                        TestStatus::Fail(TestFailReason::TestUnspecified(anyhow::anyhow!(details)))
+                    }
+                    TestConstraintsResult::Completed {
+                        checks,
+                        failed_assert,
+                    } => {
+                        let n_failed_checks: usize =
+                            checks.iter().filter(|(_, pass)| !pass).count();
+                        if failed_assert.is_some() || n_failed_checks > 0 {
+                            TestStatus::Fail(TestFailReason::TestConstraintsFailure {
+                                checks,
+                                failed_assert,
+                            })
+                        } else {
+                            TestStatus::Pass
+                        }
+                    }
+                }
             } else {
                 TestStatus::Fail(TestFailReason::TestParseFailure(
                     parsed.as_ref().unwrap_err(),

@@ -66,7 +66,7 @@ where
                             LLMResponse::Success(s) => {
                                 let parsed = partial_parse_fn(&s.content);
                                 let (parsed, response_value) = match parsed {
-                                    Ok(v) => (Some(Ok(v.clone())), Some(parsed_value_to_response(&v))),
+                                    Ok(v) => (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v)))),
                                     Err(e) => (None, Some(Err(e))),
                                 };
                                 on_event(FunctionResult::new(
@@ -103,7 +103,7 @@ where
             _ => None,
         };
         let (parsed_response, response_value) = match parsed_response {
-            Some(Ok(v)) => (Some(Ok(v.clone())), Some(parsed_value_to_response(&v))),
+            Some(Ok(v)) => (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v)))),
             Some(Err(e)) => (None, Some(Err(e))),
             None => (None, None),
         };

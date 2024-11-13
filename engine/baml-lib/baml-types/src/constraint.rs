@@ -27,7 +27,7 @@ pub enum ConstraintLevel {
 }
 
 /// The user-visible schema for a failed check.
-#[derive(Clone, Debug, serde::Serialize)]
+#[derive(Clone, Debug, serde::Serialize, PartialEq, Eq)]
 pub struct ResponseCheck {
     pub name: String,
     pub expression: String,

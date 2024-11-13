@@ -1,5 +1,5 @@
 use anyhow::Result;
-use baml_types::{BamlMap, BamlValue};
+use baml_types::{BamlMap, BamlValue, Constraint};
 use internal_baml_core::internal_baml_diagnostics::Diagnostics;
 use internal_baml_core::ir::repr::ClientSpec;
 use internal_baml_core::ir::{repr::IntermediateRepr, FunctionWalker};
@@ -159,4 +159,11 @@ pub trait InternalRuntimeInterface {
         test_name: &str,
         ctx: &RuntimeContext,
     ) -> Result<BamlMap<String, BamlValue>>;
+
+    fn get_test_constraints(
+        &self,
+        function_name: &str,
+        test_name: &str,
+        ctx: &RuntimeContext
+    ) -> Result<Vec<Constraint>>;
 }

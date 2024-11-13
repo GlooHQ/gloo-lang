@@ -9,6 +9,7 @@ import {
   runningTestsAtom,
   statusCountAtom,
   testStatusAtom,
+  testSuiteSummaryAtom,
   DoneTestStatusType,
   useRunHooks,
   showTestsAtom,
@@ -57,6 +58,8 @@ const TestStatusMessage: React.FC<{ testStatus: DoneTestStatusType }> = ({ testS
       return <div className='text-vscode-testing-iconFailed'>LLM Failed</div>
     case 'parse_failed':
       return <div className='text-vscode-testing-iconFailed'>Parse Failed</div>
+    case 'constraints_failed':
+      return <div className='text-vscode-testing-iconFailed'>Constraints Failed</div>
     case 'error':
       return <div className='text-vscode-testing-iconFailed'>Unable to run</div>
   }
@@ -98,8 +101,10 @@ const TestStatusIcon: React.FC<{
   )
 }
 
-type FilterValues = 'queued' | 'running' | 'error' | 'llm_failed' | 'parse_failed' | 'passed'
-const filterAtom = atom(new Set<FilterValues>(['running', 'error', 'llm_failed', 'parse_failed', 'passed']))
+type FilterValues = 'queued' | 'running' | 'error' | 'llm_failed' | 'parse_failed' | 'constraints_failed' | 'passed'
+const filterAtom = atom(
+  new Set<FilterValues>(['running', 'error', 'llm_failed', 'parse_failed', 'constraints_failed', 'passed']),
+)
 
 const checkFilter = (filter: Set<FilterValues>, status: TestStatusType, test_status?: DoneTestStatusType) => {
   if (filter.size === 0) {
@@ -218,7 +223,9 @@ const ParsedTestResult: React.FC<{ doneStatus: string; parsed?: WasmParsedTestRe
             </>
           ) : (
             <>
-              {failure && <pre className='text-xs whitespace-pre-wrap text-vscode-errorForeground'>{failure}</pre>}
+              {failure && doneStatus === 'parse_failed' && (
+                <pre className='text-xs whitespace-pre-wrap text-vscode-errorForeground'>{failure}</pre>
+              )}
               {parsed !== undefined && (
                 <>
                   <JsonView
@@ -538,6 +545,12 @@ const TestStatusBanner: React.FC = () => {
         onClick={() => toggleFilter('parse_failed')}
       />
       <FilterButton
+        selected={filter.has('constraints_failed')}
+        name='Constraints Failed'
+        count={statusCounts.done.constraints_failed}
+        onClick={() => toggleFilter('constraints_failed')}
+      />
+      <FilterButton
         selected={filter.has('passed')}
         name='Passed'
         count={statusCounts.done.passed}
@@ -653,12 +666,29 @@ const TestResults: React.FC = () => {
   const selectedFunction = useAtomValue(selectedFunctionAtom)
   const [showTests, setShowTests] = useAtom(showTestsAtom)
   const [showClientGraph, setClientGraph] = useAtom(showClientGraphAtom)
+  const [testSuiteSummary] = useAtom(testSuiteSummaryAtom)
 
   // reset the tab when switching funcs
   useEffect(() => {
     setShowTests(false)
   }, [selectedFunction?.name])
   const isNextJs = (window as any).next?.version
+
+  let testSuiteIcon = <span> ❌</span>
+  switch (testSuiteSummary) {
+    case 'fail':
+      testSuiteIcon = <span> ❌</span>
+      break
+    case 'pass':
+      testSuiteIcon = <span> ✅</span>
+      break
+    case 'warn':
+      testSuiteIcon = <span className='text-yellow-500'>⚠️</span>
+      break
+    case 'unknown':
+      testSuiteIcon = <span> </span>
+      break
+  }
 
   return (
     <div className='flex flex-col gap-2 px-1 w-full'>
@@ -689,7 +719,9 @@ const TestResults: React.FC = () => {
             setClientGraph(false)
           }}
         >
-          Test Results
+          <div className='flex gap-1'>
+            <span>Test Results</span> {testSuiteIcon}
+          </div>
         </Badge>
         <Badge
           className={clsx(

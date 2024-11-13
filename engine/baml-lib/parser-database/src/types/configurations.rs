@@ -1,11 +1,17 @@
+use baml_types::Constraint;
 use internal_baml_diagnostics::{DatamodelError, DatamodelWarning, Span};
-use internal_baml_schema_ast::ast::{ValExpId, ValueExprBlock, WithIdentifier, WithName, WithSpan};
+use internal_baml_schema_ast::ast::{
+    Attribute, ValExpId, ValueExprBlock, WithIdentifier, WithName, WithSpan,
+};
 use regex::Regex;
 use std::collections::HashSet;
 
+use crate::attributes::constraint::attribute_as_constraint;
 use crate::{coerce, coerce_array, coerce_expression::coerce_map, context::Context};
 
-use super::{ContantDelayStrategy, ExponentialBackoffStrategy, RetryPolicy, RetryPolicyStrategy};
+use super::{
+    Attributes, ContantDelayStrategy, ExponentialBackoffStrategy, RetryPolicy, RetryPolicyStrategy,
+};
 
 fn dedent(s: &str) -> String {
     // Find the shortest indentation in the string (that's not an empty line).
@@ -288,6 +294,18 @@ pub(crate) fn visit_test_case<'db>(
             )),
         });
 
+    let constraints: Vec<(Constraint, Span, Span)> = config
+        .attributes
+        .iter()
+        .filter_map(|attribute| {
+            let (maybe_constraint, errors) = attribute_as_constraint(attribute);
+            for error in errors {
+                ctx.push_error(error);
+            }
+            maybe_constraint
+        })
+        .collect();
+
     match (functions, args) {
         (None, _) => ctx.push_error(DatamodelError::new_validation_error(
             "Missing `functions` property",
@@ -304,6 +322,7 @@ pub(crate) fn visit_test_case<'db>(
                     functions,
                     args,
                     args_field_span: args_field_span.clone(),
+                    constraints,
                 },
             );
         }

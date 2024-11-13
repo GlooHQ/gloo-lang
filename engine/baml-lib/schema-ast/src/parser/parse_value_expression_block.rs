@@ -1,10 +1,5 @@
 use super::{
-    helpers::{parsing_catch_all, Pair},
-    parse_comments::*,
-    parse_field::parse_value_expr,
-    parse_identifier::parse_identifier,
-    parse_named_args_list::{parse_function_arg, parse_named_argument_list},
-    Rule,
+    helpers::{parsing_catch_all, Pair}, parse_attribute::parse_attribute, parse_comments::*, parse_field::parse_value_expr, parse_identifier::parse_identifier, parse_named_args_list::{parse_function_arg, parse_named_argument_list}, Rule
 };
 
 use crate::ast::*;
@@ -17,7 +12,7 @@ pub(crate) fn parse_value_expression_block(
 ) -> Result<ValueExprBlock, DatamodelError> {
     let pair_span = pair.as_span();
     let mut name: Option<Identifier> = None;
-    let attributes: Vec<Attribute> = Vec::new();
+    let mut attributes: Vec<Attribute> = Vec::new();
     let mut input = None;
     let mut output = None;
     let mut fields: Vec<Field<Expression>> = vec![];
@@ -85,6 +80,30 @@ pub(crate) fn parse_value_expression_block(
                         }
 
                         Rule::comment_block => pending_field_comment = Some(item),
+                        Rule::block_attribute => {
+                            let span = item.as_span();
+                            let attribute = parse_attribute(item, false, diagnostics);
+                            let value_is_test = sub_type == Some(ValueExprBlockType::Test);
+                            let attribute_name = attribute.name.to_string();
+                            let attribute_is_constraint = &attribute_name == "check" || &attribute_name == "assert";
+
+                            // Only tests may have block attributes, and the only valid block attributes
+                            // are checks/asserts.
+                            if value_is_test && attribute_is_constraint {
+                                // value_expression_block is compatible with the attribute
+                                attributes.push(attribute);
+                            } else if !value_is_test {
+                                diagnostics.push_error(DatamodelError::new_validation_error(
+                                    &format!("Only Tests may contain block-level attributes"),
+                                    diagnostics.span(span),
+                                ))
+                            } else {
+                                diagnostics.push_error(DatamodelError::new_validation_error(
+                                    &format!("Tests may only contain 'check' or 'assert' attributes"),
+                                    diagnostics.span(span),
+                                ))
+                            }
+                        }
                         Rule::empty_lines => {}
                         Rule::BLOCK_LEVEL_CATCH_ALL => {
                             diagnostics.push_error(DatamodelError::new_validation_error(

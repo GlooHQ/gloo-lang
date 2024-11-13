@@ -1,4 +1,7 @@
 //! Tarjan's strongly connected components algorithm for cycle detection.
+//!
+//! This is used in parser_database to detect cycles in BAML types
+//! that reference each other recursively.
 
 use std::{
     cmp,

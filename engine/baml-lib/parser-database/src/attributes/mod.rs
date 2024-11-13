@@ -1,7 +1,7 @@
 use internal_baml_schema_ast::ast::{Top, TopId, TypeExpId, TypeExpressionBlock};
 
 mod alias;
-mod constraint;
+pub mod constraint;
 mod description;
 mod to_string_attribute;
 use crate::interner::StringId;

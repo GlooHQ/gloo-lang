@@ -260,9 +260,9 @@ impl Expression {
             }
             Expression::JinjaExpression(expr) => {
                 // TODO: do not coerce all context values to strings.
-                let jinja_context: HashMap<String, BamlValue> = env_values
+                let jinja_context: HashMap<String, minijinja::Value> = env_values
                     .iter()
-                    .map(|(k, v)| (k.clone(), BamlValue::String(v.clone())))
+                    .map(|(k, v)| (k.clone(), v.clone().into()))
                     .collect();
                 let res_string = render_expression(&expr, &jinja_context)?;
                 Ok(BamlValue::String(res_string))

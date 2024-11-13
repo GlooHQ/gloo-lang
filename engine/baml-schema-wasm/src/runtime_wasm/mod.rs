@@ -20,6 +20,7 @@ use jsonish::deserializer::deserialize_flags::Flag;
 use jsonish::BamlValueWithFlags;
 
 use baml_runtime::internal::llm_client::orchestrator::ExecutionScope;
+use itertools::join;
 use js_sys::Promise;
 use js_sys::Uint8Array;
 use serde::{Deserialize, Serialize};
@@ -397,6 +398,7 @@ pub struct WasmFunctionResponse {
 }
 
 #[wasm_bindgen]
+#[derive(Debug)]
 pub struct WasmTestResponse {
     test_response: anyhow::Result<baml_runtime::TestResponse>,
     span: Option<uuid::Uuid>,
@@ -415,10 +417,13 @@ pub struct WasmParsedTestResponse {
 }
 
 #[wasm_bindgen]
+#[derive(Clone, Debug)]
 pub enum TestStatus {
     Passed,
     LLMFailure,
     ParseFailure,
+    ConstraintsFailed,
+    AssertFailed,
     UnableToRun,
 }
 
@@ -501,7 +506,19 @@ impl WasmFunctionResponse {
     }
 }
 
+// TODO: What is supposed to happen with the serialized baml_value?
+// That value has checks nested inside. Are they meant to be removed
+// during flattening? Or duplicated into the top-level list of checks?
 fn flatten_checks(value: &BamlValueWithFlags) -> (serde_json::Value, usize) {
+    // // Note: (Greg) depending on the goal of this function, we may be able
+    // // to replace most of it like this:
+    // let value_with_meta: BamlValueWithMeta<Vec<ResponseCheck>> = parsed_value_to_response(value);
+    // let n_checks: usize = value_with_meta.iter().map(|node| node.meta().len()).sum();
+    // let bare_baml_value: BamlValue = value_with_meta.into();
+    // let json_value: serde_json::Value = serde_json::to_value(bare_baml_value).unwrap_or(
+    //     "Error converting value to JSON".into()
+    // );
+
     type J = serde_json::Value;
 
     let checks = value
@@ -511,12 +528,7 @@ fn flatten_checks(value: &BamlValueWithFlags) -> (serde_json::Value, usize) {
         .flat_map(|f| match f {
             Flag::ConstraintResults(c) => c
                 .iter()
-                .map(|(label, _expr, b)| {
-                    (
-                        label.clone(),
-                        *b,
-                    )
-                })
+                .map(|(label, _expr, b)| (label.clone(), *b))
                 .collect::<Vec<_>>(),
             _ => vec![],
         })
@@ -580,10 +592,20 @@ impl WasmTestResponse {
         match &self.test_response {
             Ok(t) => match t.status() {
                 baml_runtime::TestStatus::Pass => TestStatus::Passed,
+                baml_runtime::TestStatus::NeedsHumanEval(_) => TestStatus::ConstraintsFailed,
                 baml_runtime::TestStatus::Fail(r) => match r {
                     baml_runtime::TestFailReason::TestUnspecified(_) => TestStatus::UnableToRun,
                     baml_runtime::TestFailReason::TestLLMFailure(_) => TestStatus::LLMFailure,
                     baml_runtime::TestFailReason::TestParseFailure(_) => TestStatus::ParseFailure,
+                    baml_runtime::TestFailReason::TestConstraintsFailure {
+                        failed_assert, ..
+                    } => {
+                        if failed_assert.is_some() {
+                            TestStatus::AssertFailed
+                        } else {
+                            TestStatus::ConstraintsFailed
+                        }
+                    }
                 },
             },
             Err(_) => TestStatus::UnableToRun,
@@ -645,6 +667,10 @@ impl WasmTestResponse {
             Ok(r) => match r.status() {
                 baml_runtime::TestStatus::Pass => None,
                 baml_runtime::TestStatus::Fail(r) => r.render_error(),
+                baml_runtime::TestStatus::NeedsHumanEval(checks) => Some(format!(
+                    "Checks require human validation: {}",
+                    join(checks, ", ")
+                )),
             },
             Err(e) => Some(format!("{e:#}")),
         }
@@ -759,6 +785,23 @@ impl WithRenderError for baml_runtime::TestFailReason<'_> {
             baml_runtime::TestFailReason::TestUnspecified(e) => Some(format!("{e:#}")),
             baml_runtime::TestFailReason::TestLLMFailure(f) => f.render_error(),
             baml_runtime::TestFailReason::TestParseFailure(e) => Some(format!("{e:#}")),
+            baml_runtime::TestFailReason::TestConstraintsFailure {
+                checks,
+                failed_assert,
+            } => {
+                let checks_msg = if checks.len() > 0 {
+                    let check_msgs = checks.into_iter().map(|(name, pass)| {
+                        format!("{name}: {}", if *pass { "Passed" } else { "Failed" })
+                    });
+                    format!("Check results:\n{}", join(check_msgs, "\n"))
+                } else {
+                    String::new()
+                };
+                let assert_msg = failed_assert
+                    .as_ref()
+                    .map_or("".to_string(), |name| format!("\nFailed assert: {name}"));
+                Some(format!("{checks_msg}{assert_msg}"))
+            }
         }
     }
 }

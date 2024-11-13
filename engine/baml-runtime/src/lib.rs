@@ -8,6 +8,7 @@ pub(crate) mod internal;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod cli;
 pub mod client_registry;
+pub mod constraints;
 pub mod errors;
 pub mod request;
 mod runtime;
@@ -25,6 +26,7 @@ use anyhow::Result;
 
 use baml_types::BamlMap;
 use baml_types::BamlValue;
+use baml_types::Constraint;
 use cfg_if::cfg_if;
 use client_registry::ClientRegistry;
 use indexmap::IndexMap;
@@ -61,6 +63,9 @@ pub(crate) use runtime_interface::InternalRuntimeInterface;
 pub use internal_baml_core::internal_baml_diagnostics;
 pub use internal_baml_core::internal_baml_diagnostics::Diagnostics as DiagnosticsError;
 pub use internal_baml_core::ir::{scope_diagnostics, FieldType, IRHelper, TypeValue};
+
+use crate::constraints::{evaluate_test_constraints, TestConstraintsResult};
+use crate::internal::llm_client::LLMResponse;
 
 #[cfg(not(target_arch = "wasm32"))]
 static TOKIO_SINGLETON: OnceLock<std::io::Result<Arc<tokio::runtime::Runtime>>> = OnceLock::new();
@@ -179,13 +184,27 @@ impl BamlRuntime {
 }
 
 impl BamlRuntime {
+    pub fn get_test_params_and_constraints(
+        &self,
+        function_name: &str,
+        test_name: &str,
+        ctx: &RuntimeContext,
+    ) -> Result<(BamlMap<String, BamlValue>, Vec<Constraint>)> {
+        let params = self.inner.get_test_params(function_name, test_name, ctx)?;
+        let constraints = self
+            .inner
+            .get_test_constraints(function_name, test_name, &ctx)?;
+        Ok((params, constraints))
+    }
+
     pub fn get_test_params(
         &self,
         function_name: &str,
         test_name: &str,
         ctx: &RuntimeContext,
     ) -> Result<BamlMap<String, BamlValue>> {
-        self.inner.get_test_params(function_name, test_name, ctx)
+        let (params, _) = self.get_test_params_and_constraints(function_name, test_name, ctx)?;
+        Ok(params)
     }
 
     pub async fn run_test<F>(
@@ -200,39 +219,49 @@ impl BamlRuntime {
     {
         let span = self.tracer.start_span(test_name, ctx, &Default::default());
 
-        let response = match ctx.create_ctx(None, None) {
-            Ok(rctx) => {
-                let params = self.get_test_params(function_name, test_name, &rctx);
-                match params {
-                    Ok(params) => match ctx.create_ctx(None, None) {
-                        Ok(rctx_stream) => {
-                            let stream = self.inner.stream_function_impl(
-                                function_name.into(),
-                                &params,
-                                self.tracer.clone(),
-                                rctx_stream,
-                                #[cfg(not(target_arch = "wasm32"))]
-                                self.async_runtime.clone(),
-                            );
-                            match stream {
-                                Ok(mut stream) => {
-                                    let (response, span) =
-                                        stream.run(on_event, ctx, None, None).await;
-                                    response.map(|res| TestResponse {
-                                        function_response: res,
-                                        function_span: span,
-                                    })
-                                }
-                                Err(e) => Err(e),
-                            }
-                        }
-                        Err(e) => Err(e),
-                    },
-                    Err(e) => Err(e),
+        let run_to_response = || async {
+            let rctx = ctx.create_ctx(None, None)?;
+            let (params, constraints) =
+                self.get_test_params_and_constraints(function_name, test_name, &rctx)?;
+            let rctx_stream = ctx.create_ctx(None, None)?;
+            let mut stream = self.inner.stream_function_impl(
+                function_name.into(),
+                &params,
+                self.tracer.clone(),
+                rctx_stream,
+                #[cfg(not(target_arch = "wasm32"))]
+                self.async_runtime.clone(),
+            )?;
+            let (response_res, span_uuid) = stream.run(on_event, ctx, None, None).await;
+            let res = response_res?;
+            let (_, llm_resp, _, val) = res
+                .event_chain()
+                .iter()
+                .last()
+                .context("Expected non-empty event chain")?;
+            let complete_resp = match llm_resp {
+                LLMResponse::Success(complete_llm_response) => Ok(complete_llm_response),
+                _ => Err(anyhow::anyhow!("LLM Response was not successful")),
+            }?;
+            let test_constraints_result = if constraints.is_empty() {
+                TestConstraintsResult::empty()
+            } else {
+                match val {
+                    Some(Ok(value)) => {
+                        evaluate_test_constraints(&params, &value, &complete_resp, constraints)
+                    }
+                    _ => TestConstraintsResult::empty(),
                 }
-            }
-            Err(e) => Err(e),
+            };
+            let test_response = Ok(TestResponse {
+                function_response: res,
+                function_span: span_uuid,
+                constraints_result: test_constraints_result,
+            });
+            test_response
         };
+
+        let response = run_to_response().await;
 
         let mut target_id = None;
         if let Some(span) = span {

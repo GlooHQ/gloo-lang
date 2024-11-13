@@ -24,7 +24,7 @@ use crate::{
     RuntimeContext, RuntimeInterface,
 };
 use anyhow::{Context, Result};
-use baml_types::{BamlMap, BamlValue};
+use baml_types::{BamlMap, BamlValue, Constraint};
 use internal_baml_core::{
     internal_baml_diagnostics::SourceFile,
     ir::{
@@ -280,6 +280,14 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
             }
             Err(e) => return Err(anyhow::anyhow!("Unable to resolve test params: {:?}", e)),
         }
+    }
+
+    fn get_test_constraints(
+        &self, function_name: &str, test_name: &str, ctx: &RuntimeContext
+    ) -> Result<Vec<Constraint>> {
+        let func = self.get_function(function_name, ctx)?;
+        let walker = self.ir().find_test(&func, test_name)?;
+        Ok(walker.item.1.elem.constraints.clone())
     }
 }
 

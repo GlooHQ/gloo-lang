@@ -50,7 +50,7 @@ fn sum_filter(value: Vec<Value>) -> Value {
 /// E.g. `"a|length > 2"` with context `{"a": [1, 2, 3]}` will return `"true"`.
 pub fn render_expression(
     expression: &JinjaExpression,
-    ctx: &HashMap<String, BamlValue>,
+    ctx: &HashMap<String, minijinja::Value>,
 ) -> anyhow::Result<String> {
     let env = get_env();
     // In rust string literals, `{` is escaped as `{{`.
@@ -66,8 +66,8 @@ pub fn evaluate_predicate(
     this: &BamlValue,
     predicate_expression: &JinjaExpression,
 ) -> Result<bool, anyhow::Error> {
-    let ctx: HashMap<String, BamlValue> =
-        [("this".to_string(), this.clone())].into_iter().collect();
+    let ctx: HashMap<String, minijinja::Value> =
+        HashMap::from([("this".to_string(), minijinja::Value::from_serialize(this))]);
     match render_expression(&predicate_expression, &ctx)?.as_ref() {
         "true" => Ok(true),
         "false" => Ok(false),
@@ -87,11 +87,12 @@ mod tests {
                 "a".to_string(),
                 BamlValue::List(
                     vec![BamlValue::Int(1), BamlValue::Int(2), BamlValue::Int(3)].into(),
-                ),
+                )
+                .into(),
             ),
             (
                 "b".to_string(),
-                BamlValue::String("(123)456-7890".to_string()),
+                BamlValue::String("(123)456-7890".to_string()).into(),
             ),
         ]
         .into_iter()
@@ -118,11 +119,12 @@ mod tests {
                 "a".to_string(),
                 BamlValue::List(
                     vec![BamlValue::Int(1), BamlValue::Int(2), BamlValue::Int(3)].into(),
-                ),
+                )
+                .into(),
             ),
             (
                 "b".to_string(),
-                BamlValue::String("(123)456-7890".to_string()),
+                BamlValue::String("(123)456-7890".to_string()).into(),
             ),
         ]
         .into_iter()
@@ -151,16 +153,12 @@ mod tests {
     fn test_sum_filter() {
         let ctx = vec![].into_iter().collect();
         assert_eq!(
-            render_expression(&JinjaExpression(
-                r#"[1,2]|sum"#.to_string()
-            ), &ctx).unwrap(),
+            render_expression(&JinjaExpression(r#"[1,2]|sum"#.to_string()), &ctx).unwrap(),
             "3"
         );
 
         assert_eq!(
-            render_expression(&JinjaExpression(
-                r#"[1,2.5]|sum"#.to_string()
-            ), &ctx).unwrap(),
+            render_expression(&JinjaExpression(r#"[1,2.5]|sum"#.to_string()), &ctx).unwrap(),
             "3.5"
         );
     }

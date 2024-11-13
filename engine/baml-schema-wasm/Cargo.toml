@@ -36,6 +36,7 @@ wasm-bindgen-futures = "0.4.42"
 wasm-logger = { version = "0.2.0" }
 web-time.workspace = true
 either = "1.8.1"
+itertools = "0.13.0"
 
 [dependencies.web-sys]
 version = "0.3.69"

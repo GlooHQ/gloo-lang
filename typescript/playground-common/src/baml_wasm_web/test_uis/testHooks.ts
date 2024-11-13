@@ -10,7 +10,7 @@ export const showTestsAtom = atom(false)
 export const showClientGraphAtom = atom(false)
 
 export type TestStatusType = 'queued' | 'running' | 'done' | 'error'
-export type DoneTestStatusType = 'passed' | 'llm_failed' | 'parse_failed' | 'error'
+export type DoneTestStatusType = 'passed' | 'llm_failed' | 'parse_failed' | 'constraints_failed' | 'error'
 export type TestState =
   | {
       status: 'queued'
@@ -44,10 +44,44 @@ export const statusCountAtom = atom({
     passed: 0,
     llm_failed: 0,
     parse_failed: 0,
+    constraints_failed: 0,
     error: 0,
   },
   error: 0,
 })
+
+/// This atom will track the state of the full test suite.
+/// 'unknown` means tests haven't been run yet. `pass` means
+/// they have all run to completion.
+/// 'warn' means at least one check has failed, and `fail`
+/// means at least one assert has failed, or an internal error
+/// occurred.
+export type TestSuiteSummary = 'pass' | 'warn' | 'fail' | 'unknown'
+export const testSuiteSummaryAtom = atom<TestSuiteSummary>('unknown')
+
+/// For an old summary and a new result, compute the new summary.
+/// The new summary will overwrite the old, unless the old one
+/// has higher priority.
+function updateTestSuiteState(old_result: TestSuiteSummary, new_result: TestSuiteSummary): TestSuiteSummary {
+  function priority(x: TestSuiteSummary): number {
+    switch (x) {
+      case 'unknown':
+        return 0
+      case 'pass':
+        return 1
+      case 'warn':
+        return 2
+      case 'fail':
+        return 3
+    }
+  }
+
+  if (priority(new_result) > priority(old_result)) {
+    return new_result
+  } else {
+    return old_result
+  }
+}
 
 export const useRunHooks = () => {
   const isRunning = useAtomValue(isRunningAtom)
@@ -68,6 +102,7 @@ export const useRunHooks = () => {
         }
         set(isRunningAtom, true)
         set(showTestsAtom, true)
+        set(testSuiteSummaryAtom, 'unknown')
 
         vscode.postMessage({
           command: 'telemetry',
@@ -92,6 +127,7 @@ export const useRunHooks = () => {
             passed: 0,
             llm_failed: 0,
             parse_failed: 0,
+            constraints_failed: 0,
             error: 0,
           },
           error: 0,
@@ -144,7 +180,7 @@ export const useRunHooks = () => {
               const { res, elapsed } = result.value
               // console.log('result', i, result.value.res.llm_response(), 'batch[i]', batch[i])
 
-              let status = res.status()
+              let status: Number = res.status()
               let response_status: DoneTestStatusType = 'error'
               if (status === 0) {
                 response_status = 'passed'
@@ -152,6 +188,8 @@ export const useRunHooks = () => {
                 response_status = 'llm_failed'
               } else if (status === 2) {
                 response_status = 'parse_failed'
+              } else if (status === 3 || status === 4) {
+                response_status = 'constraints_failed'
               } else {
                 response_status = 'error'
               }
@@ -171,6 +209,23 @@ export const useRunHooks = () => {
                   running: prev.running - 1,
                 }
               })
+
+              let newTestSuiteStatus: TestSuiteSummary = 'unknown'
+              if (status === 0) {
+                newTestSuiteStatus = 'pass'
+              } else if (status === 1) {
+                newTestSuiteStatus = 'fail'
+              } else if (status === 2) {
+                newTestSuiteStatus = 'fail'
+              } else if (status === 3) {
+                newTestSuiteStatus = 'warn'
+              } else if (status === 4) {
+                newTestSuiteStatus = 'fail'
+              }
+
+              let currentSummary = get(testSuiteSummaryAtom)
+              let updatedSummary = updateTestSuiteState(currentSummary, newTestSuiteStatus)
+              set(testSuiteSummaryAtom, updatedSummary)
             } else {
               set(testStatusAtom(batch[i]), { status: 'error', message: `${result.reason}` })
               set(statusCountAtom, (prev) => {

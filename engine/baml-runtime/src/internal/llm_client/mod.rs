@@ -27,10 +27,10 @@ use wasm_bindgen::JsValue;
 pub type ResponseBamlValue = BamlValueWithMeta<Vec<ResponseCheck>>;
 
 /// Validate a parsed value, checking asserts and checks.
-pub fn parsed_value_to_response(baml_value: &BamlValueWithFlags) -> Result<ResponseBamlValue> {
+pub fn parsed_value_to_response(baml_value: &BamlValueWithFlags) -> ResponseBamlValue {
     let baml_value_with_meta: BamlValueWithMeta<Vec<(String, JinjaExpression, bool)>> =
         baml_value.clone().into();
-    Ok(baml_value_with_meta.map_meta(|cs| {
+    baml_value_with_meta.map_meta(|cs| {
         cs.iter()
             .map(|(label, expr, result)| {
                 let status = (if *result { "succeeded" } else { "failed" }).to_string();
@@ -41,7 +41,7 @@ pub fn parsed_value_to_response(baml_value: &BamlValueWithFlags) -> Result<Respo
                 }
             })
             .collect()
-    }))
+    })
 }
 
 #[derive(Clone, Copy, PartialEq)]

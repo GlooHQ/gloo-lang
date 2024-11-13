@@ -8,10 +8,11 @@ use internal_baml_parser_database::{
     walkers::{
         ClassWalker, ClientSpec as AstClientSpec, ClientWalker, ConfigurationWalker,
         EnumValueWalker, EnumWalker, FieldWalker, FunctionWalker, TemplateStringWalker,
+        Walker as AstWalker,
     },
     Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy,
 };
-use internal_baml_schema_ast::ast::SubType;
+use internal_baml_schema_ast::ast::{SubType, ValExpId};
 
 use baml_types::JinjaExpression;
 use internal_baml_schema_ast::ast::{self, FieldArity, WithName, WithSpan};
@@ -676,8 +677,14 @@ impl WithRepr<Enum> for EnumWalker<'_> {
     fn repr(&self, db: &ParserDatabase) -> Result<Enum> {
         Ok(Enum {
             name: self.name().to_string(),
-            values: self.values().map(|w| (w.node(db).map(|v| (v, w.documentation().map(|s| Docstring(s.to_string())))))).collect::<Result<Vec<_>,_>>()?,
-            docstring: self.get_documentation().map(|s| Docstring(s))
+            values: self
+                .values()
+                .map(|w| {
+                    w.node(db)
+                        .map(|v| (v, w.documentation().map(|s| Docstring(s.to_string()))))
+                })
+                .collect::<Result<Vec<_>, _>>()?,
+            docstring: self.get_documentation().map(|s| Docstring(s)),
         })
     }
 }
@@ -722,7 +729,6 @@ impl WithRepr<Field> for FieldWalker<'_> {
             docstring: self.get_documentation().map(|s| Docstring(s)),
         })
     }
-
 }
 
 type ClassId = String;
@@ -774,7 +780,7 @@ impl WithRepr<Class> for ClassWalker<'_> {
                     .collect::<Result<Vec<_>>>()?,
                 None => Vec::new(),
             },
-            docstring: self.get_documentation().map(|s| Docstring(s))
+            docstring: self.get_documentation().map(|s| Docstring(s)),
         })
     }
 }
@@ -1110,14 +1116,23 @@ pub struct TestCase {
     pub name: String,
     pub functions: Vec<Node<TestCaseFunction>>,
     pub args: IndexMap<String, Expression>,
+    pub constraints: Vec<Constraint>,
 }
 
 impl WithRepr<TestCaseFunction> for (&ConfigurationWalker<'_>, usize) {
     fn attributes(&self, _db: &ParserDatabase) -> NodeAttributes {
         let span = self.0.test_case().functions[self.1].1.clone();
+        let constraints = self
+            .0
+            .test_case()
+            .constraints
+            .iter()
+            .map(|(c, _, _)| c)
+            .cloned()
+            .collect();
         NodeAttributes {
             meta: IndexMap::new(),
-            constraints: Vec::new(),
+            constraints,
             span: Some(span),
         }
     }
@@ -1131,10 +1146,17 @@ impl WithRepr<TestCaseFunction> for (&ConfigurationWalker<'_>, usize) {
 
 impl WithRepr<TestCase> for ConfigurationWalker<'_> {
     fn attributes(&self, _db: &ParserDatabase) -> NodeAttributes {
+        let constraints = self
+            .test_case()
+            .constraints
+            .iter()
+            .map(|(c, _, _)| c)
+            .cloned()
+            .collect();
         NodeAttributes {
             meta: IndexMap::new(),
             span: Some(self.span().clone()),
-            constraints: Vec::new(),
+            constraints,
         }
     }
 
@@ -1151,6 +1173,12 @@ impl WithRepr<TestCase> for ConfigurationWalker<'_> {
                 .map(|(k, (_, v))| Ok((k.clone(), v.repr(db)?)))
                 .collect::<Result<IndexMap<_, _>>>()?,
             functions,
+            constraints: <AstWalker<'_, (ValExpId, &str)> as WithRepr<TestCase>>::attributes(
+                self, db,
+            )
+            .constraints
+            .into_iter()
+            .collect::<Vec<_>>(),
         })
     }
 }
@@ -1223,7 +1251,8 @@ mod tests {
 
     #[test]
     fn test_docstrings() {
-        let ir = make_test_ir(r#"
+        let ir = make_test_ir(
+            r#"
           /// Foo class.
           class Foo {
             /// Bar field.
@@ -1243,7 +1272,9 @@ mod tests {
 
             THIRD
           }
-        "#).unwrap();
+        "#,
+        )
+        .unwrap();
 
         // Test class docstrings
         let foo = ir.find_class("Foo").as_ref().unwrap().clone().elem();
@@ -1252,7 +1283,7 @@ mod tests {
             [field1, field2] => {
                 assert_eq!(field1.elem.docstring.as_ref().unwrap().0, "Bar field.");
                 assert_eq!(field2.elem.docstring.as_ref().unwrap().0, "Baz field.");
-            },
+            }
             _ => {
                 panic!("Expected 2 fields");
             }
@@ -1260,7 +1291,10 @@ mod tests {
 
         // Test enum docstrings
         let test_enum = ir.find_enum("TestEnum").as_ref().unwrap().clone().elem();
-        assert_eq!(test_enum.docstring.as_ref().unwrap().0.as_str(), "Test enum.");
+        assert_eq!(
+            test_enum.docstring.as_ref().unwrap().0.as_str(),
+            "Test enum."
+        );
         match test_enum.values.as_slice() {
             [val1, val2, val3] => {
                 assert_eq!(val1.0.elem.0, "FIRST");
@@ -1269,10 +1303,41 @@ mod tests {
                 assert_eq!(val2.1.as_ref().unwrap().0, "Second variant.");
                 assert_eq!(val3.0.elem.0, "THIRD");
                 assert!(val3.1.is_none());
-            },
+            }
             _ => {
                 panic!("Expected 3 enum values");
             }
         }
+    }
+
+    #[test]
+    fn test_block_attributes() {
+        let ir = make_test_ir(
+            r##"
+            client<llm> GPT4 {
+              provider openai
+              options {
+                model gpt-4o
+                api_key env.OPENAI_API_KEY
+              }
+            }
+            function Foo(a: int) -> int {
+              client GPT4
+              prompt #"Double the number {{ a }}"#
+            }
+
+            test Foo() {
+              functions [Foo]
+              args {
+                a 10
+              }
+              @@assert( {{ result == 20 }} )
+            }
+        "##,
+        )
+        .unwrap();
+        let function = ir.find_function("Foo").unwrap();
+        let walker = ir.find_test(&function, "Foo").unwrap();
+        assert_eq!(walker.item.1.elem.constraints.len(), 1);
     }
 }

@@ -56,7 +56,7 @@ pub async fn orchestrate(
 
         let sleep_duration = node.error_sleep_duration().cloned();
         let (parsed_response, response_with_constraints) = match parsed_response {
-                Some(Ok(v)) => (Some(Ok(v.clone())), Some(parsed_value_to_response(&v))),
+                Some(Ok(v)) => (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v)))),
                 Some(Err(e)) => (None, Some(Err(e))),
                 None => (None, None),
             };

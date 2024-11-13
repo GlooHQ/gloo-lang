@@ -5,6 +5,7 @@ mod cycle;
 mod enums;
 mod functions;
 mod template_strings;
+mod tests;
 mod types;
 
 use baml_types::GeneratorOutputType;
@@ -22,6 +23,7 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
     clients::validate(ctx);
     template_strings::validate(ctx);
     configurations::validate(ctx);
+    tests::validate(ctx);
 
     let generators = load_generators_from_ast(ctx.db.ast(), ctx.diagnostics);
     let codegen_targets: HashSet<GeneratorOutputType> = generators.into_iter().filter_map(|generator| match generator {
