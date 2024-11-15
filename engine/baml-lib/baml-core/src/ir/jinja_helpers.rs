@@ -9,6 +9,7 @@ pub fn get_env<'a>() -> minijinja::Environment<'a> {
     env.set_trim_blocks(true);
     env.set_lstrip_blocks(true);
     env.add_filter("regex_match", regex_match);
+    env.add_filter("sum", sum_filter);
     env
 }
 
@@ -17,6 +18,10 @@ fn regex_match(value: String, regex: String) -> bool {
         Err(_) => false,
         Ok(re) => re.is_match(&value)
     }
+}
+
+fn sum_filter(value: Vec<f32>) -> f32 {
+    value.iter().sum()
 }
 
 /// Render a bare minijinaja expression with the given context.
