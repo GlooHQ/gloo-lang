@@ -1348,7 +1348,7 @@ test_deserializer!(
 );
 
 test_deserializer!(
-  test_same_recursive_union_on_multiple_fields,
+  test_recursive_union_on_multiple_fields_single_line,
   r#"class Foo {
       rec_one Foo | int
       rec_two Foo | int
@@ -1357,19 +1357,10 @@ test_deserializer!(
   r#"
     The answer is
     {
-      "rec_one": {
-        "rec_one": 1,
-        "rec_two": 2
-      },
+      "rec_one": { "rec_one": 1, "rec_two": 2 },
       "rec_two": {
-        "rec_one": {
-          "rec_one": 1,
-          "rec_two": 2
-        },
-        "rec_two": {
-          "rec_one": 1,
-          "rec_two": 2
-        }
+        "rec_one": { "rec_one": 1, "rec_two": 2 },
+        "rec_two": { "rec_one": 1, "rec_two": 2 }
       }
     },
 
@@ -1389,6 +1380,111 @@ test_deserializer!(
       "rec_two": {
         "rec_one": 1,
         "rec_two": 2
+      }
+    },
+  }
+);
+
+
+test_deserializer!(
+  test_recursive_union_on_multiple_fields_single_line_without_quotes,
+  r#"class Foo {
+      rec_one Foo | int
+      rec_two Foo | int
+  }
+  "#,
+  r#"
+    The answer is
+    {
+      rec_one: { rec_one: 1, rec_two: 2 },
+      rec_two: {
+        rec_one: { rec_one: 1, rec_two: 2 },
+        rec_two: { rec_one: 1, rec_two: 2 }
+      }
+    },
+
+    Anything else I can help with?
+  "#,
+  FieldType::Class("Foo".to_string()),
+  {
+    "rec_one": {
+      "rec_one": 1,
+      "rec_two": 2
+    },
+    "rec_two": {
+      "rec_one": {
+        "rec_one": 1,
+        "rec_two": 2
+      },
+      "rec_two": {
+        "rec_one": 1,
+        "rec_two": 2
+      }
+    },
+  }
+);
+
+
+test_deserializer!(
+  test_recursive_single_line,
+  r#"class Foo {
+      rec_one Foo | int | bool
+      rec_two Foo | int | bool
+  }
+  "#,
+  r#"
+    The answer is
+    { rec_one: true, rec_two: false },
+
+    Anything else I can help with?
+  "#,
+  FieldType::Class("Foo".to_string()),
+  {
+    "rec_one": true,
+    "rec_two": false
+  }
+);
+
+
+test_deserializer!(
+  test_recursive_union_on_multiple_fields_single_line_without_quotes_complex,
+  r#"class Foo {
+      rec_one Foo | int | bool
+      rec_two Foo | int | bool | null
+  }
+  "#,
+  r#"
+    The answer is
+    {
+      rec_one: { rec_one: { rec_one: true, rec_two: false }, rec_two: null },
+      rec_two: {
+        rec_one: { rec_one: { rec_one: 1, rec_two: 2 }, rec_two: null },
+        rec_two: { rec_one: 1, rec_two: null }
+      }
+    },
+
+    Anything else I can help with?
+  "#,
+  FieldType::Class("Foo".to_string()),
+  {
+    "rec_one": {
+      "rec_one": {
+        "rec_one": true,
+        "rec_two": false
+      },
+      "rec_two": null
+    },
+    "rec_two": {
+      "rec_one": {
+        "rec_one": {
+          "rec_one": 1,
+          "rec_two": 2
+        },
+        "rec_two": null
+      },
+      "rec_two": {
+        "rec_one": 1,
+        "rec_two": null
       }
     },
   }
