@@ -28,9 +28,18 @@ export enum {{enum.name}} {
 {% endfor %}
 
 {%- for cls in classes %}
+
+{%- if let Some(docstring) = cls.docstring %}
+{{docstring}}
+{%- endif %}
 export interface {{cls.name}} {
-  {%- for (name, optional, type) in cls.fields %}
+  {%- for (name, optional, type, m_docstring) in cls.fields %}
+
+  {%- if let Some(docstring) = m_docstring %}
+  {{ docstring }}
+  {%- endif %}
   {{name}}{% if optional %}?{% endif %}: {{type}}
+
   {%- endfor %}
   {% if cls.dynamic %}
   [key: string]: any;

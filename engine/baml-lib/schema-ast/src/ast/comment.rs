@@ -1,4 +1,4 @@
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct Comment {
+pub struct Comment {
     pub text: String,
 }

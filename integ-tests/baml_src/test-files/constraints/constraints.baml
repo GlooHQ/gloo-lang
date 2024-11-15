@@ -6,8 +6,11 @@
 //  - The ability of constraints to influence which variant of a union is chosen
 //    by the parser, when the structure is not sufficient to decide.
 
-
+/// A Martian organism with an age.
+/// Such a nice type.
 class Martian {
+  /// The age of the Martian in Mars years.
+  /// So many Mars years.
   age int @check(young_enough, {{ this < 30 }})
 }
 

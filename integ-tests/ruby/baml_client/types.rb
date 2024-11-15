@@ -735,8 +735,12 @@ module Baml
         @props = props
       end
     end
+    # A Martian organism with an age.
+    # Such a nice type.
     class Martian < T::Struct
       include Baml::Sorbet::Struct
+      # The age of the Martian in Mars years.
+      # So many Mars years.
       const :age, Baml::Checked[Integer]
 
       def initialize(props)

@@ -102,7 +102,7 @@ module Baml
 
         {% for cls in classes if cls.dynamic %}
         def {{cls.name}}
-            ClassBuilder.new(@registry, "{{cls.name}}", Set[{% for (name, _) in cls.fields %} "{{name}}", {% endfor %}])
+            ClassBuilder.new(@registry, "{{cls.name}}", Set[{% for (name, _, _) in cls.fields %} "{{name}}", {% endfor %}])
         end
         {% endfor %}
 

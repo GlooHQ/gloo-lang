@@ -29,7 +29,7 @@ pub struct Field<T> {
     ///     ^^^^^^^^^^^
     /// name String @id @default("lol")
     /// ```
-    pub(crate) documentation: Option<Comment>,
+    pub documentation: Option<Comment>,
     /// The attributes of this field.
     ///
     /// ```ignore

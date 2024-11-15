@@ -59,6 +59,12 @@ impl<'db> ClassWalker<'db> {
             })
     }
 
+
+    /// Class docstring.
+    pub fn get_documentation(&self) -> Option<String> {
+        self.ast_type_block().documentation.as_ref().map(|c| c.text.clone())
+    }
+
     /// The name of the template string.
     pub fn add_to_types(self, types: &mut internal_baml_jinja_types::PredefinedTypes) {
         types.add_class(

@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use anyhow::Result;
 use itertools::Itertools;
 
-use internal_baml_core::ir::{repr::IntermediateRepr, ClassWalker, EnumWalker};
+use internal_baml_core::ir::{repr::{Docstring, IntermediateRepr}, ClassWalker, EnumWalker};
 
 use crate::{type_check_attributes, GeneratorArgs, TypeCheckAttributes};
 
@@ -31,8 +31,9 @@ struct TypescriptEnum<'ir> {
 
 pub struct TypescriptClass<'ir> {
     pub name: Cow<'ir, str>,
-    pub fields: Vec<(Cow<'ir, str>, bool, String)>,
+    pub fields: Vec<(Cow<'ir, str>, bool, String, Option<String>)>,
     pub dynamic: bool,
+    pub docstring: Option<String>,
 }
 
 impl<'ir> TryFrom<(&'ir IntermediateRepr, &'ir GeneratorArgs)> for TypescriptTypes<'ir> {
@@ -102,13 +103,28 @@ impl<'ir> From<&ClassWalker<'ir>> for TypescriptClass<'ir> {
                         Cow::Borrowed(f.elem.name.as_str()),
                         f.elem.r#type.elem.is_optional(),
                         f.elem.r#type.elem.to_type_ref(&c.db),
+                        f.elem.docstring.as_ref().map(|d| render_docstring(d, true)),
                     )
                 })
                 .collect(),
+            docstring: c.item.elem.docstring.as_ref().map(|d| render_docstring(d, false)),
         }
     }
 }
 
 pub fn type_name_for_checks(checks: &TypeCheckAttributes) -> String {
     checks.0.iter().map(|check| format!("\"{check}\"")).sorted().join(" | ")
+}
+
+/// Render the BAML documentation (a bare string with padding stripped)
+/// into a TS docstring.
+/// (Optionally indented and formatted as a TS block comment).
+fn render_docstring(d: &Docstring, indented: bool) -> String {
+    if indented {
+        let lines = d.0.as_str().replace("\n", "\n   * ");
+        format!("/**\n   * {lines}\n   */")
+    } else {
+        let lines = d.0.as_str().replace("\n", "\n * ");
+        format!("/**\n * {lines}\n */")
+    }
 }

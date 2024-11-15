@@ -36,12 +36,19 @@ class {{enum.name}}(str, Enum):
 {#- Classes -#}
 {% for cls in classes %}
 class {{cls.name}}(BaseModel):
-    {% if cls.dynamic %}
+    {%- if let Some(docstring) = cls.docstring %}
+    {{docstring}}
+    {%- endif %}
+    {%- if cls.dynamic %}
     model_config = ConfigDict(extra='allow')
     {%- endif %}
-    {% if cls.fields.is_empty() && !cls.dynamic %}pass{% endif %}
+    {%- if cls.fields.is_empty() && !cls.dynamic %}pass{% endif %}
     
-    {%- for (name, type) in cls.fields %}
+    {%- for (name, type, m_docstring) in cls.fields %}
     {{name}}: {{type}}
+    {%- if let Some(docstring) = m_docstring %}
+    {{ docstring }}
+
+    {%- endif %}
     {%- endfor %}
 {% endfor %}

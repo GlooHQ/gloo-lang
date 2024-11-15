@@ -39,6 +39,11 @@ impl<'db> FieldWalker<'db> {
 
         result
     }
+
+    /// The field's docstring.
+    pub fn get_documentation(&self) -> Option<String> {
+        self.ast_field().documentation.as_ref().map(|c| c.text.clone())
+    }
 }
 
 impl<'db> WithName for FieldWalker<'db> {

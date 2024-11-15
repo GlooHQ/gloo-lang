@@ -79,7 +79,7 @@ pub struct TypeExpressionBlock {
     ///   Value2
     /// }
     /// ```
-    pub(crate) documentation: Option<Comment>,
+    pub documentation: Option<Comment>,
     /// The location of this enum in the text representation.
     pub span: Span,
 

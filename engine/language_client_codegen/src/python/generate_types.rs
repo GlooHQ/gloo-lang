@@ -7,7 +7,7 @@ use crate::{field_type_attributes, type_check_attributes, TypeCheckAttributes};
 
 use super::python_language_features::ToPython;
 use internal_baml_core::ir::{
-    repr::IntermediateRepr, ClassWalker, EnumWalker, FieldType, IRHelper,
+    repr::{Docstring, IntermediateRepr}, ClassWalker, EnumWalker, FieldType, IRHelper,
 };
 
 #[derive(askama::Template)]
@@ -22,7 +22,6 @@ pub(crate) struct PythonTypes<'ir> {
 pub(crate) struct TypeBuilder<'ir> {
     enums: Vec<PythonEnum<'ir>>,
     classes: Vec<PythonClass<'ir>>,
-    checks_classes: Vec<PythonClass<'ir>>,
 }
 
 struct PythonEnum<'ir> {
@@ -33,10 +32,13 @@ struct PythonEnum<'ir> {
 
 struct PythonClass<'ir> {
     name: Cow<'ir, str>,
-    // the name, and the type of the field
-    fields: Vec<(Cow<'ir, str>, String)>,
+    /// The docstring for the class, including comment delimiters.
+    docstring: Option<String>,
+    // the name, type and docstring of the field.
+    fields: Vec<(Cow<'ir, str>, String, Option<String>)>,
     dynamic: bool,
 }
+
 
 #[derive(askama::Template)]
 #[template(path = "partial_types.py.j2", escape = "none")]
@@ -48,8 +50,10 @@ pub(crate) struct PythonStreamTypes<'ir> {
 struct PartialPythonClass<'ir> {
     name: &'ir str,
     dynamic: bool,
-    // the name, and the type of the field
-    fields: Vec<(&'ir str, String)>,
+    /// The docstring for the class, including comment delimiters.
+    docstring: Option<String>,
+    // the name, type and docstring of the field.
+    fields: Vec<(&'ir str, String, Option<String>)>,
 }
 
 impl<'ir> TryFrom<(&'ir IntermediateRepr, &'_ crate::GeneratorArgs)> for PythonTypes<'ir> {
@@ -71,14 +75,9 @@ impl<'ir> TryFrom<(&'ir IntermediateRepr, &'_ crate::GeneratorArgs)> for TypeBui
     fn try_from(
         (ir, _): (&'ir IntermediateRepr, &'_ crate::GeneratorArgs),
     ) -> Result<TypeBuilder<'ir>> {
-        let checks_classes = type_check_attributes(ir)
-            .into_iter()
-            .map(|checks| type_def_for_checks(checks))
-            .collect::<Vec<_>>();
         Ok(TypeBuilder {
             enums: ir.walk_enums().map(PythonEnum::from).collect::<Vec<_>>(),
             classes: ir.walk_classes().map(PythonClass::from).collect::<Vec<_>>(),
-            checks_classes,
         })
     }
 }
@@ -116,9 +115,11 @@ impl<'ir> From<ClassWalker<'ir>> for PythonClass<'ir> {
                             &f.elem.r#type.elem,
                             &f.elem.r#type.elem.to_type_ref(&c.db),
                         ),
+                        f.elem.docstring.as_ref().map(|d| render_docstring(d)),
                     )
                 })
                 .collect(),
+            docstring: c.item.elem.docstring.as_ref().map(|d| render_docstring(d)),
         }
     }
 }
@@ -153,9 +154,11 @@ impl<'ir> From<ClassWalker<'ir>> for PartialPythonClass<'ir> {
                             &f.elem.r#type.elem,
                             &f.elem.r#type.elem.to_partial_type_ref(&c.db, false),
                         ),
+                        f.elem.docstring.as_ref().map(|d| render_docstring(d)),
                     )
                 })
                 .collect(),
+            docstring: c.item.elem.docstring.as_ref().map(|d| render_docstring(d)),
         }
     }
 }
@@ -179,17 +182,6 @@ pub fn type_name_for_checks(checks: &TypeCheckAttributes) -> String {
     format!["Literal[{check_names}]"]
 }
 
-fn type_def_for_checks(checks: TypeCheckAttributes) -> PythonClass<'static> {
-    PythonClass {
-        name: Cow::Owned(type_name_for_checks(&checks)),
-        fields: checks
-            .0
-            .into_iter()
-            .map(|check_name| (Cow::Owned(check_name), "Check".to_string()))
-            .collect(),
-        dynamic: false,
-    }
-}
 
 /// Returns the Python `Literal` representation of `self`.
 pub fn to_python_literal(literal: &LiteralValue) -> String {
@@ -321,4 +313,11 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
             }
         }
     }
+}
+
+/// Render the BAML documentation (a bare string with padding stripped)
+/// into a Python docstring. (Indented once and surrounded by """).
+fn render_docstring(d: &Docstring) -> String {
+    let lines = d.0.as_str().replace("\n", "\n    ");
+    format!("\"\"\"{lines}\"\"\"")
 }

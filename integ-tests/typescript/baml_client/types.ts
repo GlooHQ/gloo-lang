@@ -373,7 +373,15 @@ export interface MalformedConstraints2 {
   
 }
 
+/**
+ * A Martian organism with an age.
+ * Such a nice type.
+ */
 export interface Martian {
+  /**
+   * The age of the Martian in Mars years.
+   * So many Mars years.
+   */
   age: Checked<number,"young_enough">
   
 }

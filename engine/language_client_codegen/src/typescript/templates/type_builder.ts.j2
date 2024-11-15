@@ -5,7 +5,7 @@ export default class TypeBuilder {
     private tb: _TypeBuilder;
     {% for cls in classes %}{% if cls.dynamic %}
     {{cls.name}}: ClassBuilder<'{{cls.name}}'
-    {%- for (name, _, _) in cls.fields %}{% if loop.first %}, {%endif%}"{{name}}"{% if !loop.last %} | {% endif %}{% endfor -%}
+    {%- for (name, _, _, _) in cls.fields %}{% if loop.first %}, {%endif%}"{{name}}"{% if !loop.last %} | {% endif %}{% endfor -%}
     >;
     {% endif %}{% endfor %}
     {% for enum in enums %}{% if enum.dynamic %}
@@ -23,7 +23,7 @@ export default class TypeBuilder {
         });
         {% for cls in classes %}{% if cls.dynamic %}
         this.{{cls.name}} = this.tb.classBuilder("{{cls.name}}", [
-          {% for (name, _, _) in cls.fields %}"{{name}}",{% endfor %}
+          {% for (name, _, _, _) in cls.fields %}"{{name}}",{% endfor %}
         ]);
         {% endif %}{% endfor %}
         {% for enum in enums %}{% if enum.dynamic %}

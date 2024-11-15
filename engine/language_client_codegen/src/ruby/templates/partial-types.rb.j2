@@ -13,16 +13,22 @@ module Baml
 
     {#- https://sorbet.org/docs/tstruct #}
     {%- for cls in partial_classes %}
+    {%- if let Some(docstring) = cls.docstring %}
+    {{docstring}}
+    {%- endif %}
     class {{cls.name}} < T::Struct
       include Baml::Sorbet::Struct
 
-      {%- for (name, type) in cls.fields %}
+      {%- for (name, type, m_docstring) in cls.fields %}
+      {%- if let Some(docstring) = m_docstring %}
+      {{ docstring }}
+      {%- endif %}
       const :{{name}}, {{type}}
       {%- endfor %}
 
       def initialize(props)
         super(
-          {%- for (name, _) in cls.fields %}
+          {%- for (name, _, _) in cls.fields %}
           {{name}}: props[:{{name}}],
           {%- endfor %}
         )
