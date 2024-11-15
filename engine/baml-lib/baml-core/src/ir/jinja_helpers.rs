@@ -146,4 +146,22 @@ mod tests {
             "true"
         )
     }
+
+    #[test]
+    fn test_sum_filter() {
+        let ctx = vec![].into_iter().collect();
+        assert_eq!(
+            render_expression(&JinjaExpression(
+                r#"[1,2]|sum"#.to_string()
+            ), &ctx).unwrap(),
+            "3"
+        );
+
+        assert_eq!(
+            render_expression(&JinjaExpression(
+                r#"[1,2.5]|sum"#.to_string()
+            ), &ctx).unwrap(),
+            "3.5"
+        );
+    }
 }
