@@ -9,7 +9,7 @@ export default class TypeBuilder {
     >;
     {% endif %}{% endfor %}
     {% for enum in enums %}{% if enum.dynamic %}
-    {{enum.name}}: EnumBuilder<'{{enum.name}}'{%- for value in enum.values %}{% if loop.first %}, {%endif%}"{{value}}"{% if !loop.last %} | {% endif %}{% endfor -%}>;
+    {{enum.name}}: EnumBuilder<'{{enum.name}}'{%- for (value, _) in enum.values %}{% if loop.first %}, {%endif%}"{{value}}"{% if !loop.last %} | {% endif %}{% endfor -%}>;
     {% endif %}{% endfor %}
 
     constructor() {
@@ -28,7 +28,7 @@ export default class TypeBuilder {
         {% endif %}{% endfor %}
         {% for enum in enums %}{% if enum.dynamic %}
         this.{{enum.name}} = this.tb.enumBuilder("{{enum.name}}", [
-          {% for value in enum.values %}"{{value}}",{% endfor %}
+          {% for (value, _) in enum.values %}"{{value}}",{% endfor %}
         ]);
         {% endif %}{% endfor %}
     }

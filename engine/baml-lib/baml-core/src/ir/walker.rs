@@ -133,7 +133,7 @@ impl<'a> Walker<'a, &'a Enum> {
     pub fn walk_values(&'a self) -> impl Iterator<Item = Walker<'a, &'a EnumValue>> {
         self.item.elem.values.iter().map(|v| Walker {
             db: self.db,
-            item: v,
+            item: &v.0,
         })
     }
 
@@ -142,10 +142,10 @@ impl<'a> Walker<'a, &'a Enum> {
             .elem
             .values
             .iter()
-            .find(|v| v.elem.0 == name)
+            .find(|v| v.0.elem.0 == name)
             .map(|v| Walker {
                 db: self.db,
-                item: v,
+                item: &v.0,
             })
     }
 

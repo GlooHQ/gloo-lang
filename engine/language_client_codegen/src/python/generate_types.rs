@@ -26,8 +26,9 @@ pub(crate) struct TypeBuilder<'ir> {
 
 struct PythonEnum<'ir> {
     name: &'ir str,
-    values: Vec<&'ir str>,
+    values: Vec<(&'ir str, Option<String>)>,
     dynamic: bool,
+    docstring: Option<String>,
 }
 
 struct PythonClass<'ir> {
@@ -92,8 +93,9 @@ impl<'ir> From<EnumWalker<'ir>> for PythonEnum<'ir> {
                 .elem
                 .values
                 .iter()
-                .map(|v| v.elem.0.as_str())
+                .map(|v| (v.0.elem.0.as_str(), v.1.as_ref().map(|d| render_docstring(d))))
                 .collect(),
+            docstring: e.item.elem.docstring.as_ref().map(|s| render_docstring(s))
         }
     }
 }

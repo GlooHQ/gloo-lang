@@ -457,7 +457,7 @@ impl<'ir> TryFrom<EnumWalker<'ir>> for TypeSpecWithMeta {
                         .elem
                         .values
                         .iter()
-                        .map(|v| v.elem.0.to_string())
+                        .map(|v| v.0.elem.0.to_string())
                         .collect(),
                 ),
                 r#const: None,

@@ -94,9 +94,13 @@ class EnumInClass(str, Enum):
     TWO = "TWO"
 
 class EnumOutput(str, Enum):
+    """An enum with three values,
+    ONE, TWO and THREE."""
     
     ONE = "ONE"
+    """The first enum."""
     TWO = "TWO"
+    """The second enum."""
     THREE = "THREE"
 
 class Hobby(str, Enum):

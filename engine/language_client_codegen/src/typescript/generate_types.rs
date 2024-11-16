@@ -25,8 +25,9 @@ pub(crate) struct TypescriptTypes<'ir> {
 
 struct TypescriptEnum<'ir> {
     pub name: &'ir str,
-    pub values: Vec<&'ir str>,
+    pub values: Vec<(&'ir str, Option<String>)>,
     pub dynamic: bool,
+    pub docstring: Option<String>,
 }
 
 pub struct TypescriptClass<'ir> {
@@ -82,8 +83,9 @@ impl<'ir> From<&EnumWalker<'ir>> for TypescriptEnum<'ir> {
                 .elem
                 .values
                 .iter()
-                .map(|v| v.elem.0.as_str())
+                .map(|v| (v.0.elem.0.as_str(), v.1.as_ref().map(|s| render_docstring(s, true))))
                 .collect(),
+            docstring: e.item.elem.docstring.as_ref().map(|d| render_docstring(d, false)),
         }
     }
 }

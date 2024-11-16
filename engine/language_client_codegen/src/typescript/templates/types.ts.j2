@@ -20,8 +20,14 @@ export function get_checks<CheckName extends string>(checks: Record<CheckName, C
 }
 
 {%- for enum in enums %}
+{%- if let Some(docstring) = enum.docstring %}
+{{docstring}}
+{%- endif %}
 export enum {{enum.name}} {
-  {%- for value in enum.values %}
+  {%- for (value, m_docstring) in enum.values %}
+  {%- if let Some(docstring) = m_docstring %}
+  {{docstring}}
+  {%- endif %}
   {{ value }} = "{{ value }}",
   {%- endfor %}
 }

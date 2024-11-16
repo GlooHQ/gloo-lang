@@ -1,5 +1,11 @@
+/// An enum with three values,
+/// ONE, TWO and THREE.
 enum EnumOutput {
+
+  /// The first enum.
   ONE
+
+  /// The second enum.
   TWO
   THREE
 

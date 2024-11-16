@@ -78,6 +78,8 @@ module Baml
       end
     end
     class EnumOutput < T::Enum
+      # An enum with three values,
+      # ONE, TWO and THREE.
       enums do
         ONE = new("ONE")
         TWO = new("TWO")

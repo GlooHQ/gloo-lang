@@ -27,9 +27,16 @@ def all_succeeded(checks: Dict[CheckName, Check]) -> bool:
 {# Enums -#}
 {% for enum in enums %}
 class {{enum.name}}(str, Enum):
+    {%- if let Some(docstring) = enum.docstring %}
+    {{docstring}}
+    {%- endif %}
     {% if enum.values.is_empty() %}pass{% endif %}
-    {%- for value in enum.values %}
+    {%- for (value, m_docstring) in enum.values %}
     {{ value }} = "{{ value }}"
+    {%- if let Some(docstring) = m_docstring %}
+    {{ docstring }}
+    {%- endif %}
+
     {%- endfor %}
 {% endfor %}
 

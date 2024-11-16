@@ -260,11 +260,22 @@ mod tests {
             /// multiline baz.
             baz string
           }
+
+          /// Documented enum.
+          enum E {
+            /// Documented variant.
+            EFoo
+
+            /// Another documented variant.
+            EBar
+            EBaz
+          }
         "##;
         let root_path = "a.baml";
         let source = SourceFile::new_static(root_path.into(), input);
         let schema = parse_schema(&root_path.into(), &source).unwrap().0;
-        let foo_top = schema.iter_tops().next().unwrap().1;
+        let mut tops = schema.iter_tops();
+        let foo_top = tops.next().unwrap().1;
         match foo_top {
             Top::Class(TypeExpressionBlock {
                 name,
@@ -295,6 +306,40 @@ mod tests {
             }
             _ => {
                 panic!("Expected class.")
+            }
+        }
+        let e_top = tops.next().unwrap().1;
+        match e_top {
+            Top::Enum(TypeExpressionBlock {
+                name,
+                fields,
+                documentation,
+                ..
+            }) => {
+                assert_eq!(name.to_string().as_str(), "E");
+                assert_eq!(
+                    documentation.as_ref().unwrap().text.as_str(),
+                    "Documented enum."
+                );
+                match fields.as_slice() {
+                    [field1, field2, field3] => {
+                        assert_eq!(
+                            field1.documentation.as_ref().unwrap().text.as_str(),
+                            "Documented variant."
+                        );
+                        assert_eq!(
+                            field2.documentation.as_ref().unwrap().text.as_str(),
+                            "Another documented variant."
+                        );
+                        assert!(field3.documentation.is_none());
+                    }
+                    _ => {
+                        panic!("Expected exactly 3 enum variants");
+                    }
+                }
+            }
+            _ => {
+                panic!("Expected enum. got {e_top:?}")
             }
         }
     }

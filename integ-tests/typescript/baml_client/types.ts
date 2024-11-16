@@ -89,8 +89,18 @@ export enum EnumInClass {
   TWO = "TWO",
 }
 
+/**
+ * An enum with three values,
+ * ONE, TWO and THREE.
+ */
 export enum EnumOutput {
+  /**
+   * The first enum.
+   */
   ONE = "ONE",
+  /**
+   * The second enum.
+   */
   TWO = "TWO",
   THREE = "THREE",
 }

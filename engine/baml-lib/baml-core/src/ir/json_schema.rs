@@ -123,7 +123,7 @@ impl WithJsonSchema for Walker<'_, &Enum> {
                 "enum": self.elem().values
                     .iter()
                     .map(|v| json!({
-                        "const": v.elem.0.clone()
+                        "const": v.0.elem.0.clone()
                     }))
                     .collect::<Vec<_>>(),
 

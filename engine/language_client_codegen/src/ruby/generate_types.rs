@@ -20,6 +20,7 @@ struct RubyEnum<'ir> {
     pub name: &'ir str,
     pub values: Vec<&'ir str>,
     dynamic: bool,
+    docstring: Option<String>,
 }
 
 struct RubyStruct<'ir> {
@@ -71,8 +72,9 @@ impl<'ir> From<EnumWalker<'ir>> for RubyEnum<'ir> {
                 .elem
                 .values
                 .iter()
-                .map(|v| v.elem.0.as_str())
+                .map(|v| v.0.elem.0.as_str())
                 .collect(),
+            docstring: e.item.elem.docstring.as_ref().map(|d| render_docstring(d, true))
         }
     }
 }

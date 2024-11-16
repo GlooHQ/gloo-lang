@@ -7,6 +7,9 @@ module Baml
     {#- https://sorbet.org/docs/tenum #}
     {%- for enum in enums %}
     class {{ enum.name }} < T::Enum
+      {%- if let Some(docstring) = enum.docstring %}
+      {{docstring}}
+      {%- endif %}
       {%- if enum.values.len() > 0 %}
       enums do
         {%- for value in enum.values %}

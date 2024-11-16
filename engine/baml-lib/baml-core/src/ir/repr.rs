@@ -639,7 +639,9 @@ pub struct EnumValue(pub String);
 #[derive(serde::Serialize, Debug)]
 pub struct Enum {
     pub name: EnumId,
-    pub values: Vec<Node<EnumValue>>,
+    pub values: Vec<(Node<EnumValue>, Option<Docstring>)>,
+    /// Docstring.
+    pub docstring: Option<Docstring>,
 }
 
 impl WithRepr<EnumValue> for EnumValueWalker<'_> {
@@ -674,10 +676,8 @@ impl WithRepr<Enum> for EnumWalker<'_> {
     fn repr(&self, db: &ParserDatabase) -> Result<Enum> {
         Ok(Enum {
             name: self.name().to_string(),
-            values: self
-                .values()
-                .map(|v| v.node(db))
-                .collect::<Result<Vec<_>>>()?,
+            values: self.values().map(|w| (w.node(db).map(|v| (v, w.documentation().map(|s| Docstring(s.to_string())))))).collect::<Result<Vec<_>,_>>()?,
+            docstring: self.get_documentation().map(|s| Docstring(s))
         })
     }
 }
@@ -1231,9 +1231,21 @@ mod tests {
 
             /// Baz field.
             baz int
+          }
 
+          /// Test enum.
+          enum TestEnum {
+            /// First variant.
+            FIRST
+
+            /// Second variant.
+            SECOND
+
+            THIRD
           }
         "#).unwrap();
+
+        // Test class docstrings
         let foo = ir.find_class("Foo").as_ref().unwrap().clone().elem();
         assert_eq!(foo.docstring.as_ref().unwrap().0.as_str(), "Foo class.");
         match foo.static_fields.as_slice() {
@@ -1243,6 +1255,23 @@ mod tests {
             },
             _ => {
                 panic!("Expected 2 fields");
+            }
+        }
+
+        // Test enum docstrings
+        let test_enum = ir.find_enum("TestEnum").as_ref().unwrap().clone().elem();
+        assert_eq!(test_enum.docstring.as_ref().unwrap().0.as_str(), "Test enum.");
+        match test_enum.values.as_slice() {
+            [val1, val2, val3] => {
+                assert_eq!(val1.0.elem.0, "FIRST");
+                assert_eq!(val1.1.as_ref().unwrap().0, "First variant.");
+                assert_eq!(val2.0.elem.0, "SECOND");
+                assert_eq!(val2.1.as_ref().unwrap().0, "Second variant.");
+                assert_eq!(val3.0.elem.0, "THIRD");
+                assert!(val3.1.is_none());
+            },
+            _ => {
+                panic!("Expected 3 enum values");
             }
         }
     }

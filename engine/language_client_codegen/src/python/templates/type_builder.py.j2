@@ -73,7 +73,7 @@ class {{enum.name}}Builder:
     def __init__(self, tb: _TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)
         self.__bldr = _tb.enum("{{enum.name}}")
-        self.__values: typing.Set[str] = set([{% for value in enum.values %} "{{value}}", {% endfor %}])
+        self.__values: typing.Set[str] = set([{% for (value, _) in enum.values %} "{{value}}", {% endfor %}])
         self.__vals = {{enum.name}}Values(self.__bldr, self.__values)
 
     def type(self) -> FieldType:
@@ -97,7 +97,7 @@ class {{enum.name}}Values:
         self.__bldr = enum_bldr
         self.__values = values
 
-    {% for value in enum.values %}
+    {% for (value, _) in enum.values %}
 
     @property
     def {{value}}(self) -> EnumValueBuilder:
