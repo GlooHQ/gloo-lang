@@ -114,7 +114,7 @@ impl<'ir> From<ClassWalker<'ir>> for PythonClass<'ir> {
                         Cow::Borrowed(f.elem.name.as_str()),
                         add_default_value(
                             &f.elem.r#type.elem,
-                            &f.elem.r#type.elem.to_type_ref(&c.db),
+                            f.elem.r#type.elem.to_type_ref(&c.db),
                         ),
                     )
                 })
@@ -151,7 +151,7 @@ impl<'ir> From<ClassWalker<'ir>> for PartialPythonClass<'ir> {
                         f.elem.name.as_str(),
                         add_default_value(
                             &f.elem.r#type.elem,
-                            &f.elem.r#type.elem.to_partial_type_ref(&c.db, false),
+                            f.elem.r#type.elem.to_partial_type_ref(&c.db, false),
                         ),
                     )
                 })
@@ -160,11 +160,11 @@ impl<'ir> From<ClassWalker<'ir>> for PartialPythonClass<'ir> {
     }
 }
 
-pub fn add_default_value(node: &FieldType, type_str: &String) -> String {
-    if type_str.starts_with("Optional[") {
+pub fn add_default_value(node: &FieldType, type_str: String) -> String {
+    if node.is_optional() {
         return format!("{} = None", type_str);
     } else {
-        return type_str.clone();
+        return type_str;
     }
 }
 

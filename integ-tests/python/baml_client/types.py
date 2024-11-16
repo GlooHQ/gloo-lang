@@ -213,14 +213,14 @@ class ContactInfo(BaseModel):
     
     
     primary: Union["PhoneNumber", "EmailAddress"]
-    secondary: Union["PhoneNumber", "EmailAddress", None]
+    secondary: Union["PhoneNumber", "EmailAddress", None] = None
 
 class CustomTaskResult(BaseModel):
     
     
-    bookOrder: Union["BookOrder", Optional[None]]
-    flightConfirmation: Union["FlightConfirmation", Optional[None]]
-    groceryReceipt: Union["GroceryReceipt", Optional[None]]
+    bookOrder: Union["BookOrder", Optional[None]] = None
+    flightConfirmation: Union["FlightConfirmation", Optional[None]] = None
+    groceryReceipt: Union["GroceryReceipt", Optional[None]] = None
 
 class DummyOutput(BaseModel):
     
@@ -392,15 +392,15 @@ class NamedArgsSingleClass(BaseModel):
 class Nested(BaseModel):
     
     
-    prop3: Union[str, Optional[None]]
-    prop4: Union[str, Optional[None]]
+    prop3: Union[str, Optional[None]] = None
+    prop4: Union[str, Optional[None]] = None
     prop20: "Nested2"
 
 class Nested2(BaseModel):
     
     
-    prop11: Union[str, Optional[None]]
-    prop12: Union[str, Optional[None]]
+    prop11: Union[str, Optional[None]] = None
+    prop12: Union[str, Optional[None]] = None
 
 class NestedBlockConstraint(BaseModel):
     
@@ -507,12 +507,12 @@ class Resume(BaseModel):
 class Schema(BaseModel):
     
     
-    prop1: Union[str, Optional[None]]
+    prop1: Union[str, Optional[None]] = None
     prop2: Union["Nested", str]
     prop5: List[Union[str, Optional[None]]]
     prop6: Union[str, List["Nested"]]
     nested_attrs: List[Union[str, Optional[None], "Nested"]]
-    parens: Union[str, Optional[None]]
+    parens: Union[str, Optional[None]] = None
     other_group: Union[str, Union[int, str]]
 
 class SearchParams(BaseModel):
