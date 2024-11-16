@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use aws_config::Region;
 use aws_config::{identity::IdentityCache, retry::RetryConfig, BehaviorVersion, ConfigLoader};
+use aws_credential_types::Credentials;
 use aws_sdk_bedrockruntime::{self as bedrock, operation::converse::ConverseOutput};
 
 use anyhow::{Context, Result};
@@ -36,7 +37,9 @@ use crate::{RenderCurlSettings, RuntimeContext};
 struct RequestProperties {
     model_id: String,
 
-    aws_region: Option<String>,
+
+    // (region, access_key_id, secret_access_key)
+    aws_access: (Option<String>, Option<String>, Option<String>),
 
     default_role: String,
     inference_config: Option<bedrock::types::InferenceConfiguration>,
@@ -89,15 +92,22 @@ fn resolve_properties(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Req
         .remove_str("region")
         .unwrap_or_else(|_| ctx.env.get("AWS_REGION").map(|s| s.to_string()));
 
+    let aws_access_key_id = properties.remove_str("aws_access_key_id")
+        .unwrap_or_else(|_| ctx.env.get("AWS_ACCESS_KEY_ID").map(|s| s.to_string()));
+    let aws_secret_access_key = properties.remove_str("aws_secret_access_key")
+        .unwrap_or_else(|_| ctx.env.get("AWS_SECRET_ACCESS_KEY").map(|s| s.to_string()));
+
     let supported_request_modes = properties.pull_supported_request_modes()?;
+
+    let properties = properties.finalize();
 
     Ok(RequestProperties {
         model_id,
-        aws_region,
+        aws_access: (aws_region, aws_access_key_id, aws_secret_access_key),
         default_role,
         inference_config,
         allowed_metadata,
-        request_options: properties.finalize(),
+        request_options: properties,
         ctx_env: ctx.env.clone(),
         supported_request_modes,
     })
@@ -138,6 +148,9 @@ impl AwsClient {
     // TODO: this should be memoized on client construction, but because config loading is async,
     // we can't do this in AwsClient::new (which is called from LLMPRimitiveProvider::try_from)
     async fn client_anyhow(&self) -> Result<bedrock::Client> {
+
+        let (aws_region, aws_access_key_id, aws_secret_access_key) = &self.properties.aws_access;
+
         #[cfg(not(target_arch = "wasm32"))]
         let loader: ConfigLoader = aws_config::defaults(BehaviorVersion::latest());
 
@@ -145,18 +158,18 @@ impl AwsClient {
         let loader: ConfigLoader = {
             use aws_config::Region;
             use aws_credential_types::Credentials;
-
+            
             let (aws_region, aws_access_key_id, aws_secret_access_key) = match (
-                self.properties.ctx_env.get("AWS_REGION"),
-                self.properties.ctx_env.get("AWS_ACCESS_KEY_ID"),
-                self.properties.ctx_env.get("AWS_SECRET_ACCESS_KEY"),
+                aws_region,
+                aws_access_key_id,
+                aws_secret_access_key,
             ) {
                 (Some(aws_region), Some(aws_access_key_id), Some(aws_secret_access_key)) => {
                     (aws_region, aws_access_key_id, aws_secret_access_key)
                 }
                 _ => {
                     anyhow::bail!(
-                        "AWS_REGION, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set in the environment"
+                        "AWS_REGION, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be configured for AWS Bedrock for Web Assembly"
                     )
                 }
             };
@@ -174,10 +187,27 @@ impl AwsClient {
             loader
         };
 
-        let loader = if let Some(aws_region) = &self.properties.aws_region {
+        let loader = if let Some(aws_region) = aws_region {
             loader.region(Region::new(aws_region.clone()))
         } else {
             loader
+        };
+
+
+        let loader = match (aws_access_key_id, aws_secret_access_key) {
+            (Some(aws_access_key_id), Some(aws_secret_access_key)) => {
+            loader.credentials_provider(Credentials::new(
+                aws_access_key_id.clone(),
+                aws_secret_access_key.clone(),
+                None,
+                None,
+                "baml-runtime/wasm",
+                ))
+            }
+            (Some(_), None) | (None, Some(_)) => {
+                anyhow::bail!("AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be configured or not configured together for AWS Bedrock")
+            }
+            _ => loader,
         };
 
         let config = loader
