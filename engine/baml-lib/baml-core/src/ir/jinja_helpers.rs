@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use baml_types::{BamlValue, JinjaExpression};
+use minijinja::value::Value;
 use regex::Regex;
 
 pub fn get_env<'a>() -> minijinja::Environment<'a> {
@@ -9,14 +10,40 @@ pub fn get_env<'a>() -> minijinja::Environment<'a> {
     env.set_trim_blocks(true);
     env.set_lstrip_blocks(true);
     env.add_filter("regex_match", regex_match);
+    env.add_filter("sum", sum_filter);
     env
 }
 
 fn regex_match(value: String, regex: String) -> bool {
     match Regex::new(&regex) {
         Err(_) => false,
-        Ok(re) => re.is_match(&value)
+        Ok(re) => re.is_match(&value),
     }
+}
+
+fn sum_filter(value: Vec<Value>) -> Value {
+    let int_sum: Option<i64> = value
+        .iter()
+        .map(|v| <i64>::try_from(v.clone()).ok())
+        .collect::<Option<Vec<_>>>()
+        .map(|ints| ints.into_iter().sum());
+    let float_sum: Option<f64> = value
+        .into_iter()
+        .map(|v| <f64>::try_from(v).ok())
+        .collect::<Option<Vec<_>>>()
+        .map(|floats| floats.into_iter().sum());
+    // If we could downcast all the Values to ints, return an int.
+    // Otherwise, if we could downcast all the Values to floats, return the
+    // float.
+    // Otherwise, return 0. We rely on our jinja typechecker to make sure an
+    // erroneous 0 never makes it back to the user.
+    if int_sum.is_none() && float_sum.is_none() {
+        log::warn!("The `sum` jinja filter was run against non-numeric arguments")
+    }
+    int_sum.map_or(
+        float_sum.map_or(Value::from(0), |float| Value::from(float)),
+        |int| Value::from(int),
+    )
 }
 
 /// Render a bare minijinaja expression with the given context.
@@ -50,16 +77,23 @@ pub fn evaluate_predicate(
 
 #[cfg(test)]
 mod tests {
-    use baml_types::BamlValue;
     use super::*;
-
+    use baml_types::BamlValue;
 
     #[test]
     fn test_render_expressions() {
-        let ctx = vec![(
-            "a".to_string(),
-            BamlValue::List(vec![BamlValue::Int(1), BamlValue::Int(2), BamlValue::Int(3)].into())
-        ), ("b".to_string(), BamlValue::String("(123)456-7890".to_string()))]
+        let ctx = vec![
+            (
+                "a".to_string(),
+                BamlValue::List(
+                    vec![BamlValue::Int(1), BamlValue::Int(2), BamlValue::Int(3)].into(),
+                ),
+            ),
+            (
+                "b".to_string(),
+                BamlValue::String("(123)456-7890".to_string()),
+            ),
+        ]
         .into_iter()
         .collect();
 
@@ -79,19 +113,55 @@ mod tests {
 
     #[test]
     fn test_render_regex_match() {
-        let ctx = vec![(
-            "a".to_string(),
-            BamlValue::List(vec![BamlValue::Int(1), BamlValue::Int(2), BamlValue::Int(3)].into())
-        ), ("b".to_string(), BamlValue::String("(123)456-7890".to_string()))]
+        let ctx = vec![
+            (
+                "a".to_string(),
+                BamlValue::List(
+                    vec![BamlValue::Int(1), BamlValue::Int(2), BamlValue::Int(3)].into(),
+                ),
+            ),
+            (
+                "b".to_string(),
+                BamlValue::String("(123)456-7890".to_string()),
+            ),
+        ]
         .into_iter()
         .collect();
         assert_eq!(
-            render_expression(&JinjaExpression(r##"b|regex_match("123")"##.to_string()), &ctx).unwrap(),
+            render_expression(
+                &JinjaExpression(r##"b|regex_match("123")"##.to_string()),
+                &ctx
+            )
+            .unwrap(),
             "true"
         );
         assert_eq!(
-            render_expression(&JinjaExpression(r##"b|regex_match("\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}")"##.to_string()), &ctx).unwrap(),
+            render_expression(
+                &JinjaExpression(
+                    r##"b|regex_match("\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}")"##.to_string()
+                ),
+                &ctx
+            )
+            .unwrap(),
             "true"
         )
+    }
+
+    #[test]
+    fn test_sum_filter() {
+        let ctx = vec![].into_iter().collect();
+        assert_eq!(
+            render_expression(&JinjaExpression(
+                r#"[1,2]|sum"#.to_string()
+            ), &ctx).unwrap(),
+            "3"
+        );
+
+        assert_eq!(
+            render_expression(&JinjaExpression(
+                r#"[1,2.5]|sum"#.to_string()
+            ), &ctx).unwrap(),
+            "3.5"
+        );
     }
 }

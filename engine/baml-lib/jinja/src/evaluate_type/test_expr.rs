@@ -274,3 +274,28 @@ fn test_output_format() {
         vec!["Function 'baml::OutputFormat' does not have an argument 'unknown'. Did you mean one of these: 'always_hoist_enums', 'enum_value_prefix', 'or_splitter'?"]
     );
 }
+
+
+#[test]
+fn sum_filter() {
+    let types = PredefinedTypes::default(JinjaContext::Prompt);
+    assert_eq!(
+        assert_evaluates_to!(r#"[1,2,3]|sum"#, types),
+        Type::Int
+    );
+    assert_eq!(
+        assert_evaluates_to!(r#"[1.1,2.1,3.2]|sum"#, types),
+        Type::Float
+    );
+    // // This would be nice, but it doesn't work.
+    // // Type checker says this is a subtype of `int[]`.
+    // // BUG.
+    // assert_eq!(
+    //     assert_evaluates_to!(r#"[1.1,2,3]|sum"#, types),
+    //     Type::Float
+    // );
+    assert_eq!(
+        assert_fails_to!(r#"["hi", 1]|sum"#, types),
+        vec![r#"'[hi,1]' is a list[(literal["hi"] | literal[1])], expected (int|float)[]"#]
+    );
+}

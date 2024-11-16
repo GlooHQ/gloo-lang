@@ -214,6 +214,7 @@ fn tracker_visit_expr<'a>(
                 "slice",
                 "sort",
                 "split",
+                "sum",
                 "title",
                 "tojson",
                 "json",
@@ -291,6 +292,21 @@ fn tracker_visit_expr<'a>(
                 "slice" => Type::Unknown,
                 "sort" => Type::Unknown,
                 "split" => Type::List(Box::new(Type::String)),
+                "sum" => match inner.clone() {
+                    Type::List(elem_type) =>
+                        if elem_type.is_subtype_of(&Type::Float) {
+                            Type::Float
+                        } else if elem_type.is_subtype_of(&Type::Int) {
+                            Type::Int
+                        } else {
+                            ensure_type("(int|float)[]");
+                            Type::String
+                        }
+                    _ => {
+                        ensure_type("(int|float)[]");
+                        Type::Bool
+                    },
+                }
                 "title" => Type::String,
                 "tojson" | "json" => Type::String,
                 "trim" => Type::String,
