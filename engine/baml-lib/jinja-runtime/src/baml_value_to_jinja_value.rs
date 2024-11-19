@@ -28,7 +28,7 @@ impl IntoMiniJinjaValue for BamlValue {
             BamlValue::Map(m) => {
                 let map = m
                     .into_iter()
-                    .map(|(k, v)| (k.as_str(), v.into_minijinja_value(ir, env_vars)));
+                    .map(|(k, v)| (k.to_string(), v.into_minijinja_value(ir, env_vars)));
                 minijinja::Value::from_iter(map)
             }
             BamlValue::List(l) => {

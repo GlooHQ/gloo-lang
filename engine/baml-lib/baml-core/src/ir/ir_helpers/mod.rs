@@ -14,8 +14,8 @@ use crate::{
 };
 use anyhow::Result;
 use baml_types::{
-    BamlMap, BamlValue, BamlValueWithMeta, Constraint, ConstraintLevel, FieldType, LiteralValue,
-    TypeValue,
+    BamlMap, BamlMapKey, BamlValue, BamlValueWithMeta, Constraint, ConstraintLevel, FieldType,
+    LiteralValue, TypeValue,
 };
 pub use to_baml_arg::ArgCoercer;
 
@@ -186,7 +186,7 @@ impl IRHelper for IntermediateRepr {
                 if let Ok(baml_arg) =
                     coerce_settings.coerce_arg(self, param_type, param_value, &mut scope)
                 {
-                    baml_arg_map.insert(param_name.to_string(), baml_arg);
+                    baml_arg_map.insert(BamlMapKey::string(param_name), baml_arg);
                 }
             } else {
                 // Check if the parameter is optional.
@@ -291,14 +291,15 @@ impl IRHelper for IntermediateRepr {
                         if !map_type.is_subtype_of(&field_type) {
                             anyhow::bail!("Could not unify {:?} with {:?}", map_type, field_type);
                         } else {
-                            let mapped_fields: BamlMap<String, BamlValueWithMeta<FieldType>> =
-                                    pairs
+                            let mapped_fields: BamlMap<BamlMapKey, BamlValueWithMeta<FieldType>> =
+                                pairs
                                     .into_iter()
                                     .map(|(key, val)| {
-                                        let sub_value = self.distribute_type(val, item_type.clone())?;
+                                        let sub_value =
+                                            self.distribute_type(val, item_type.clone())?;
                                         Ok((key, sub_value))
                                     })
-                                    .collect::<anyhow::Result<BamlMap<String,BamlValueWithMeta<FieldType>>>>()?;
+                                    .collect::<anyhow::Result<_>>()?;
                             Ok(BamlValueWithMeta::Map(mapped_fields, field_type))
                         }
                     }
@@ -515,7 +516,11 @@ mod tests {
     }
 
     fn mk_map_1() -> BamlValue {
-        BamlValue::Map(vec![("a".to_string(), mk_int(1))].into_iter().collect())
+        BamlValue::Map(
+            vec![(BamlMapKey::string("a"), mk_int(1))]
+                .into_iter()
+                .collect(),
+        )
     }
 
     fn mk_ir() -> IntermediateRepr {
@@ -557,7 +562,7 @@ mod tests {
     #[test]
     fn infer_map_map() {
         let my_map_map = BamlValue::Map(
-            vec![("map_a".to_string(), mk_map_1())]
+            vec![(BamlMapKey::string("map_a"), mk_map_1())]
                 .into_iter()
                 .collect(),
         );
@@ -629,12 +634,12 @@ mod tests {
         let map_1 = BamlValue::Map(
             vec![
                 (
-                    "1_string".to_string(),
+                    BamlMapKey::string("1_string"),
                     BamlValue::String("1_string_value".to_string()),
                 ),
-                ("1_int".to_string(), mk_int(1)),
+                (BamlMapKey::string("1_int"), mk_int(1)),
                 (
-                    "1_foo".to_string(),
+                    BamlMapKey::string("1_foo"),
                     BamlValue::Class(
                         "Foo".to_string(),
                         vec![
@@ -719,9 +724,9 @@ mod tests {
         // The compound value we want to test.
         let map = BamlValue::Map(
             vec![
-                ("a".to_string(), list_1.clone()),
-                ("b".to_string(), list_1),
-                ("c".to_string(), list_2),
+                (BamlMapKey::string("a"), list_1.clone()),
+                (BamlMapKey::string("b"), list_1),
+                (BamlMapKey::string("c"), list_2),
             ]
             .into_iter()
             .collect(),

@@ -1,9 +1,9 @@
 use baml_types::{
-    BamlMap, BamlValue, BamlValueWithMeta, Constraint, ConstraintLevel, FieldType, LiteralValue,
-    TypeValue,
+    BamlMap, BamlMapKey, BamlValue, BamlValueWithMeta, Constraint, ConstraintLevel, FieldType,
+    LiteralValue, TypeValue,
 };
 use core::result::Result;
-use std::path::PathBuf;
+use std::{collections::VecDeque, path::PathBuf};
 
 use crate::ir::IntermediateRepr;
 
@@ -84,7 +84,10 @@ impl ArgCoercer {
                             };
 
                             for key in kv.keys() {
-                                if !vec!["file", "media_type"].contains(&key.as_str()) {
+                                if !["file", "media_type"]
+                                    .map(BamlMapKey::string)
+                                    .contains(&key)
+                                {
                                     scope.push_error(format!(
                                         "Invalid property `{}` on file {}: `media_type` is the only supported property",
                                         key,
@@ -118,7 +121,7 @@ impl ArgCoercer {
                                 None => None,
                             };
                             for key in kv.keys() {
-                                if !vec!["url", "media_type"].contains(&key.as_str()) {
+                                if !["url", "media_type"].map(BamlMapKey::string).contains(&key) {
                                     scope.push_error(format!(
                                         "Invalid property `{}` on url {}: `media_type` is the only supported property",
                                         key,
@@ -143,7 +146,10 @@ impl ArgCoercer {
                                 None => None,
                             };
                             for key in kv.keys() {
-                                if !vec!["base64", "media_type"].contains(&key.as_str()) {
+                                if !["base64", "media_type"]
+                                    .map(BamlMapKey::string)
+                                    .contains(&key)
+                                {
                                     scope.push_error(format!(
                                         "Invalid property `{}` on base64 {}: `media_type` is the only supported property",
                                         key,
@@ -215,7 +221,7 @@ impl ArgCoercer {
             }),
             (FieldType::Class(name), _) => match value {
                 BamlValue::Class(n, _) if n == name => Ok(value.clone()),
-                BamlValue::Class(_, obj) | BamlValue::Map(obj) => match ir.find_class(name) {
+                BamlValue::Class(_, obj) /*BamlValue::Map(obj)*/ => match ir.find_class(name) {
                     Ok(c) => {
                         let mut fields = BamlMap::new();
 
@@ -285,12 +291,57 @@ impl ArgCoercer {
             (FieldType::Map(k, v), _) => {
                 if let BamlValue::Map(kv) = value {
                     let mut map = BamlMap::new();
+                    let mut failed_parsing_int_err = None;
+
+                    let mut is_union_of_literal_ints = false;
+
+                    // TODO: Can we avoid this loop here? Won't hit performance
+                    // by a lot unless the user defines a giant union.
+                    if let FieldType::Union(items) = k.as_ref() {
+                        let mut found_types_other_than_literal_ints = false;
+                        let mut queue = VecDeque::from_iter(items.iter());
+                        while let Some(item) = queue.pop_front() {
+                            match item {
+                                FieldType::Literal(LiteralValue::Int(_)) => continue,
+                                FieldType::Union(nested) => queue.extend(nested.iter()),
+                                _ => {
+                                    found_types_other_than_literal_ints = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if !found_types_other_than_literal_ints {
+                            is_union_of_literal_ints = true;
+                        }
+                    }
+
                     for (key, value) in kv {
                         scope.push("<key>".to_string());
-                        let k = self.coerce_arg(ir, k, &BamlValue::String(key.clone()), scope);
+
+                        let target_baml_key = if matches!(**k, FieldType::Primitive(TypeValue::Int))
+                            || is_union_of_literal_ints
+                        {
+                            let BamlMapKey::String(str_int) = key else {
+                                todo!();
+                            };
+
+                            match str_int.parse::<i64>() {
+                                Ok(i) => BamlValue::Int(i),
+                                Err(e) => {
+                                    failed_parsing_int_err = Some(key);
+                                    // Stop here and let the code below return
+                                    // the error.
+                                    break;
+                                }
+                            }
+                        } else {
+                            BamlValue::String(key.to_string())
+                        };
+
+                        let coerced_key = self.coerce_arg(ir, k, &target_baml_key, scope);
                         scope.pop(false);
 
-                        if k.is_ok() {
+                        if coerced_key.is_ok() {
                             scope.push(key.to_string());
                             if let Ok(v) = self.coerce_arg(ir, v, value, scope) {
                                 map.insert(key.clone(), v);
@@ -298,7 +349,15 @@ impl ArgCoercer {
                             scope.pop(false);
                         }
                     }
-                    Ok(BamlValue::Map(map))
+
+                    if let Some(failed_int) = failed_parsing_int_err {
+                        scope.push_error(format!(
+                            "Expected int for map with int keys, got `{failed_int}`"
+                        ));
+                        Err(())
+                    } else {
+                        Ok(BamlValue::Map(map))
+                    }
                 } else {
                     scope.push_error(format!("Expected map, got `{}`", value));
                     Err(())

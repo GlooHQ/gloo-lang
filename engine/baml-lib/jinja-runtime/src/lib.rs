@@ -441,7 +441,7 @@ mod render_tests {
 
     use super::*;
 
-    use baml_types::{BamlMap, BamlMediaType};
+    use baml_types::{BamlMap, BamlMapKey, BamlMediaType};
     use env_logger;
     use indexmap::IndexMap;
     use std::sync::Once;
@@ -1022,7 +1022,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "haiku_subject".to_string(),
+            BamlMapKey::string("haiku_subject"),
             BamlValue::String("sakura".to_string()),
         )]));
 
@@ -1105,7 +1105,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "haiku_subject".to_string(),
+            BamlMapKey::string("haiku_subject"),
             BamlValue::String("sakura".to_string()),
         )]));
 
@@ -1165,7 +1165,7 @@ mod render_tests {
     fn render_malformed_jinja() -> anyhow::Result<()> {
         setup_logging();
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "name".to_string(),
+            BamlMapKey::string("name"),
             BamlValue::String("world".to_string()),
         )]));
 
@@ -1212,7 +1212,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "class_arg".to_string(),
+            BamlMapKey::string("class_arg"),
             // class args are not aliased yet when passed in to jinja
             BamlValue::Class(
                 "C".to_string(),
@@ -1259,7 +1259,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "class_arg".to_string(),
+            BamlMapKey::string("class_arg"),
             BamlValue::Class(
                 "C".to_string(),
                 BamlMap::from([("prop1".to_string(), BamlValue::String("value".to_string()))]),
@@ -1320,7 +1320,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "class_arg".to_string(),
+            BamlMapKey::string("class_arg"),
             BamlValue::Class(
                 "C".to_string(),
                 BamlMap::from([("prop1".to_string(), BamlValue::Int(4))]),
@@ -1381,7 +1381,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "class_arg".to_string(),
+            BamlMapKey::string("class_arg"),
             BamlValue::Class(
                 "C".to_string(),
                 BamlMap::from([("prop1".to_string(), BamlValue::Int(13))]),
@@ -1424,7 +1424,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "class_arg".to_string(),
+            BamlMapKey::string("class_arg"),
             BamlValue::Class(
                 "A".to_string(),
                 IndexMap::from([
@@ -1500,7 +1500,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "class_arg".to_string(),
+            BamlMapKey::string("class_arg"),
             BamlValue::Class(
                 "A".to_string(),
                 IndexMap::from([
@@ -1593,7 +1593,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "class_arg".to_string(),
+            BamlMapKey::string("class_arg"),
             BamlValue::List(vec![
                 BamlValue::Class(
                     "A".to_string(),
@@ -1698,7 +1698,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "class_arg".to_string(),
+            BamlMapKey::string("class_arg"),
             BamlValue::List(vec![BamlValue::Class(
                 "A".to_string(),
                 IndexMap::from([
@@ -1773,7 +1773,7 @@ mod render_tests {
         setup_logging();
 
         let args: BamlValue = BamlValue::Map(BamlMap::from([(
-            "class_arg".to_string(),
+            BamlMapKey::string("class_arg"),
             BamlValue::Class(
                 "A".to_string(),
                 IndexMap::from([
@@ -1892,7 +1892,7 @@ mod render_tests {
         setup_logging();
 
         let args = BamlValue::Map(BamlMap::from([(
-            "enum_arg".to_string(),
+            BamlMapKey::string("enum_arg"),
             BamlValue::Enum("MyEnum".to_string(), "VALUE_A".to_string()),
         )]));
 

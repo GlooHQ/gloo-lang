@@ -7,7 +7,7 @@ mod baml_value;
 mod field_type;
 mod generator;
 
-pub use baml_value::{BamlValue, BamlValueWithMeta};
+pub use baml_value::{BamlMapKey, BamlValue, BamlValueWithMeta};
 pub use constraint::*;
 pub use field_type::{FieldType, LiteralValue, TypeValue};
 pub use generator::{GeneratorDefaultClientMode, GeneratorOutputType};

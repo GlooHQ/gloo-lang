@@ -142,7 +142,20 @@ impl ParsingContext<'_> {
     pub(crate) fn error_map_must_have_supported_key(&self, key_type: &FieldType) -> ParsingError {
         ParsingError {
             reason: format!(
-                "Maps may only have strings, enums or literal strings for keys, but got {key_type}"
+                "Maps may only have strings, enums or literals as keys, but got {key_type}"
+            ),
+            scope: self.scope.clone(),
+            causes: vec![],
+        }
+    }
+
+    pub(crate) fn error_map_must_have_only_one_type_in_key_union(
+        &self,
+        key_type: &FieldType,
+    ) -> ParsingError {
+        ParsingError {
+            reason: format!(
+                "Unions in map keys may only contain literals of the same type, but got {key_type}"
             ),
             scope: self.scope.clone(),
             causes: vec![],

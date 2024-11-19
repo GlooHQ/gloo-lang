@@ -1,5 +1,5 @@
 use anyhow::Result;
-use baml_types::BamlValue;
+use baml_types::{BamlMapKey, BamlValue};
 use indexmap::IndexMap;
 
 use internal_baml_parser_database::RetryPolicyStrategy;
@@ -237,7 +237,10 @@ impl Expression {
             Expression::Map(m) => {
                 let mut map = baml_types::BamlMap::new();
                 for (k, v) in m {
-                    map.insert(k.as_string_value(env_values)?, v.normalize(env_values)?);
+                    map.insert(
+                        BamlMapKey::String(k.as_string_value(env_values)?),
+                        v.normalize(env_values)?,
+                    );
                 }
                 Ok(BamlValue::Map(map))
             }

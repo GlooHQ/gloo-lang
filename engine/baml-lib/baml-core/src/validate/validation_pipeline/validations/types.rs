@@ -74,9 +74,23 @@ fn validate_type_allowed(ctx: &mut Context<'_>, field_type: &FieldType) {
                 // Literal string key.
                 FieldType::Literal(FieldArity::Required, LiteralValue::String(_), ..) => {}
 
-                // Literal string union.
+                // Literal int key.
+                FieldType::Literal(FieldArity::Required, LiteralValue::Int(_), ..) => {}
+
+                // Literal union.
                 FieldType::Union(FieldArity::Required, items, ..) => {
                     let mut queue = VecDeque::from_iter(items.iter());
+
+                    // Little hack to keep track of data types in the union with
+                    // a single pass and no allocations. Unions that contain
+                    // literals of different types are not allowed as map keys.
+                    //
+                    // TODO: Same code is used at `coerce_map` function in
+                    // baml-lib/jsonish/src/deserializer/coercer/coerce_map.rs
+                    //
+                    // Should figure out how to reuse this.
+                    let mut literal_types_found = [0, 0, 0];
+                    let [strings, ints, bools] = &mut literal_types_found;
 
                     while let Some(item) = queue.pop_front() {
                         match item {
@@ -85,7 +99,17 @@ fn validate_type_allowed(ctx: &mut Context<'_>, field_type: &FieldType) {
                                 FieldArity::Required,
                                 LiteralValue::String(_),
                                 ..,
-                            ) => {}
+                            ) => *strings += 1,
+
+                            // Ok, literal int.
+                            FieldType::Literal(FieldArity::Required, LiteralValue::Int(_), ..) => {
+                                *ints += 1
+                            }
+
+                            // Ok, literal bool.
+                            FieldType::Literal(FieldArity::Required, LiteralValue::Bool(_), ..) => {
+                                *bools += 1
+                            }
 
                             // Nested union, "recurse" but it's iterative.
                             FieldType::Union(FieldArity::Required, nested, ..) => {
@@ -100,6 +124,13 @@ fn validate_type_allowed(ctx: &mut Context<'_>, field_type: &FieldType) {
                                 );
                             }
                         }
+                    }
+
+                    if literal_types_found.iter().filter(|&&t| t > 0).count() > 1 {
+                        ctx.push_error(DatamodelError::new_validation_error(
+                            "Unions in map keys may only contain literals of the same type.",
+                            kv_types.0.span().clone(),
+                        ));
                     }
                 }
 

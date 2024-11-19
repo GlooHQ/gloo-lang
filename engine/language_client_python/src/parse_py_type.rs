@@ -295,6 +295,10 @@ pub fn parse_py_type(
                 Ok(MappedPyType::List(items))
             } else if let Ok(kv) = any.extract::<HashMap<String, PyObject>>(py) {
                 Ok(MappedPyType::Map(kv))
+            } else if let Ok(kv) = any.extract::<HashMap<i64, PyObject>>(py) {
+                Ok(MappedPyType::Map(
+                    kv.into_iter().map(|(k, v)| (k.to_string(), v)).collect(),
+                ))
             } else if let Ok(b) = any.downcast_bound::<PyBool>(py) {
                 Ok(MappedPyType::Bool(b.is_true()))
             } else if let Ok(i) = any.extract::<i64>(py) {

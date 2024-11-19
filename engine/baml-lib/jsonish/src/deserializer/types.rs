@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 
-use baml_types::{BamlMap, BamlMedia, BamlValue, BamlValueWithMeta, Constraint, JinjaExpression};
+use baml_types::{
+    BamlMap, BamlMapKey, BamlMedia, BamlValue, BamlValueWithMeta, Constraint, JinjaExpression,
+};
 use serde_json::json;
 use strsim::jaro;
 
@@ -284,9 +286,11 @@ impl From<BamlValueWithFlags> for BamlValue {
             BamlValueWithFlags::List(_, v) => {
                 BamlValue::List(v.into_iter().map(|x| x.into()).collect())
             }
-            BamlValueWithFlags::Map(_, m) => {
-                BamlValue::Map(m.into_iter().map(|(k, (_, v))| (k, v.into())).collect())
-            }
+            BamlValueWithFlags::Map(_, m) => BamlValue::Map(
+                m.into_iter()
+                    .map(|(k, (_, v))| (BamlMapKey::String(k), v.into()))
+                    .collect(),
+            ),
             BamlValueWithFlags::Enum(s, v) => BamlValue::Enum(s, v.value),
             BamlValueWithFlags::Class(s, _, m) => {
                 BamlValue::Class(s, m.into_iter().map(|(k, v)| (k, v.into())).collect())
@@ -309,7 +313,7 @@ impl From<&BamlValueWithFlags> for BamlValue {
             }
             BamlValueWithFlags::Map(_, m) => BamlValue::Map(
                 m.into_iter()
-                    .map(|(k, (_, v))| (k.clone(), v.into()))
+                    .map(|(k, (_, v))| (BamlMapKey::string(k), v.into()))
                     .collect(),
             ),
             BamlValueWithFlags::Enum(s, v) => BamlValue::Enum(s.clone(), v.value.clone()),
@@ -451,7 +455,10 @@ impl From<BamlValueWithFlags> for BamlValueWithMeta<Vec<(String, JinjaExpression
             Float(ValueWithFlags { value, .. }) => BamlValueWithMeta::Float(value, c),
             Bool(ValueWithFlags { value, .. }) => BamlValueWithMeta::Bool(value, c),
             Map(_, values) => BamlValueWithMeta::Map(
-                values.into_iter().map(|(k, v)| (k, v.1.into())).collect(),
+                values
+                    .into_iter()
+                    .map(|(k, v)| (BamlMapKey::String(k), v.1.into()))
+                    .collect(),
                 c,
             ), // TODO: (Greg) I discard the DeserializerConditions tupled up with the value of the BamlMap. I'm not sure why BamlMap value is (DeserializerContitions, BamlValueWithFlags) in the first place.
             List(_, values) => {

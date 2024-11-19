@@ -1,12 +1,11 @@
+use crate::{baml_value::BamlMapKey, BamlMedia, BamlValue};
 use std::fmt;
-use crate::{BamlMedia, BamlValue};
 
 /// A wrapper around a jinja expression. The inner `String` should not contain
 /// the interpolation brackets `{{ }}`; it should be a bare expression like
 /// `"this|length < something"`.
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 pub struct JinjaExpression(pub String);
-
 
 impl fmt::Display for JinjaExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -53,6 +52,15 @@ impl From<BamlMedia> for MinijinjaBamlMedia {
 impl From<BamlMedia> for minijinja::Value {
     fn from(arg: BamlMedia) -> minijinja::Value {
         minijinja::Value::from_object(MinijinjaBamlMedia::from(arg))
+    }
+}
+
+impl From<BamlMapKey> for minijinja::Value {
+    fn from(key: BamlMapKey) -> Self {
+        match key {
+            BamlMapKey::String(s) => minijinja::Value::from(s),
+            BamlMapKey::Int(n) => minijinja::Value::from(n),
+        }
     }
 }
 

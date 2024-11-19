@@ -39,20 +39,37 @@ pub(super) fn coerce_map(
     // If we can determine that the type is always valid then we can get rid of
     // this logic and skip the loops & allocs in the the union branch.
     match key_type.as_ref() {
-        // String, enum or just one literal string, OK.
+        // String, int, enum or just one literal string or int, OK.
         FieldType::Primitive(TypeValue::String)
+        | FieldType::Primitive(TypeValue::Int)
         | FieldType::Enum(_)
-        | FieldType::Literal(LiteralValue::String(_)) => {}
+        | FieldType::Literal(LiteralValue::String(_))
+        | FieldType::Literal(LiteralValue::Int(_)) => {}
 
-        // For unions we need to check if all the items are literal strings.
+        // For unions we need to check if all the items are literals of the same
+        // type.
         FieldType::Union(items) => {
             let mut queue = VecDeque::from_iter(items.iter());
+
+            // Same trick used in `validate_type_allowed` at
+            // baml-lib/baml-core/src/validate/validation_pipeline/validations/types.rs
+            //
+            // TODO: Figure out how to reuse this.
+            let mut literal_types_found = [0, 0, 0];
+            let [strings, ints, bools] = &mut literal_types_found;
+
             while let Some(item) = queue.pop_front() {
                 match item {
-                    FieldType::Literal(LiteralValue::String(_)) => continue,
+                    FieldType::Literal(LiteralValue::String(_)) => *strings += 1,
+                    FieldType::Literal(LiteralValue::Int(_)) => *ints += 1,
+                    FieldType::Literal(LiteralValue::Bool(_)) => *bools += 1,
                     FieldType::Union(nested) => queue.extend(nested.iter()),
                     other => return Err(ctx.error_map_must_have_supported_key(other)),
                 }
+            }
+
+            if literal_types_found.iter().filter(|&&t| t > 0).count() > 1 {
+                return Err(ctx.error_map_must_have_only_one_type_in_key_union(key_type));
             }
         }
 
