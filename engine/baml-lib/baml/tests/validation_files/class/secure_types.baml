@@ -25,7 +25,7 @@ class ComplexTypes {
 //  2 | class ComplexTypes {
 //  3 |   a map<string[], (int | bool[]) | apple_pie[][]>
 //    | 
-// error: Error validating: Maps may only have strings as keys
+// error: Error validating: Maps may only have strings, enums or literal strings as keys
 //   -->  class/secure_types.baml:3
 //    | 
 //  2 | class ComplexTypes {
@@ -43,7 +43,7 @@ class ComplexTypes {
 //  3 |   a map<string[], (int | bool[]) | apple_pie[][]>
 //  4 |   b (int, map<bool, string?>, (char | float)[][] | long_word_123.foobar[])
 //    | 
-// error: Error validating: Maps may only have strings as keys
+// error: Error validating: Maps may only have strings, enums or literal strings as keys
 //   -->  class/secure_types.baml:4
 //    | 
 //  3 |   a map<string[], (int | bool[]) | apple_pie[][]>
@@ -73,7 +73,7 @@ class ComplexTypes {
 //  5 |   c apple123_456_pie | (stringer, bool[], (int | char))[]
 //  6 |   d map<int[][], ((int | float) | char[])>
 //    | 
-// error: Error validating: Maps may only have strings as keys
+// error: Error validating: Maps may only have strings, enums or literal strings as keys
 //   -->  class/secure_types.baml:6
 //    | 
 //  5 |   c apple123_456_pie | (stringer, bool[], (int | char))[]
@@ -121,7 +121,7 @@ class ComplexTypes {
 //  9 |   g (int, (float, char, bool), string[]) | tuple_inside_tuple[]
 // 10 |   h (((int | string)[]) | map<bool[][], char[]>)
 //    | 
-// error: Error validating: Maps may only have strings as keys
+// error: Error validating: Maps may only have strings, enums or literal strings as keys
 //   -->  class/secure_types.baml:10
 //    | 
 //  9 |   g (int, (float, char, bool), string[]) | tuple_inside_tuple[]
@@ -181,13 +181,13 @@ class ComplexTypes {
 // 12 |   j ((char, int[][], (bool | string[][])) | double[][][][], (float, int)[])
 // 13 |   k map<string[], (int | long[])> | map<float[][], double[][]>
 //    | 
-// error: Error validating: Maps may only have strings as keys
+// error: Error validating: Maps may only have strings, enums or literal strings as keys
 //   -->  class/secure_types.baml:13
 //    | 
 // 12 |   j ((char, int[][], (bool | string[][])) | double[][][][], (float, int)[])
 // 13 |   k map<string[], (int | long[])> | map<float[][], double[][]>
 //    | 
-// error: Error validating: Maps may only have strings as keys
+// error: Error validating: Maps may only have strings, enums or literal strings as keys
 //   -->  class/secure_types.baml:13
 //    | 
 // 12 |   j ((char, int[][], (bool | string[][])) | double[][][][], (float, int)[])
@@ -247,13 +247,13 @@ class ComplexTypes {
 // 15 |   m (tuple_1, tuple_2 | tuple_3, (tuple_4, tuple_5))[]
 // 16 |   n map<complex_key_type[], map<another_key, (int | string[])>>
 //    | 
-// error: Error validating: Maps may only have strings as keys
+// error: Error validating: Maps may only have strings, enums or literal strings as keys
 //   -->  class/secure_types.baml:16
 //    | 
 // 15 |   m (tuple_1, tuple_2 | tuple_3, (tuple_4, tuple_5))[]
 // 16 |   n map<complex_key_type[], map<another_key, (int | string[])>>
 //    | 
-// error: Error validating: Maps may only have strings as keys
+// error: Error validating: Maps may only have strings, enums or literal strings as keys
 //   -->  class/secure_types.baml:16
 //    | 
 // 15 |   m (tuple_1, tuple_2 | tuple_3, (tuple_4, tuple_5))[]
