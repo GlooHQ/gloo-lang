@@ -319,11 +319,27 @@ A collection of elements of the same type.
 
 ### Map
 
-A mapping of strings to elements of another type.
+A mapping of strings or enums to elements of another type.
 
 **Syntax**: `map<string, ValueType>`
 
 **Example**: `map<string, string>`
+
+Enums and literal strings can also be used as keys.
+
+```baml
+enum Category {
+  A
+  B
+  C
+}
+
+// Enum key syntax
+map<Category, string>
+
+// Literal strings syntax
+map<"A" | "B" | "C", string>
+```
 
 {/* <Info>
   For TS users: `map<string, ValueType>` will generate a 
