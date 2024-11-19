@@ -469,6 +469,38 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        prefix: String,suffix: String,language: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(String)
+    }
+    def Completion(
+        *varargs,
+        prefix:,suffix:,language:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("Completion may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "Completion",
+        {
+          prefix: prefix,suffix: suffix,language: language,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(T.any(Baml::Types::BookOrder, Baml::Types::FlightConfirmation, Baml::Types::GroceryReceipt))
@@ -4257,6 +4289,41 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[T.nilable(Baml::Types::Category), T.any(Baml::Types::Category, String)].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        prefix: String,suffix: String,language: String,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[String])
+    }
+    def Completion(
+        *varargs,
+        prefix:,suffix:,language:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("Completion may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "Completion",
+        {
+          prefix: prefix,suffix: suffix,language: language,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(String), String].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
