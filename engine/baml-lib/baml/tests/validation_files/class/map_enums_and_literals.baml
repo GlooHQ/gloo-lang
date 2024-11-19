@@ -19,7 +19,7 @@ function InOutEnumKey(i1: map<MapKey, string>, i2: map<MapKey, string>) -> map<M
   "#
 }
 
-function InOutLiteralKey(
+function InOutLiteralStringUnionMapKey(
   i1: map<"one" | "two" | ("three" | "four"), string>, 
   i2: map<"one" | "two" | ("three" | "four"), string>
 ) -> map<"one" | "two" | ("three" | "four"), string> {

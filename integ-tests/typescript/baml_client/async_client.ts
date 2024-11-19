@@ -1418,13 +1418,13 @@ export class BamlAsyncClient {
     }
   }
   
-  async InOutLiteralMapKey(
+  async InOutLiteralStringUnionMapKey(
       i1: Partial<Record<"one" | "two" | "three" | "four", string>>,i2: Partial<Record<"one" | "two" | "three" | "four", string>>,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Partial<Record<"one" | "two" | "three" | "four", string>>> {
     try {
       const raw = await this.runtime.callFunction(
-        "InOutLiteralMapKey",
+        "InOutLiteralStringUnionMapKey",
         {
           "i1": i1,"i2": i2
         },
@@ -1433,6 +1433,31 @@ export class BamlAsyncClient {
         __baml_options__?.clientRegistry,
       )
       return raw.parsed() as Partial<Record<"one" | "two" | "three" | "four", string>>
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async InOutSingleLiteralStringMapKey(
+      m: Partial<Record<"key", string>>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<Partial<Record<"key", string>>> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "InOutSingleLiteralStringMapKey",
+        {
+          "m": m
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as Partial<Record<"key", string>>
     } catch (error: any) {
       const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
@@ -4764,13 +4789,13 @@ class BamlStreamClient {
     }
   }
   
-  InOutLiteralMapKey(
+  InOutLiteralStringUnionMapKey(
       i1: Partial<Record<"one" | "two" | "three" | "four", string>>,i2: Partial<Record<"one" | "two" | "three" | "four", string>>,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<RecursivePartialNull<Partial<Record<"one" | "two" | "three" | "four", string>>>, Partial<Record<"one" | "two" | "three" | "four", string>>> {
     try {
       const raw = this.runtime.streamFunction(
-        "InOutLiteralMapKey",
+        "InOutLiteralStringUnionMapKey",
         {
           "i1": i1,"i2": i2
         },
@@ -4783,6 +4808,39 @@ class BamlStreamClient {
         raw,
         (a): a is RecursivePartialNull<Partial<Record<"one" | "two" | "three" | "four", string>>> => a,
         (a): a is Partial<Record<"one" | "two" | "three" | "four", string>> => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  InOutSingleLiteralStringMapKey(
+      m: Partial<Record<"key", string>>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<Partial<Record<"key", string>>>, Partial<Record<"key", string>>> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "InOutSingleLiteralStringMapKey",
+        {
+          "m": m
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<Partial<Record<"key", string>>>, Partial<Record<"key", string>>>(
+        raw,
+        (a): a is RecursivePartialNull<Partial<Record<"key", string>>> => a,
+        (a): a is Partial<Record<"key", string>> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
