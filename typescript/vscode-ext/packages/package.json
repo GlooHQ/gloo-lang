@@ -49,8 +49,8 @@
         },
         "baml.restartTSServerOnSave": {
           "type": "boolean",
-          "default": true,
-          "description": "Restart the TypeScript server on save, to have it read the new generated types."
+          "default": false,
+          "description": "Restart the TypeScript server when generating baml_client code, in case it's not reading the new generated types."
         },
         "baml.fileWatcher": {
           "scope": "window",

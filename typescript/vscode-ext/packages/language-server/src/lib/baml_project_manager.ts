@@ -6,7 +6,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { CompletionList, CompletionItem } from 'vscode-languageserver'
 import { exec } from 'child_process'
 
-import { existsSync, readFileSync } from 'fs'
+import { existsSync, readFileSync, utimes } from 'fs'
 
 import { URI } from 'vscode-uri'
 import { findTopLevelParent, gatherFiles } from '../file/fileUtils'
@@ -417,6 +417,27 @@ class Project {
             await rename(g.output_dir, backupDir)
           }
           await rename(tmpDir, g.output_dir)
+
+          try {
+            // some filewatchers don't trigger unless the file is touched. Creating the new dir alone doesn't work.
+            // if we remove this, TS will still have the old types, and nextjs will not hot-reload.
+            g.files.map((f) => {
+              const fpath = path.join(g.output_dir, f.path_in_output_dir)
+              const currentTime = new Date()
+              const newTime = new Date(currentTime.getTime() + 100)
+                utimes(fpath, newTime, newTime, (err) => {
+                  if (err) {
+                    console.log(`Error setting file times: ${err.message}`)
+                  }
+                })
+            })
+          } catch (e) {
+            if (e instanceof Error) {
+              console.error(`Error setting file times: ${e.message}`)
+            } else {
+              console.error(`Error setting file times:`)
+            }
+          }
           await rm(backupDir, { recursive: true, force: true })
 
           return g

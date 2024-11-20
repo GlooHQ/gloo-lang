@@ -3,7 +3,7 @@ export const bamlConfigSchema = z
   .object({
     cliPath: z.optional(z.string().nullable()).default(null),
     generateCodeOnSave: z.enum(['never', 'always']).default('always'),
-    restartTSServerOnSave: z.boolean().default(true),
+    restartTSServerOnSave: z.boolean().default(false),
     envCommand: z.string().default('env'),
     fileWatcher: z.boolean().default(false),
     trace: z.object({
