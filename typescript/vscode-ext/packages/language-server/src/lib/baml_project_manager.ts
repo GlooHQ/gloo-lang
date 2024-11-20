@@ -425,11 +425,11 @@ class Project {
               const fpath = path.join(g.output_dir, f.path_in_output_dir)
               const currentTime = new Date()
               const newTime = new Date(currentTime.getTime() + 100)
-                utimes(fpath, newTime, newTime, (err) => {
-                  if (err) {
-                    console.log(`Error setting file times: ${err.message}`)
-                  }
-                })
+              utimes(fpath, newTime, newTime, (err) => {
+                if (err) {
+                  console.log(`Error setting file times: ${err.message}`)
+                }
+              })
             })
           } catch (e) {
             if (e instanceof Error) {
