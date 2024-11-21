@@ -9,7 +9,7 @@ pub type ChatCompletionResponseDelta = ChatCompletionGeneric<ChatCompletionChoic
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct ChatCompletionGeneric<C> {
     /// A unique identifier for the chat completion.
-    pub id: String,
+    pub id: Option<String>,
     /// A list of chat completion choices. Can be more than one if `n` is greater than 1.s
     pub choices: Vec<C>,
     /// The Unix timestamp (in seconds) of when the chat completion was created.
