@@ -346,7 +346,7 @@ impl DatamodelError {
     }
 
     pub fn new_field_validation_error(
-        message: &str,
+        message: String,
         container_type: &str,
         container_name: &str,
         field: &str,
