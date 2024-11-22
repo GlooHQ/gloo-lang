@@ -1232,7 +1232,7 @@ impl WasmRuntime {
             if span.file_path.as_str().ends_with(file_name)
                 && ((span.start + 1)..=(span.end + 1)).contains(&cursor_idx)
             {
-                if let Some(parent_function) =
+                if let Some(_parent_function) =
                     tc.parent_functions.iter().find(|f| f.name == selected_func)
                 {
                     return functions.into_iter().find(|f| f.name == selected_func);
@@ -1251,7 +1251,7 @@ impl WasmRuntime {
             if span.file_path.as_str().ends_with(file_name)
                 && ((span.start + 1)..=(span.end + 1)).contains(&cursor_idx)
             {
-                if let Some(parent_function) =
+                if let Some(_parent_function) =
                     tc.parent_functions.iter().find(|f| f.name == selected_func)
                 {
                     return functions.into_iter().find(|f| f.name == selected_func);
@@ -1441,7 +1441,7 @@ fn js_fn_to_baml_src_reader(get_baml_src_cb: js_sys::Function) -> BamlSrcReader 
 }
 
 #[wasm_bindgen]
-struct WasmCallContext {
+pub struct WasmCallContext {
     /// Index of the orchestration graph node to use for the call
     /// Defaults to 0 when unset
     node_index: Option<usize>,

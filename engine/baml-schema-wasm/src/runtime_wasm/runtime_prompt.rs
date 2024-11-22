@@ -7,15 +7,12 @@ use baml_runtime::{
     },
     ChatMessagePart, RenderedPrompt,
 };
-use serde::Serialize;
 use serde_json::json;
 
 use crate::runtime_wasm::ToJsValue;
-use baml_types::{BamlMedia, BamlMediaContent, BamlMediaType, MediaBase64};
+use baml_types::{BamlMediaContent, BamlMediaType, MediaBase64};
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
-
-use super::WasmFunction;
 
 #[wasm_bindgen(getter_with_clone)]
 pub struct WasmScope {

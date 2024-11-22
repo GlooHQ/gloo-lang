@@ -1,10 +1,4 @@
-#[cfg(all(test, feature = "no_wasm"))]
-mod tests;
-
-// #[cfg(all(feature = "wasm", feature = "no_wasm"))]
-// compile_error!(
-//     "The features 'wasm' and 'no_wasm' are mutually exclusive. You can only use one at a time."
-// );
+// mod tests;
 
 #[cfg(feature = "internal")]
 pub mod internal;
@@ -15,7 +9,6 @@ pub(crate) mod internal;
 pub mod cli;
 pub mod client_registry;
 pub mod errors;
-mod macros;
 pub mod request;
 mod runtime;
 pub mod runtime_interface;
