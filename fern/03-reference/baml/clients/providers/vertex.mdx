@@ -273,8 +273,19 @@ client<llm> MyClient {
 
 For all other options, see the [official Vertex AI documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal).
 
+## Publishers Other Than Google
 
+If you are using models from publishers other than Google, such as Llama from
+Meta, use your project endpoint as the `base_url` in BAML:
 
-
-
+```baml
+client<llm> VertexLlama {
+  provider vertex-ai
+  options {  
+    base_url "https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/endpoints/"
+    project_id my-project-id
+    location us-central1
+  }
+}
+```
 
