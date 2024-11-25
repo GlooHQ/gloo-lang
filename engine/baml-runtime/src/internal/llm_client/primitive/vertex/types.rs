@@ -232,7 +232,7 @@ pub enum HarmSeverity {
 #[serde(rename_all = "camelCase")]
 pub struct Candidate {
     pub index: Option<i32>,
-    pub content: Content,
+    pub content: Option<Content>,
     pub finish_reason: Option<FinishReason>,
     pub safety_ratings: Option<Vec<SafetyRating>>,
     pub citation_metadata: Option<CitationMetadata>,

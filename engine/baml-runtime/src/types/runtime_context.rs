@@ -1,7 +1,7 @@
 use anyhow::Result;
-use baml_types::BamlValue;
+use baml_types::{BamlValue, EvaluationContext, UnresolvedValue};
 use indexmap::IndexMap;
-use internal_baml_core::ir::{repr::Expression, FieldType};
+use internal_baml_core::ir::FieldType;
 use serde;
 use serde_json;
 use std::{collections::HashMap, sync::Arc};
@@ -61,20 +61,21 @@ pub struct RuntimeContext {
 }
 
 impl RuntimeContext {
+    pub fn eval_ctx<'a>(&'a self, allow_missing: bool) -> EvaluationContext<'a> {
+        EvaluationContext::new(&self.env, allow_missing)
+    }
+
     pub fn resolve_expression<T: serde::de::DeserializeOwned>(
         &self,
-        expr: &Expression,
+        expr: &UnresolvedValue<()>,
+        // If true, will return an error if any environment variables are not set
+        // otherwise, will return a value with the missing environment variables replaced with the string "${key}"
+        strict: bool,
     ) -> Result<T> {
-        match super::expression_helper::to_value(self, expr) {
-            Ok(v) => serde_json::from_value(v).map_err(|e| e.into()),
-            Err(e) => Err(e),
+        let ctx = EvaluationContext::new(&self.env, strict);
+        match expr.resolve_serde::<T>(&ctx) {
+            Ok(v) => Ok(v),
+            Err(e) => anyhow::bail!("Failed to resolve expression {:?} with error: {:?}", expr, e),
         }
-        .map_err(|e| {
-            anyhow::anyhow!(
-                "Failed to resolve expression {:?} with error: {:?}",
-                expr,
-                e
-            )
-        })
     }
 }

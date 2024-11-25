@@ -1,21 +1,22 @@
 use std::collections::HashSet;
 
 use anyhow::{anyhow, Result};
-use baml_types::{Constraint, ConstraintLevel, FieldType};
+use baml_types::{Constraint, ConstraintLevel, FieldType, StringOr, UnresolvedValue};
 use either::Either;
 use indexmap::{IndexMap, IndexSet};
 use internal_baml_parser_database::{
     walkers::{
-        ClassWalker, ClientSpec as AstClientSpec, ClientWalker, ConfigurationWalker,
+        ClassWalker, ClientWalker, ConfigurationWalker,
         EnumValueWalker, EnumWalker, FieldWalker, FunctionWalker, TemplateStringWalker,
         Walker as AstWalker,
     },
-    Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy,
+    Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy
 };
 use internal_baml_schema_ast::ast::{SubType, ValExpId};
 
 use baml_types::JinjaExpression;
 use internal_baml_schema_ast::ast::{self, FieldArity, WithName, WithSpan};
+use internal_llm_client::{ClientProvider, ClientSpec, UnresolvedClientProperty};
 use serde::Serialize;
 
 use crate::Configuration;
@@ -24,7 +25,7 @@ use crate::Configuration;
 /// It is a representation of the BAML AST that is easier to work with than the
 /// raw BAML AST, and should include all information necessary to generate
 /// code in any target language.
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct IntermediateRepr {
     enums: Vec<Node<Enum>>,
     classes: Vec<Node<Class>>,
@@ -35,7 +36,6 @@ pub struct IntermediateRepr {
     retry_policies: Vec<Node<RetryPolicy>>,
     template_strings: Vec<Node<TemplateString>>,
 
-    #[serde(skip)]
     configuration: Configuration,
 }
 
@@ -223,7 +223,7 @@ impl IntermediateRepr {
 //   [x] rename lockfile/mod.rs to ir/mod.rs
 //   [x] wire Result<> type through, need this to be more sane
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug)]
 pub struct NodeAttributes {
     /// Map of attributes on the corresponding IR node.
     ///
@@ -231,18 +231,16 @@ pub struct NodeAttributes {
     ///
     ///   - @skip becomes ("skip", bool)
     ///   - @alias(...) becomes ("alias", ...)
-    #[serde(with = "indexmap::map::serde_seq")]
-    meta: IndexMap<String, Expression>,
+    meta: IndexMap<String, UnresolvedValue<()>>,
 
     pub constraints: Vec<Constraint>,
 
     // Spans
-    #[serde(skip)]
     pub span: Option<ast::Span>,
 }
 
 impl NodeAttributes {
-    pub fn get(&self, key: &str) -> Option<&Expression> {
+    pub fn get(&self, key: &str) -> Option<&UnresolvedValue<()>> {
         self.meta.get(key)
     }
 }
@@ -260,7 +258,7 @@ impl Default for NodeAttributes {
 fn to_ir_attributes(
     db: &ParserDatabase,
     maybe_ast_attributes: Option<&Attributes>,
-) -> (IndexMap<String, Expression>, Vec<Constraint>) {
+) -> (IndexMap<String, UnresolvedValue<()>>, Vec<Constraint>) {
     let null_result = (IndexMap::new(), Vec::new());
     maybe_ast_attributes.map_or(null_result, |attributes| {
         let Attributes {
@@ -270,35 +268,25 @@ fn to_ir_attributes(
             skip,
             constraints,
         } = attributes;
-        let description = description.as_ref().and_then(|d| {
-            let name = "description".to_string();
-            match d {
-                ast::Expression::StringValue(s, _) => Some((name, Expression::String(s.clone()))),
-                ast::Expression::RawStringValue(s) => {
-                    Some((name, Expression::RawString(s.value().to_string())))
-                }
-                ast::Expression::JinjaExpressionValue(j, _) => {
-                    Some((name, Expression::JinjaExpression(j.clone())))
-                }
-                _ => {
-                    eprintln!("Warning, encountered an unexpected description attribute");
-                    None
-                }
-            }
-        });
+
+        let description = description
+            .as_ref()
+            .map(|d| ("description".to_string(), d.without_meta()));
+
         let alias = alias
             .as_ref()
-            .map(|v| ("alias".to_string(), Expression::String(db[*v].to_string())));
+            .map(|v| ("alias".to_string(), v.without_meta()));
+
         let dynamic_type = dynamic_type.as_ref().and_then(|v| {
             if *v {
-                Some(("dynamic_type".to_string(), Expression::Bool(true)))
+                Some(("dynamic_type".to_string(), UnresolvedValue::Bool(true, ())))
             } else {
                 None
             }
         });
         let skip = skip.as_ref().and_then(|v| {
             if *v {
-                Some(("skip".to_string(), Expression::Bool(true)))
+                Some(("skip".to_string(), UnresolvedValue::Bool(true, ())))
             } else {
                 None
             }
@@ -313,7 +301,7 @@ fn to_ir_attributes(
 }
 
 /// Nodes allow attaching metadata to a given IR entity: attributes, source location, etc
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct Node<T> {
     pub attributes: NodeAttributes,
     pub elem: T,
@@ -493,108 +481,33 @@ impl WithRepr<FieldType> for ast::FieldType {
     }
 }
 
-#[derive(serde::Serialize, Debug)]
-pub enum Identifier {
-    /// Starts with env.*
-    ENV(String),
-    /// The path to a Local Identifer + the local identifer. Separated by '.'
-    #[allow(dead_code)]
-    Ref(Vec<String>),
-    /// A string without spaces or '.' Always starts with a letter. May contain numbers
-    Local(String),
-    /// Special types (always lowercase).
-    Primitive(baml_types::TypeValue),
-}
+// #[derive(serde::Serialize, Debug)]
+// pub enum Identifier {
+//     /// Starts with env.*
+//     ENV(String),
+//     /// The path to a Local Identifer + the local identifer. Separated by '.'
+//     #[allow(dead_code)]
+//     Ref(Vec<String>),
+//     /// A string without spaces or '.' Always starts with a letter. May contain numbers
+//     Local(String),
+//     /// Special types (always lowercase).
+//     Primitive(baml_types::TypeValue),
+// }
 
-impl Identifier {
-    pub fn name(&self) -> String {
-        match self {
-            Identifier::ENV(k) => k.clone(),
-            Identifier::Ref(r) => r.join("."),
-            Identifier::Local(l) => l.clone(),
-            Identifier::Primitive(p) => p.to_string(),
-        }
-    }
-}
-
-#[derive(serde::Serialize, Debug)]
-pub enum Expression {
-    Identifier(Identifier),
-    Bool(bool),
-    Numeric(String),
-    String(String),
-    RawString(String),
-    List(Vec<Expression>),
-    Map(Vec<(Expression, Expression)>),
-    JinjaExpression(JinjaExpression),
-}
-
-impl Expression {
-    pub fn required_env_vars<'a>(&'a self) -> Vec<String> {
-        match self {
-            Expression::Identifier(Identifier::ENV(k)) => vec![k.to_string()],
-            Expression::List(l) => l.iter().flat_map(Expression::required_env_vars).collect(),
-            Expression::Map(m) => m
-                .iter()
-                .flat_map(|(k, v)| {
-                    let mut keys = k.required_env_vars();
-                    keys.extend(v.required_env_vars());
-                    keys
-                })
-                .collect(),
-            _ => vec![],
-        }
-    }
-}
-
-impl WithRepr<Expression> for ast::Expression {
-    fn repr(&self, db: &ParserDatabase) -> Result<Expression> {
-        Ok(match self {
-            ast::Expression::BoolValue(val, _) => Expression::Bool(val.clone()),
-            ast::Expression::NumericValue(val, _) => Expression::Numeric(val.clone()),
-            ast::Expression::StringValue(val, _) => Expression::String(val.clone()),
-            ast::Expression::RawStringValue(val) => Expression::RawString(val.value().to_string()),
-            ast::Expression::JinjaExpressionValue(val, _) => {
-                Expression::JinjaExpression(val.clone())
-            }
-            ast::Expression::Identifier(idn) => match idn {
-                ast::Identifier::ENV(k, _) => {
-                    Ok(Expression::Identifier(Identifier::ENV(k.clone())))
-                }
-                ast::Identifier::String(s, _) => Ok(Expression::String(s.clone())),
-                ast::Identifier::Local(l, _) => {
-                    Ok(Expression::Identifier(Identifier::Local(l.clone())))
-                }
-                ast::Identifier::Ref(r, _) => {
-                    // NOTE(sam): this feels very very wrong, but per vbv, we don't really use refs
-                    // right now, so this should be safe. this is done to ensure that
-                    // "options { model gpt-3.5-turbo }" is represented correctly in the resulting IR,
-                    // specifically that "gpt-3.5-turbo" is actually modelled as Expression::String
-                    //
-                    // this does not impact the handling of "options { api_key env.OPENAI_API_KEY }"
-                    // because that's modelled as Identifier::ENV, not Identifier::Ref
-                    Ok(Expression::String(r.full_name.clone()))
-                }
-
-                ast::Identifier::Invalid(_, _) => {
-                    Err(anyhow!("Cannot represent an invalid parser-AST identifier"))
-                }
-            }?,
-            ast::Expression::Array(arr, _) => {
-                Expression::List(arr.iter().map(|e| e.repr(db)).collect::<Result<Vec<_>>>()?)
-            }
-            ast::Expression::Map(arr, _) => Expression::Map(
-                arr.iter()
-                    .map(|(k, v)| Ok((k.repr(db)?, v.repr(db)?)))
-                    .collect::<Result<Vec<_>>>()?,
-            ),
-        })
-    }
-}
+// impl Identifier {
+//     pub fn name(&self) -> String {
+//         match self {
+//             Identifier::ENV(k) => k.clone(),
+//             Identifier::Ref(r) => r.join("."),
+//             Identifier::Local(l) => l.clone(),
+//             Identifier::Primitive(p) => p.to_string(),
+//         }
+//     }
+// }
 
 type TemplateStringId = String;
 
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct TemplateString {
     pub name: TemplateStringId,
     pub params: Vec<Field>,
@@ -637,7 +550,7 @@ type EnumId = String;
 #[derive(serde::Serialize, Debug)]
 pub struct EnumValue(pub String);
 
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct Enum {
     pub name: EnumId,
     pub values: Vec<(Node<EnumValue>, Option<Docstring>)>,
@@ -692,7 +605,7 @@ impl WithRepr<Enum> for EnumWalker<'_> {
 #[derive(serde::Serialize, Debug)]
 pub struct Docstring(pub String);
 
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct Field {
     pub name: String,
     pub r#type: Node<FieldType>,
@@ -734,7 +647,7 @@ impl WithRepr<Field> for FieldWalker<'_> {
 type ClassId = String;
 
 /// A BAML Class.
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct Class {
     /// User defined class name.
     pub name: ClassId,
@@ -794,7 +707,7 @@ impl Class {
 pub enum OracleType {
     LLM,
 }
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct AliasOverride {
     pub name: String,
     // This is used to generate deserializers with aliased keys (see .overload in python deserializer)
@@ -802,15 +715,15 @@ pub struct AliasOverride {
 }
 
 // TODO, also add skips
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct AliasedKey {
     pub key: String,
-    pub alias: Expression,
+    pub alias: UnresolvedValue<()>,
 }
 
 type ImplementationId = String;
 
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct Implementation {
     r#type: OracleType,
     pub name: ImplementationId,
@@ -818,10 +731,8 @@ pub struct Implementation {
 
     pub prompt: Prompt,
 
-    #[serde(with = "indexmap::map::serde_seq")]
     pub input_replacers: IndexMap<String, String>,
 
-    #[serde(with = "indexmap::map::serde_seq")]
     pub output_replacers: IndexMap<String, String>,
 
     pub client: ClientId,
@@ -867,7 +778,7 @@ impl Function {
     }
 }
 
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct Function {
     pub name: FunctionId,
     pub inputs: Vec<(String, FieldType)>,
@@ -877,66 +788,23 @@ pub struct Function {
     pub default_config: String,
 }
 
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct FunctionConfig {
     pub name: String,
     pub prompt_template: String,
-    #[serde(skip)]
     pub prompt_span: ast::Span,
     pub client: ClientSpec,
 }
 
-// NB(sam): we used to use this to bridge the wasm layer, but
-// I don't think we do anymore.
-#[derive(serde::Serialize, Clone, Debug)]
-pub enum ClientSpec {
-    Named(String),
-    /// Shorthand for "<provider>/<model>"
-    Shorthand(String, String),
-}
 
-impl ClientSpec {
-    pub fn as_str(&self) -> String {
-        match self {
-            ClientSpec::Named(n) => n.clone(),
-            ClientSpec::Shorthand(provider, model) => format!("{provider}/{model}"),
-        }
-    }
-
-    pub fn new_from_id(arg: String) -> Self {
-        if arg.contains("/") {
-            let (provider, model) = arg.split_once("/").unwrap();
-            ClientSpec::Shorthand(provider.to_string(), model.to_string())
-        } else {
-            ClientSpec::Named(arg)
-        }
-    }
-
-    pub fn required_env_vars(&self) -> HashSet<String> {
-        match self {
-            ClientSpec::Named(n) => HashSet::new(),
-            ClientSpec::Shorthand(_, _) => HashSet::new(),
-        }
-    }
-}
-
-impl From<AstClientSpec> for ClientSpec {
-    fn from(spec: AstClientSpec) -> Self {
-        match spec {
-            AstClientSpec::Named(n) => ClientSpec::Named(n.to_string()),
-            AstClientSpec::Shorthand(provider, model) => ClientSpec::Shorthand(provider, model),
-        }
-    }
-}
-
-impl std::fmt::Display for ClientSpec {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.as_str())
-    }
-}
+// impl std::fmt::Display for ClientSpec {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "{}", self.as_str())
+//     }
+// }
 
 fn process_field(
-    overrides: &IndexMap<(String, String), IndexMap<String, Expression>>, // Adjust the type according to your actual field type
+    overrides: &IndexMap<(String, String), IndexMap<String, UnresolvedValue<()>>>, // Adjust the type according to your actual field type
     original_name: &str,
     function_name: &str,
     impl_name: &str,
@@ -944,31 +812,31 @@ fn process_field(
     // This feeds into deserializer.overload; the registerEnumDeserializer counterpart is in generate_ts_client.rs
     match overrides.get(&((*function_name).to_string(), (*impl_name).to_string())) {
         Some(overrides) => {
-            if let Some(Expression::String(alias)) = overrides.get("alias") {
-                if let Some(Expression::String(description)) = overrides.get("description") {
+            if let Some(UnresolvedValue::String(alias, ..)) = overrides.get("alias") {
+                if let Some(UnresolvedValue::String(description, ..)) = overrides.get("description") {
                     // "alias" and "alias: description"
                     vec![
                         AliasedKey {
                             key: original_name.to_string(),
-                            alias: Expression::String(alias.clone()),
+                            alias: UnresolvedValue::String(alias.clone(), ()),
                         },
-                        AliasedKey {
-                            key: original_name.to_string(),
-                            alias: Expression::String(format!("{}: {}", alias, description)),
-                        },
+                        // AliasedKey {
+                        //     key: original_name.to_string(),
+                        //     alias: UnresolvedValue::String(format!("{}: {}", alias, description)),
+                        // },
                     ]
                 } else {
                     // "alias"
                     vec![AliasedKey {
                         key: original_name.to_string(),
-                        alias: Expression::String(alias.clone()),
+                        alias: UnresolvedValue::String(alias.clone(), ()),
                     }]
                 }
-            } else if let Some(Expression::String(description)) = overrides.get("description") {
+            } else if let Some(UnresolvedValue::String(description, ..)) = overrides.get("description") {
                 // "description"
                 vec![AliasedKey {
                     key: original_name.to_string(),
-                    alias: Expression::String(description.clone()),
+                    alias: UnresolvedValue::String(description.clone(), ()),
                 }]
             } else {
                 // no overrides
@@ -1028,12 +896,12 @@ impl WithRepr<Function> for FunctionWalker<'_> {
 
 type ClientId = String;
 
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct Client {
     pub name: ClientId,
-    pub provider: String,
+    pub provider: ClientProvider,
     pub retry_policy_id: Option<String>,
-    pub options: Vec<(String, Expression)>,
+    pub options: UnresolvedClientProperty<()>,
 }
 
 impl WithRepr<Client> for ClientWalker<'_> {
@@ -1052,9 +920,7 @@ impl WithRepr<Client> for ClientWalker<'_> {
             options: self
                 .properties()
                 .options
-                .iter()
-                .map(|(k, v)| Ok((k.clone(), v.repr(db)?)))
-                .collect::<Result<Vec<_>>>()?,
+                .without_meta(),
             retry_policy_id: self
                 .properties()
                 .retry_policy
@@ -1067,14 +933,14 @@ impl WithRepr<Client> for ClientWalker<'_> {
 #[derive(serde::Serialize, Debug)]
 pub struct RetryPolicyId(pub String);
 
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct RetryPolicy {
     pub name: RetryPolicyId,
     pub max_retries: u32,
     pub strategy: RetryPolicyStrategy,
     // NB: the parser DB has a notion of "empty options" vs "no options"; we collapse
     // those here into an empty vec
-    options: Vec<(String, Expression)>,
+    options: Vec<(String, UnresolvedValue<()>)>,
 }
 
 impl WithRepr<RetryPolicy> for ConfigurationWalker<'_> {
@@ -1092,10 +958,7 @@ impl WithRepr<RetryPolicy> for ConfigurationWalker<'_> {
             max_retries: self.retry_policy().max_retries,
             strategy: self.retry_policy().strategy,
             options: match &self.retry_policy().options {
-                Some(o) => o
-                    .iter()
-                    .map(|((k, _), v)| Ok((k.clone(), v.repr(db)?)))
-                    .collect::<Result<Vec<_>>>()?,
+                Some(o) => o.iter().map(|(k, (_, v))| Ok((k.clone(), v.without_meta()))).collect::<Result<Vec<_>>>()?,
                 None => vec![],
             },
         })
@@ -1111,11 +974,11 @@ impl TestCaseFunction {
     }
 }
 
-#[derive(serde::Serialize, Debug)]
+#[derive(Debug)]
 pub struct TestCase {
     pub name: String,
     pub functions: Vec<Node<TestCaseFunction>>,
-    pub args: IndexMap<String, Expression>,
+    pub args: IndexMap<String, UnresolvedValue<()>>,
     pub constraints: Vec<Constraint>,
 }
 
@@ -1170,7 +1033,7 @@ impl WithRepr<TestCase> for ConfigurationWalker<'_> {
                 .test_case()
                 .args
                 .iter()
-                .map(|(k, (_, v))| Ok((k.clone(), v.repr(db)?)))
+                .map(|(k, (_, v))| Ok((k.clone(), v.without_meta())))
                 .collect::<Result<IndexMap<_, _>>>()?,
             functions,
             constraints: <AstWalker<'_, (ValExpId, &str)> as WithRepr<TestCase>>::attributes(

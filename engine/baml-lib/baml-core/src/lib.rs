@@ -5,6 +5,7 @@
 pub use internal_baml_diagnostics;
 pub use internal_baml_parser_database::{self};
 
+
 pub use internal_baml_schema_ast::{self, ast};
 
 use rayon::prelude::*;

@@ -1,9 +1,12 @@
+use std::str::FromStr;
+
 use baml_runtime::client_registry;
 use pyo3::prelude::{pymethods, PyResult};
 use pyo3::{PyObject, Python, ToPyObject};
 
 use crate::errors::BamlInvalidArgumentError;
 use crate::parse_py_type::parse_py_type;
+use client_registry::ClientProvider;
 
 crate::lang_wrapper!(ClientRegistry, client_registry::ClientRegistry);
 
@@ -36,12 +39,14 @@ impl ClientRegistry {
             ));
         };
 
-        let client_property = baml_runtime::client_registry::ClientProperty {
-            name,
-            provider,
-            retry_policy,
-            options: args_map,
+        let provider = match ClientProvider::from_str(&provider) {
+            Ok(provider) => provider,
+            Err(e) => {
+                return Err(BamlInvalidArgumentError::new_err(format!("Invalid provider: {:?}", e)));
+            }
         };
+
+        let client_property = client_registry::ClientProperty::new(name, provider, retry_policy, args_map);
 
         self.inner.add_client(client_property);
         Ok(())

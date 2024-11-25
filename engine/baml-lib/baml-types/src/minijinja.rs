@@ -4,7 +4,7 @@ use crate::{BamlMedia, BamlValue};
 /// A wrapper around a jinja expression. The inner `String` should not contain
 /// the interpolation brackets `{{ }}`; it should be a bare expression like
 /// `"this|length < something"`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, Hash, Eq)]
 pub struct JinjaExpression(pub String);
 
 

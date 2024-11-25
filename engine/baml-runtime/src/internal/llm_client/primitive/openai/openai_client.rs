@@ -2,16 +2,18 @@ use std::collections::HashMap;
 
 use crate::internal::llm_client::ResolveMediaUrls;
 use anyhow::Result;
-use baml_types::{BamlMedia, BamlMediaContent, BamlMediaType};
+use baml_types::{BamlMap, BamlMedia, BamlMediaContent, BamlMediaType};
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{ChatMessagePart, RenderContext_Client, RenderedChatMessage};
+use internal_llm_client::openai::ResolvedOpenAI;
+use internal_llm_client::AllowedRoleMetadata;
 use serde_json::json;
 
 use crate::internal::llm_client::{
     ErrorCode, LLMCompleteResponse, LLMCompleteResponseMetadata, LLMErrorResponse,
 };
 
-use super::properties::{self, PostRequestProperties};
+use super::properties;
 use super::types::{ChatCompletionResponse, ChatCompletionResponseDelta, FinishReason};
 
 use crate::client_registry::ClientProperty;
@@ -39,7 +41,7 @@ pub struct OpenAIClient {
     retry_policy: Option<String>,
     context: RenderContext_Client,
     features: ModelFeatures,
-    properties: PostRequestProperties,
+    properties: ResolvedOpenAI,
     // clients
     client: reqwest::Client,
 }
@@ -51,10 +53,7 @@ impl WithRetryPolicy for OpenAIClient {
 }
 
 impl WithClientProperties for OpenAIClient {
-    fn client_properties(&self) -> &HashMap<String, serde_json::Value> {
-        &self.properties.properties
-    }
-    fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
+    fn allowed_metadata(&self) -> &AllowedRoleMetadata {
         &self.properties.allowed_metadata
     }
     fn supports_streaming(&self) -> bool {
@@ -300,7 +299,7 @@ impl RequestBuilder for OpenAIClient {
         Ok(req.json(&body))
     }
 
-    fn request_options(&self) -> &HashMap<String, serde_json::Value> {
+    fn request_options(&self) -> &BamlMap<String, serde_json::Value> {
         &self.properties.properties
     }
 }
@@ -427,7 +426,7 @@ macro_rules! make_openai_client {
             provider: $provider.into(),
             context: RenderContext_Client {
                 name: $client.name.clone(),
-                provider: $client.provider.clone(),
+                provider: $client.provider.to_string(),
                 default_role: $properties.default_role.clone(),
             },
             features: ModelFeatures {
@@ -448,7 +447,7 @@ macro_rules! make_openai_client {
             provider: $provider.into(),
             context: RenderContext_Client {
                 name: $client.name().into(),
-                provider: $client.elem().provider.clone(),
+                provider: $client.elem().provider.to_string(),
                 default_role: $properties.default_role.clone(),
             },
             features: ModelFeatures {
@@ -471,31 +470,27 @@ macro_rules! make_openai_client {
 
 impl OpenAIClient {
     pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<OpenAIClient> {
-        let properties = super::super::resolve_properties_walker(client, ctx)?;
-        let properties = properties::openai::resolve_properties(properties, ctx)?;
+        let properties = properties::resolve_properties(&client.elem().provider, &client.options(), ctx)?;
         make_openai_client!(client, properties, "openai")
     }
 
     pub fn new_generic(client: &ClientWalker, ctx: &RuntimeContext) -> Result<OpenAIClient> {
-        let properties = super::super::resolve_properties_walker(client, ctx)?;
-        let properties = properties::generic::resolve_properties(properties, ctx)?;
+        let properties = properties::resolve_properties(&client.elem().provider, &client.options(), ctx)?;
         make_openai_client!(client, properties, "openai-generic")
     }
 
     pub fn new_ollama(client: &ClientWalker, ctx: &RuntimeContext) -> Result<OpenAIClient> {
-        let properties = super::super::resolve_properties_walker(client, ctx)?;
-        let properties = properties::ollama::resolve_properties(properties, ctx)?;
+        let properties = properties::resolve_properties(&client.elem().provider, &client.options(), ctx)?;
         make_openai_client!(client, properties, "ollama")
     }
 
     pub fn new_azure(client: &ClientWalker, ctx: &RuntimeContext) -> Result<OpenAIClient> {
-        let properties = super::super::resolve_properties_walker(client, ctx)?;
-        let properties = properties::azure::resolve_properties(properties, ctx)?;
+        let properties = properties::resolve_properties(&client.elem().provider, &client.options(), ctx)?;
         make_openai_client!(client, properties, "azure")
     }
 
     pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<OpenAIClient> {
-        let properties = properties::openai::resolve_properties(client.property_handler()?, &ctx)?;
+        let properties = properties::resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
         make_openai_client!(client, properties, "openai", dynamic)
     }
 
@@ -503,7 +498,7 @@ impl OpenAIClient {
         client: &ClientProperty,
         ctx: &RuntimeContext,
     ) -> Result<OpenAIClient> {
-        let properties = properties::generic::resolve_properties(client.property_handler()?, ctx)?;
+        let properties = properties::resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
         make_openai_client!(client, properties, "openai-generic", dynamic)
     }
 
@@ -511,7 +506,7 @@ impl OpenAIClient {
         client: &ClientProperty,
         ctx: &RuntimeContext,
     ) -> Result<OpenAIClient> {
-        let properties = properties::ollama::resolve_properties(client.property_handler()?, ctx)?;
+        let properties = properties::resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
         make_openai_client!(client, properties, "ollama", dynamic)
     }
 
@@ -519,7 +514,7 @@ impl OpenAIClient {
         client: &ClientProperty,
         ctx: &RuntimeContext,
     ) -> Result<OpenAIClient> {
-        let properties = properties::azure::resolve_properties(client.property_handler()?, ctx)?;
+        let properties = properties::resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
         make_openai_client!(client, properties, "azure", dynamic)
     }
 }

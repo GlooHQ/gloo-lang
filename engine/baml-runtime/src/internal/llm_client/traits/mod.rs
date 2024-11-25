@@ -2,6 +2,7 @@ use std::{collections::HashMap, path::PathBuf, pin::Pin};
 
 use anyhow::{Context, Result};
 use aws_smithy_types::byte_stream::error::Error;
+use internal_llm_client::AllowedRoleMetadata;
 use serde_json::{json, Map};
 
 mod chat;
@@ -33,8 +34,7 @@ pub trait WithRetryPolicy {
 }
 
 pub trait WithClientProperties {
-    fn client_properties(&self) -> &HashMap<String, serde_json::Value>;
-    fn allowed_metadata(&self) -> &super::AllowedMetadata;
+    fn allowed_metadata(&self) -> &AllowedRoleMetadata;
     fn supports_streaming(&self) -> bool;
 }
 

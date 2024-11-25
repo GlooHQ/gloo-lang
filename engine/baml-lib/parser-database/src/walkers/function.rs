@@ -1,6 +1,7 @@
 use either::Either;
 use internal_baml_diagnostics::DatamodelError;
 use internal_baml_schema_ast::ast::{ArgumentId, Identifier, WithIdentifier, WithSpan};
+use internal_llm_client::ClientSpec;
 
 use crate::{
     ast::{self, WithName},
@@ -120,14 +121,14 @@ impl<'db> FunctionWalker<'db> {
     }
 }
 
-/// Reference to a client
-pub enum ClientSpec {
-    /// References a client by name
-    Named(String),
-
-    /// Defined inline using shorthand "<provider>/<model>" syntax
-    Shorthand(String, String),
-}
+// impl AstClientSpec {
+//     pub fn required_env_vars(&self) -> HashSet<String> {
+//         match self {
+//             ClientSpec::Named(n) => HashSet::new(),
+//             ClientSpec::Shorthand(_, _) => HashSet::new(),
+//         }
+//     }
+// }
 
 impl<'db> FunctionWalker<'db> {
     /// Returns the client spec for the function, if it is well-formed
@@ -139,14 +140,11 @@ impl<'db> FunctionWalker<'db> {
                 self.span().clone(),
             ));
         };
-
-        match client.0.split_once("/") {
-            // TODO: do this in a more robust way
-            // actually validate which clients are and aren't allowed
-            Some((provider, model)) => Ok(ClientSpec::Shorthand(provider.to_string(), model.to_string())),
-            None => match self.db.find_client(client.0.as_str()) {
-                Some(client) => Ok(ClientSpec::Named(client.name().to_string())),
-                None => {
+        match ClientSpec::new_from_id(client.0.as_str()) {
+            Ok(ClientSpec::Named(name)) => {
+                if let Some(client) = self.db.find_client(&name) {
+                    Ok(ClientSpec::Named(name))
+                } else {
                     let clients = self
                         .db
                         .walk_clients()
@@ -157,9 +155,17 @@ impl<'db> FunctionWalker<'db> {
                         &client.0,
                         client.1.clone(),
                         clients.clone(),
+                        false,
                     ))
                 }
-            },
+            }
+            Ok(spec) => Ok(spec),
+            Err(e) => {
+                return Err(DatamodelError::new_validation_error(
+                    &e.to_string(),
+                    client.1.clone(),
+                ));
+            }
         }
     }
 }

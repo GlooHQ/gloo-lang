@@ -65,7 +65,7 @@ function ExtractResume(resume: string, img: image?) -> Resume {
 
 test sam_resume {
     functions [ExtractResume]
-    input {
+    args {
         img {
             url "https://avatars.githubusercontent.com/u/1016595?v=4"
         }
@@ -122,7 +122,7 @@ test sam_resume {
 
 test vaibhav_resume {
     functions [ExtractResume]
-    input {
+    args {
         resume #"
             Vaibhav Gupta
             linkedin/vaigup

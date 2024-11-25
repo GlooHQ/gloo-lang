@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use baml_types::BamlValue;
+use baml_types::{BamlMap, BamlValue};
 use internal_baml_core::ir::{repr::IntermediateRepr, ClientWalker};
+use internal_llm_client::{AllowedRoleMetadata, ClientProvider, OpenAIClientProviderVariant};
 
 use crate::{
     client_registry::ClientProperty, internal::prompt_renderer::PromptRenderer,
@@ -87,10 +88,7 @@ impl WithRetryPolicy for LLMPrimitiveProvider {
 }
 
 impl WithClientProperties for LLMPrimitiveProvider {
-    fn client_properties(&self) -> &std::collections::HashMap<String, serde_json::Value> {
-        match_llm_provider!(self, client_properties)
-    }
-    fn allowed_metadata(&self) -> &super::AllowedMetadata {
+    fn allowed_metadata(&self) -> &AllowedRoleMetadata {
         match_llm_provider!(self, allowed_metadata)
     }
     fn supports_streaming(&self) -> bool {
@@ -102,32 +100,48 @@ impl TryFrom<(&ClientProperty, &RuntimeContext)> for LLMPrimitiveProvider {
     type Error = anyhow::Error;
 
     fn try_from((value, ctx): (&ClientProperty, &RuntimeContext)) -> Result<Self> {
-        match value.provider.as_str() {
-            "openai" => OpenAIClient::dynamic_new(value, ctx).map(Into::into),
-            "openai-generic" => OpenAIClient::dynamic_new_generic(value, ctx).map(Into::into),
-            "azure-openai" => OpenAIClient::dynamic_new_azure(value, ctx).map(Into::into),
-            "ollama" => OpenAIClient::dynamic_new_ollama(value, ctx).map(Into::into),
-            "anthropic" => AnthropicClient::dynamic_new(value, ctx).map(Into::into),
-            "google-ai" => GoogleAIClient::dynamic_new(value, ctx).map(Into::into),
-            "vertex-ai" => VertexClient::dynamic_new(value, ctx).map(Into::into),
-            // dynamic_new is not implemented for aws::AwsClient
-            other => {
-                let options = [
-                    "anthropic",
-                    "azure-openai",
-                    "google-ai",
-                    "openai",
-                    "openai-generic",
-                    "vertex-ai",
-                    "fallback",
-                    "round-robin",
-                ];
-                anyhow::bail!(
-                    "Unsupported provider: {}. Available ones are: {}",
-                    other,
-                    options.join(", ")
-                )
+        match &value.provider {
+            ClientProvider::OpenAI(open_aiclient_provider_variant) => {
+                match open_aiclient_provider_variant {
+                    OpenAIClientProviderVariant::Base => OpenAIClient::dynamic_new(value, ctx).map(Into::into),
+                    OpenAIClientProviderVariant::Ollama => OpenAIClient::dynamic_new_ollama(value, ctx).map(Into::into),
+                    OpenAIClientProviderVariant::Azure => OpenAIClient::dynamic_new_azure(value, ctx).map(Into::into),
+                    OpenAIClientProviderVariant::Generic => OpenAIClient::dynamic_new_generic(value, ctx).map(Into::into),
+                }
+            },
+            ClientProvider::Anthropic => AnthropicClient::dynamic_new(value, ctx).map(Into::into),
+            ClientProvider::AwsBedrock => AwsClient::dynamic_new(value, ctx).map(Into::into),
+            ClientProvider::GoogleAi => GoogleAIClient::dynamic_new(value, ctx).map(Into::into),
+            ClientProvider::Vertex => VertexClient::dynamic_new(value, ctx).map(Into::into),
+            ClientProvider::Strategy(strategy_client_provider) => {
+                unimplemented!("Strategy client providers are not supported yet in LLMPrimitiveProvider")
             }
+            
+            // "openai" => OpenAIClient::dynamic_new(value, ctx).map(Into::into),
+            // "openai-generic" => OpenAIClient::dynamic_new_generic(value, ctx).map(Into::into),
+            // "azure-openai" => OpenAIClient::dynamic_new_azure(value, ctx).map(Into::into),
+            // "ollama" => OpenAIClient::dynamic_new_ollama(value, ctx).map(Into::into),
+            // "anthropic" => AnthropicClient::dynamic_new(value, ctx).map(Into::into),
+            // "google-ai" => GoogleAIClient::dynamic_new(value, ctx).map(Into::into),
+            // "vertex-ai" => VertexClient::dynamic_new(value, ctx).map(Into::into),
+            // // dynamic_new is not implemented for aws::AwsClient
+            // other => {
+            //     let options = [
+            //         "anthropic",
+            //         "azure-openai",
+            //         "google-ai",
+            //         "openai",
+            //         "openai-generic",
+            //         "vertex-ai",
+            //         "fallback",
+            //         "round-robin",
+            //     ];
+            //     anyhow::bail!(
+            //         "Unsupported provider: {}. Available ones are: {}",
+            //         other,
+            //         options.join(", ")
+            //     )
+            // }
         }
     }
 }
@@ -136,36 +150,21 @@ impl TryFrom<(&ClientWalker<'_>, &RuntimeContext)> for LLMPrimitiveProvider {
     type Error = anyhow::Error;
 
     fn try_from((client, ctx): (&ClientWalker, &RuntimeContext)) -> Result<Self> {
-        match client.elem().provider.as_str() {
-            "baml-openai-chat" | "openai" => OpenAIClient::new(client, ctx).map(Into::into),
-            "openai-generic" => OpenAIClient::new_generic(client, ctx).map(Into::into),
-            "baml-azure-chat" | "azure-openai" => {
-                OpenAIClient::new_azure(client, ctx).map(Into::into)
+        match &client.elem().provider {
+            ClientProvider::OpenAI(open_aiclient_provider_variant) => {
+                match open_aiclient_provider_variant {
+                    OpenAIClientProviderVariant::Base => OpenAIClient::new(client, ctx).map(Into::into),
+                    OpenAIClientProviderVariant::Ollama => OpenAIClient::new_ollama(client, ctx).map(Into::into),
+                    OpenAIClientProviderVariant::Azure => OpenAIClient::new_azure(client, ctx).map(Into::into),
+                    OpenAIClientProviderVariant::Generic => OpenAIClient::new_generic(client, ctx).map(Into::into),
+                }
             }
-            "baml-anthropic-chat" | "anthropic" => {
-                AnthropicClient::new(client, ctx).map(Into::into)
-            }
-            "baml-ollama-chat" | "ollama" => OpenAIClient::new_ollama(client, ctx).map(Into::into),
-            "google-ai" => GoogleAIClient::new(client, ctx).map(Into::into),
-            "aws-bedrock" => aws::AwsClient::new(client, ctx).map(Into::into),
-            "vertex-ai" => VertexClient::new(client, ctx).map(Into::into),
-            other => {
-                let options = [
-                    "anthropic",
-                    "aws-bedrock",
-                    "azure-openai",
-                    "google-ai",
-                    "openai",
-                    "openai-generic",
-                    "vertex-ai",
-                    "fallback",
-                    "round-robin",
-                ];
-                anyhow::bail!(
-                    "Unsupported provider: {}. Available ones are: {}",
-                    other,
-                    options.join(", ")
-                )
+            ClientProvider::Anthropic => AnthropicClient::new(client, ctx).map(Into::into),
+            ClientProvider::AwsBedrock => AwsClient::new(client, ctx).map(Into::into),
+            ClientProvider::GoogleAi => GoogleAIClient::new(client, ctx).map(Into::into),
+            ClientProvider::Vertex => VertexClient::new(client, ctx).map(Into::into),
+            ClientProvider::Strategy(strategy_client_provider) => {
+                unimplemented!("Strategy client providers are not supported yet in LLMPrimitiveProvider")
             }
         }
         .into()
@@ -247,9 +246,7 @@ impl LLMPrimitiveProvider {
         &match_llm_provider!(self, context).name
     }
 
-    pub fn request_options(&self) -> &std::collections::HashMap<String, serde_json::Value> {
+    pub fn request_options(&self) -> &BamlMap<String, serde_json::Value> {
         match_llm_provider!(self, request_options)
     }
 }
-
-use super::resolve_properties_walker;

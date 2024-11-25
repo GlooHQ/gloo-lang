@@ -1,10 +1,11 @@
 use baml_types::Constraint;
+use baml_types::UnresolvedValue;
 use internal_baml_diagnostics::{DatamodelError, DatamodelWarning, Span};
 use internal_baml_schema_ast::ast::{
     Attribute, ValExpId, ValueExprBlock, WithIdentifier, WithName, WithSpan,
 };
 use regex::Regex;
-use std::collections::HashSet;
+use std::{collections::HashSet, ops::Deref};
 
 use crate::attributes::constraint::attribute_as_constraint;
 use crate::{coerce, coerce_array, coerce_expression::coerce_map, context::Context};
@@ -72,13 +73,13 @@ pub(crate) fn visit_retry_policy<'db>(
                 }
             }
             ("options", Some(val)) => {
-                match coerce_map(val, &coerce::string_with_span, ctx.diagnostics) {
-                    Some(val) => {
-                        options = Some(
-                            val.iter()
-                                .map(|(k, v)| ((k.0.to_string(), k.1.clone()), (*v).clone()))
-                                .collect::<Vec<_>>(),
-                        );
+                match val.to_unresolved_value(ctx.diagnostics) {
+                    Some(UnresolvedValue::<Span>::Map(kv, _)) => options = Some(kv),
+                    Some(other) => {
+                        ctx.push_error(DatamodelError::new_validation_error(
+                            "`options` must be a map",
+                            other.meta().clone()
+                        ));
                     }
                     None => {}
                 }
@@ -251,38 +252,14 @@ pub(crate) fn visit_test_case<'db>(
                     }
                 }
             }
-            ("input", Some(val)) => {
-                if !val.is_map() {
-                    ctx.diagnostics.push_warning(DatamodelWarning::new(
-                        "Direct values are not supported. Please pass in parameters by name".into(),
-                        val.span().clone(),
-                    ));
-                    args = Some((f.span(), Default::default()));
-                } else {
-                    match coerce_map(val, &coerce::string_with_span, ctx.diagnostics) {
-                        Some(val) => {
-                            let params = val
-                                .iter()
-                                .map(|(k, v)| ((k.0.to_string(), (k.1.clone(), (*v).clone()))))
-                                .collect();
-                            args = Some((f.span(), params));
-                        }
-                        None => ctx.push_error(DatamodelError::new_property_not_known_error(
-                            "input",
-                            f.identifier().span().clone(),
-                            ["functions", "args"].to_vec(),
-                        )),
-                    }
-                }
-            }
             ("args", Some(val)) => {
-                match coerce_map(val, &coerce::string_with_span, ctx.diagnostics) {
-                    Some(val) => {
-                        let params = val
-                            .iter()
-                            .map(|(k, v)| ((k.0.to_string(), (k.1.clone(), (*v).clone()))))
-                            .collect();
-                        args = Some((f.span(), params));
+                match val.to_unresolved_value(ctx.diagnostics) {
+                    Some(UnresolvedValue::<Span>::Map(kv, span)) => args = Some((span, kv)),
+                    Some(other) => {
+                        ctx.push_error(DatamodelError::new_validation_error(
+                            "`args` must be a map",
+                            other.meta().clone()
+                        ));
                     }
                     None => {}
                 }

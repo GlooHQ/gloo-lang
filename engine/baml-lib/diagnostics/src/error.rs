@@ -102,6 +102,10 @@ impl DatamodelError {
         Self::new(msg, span)
     }
 
+    pub fn new_client_error(message: impl Into<Cow<'static, str>>, span: Span) -> DatamodelError {
+        Self::new(message, span)
+    }
+
     pub fn new_attribute_argument_not_found_error(
         argument_name: &str,
         attribute_name: &str,
@@ -408,18 +412,21 @@ impl DatamodelError {
         name: &str,
         span: Span,
         mut names: Vec<String>,
+        include_primitives: bool,
     ) -> DatamodelError {
         // Include a list of primitives in the names
-        let primitives = vec![
-            "int".to_string(),
-            "float".to_string(),
-            "bool".to_string(),
-            "string".to_string(),
-            "image".to_string(),
-            "audio".to_string(),
-            "null".to_string(),
-        ];
-        names.extend(primitives);
+        if include_primitives {
+            let primitives = vec![
+                "int".to_string(),
+                "float".to_string(),
+                "bool".to_string(),
+                "string".to_string(),
+                "image".to_string(),
+                "audio".to_string(),
+                "null".to_string(),
+            ];
+            names.extend(primitives);
+        }
 
         let close_names = sort_by_match(name, &names, Some(3));
         let suggestions = if names.is_empty() {
@@ -490,6 +497,21 @@ impl DatamodelError {
         };
 
         Self::new(format!("{}{}", prefix, suggestions), span)
+    }
+
+    pub fn new_client_not_found_error(client_name: &str, span: Span, valid_clients: &[String]) -> DatamodelError {
+        let names = valid_clients.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let close_names = sort_by_match(client_name, &names, Some(10));
+
+        let msg = if close_names.is_empty() {
+            format!("client `{}` does not exist.", client_name)
+        } else if close_names.len() == 1 {
+            format!("client `{}` does not exist. Did you mean `{}`?", client_name, close_names[0])
+        } else {
+            format!("client `{}` does not exist. Did you mean one of these: `{}`?", client_name, close_names.join("`, `"))
+        };
+
+        Self::new(msg, span)
     }
 
     pub fn new_type_not_found_error(

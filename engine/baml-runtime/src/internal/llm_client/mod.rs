@@ -5,16 +5,16 @@ pub mod llm_provider;
 pub mod orchestrator;
 pub mod primitive;
 
-mod properties_hander;
 pub mod retry_policy;
 mod strategy;
 pub mod traits;
 
 use anyhow::Result;
 
-use baml_types::{BamlValueWithMeta, JinjaExpression, ResponseCheck};
+use baml_types::{BamlMap, BamlValueWithMeta, JinjaExpression, ResponseCheck};
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::RenderedPrompt;
+use internal_llm_client::AllowedRoleMetadata;
 use jsonish::BamlValueWithFlags;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -75,34 +75,9 @@ pub struct ModelFeatures {
     pub chat: bool,
     pub anthropic_system_constraints: bool,
     pub resolve_media_urls: ResolveMediaUrls,
-    pub allowed_metadata: AllowedMetadata,
+    pub allowed_metadata: AllowedRoleMetadata,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum AllowedMetadata {
-    #[serde(rename = "all")]
-    All,
-    #[serde(rename = "none")]
-    None,
-    Only(HashSet<String>),
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct SupportedRequestModes {
-    // If unset, treat as auto
-    pub stream: Option<bool>,
-}
-
-impl AllowedMetadata {
-    pub fn is_allowed(&self, key: &str) -> bool {
-        match self {
-            Self::All => true,
-            Self::None => false,
-            Self::Only(allowed) => allowed.contains(&key.to_string()),
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct RetryLLMResponse {
@@ -180,7 +155,7 @@ pub struct LLMErrorResponse {
     pub client: String,
     pub model: Option<String>,
     pub prompt: RenderedPrompt,
-    pub request_options: HashMap<String, serde_json::Value>,
+    pub request_options: BamlMap<String, serde_json::Value>,
     #[cfg_attr(target_arch = "wasm32", serde(skip_serializing))]
     pub start_time: web_time::SystemTime,
     pub latency: web_time::Duration,
@@ -258,7 +233,7 @@ pub struct LLMCompleteResponse {
     pub client: String,
     pub model: String,
     pub prompt: RenderedPrompt,
-    pub request_options: HashMap<String, serde_json::Value>,
+    pub request_options: BamlMap<String, serde_json::Value>,
     pub content: String,
     #[cfg_attr(target_arch = "wasm32", serde(skip_serializing))]
     pub start_time: web_time::SystemTime,
@@ -372,28 +347,4 @@ impl crate::tracing::Visualize for LLMErrorResponse {
         ));
         s.join("\n")
     }
-}
-
-// For parsing args
-fn resolve_properties_walker(
-    client: &ClientWalker,
-    ctx: &crate::RuntimeContext,
-) -> Result<properties_hander::PropertiesHandler> {
-    use anyhow::Context;
-    let result = (&client.item.elem.options)
-        .iter()
-        .map(|(k, v)| {
-            Ok((
-                k.into(),
-                ctx.resolve_expression::<serde_json::Value>(v)
-                    .context(format!(
-                        "client {} could not resolve options.{}",
-                        client.name(),
-                        k
-                    ))?,
-            ))
-        })
-        .collect::<Result<std::collections::HashMap<_, _>>>()?;
-
-    Ok(properties_hander::PropertiesHandler::new(result))
 }

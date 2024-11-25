@@ -1,17 +1,21 @@
+use ouroboros::self_referencing;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+use std::ops::Deref;
 
 use crate::coerce;
 use crate::types::configurations::visit_test_case;
 use crate::{context::Context, DatamodelError};
 
 use baml_types::Constraint;
+use baml_types::{StringOr, UnresolvedValue};
 use indexmap::IndexMap;
-use internal_baml_diagnostics::Span;
+use internal_baml_diagnostics::{Diagnostics, Span};
 use internal_baml_prompt_parser::ast::{ChatBlock, PrinterBlock, Variable};
 use internal_baml_schema_ast::ast::{
     self, Expression, FieldId, RawString, ValExpId, WithIdentifier, WithName, WithSpan,
 };
+use internal_llm_client::{ClientProvider, PropertyHandler, UnresolvedClientProperty};
 
 mod configurations;
 mod prompt;
@@ -126,18 +130,22 @@ pub enum PromptAst<'a> {
     Chat(Vec<(Option<&'a ChatBlock>, String)>, Vec<(String, String)>),
 }
 
-#[derive(Debug, Clone)]
+/// The properties of the client.
+/// This is highly dangerous, but i did this to only copy the options once.
 pub struct ClientProperties {
-    pub provider: (String, Span),
+    /// The provider for the client, e.g. baml-openai-chat
+    pub provider: (ClientProvider, Span),
+    /// The retry policy for the client
     pub retry_policy: Option<(String, Span)>,
-    pub options: Vec<(String, Expression)>,
+    /// The options for the client
+    pub options: UnresolvedClientProperty<Span>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TestCase {
     pub functions: Vec<(String, Span)>,
     // The span is the span of the argument (the expression has its own span)
-    pub args: IndexMap<String, (Span, Expression)>,
+    pub args: IndexMap<String, (Span, UnresolvedValue<Span>)>,
     pub args_field_span: Span,
     pub constraints: Vec<(Constraint, Span, Span)>,
 }
@@ -167,14 +175,14 @@ impl PrinterType {
 }
 
 /// How to retry a request.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct RetryPolicy {
     /// The maximum number of retries.
     pub max_retries: u32,
     /// The strategy to use.
     pub strategy: RetryPolicyStrategy,
     /// Any additional options.
-    pub options: Option<Vec<((String, Span), Expression)>>,
+    pub options: Option<IndexMap<String, (Span, UnresolvedValue<Span>)>>,
 }
 
 #[derive(Debug, Clone, Copy, serde::Serialize)]
@@ -220,7 +228,7 @@ pub struct TemplateStringProperties {
     pub template: String,
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub(super) struct Types {
     pub(super) enum_attributes: HashMap<ast::TypeExpId, EnumAttributes>,
     pub(super) class_attributes: HashMap<ast::TypeExpId, ClassAttributes>,
@@ -431,34 +439,61 @@ fn visit_function<'db>(idx: ValExpId, function: &'db ast::ValueExprBlock, ctx: &
 fn visit_client<'db>(idx: ValExpId, client: &'db ast::ValueExprBlock, ctx: &mut Context<'db>) {
     let mut provider = None;
     let mut retry_policy = None;
-    let mut options: Vec<(String, Expression)> = Vec::new();
+    let mut options = None;
     client
         .iter_fields()
         .for_each(|(_idx, field)| match field.name() {
-            "provider" => provider = field.expr.as_ref(),
-            "retry_policy" => retry_policy = field.expr.as_ref(),
-            "options" => {
-                match field.expr.as_ref() {
-                    Some(ast::Expression::Map(map, span)) => {
-                        map.iter().for_each(|(key, value)| {
-                            if let Some(key) = coerce::string(key, ctx.diagnostics) {
-                                options.push((key.to_string(), value.clone()));
-                            } else {
-                                ctx.push_error(DatamodelError::new_validation_error(
-                                    "Expected a string key.",
-                                    span.clone(),
+            "provider" => {
+                match field
+                    .expr
+                    .as_ref()
+                    .and_then(|e| e.to_unresolved_value(ctx.diagnostics))
+                {
+                    Some(e) => match e.as_static_str() {
+                        Ok(s) => match s.parse::<ClientProvider>() {
+                            Ok(p) => provider = Some((p, e.meta().clone())),
+                            Err(err) => {
+                                ctx.push_error(DatamodelError::not_found_error(
+                                    "client provider",
+                                    s,
+                                    e.meta().clone(),
+                                    ClientProvider::allowed_providers()
+                                        .iter()
+                                        .map(|v| v.to_string())
+                                        .collect(),
+                                    false,
                                 ));
                             }
-                        });
+                        },
+                        Err(err) => ctx.push_error(DatamodelError::new_validation_error(
+                            &format!("`provider` value error: {err}"),
+                            e.meta().clone(),
+                        )),
+                    },
+                    None => ctx.push_error(DatamodelError::new_validation_error(
+                        "Missing `provider` field in client. e.g. `provider \"openai\"`",
+                        field.span().clone(),
+                    )),
+                }
+            }
+            "retry_policy" => retry_policy = field.expr.as_ref(),
+            "options" => {
+                match field
+                    .expr
+                    .as_ref()
+                    .and_then(|e| e.to_unresolved_value(ctx.diagnostics))
+                {
+                    Some(UnresolvedValue::Map(kv, _)) => {
+                        options = Some((kv, field.identifier().span().clone()));
                     }
-                    Some(_) => {
+                    Some(v) => {
                         ctx.push_error(DatamodelError::new_validation_error(
-                            "Expected a map.",
-                            field.span().clone(),
+                            &format!("Expected a key-value pair, but got a: {}", v.r#type()),
+                            v.meta().clone(),
                         ));
                     }
-                    _ => {}
-                };
+                    None => {}
+                }
             }
             config => ctx.push_error(DatamodelError::new_validation_error(
                 &format!("Unknown field `{}` in client", config),
@@ -477,25 +512,37 @@ fn visit_client<'db>(idx: ValExpId, client: &'db ast::ValueExprBlock, ctx: &mut 
         None => None,
     };
 
-    match (provider, options) {
-        (Some(provider), options) => {
-            match (coerce::string_with_span(provider, ctx.diagnostics), options) {
-                (Some(provider), options) => {
+    match provider {
+        Some(provider) => {
+            let (options_kv, options_span) = match options {
+                Some((kv, span)) => (kv, span),
+                None => (Default::default(), client.span().clone()),
+            };
+
+            let properties = PropertyHandler::new(options_kv, options_span);
+            // Parse and cache the result
+            match provider.0.parse_client_property(properties) {
+                Ok(options) => {
                     ctx.types.client_properties.insert(
                         idx,
                         ClientProperties {
-                            provider: (provider.0.to_string(), provider.1.clone()),
+                            provider,
                             retry_policy,
                             options,
                         },
                     );
-                }
-                _ => {
-                    // Errors are handled by coerce.
+                },
+                Err(errors) => {
+                    for error in errors {
+                        ctx.push_error(DatamodelError::new_client_error(
+                            error.message,
+                            error.span,
+                        ));
+                    }
                 }
             }
         }
-        (None, _) => ctx.push_error(DatamodelError::new_validation_error(
+        None => ctx.push_error(DatamodelError::new_validation_error(
             "Missing `provider` field in client. e.g. `provider openai`",
             client.span().clone(),
         )),

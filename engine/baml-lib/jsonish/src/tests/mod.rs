@@ -22,7 +22,7 @@ use std::{
     path::PathBuf,
 };
 
-use baml_types::BamlValue;
+use baml_types::{BamlValue, EvaluationContext};
 use internal_baml_core::{
     internal_baml_diagnostics::SourceFile,
     ir::{repr::IntermediateRepr, ClassWalker, EnumWalker, FieldType, IRHelper, TypeValue},
@@ -53,7 +53,7 @@ fn load_test_ir(file_content: &str) -> IntermediateRepr {
 fn render_output_format(
     ir: &IntermediateRepr,
     output: &FieldType,
-    env_values: &HashMap<String, String>,
+    env_values: &EvaluationContext<'_>,
 ) -> Result<OutputFormatContent> {
     let (enums, classes, recursive_classes) = relevant_data_models(ir, output, env_values)?;
 
@@ -68,7 +68,7 @@ fn find_existing_class_field<'a>(
     class_name: &str,
     field_name: &str,
     class_walker: &Result<ClassWalker<'a>>,
-    env_values: &HashMap<String, String>,
+    env_values: &EvaluationContext<'_>,
 ) -> Result<(Name, FieldType, Option<String>)> {
     let Ok(class_walker) = class_walker else {
         anyhow::bail!("Class {} does not exist", class_name);
@@ -88,7 +88,7 @@ fn find_enum_value(
     enum_name: &str,
     value_name: &str,
     enum_walker: &Result<EnumWalker<'_>>,
-    env_values: &HashMap<String, String>,
+    env_values: &EvaluationContext<'_>,
 ) -> Result<Option<(Name, Option<String>)>> {
     if enum_walker.is_err() {
         anyhow::bail!("Enum {} does not exist", enum_name);
@@ -124,7 +124,7 @@ fn find_enum_value(
 fn relevant_data_models<'a>(
     ir: &'a IntermediateRepr,
     output: &'a FieldType,
-    env_values: &HashMap<String, String>,
+    env_values: &EvaluationContext<'_>,
 ) -> Result<(Vec<Enum>, Vec<Class>, IndexSet<String>)> {
     let mut checked_types: HashSet<String> = HashSet::new();
     let mut enums = Vec::new();

@@ -1,15 +1,17 @@
 use anyhow::Result;
-use baml_types::BamlValue;
+use baml_types::{BamlValue, EvaluationContext, UnresolvedValue};
 use indexmap::IndexMap;
 
+use internal_baml_diagnostics::Span;
 use internal_baml_parser_database::RetryPolicyStrategy;
+use internal_llm_client::ClientSpec;
 
 use std::collections::{HashMap, HashSet};
 
 use super::{
     repr::{self, FunctionConfig, WithRepr},
-    Class, Client, Enum, EnumValue, Expression, Field, FunctionNode, IRHelper, Identifier, Impl,
-    RetryPolicy, TemplateString, TestCase, Walker,
+    Class, Client, Enum, EnumValue, Field, FunctionNode, IRHelper, Impl, RetryPolicy,
+    TemplateString, TestCase, Walker,
 };
 use crate::ir::jinja_helpers::render_expression;
 
@@ -62,13 +64,19 @@ impl<'a> Walker<'a, &'a FunctionNode> {
     pub fn required_env_vars(&'a self) -> Result<HashSet<String>> {
         if let Some(c) = self.elem().configs.first() {
             match &c.client {
-                repr::ClientSpec::Named(n) => {
+                ClientSpec::Named(n) => {
                     let client: super::ClientWalker<'a> = self.db.find_client(n)?;
                     Ok(client.required_env_vars())
                 }
-                repr::ClientSpec::Shorthand(provider, _) => {
-                    let env_vars = provider_to_env_vars(provider);
-                    Ok(env_vars.into_iter().map(|(_, v)| v.to_string()).collect())
+                ClientSpec::Shorthand(provider, model) => {
+                    let options = IndexMap::from_iter([("model".to_string(), ((), baml_types::UnresolvedValue::String(baml_types::StringOr::Value(model.clone()), ())))]);
+                    let properties = internal_llm_client::PropertyHandler::<()>::new(options, ());
+                    if let Ok(client) = provider.parse_client_property(properties) {
+                        Ok(client.required_env_vars())
+                    } else {
+                        // We likely can't make a shorthand client from the given provider
+                        Ok(HashSet::new())
+                    }
                 }
             }
         } else {
@@ -122,11 +130,11 @@ impl<'a> Walker<'a, &'a Enum> {
         &self.elem().name
     }
 
-    pub fn alias(&self, env_values: &HashMap<String, String>) -> Result<Option<String>> {
+    pub fn alias(&self, ctx: &EvaluationContext<'_>) -> Result<Option<String>> {
         self.item
             .attributes
             .get("alias")
-            .map(|v| v.as_string_value(env_values))
+            .map(|v| v.resolve_string(ctx))
             .transpose()
     }
 
@@ -159,11 +167,11 @@ impl<'a> Walker<'a, &'a Enum> {
 }
 
 impl<'a> Walker<'a, &'a EnumValue> {
-    pub fn skip(&self, env_values: &HashMap<String, String>) -> Result<bool> {
+    pub fn skip(&self, ctx: &EvaluationContext<'_>) -> Result<bool> {
         self.item
             .attributes
             .get("skip")
-            .map(|v| v.as_bool(env_values))
+            .map(|v| v.resolve_bool(ctx))
             .unwrap_or(Ok(false))
     }
 
@@ -171,103 +179,20 @@ impl<'a> Walker<'a, &'a EnumValue> {
         &self.item.elem.0
     }
 
-    pub fn alias(&self, env_values: &HashMap<String, String>) -> Result<Option<String>> {
+    pub fn alias(&self, ctx: &EvaluationContext<'_>) -> Result<Option<String>> {
         self.item
             .attributes
             .get("alias")
-            .map(|v| v.as_string_value(env_values))
+            .map(|v| v.resolve_string(ctx))
             .transpose()
     }
 
-    pub fn description(&self, env_values: &HashMap<String, String>) -> Result<Option<String>> {
+    pub fn description(&self, ctx: &EvaluationContext<'_>) -> Result<Option<String>> {
         self.item
             .attributes
             .get("description")
-            .map(|v| v.as_string_value(env_values))
+            .map(|v| v.resolve_string(ctx))
             .transpose()
-    }
-}
-
-impl Expression {
-    pub fn as_bool(&self, env_values: &HashMap<String, String>) -> Result<bool> {
-        match self {
-            Expression::Bool(b) => Ok(*b),
-            Expression::Identifier(Identifier::ENV(s)) => Ok(env_values.contains_key(s)),
-            _ => anyhow::bail!("Expected bool value, got {:?}", self),
-        }
-    }
-
-    pub fn as_string_value(&self, env_values: &HashMap<String, String>) -> Result<String> {
-        match self {
-            Expression::String(s) => Ok(s.clone()),
-            Expression::RawString(s) => Ok(s.clone()),
-            Expression::Identifier(Identifier::ENV(s)) => match env_values.get(s) {
-                Some(v) => Ok(v.clone()),
-                None => anyhow::bail!("Environment variable {} not found", s),
-            },
-            Expression::Identifier(idn) => Ok(idn.name().to_string()),
-            _ => anyhow::bail!("Expected string value, got {:?}", self),
-        }
-    }
-
-    /// Normalize an `Expression` into a `BamlValue` in a given context.
-    ///
-    /// TODO: Modify the context, rename it to `env` and make it a map
-    /// from `String` to `BamlValue`. This generalizes the context from
-    /// known environment variables to variables set by other means. For
-    /// example, we will eventually want to normalize `JinjaExpressions` found
-    /// inside an `assert` by augmenting the context with the LLM response.
-    pub fn normalize(&self, env_values: &HashMap<String, String>) -> Result<BamlValue> {
-        match self {
-            Expression::Identifier(idn) => match idn {
-                repr::Identifier::ENV(s) => match env_values.get(s) {
-                    Some(v) => Ok(BamlValue::String(v.clone())),
-                    None => anyhow::bail!("Environment variable {} not found", s),
-                },
-                repr::Identifier::Ref(r) => Ok(BamlValue::String(r.join(".").to_string())),
-                repr::Identifier::Local(r) => match r.as_str() {
-                    "true" => Ok(BamlValue::Bool(true)),
-                    "false" => Ok(BamlValue::Bool(false)),
-                    "null" => Ok(BamlValue::Null),
-                    _ => Ok(BamlValue::String(r.to_string())),
-                },
-                repr::Identifier::Primitive(t) => Ok(BamlValue::String(t.to_string())),
-            },
-            Expression::Bool(b) => Ok(BamlValue::Bool(*b)),
-            Expression::Map(m) => {
-                let mut map = baml_types::BamlMap::new();
-                for (k, v) in m {
-                    map.insert(k.as_string_value(env_values)?, v.normalize(env_values)?);
-                }
-                Ok(BamlValue::Map(map))
-            }
-            Expression::List(l) => {
-                let mut list = Vec::new();
-                for v in l {
-                    list.push(v.normalize(env_values)?);
-                }
-                Ok(BamlValue::List(list))
-            }
-            Expression::RawString(s) | Expression::String(s) => Ok(BamlValue::String(s.clone())),
-            repr::Expression::Numeric(n) => {
-                if let Ok(n) = n.parse::<i64>() {
-                    Ok(BamlValue::Int(n))
-                } else if let Ok(n) = n.parse::<f64>() {
-                    Ok(BamlValue::Float(n))
-                } else {
-                    anyhow::bail!("Invalid numeric value: {}", n)
-                }
-            }
-            Expression::JinjaExpression(expr) => {
-                // TODO: do not coerce all context values to strings.
-                let jinja_context: HashMap<String, minijinja::Value> = env_values
-                    .iter()
-                    .map(|(k, v)| (k.clone(), v.clone().into()))
-                    .collect();
-                let res_string = render_expression(&expr, &jinja_context)?;
-                Ok(BamlValue::String(res_string))
-            }
-        }
     }
 }
 
@@ -294,7 +219,7 @@ impl<'a> Walker<'a, (&'a FunctionNode, &'a TestCase)> {
         format!("{}::{}", self.item.0.elem.name(), self.item.1.elem.name)
     }
 
-    pub fn args(&self) -> &IndexMap<String, Expression> {
+    pub fn args(&self) -> &IndexMap<String, UnresolvedValue<()>> {
         &self.item.1.elem.args
     }
 
@@ -308,11 +233,11 @@ impl<'a> Walker<'a, (&'a FunctionNode, &'a TestCase)> {
 
     pub fn test_case_params(
         &self,
-        env_values: &HashMap<String, String>,
+        ctx: &EvaluationContext<'_>,
     ) -> Result<IndexMap<String, Result<BamlValue>>> {
         self.args()
             .iter()
-            .map(|(k, v)| Ok((k.clone(), v.normalize(env_values))))
+            .map(|(k, v)| Ok((k.clone(), v.resolve_serde::<BamlValue>(ctx))))
             .collect()
     }
 
@@ -329,11 +254,11 @@ impl<'a> Walker<'a, &'a Class> {
         &self.elem().name
     }
 
-    pub fn alias(&self, env_values: &HashMap<String, String>) -> Result<Option<String>> {
+    pub fn alias(&self, ctx: &EvaluationContext<'_>) -> Result<Option<String>> {
         self.item
             .attributes
             .get("alias")
-            .map(|v| v.as_string_value(env_values))
+            .map(|v| v.resolve_string(ctx))
             .transpose()
     }
 
@@ -386,26 +311,12 @@ impl<'a> Walker<'a, &'a Client> {
         self.item.attributes.span.as_ref()
     }
 
-    pub fn options(&'a self) -> &'a Vec<(String, Expression)> {
+    pub fn options(&'a self) -> &'a internal_llm_client::UnresolvedClientProperty<()> {
         &self.elem().options
     }
 
     pub fn required_env_vars(&'a self) -> HashSet<String> {
-        let mut env_vars = self
-            .options()
-            .iter()
-            .flat_map(|(_, expr)| expr.required_env_vars())
-            .collect::<HashSet<String>>();
-
-        let options = self.options();
-        for (k, v) in provider_to_env_vars(self.elem().provider.as_str()) {
-            match k {
-                Some(k) if !options.iter().any(|(k2, _)| k2 == k) => env_vars.insert(v.to_string()),
-                None => env_vars.insert(v.to_string()),
-                _ => false,
-            };
-        }
-        env_vars
+        self.options().required_env_vars()
     }
 }
 
@@ -466,48 +377,23 @@ impl<'a> Walker<'a, &'a Field> {
         &self.item.elem
     }
 
-    pub fn alias(&self, env_values: &HashMap<String, String>) -> Result<Option<String>> {
+    pub fn alias(&self, ctx: &EvaluationContext<'_>) -> Result<Option<String>> {
         self.item
             .attributes
             .get("alias")
-            .map(|v| v.as_string_value(env_values))
+            .map(|v| v.resolve_string(ctx))
             .transpose()
     }
 
-    pub fn description(&self, env_values: &HashMap<String, String>) -> Result<Option<String>> {
+    pub fn description(&self, ctx: &EvaluationContext<'_>) -> Result<Option<String>> {
         self.item
             .attributes
             .get("description")
-            .map(|v| {
-                let normalized = v.normalize(env_values)?;
-                let baml_value = normalized
-                    .as_str()
-                    .ok_or(anyhow::anyhow!("Unexpected: Evaluated to non-string value"))?;
-                Ok(String::from(baml_value))
-            })
+            .map(|v| v.resolve_string(ctx))
             .transpose()
     }
 
     pub fn span(&self) -> Option<&crate::Span> {
         self.item.attributes.span.as_ref()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use baml_types::JinjaExpression;
-
-    #[test]
-    fn basic_jinja_normalization() {
-        let expr = Expression::JinjaExpression(JinjaExpression("this == 'hello'".to_string()));
-        let env = vec![("this".to_string(), "hello".to_string())]
-            .into_iter()
-            .collect();
-        let normalized = expr.normalize(&env).unwrap();
-        match normalized {
-            BamlValue::String(s) => assert_eq!(&s, "true"),
-            _ => panic!("Expected String Expression"),
-        }
     }
 }

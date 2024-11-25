@@ -1,9 +1,8 @@
 use crate::client_registry::ClientProperty;
-use crate::internal::llm_client::properties_hander::{ PropertiesHandler};
 use crate::internal::llm_client::traits::{
     ToProviderMessage, ToProviderMessageExt, WithClientProperties,
 };
-use crate::internal::llm_client::{AllowedMetadata, ResolveMediaUrls, SupportedRequestModes};
+use crate::internal::llm_client::ResolveMediaUrls;
 #[cfg(target_arch = "wasm32")]
 use crate::internal::wasm_jwt::{encode_jwt, JwtError};
 use crate::RuntimeContext;
@@ -25,6 +24,10 @@ use crate::{
 use anyhow::{Context, Result};
 use chrono::{Duration, Utc};
 use futures::StreamExt;
+use internal_llm_client::vertex::{ResolvedServiceAccountDetails, ResolvedVertex, ServiceAccount};
+use internal_llm_client::{
+    AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty,
+};
 #[cfg(not(target_arch = "wasm32"))]
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
@@ -42,40 +45,13 @@ use internal_baml_jinja::{RenderContext_Client, RenderedChatMessage};
 use serde_json::json;
 use std::collections::HashMap;
 
-enum ServiceAccountDetails {
-    None,
-    RawAuthorizationHeader(String),
-    FilePath(String),
-    Json(serde_json::Map<String, serde_json::Value>),
-}
-
-impl Default for ServiceAccountDetails {
-    fn default() -> Self {
-        ServiceAccountDetails::None
-    }
-}
-
-struct PostRequestProperties {
-    default_role: String,
-    base_url: Option<String>,
-    service_account_details: ServiceAccountDetails,
-    headers: HashMap<String, String>,
-    proxy_url: Option<String>,
-    properties: HashMap<String, serde_json::Value>,
-    project_id: Option<String>,
-    model_id: Option<String>,
-    location: Option<String>,
-    allowed_metadata: AllowedMetadata,
-    supported_request_modes: SupportedRequestModes,
-}
-
 pub struct VertexClient {
     pub name: String,
     pub client: reqwest::Client,
     pub retry_policy: Option<String>,
     pub context: RenderContext_Client,
     pub features: ModelFeatures,
-    properties: PostRequestProperties,
+    properties: ResolvedVertex,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -87,100 +63,38 @@ struct Claims {
     iat: i64,
 }
 
-#[derive(Debug, Deserialize)]
-struct ServiceAccount {
-    client_email: String,
-    private_key: String,
+// This is currently hardcoded, but we could make it a property if we wanted
+// https://developers.google.com/identity/protocols/oauth2/scopes
+const DEFAULT_SCOPE: &str = "https://www.googleapis.com/auth/cloud-platform";
+
+impl Claims {
+    fn from_service_account(service_account: &ServiceAccount) -> Claims {
+        let now = Utc::now();
+        Claims {
+            iss: service_account.client_email.clone(),
+            scope: DEFAULT_SCOPE.to_string(),
+            aud: service_account.token_uri.clone(),
+            exp: (now + Duration::hours(1)).timestamp(),
+            iat: now.timestamp(),
+        }
+    }
 }
 
 fn resolve_properties(
-    mut properties: PropertiesHandler,
+    provider: &ClientProvider,
+    properties: &UnresolvedClientProperty<()>,
     ctx: &RuntimeContext,
-) -> Result<PostRequestProperties, anyhow::Error> {
-    let default_role = properties.pull_default_role("user")?;
+) -> Result<ResolvedVertex, anyhow::Error> {
+    let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
 
-    let base_url = properties.pull_base_url()?;
-    let allowed_metadata = properties.pull_allowed_role_metadata()?;
-
-    let service_account_details = {
-        let authz = properties.remove_str("authorization")?;
-        let creds = properties.remove_serde::<serde_json::Value>("credentials")?;
-        let creds_content = properties.remove_str("credentials_content")?;
-
-        // Ensure that at most one of authz, creds, and creds_content is provided
-        if [authz.is_some(), creds.is_some(), creds_content.is_some()]
-            .iter()
-            .filter(|&&b| b)
-            .count()
-            > 1
-        {
-            anyhow::bail!(
-                "Only one of authorization, credentials, and credentials_content can be provided"
-            );
-        }
-
-        if let Some(authz) = authz {
-            ServiceAccountDetails::RawAuthorizationHeader(authz)
-        } else if let Some(creds) = creds {
-            match creds {
-                serde_json::Value::String(s) => match serde_json::from_str(&s) {
-                    Ok(service_account) => ServiceAccountDetails::Json(service_account),
-                    Err(_) => ServiceAccountDetails::FilePath(s),
-                },
-                serde_json::Value::Object(o) => ServiceAccountDetails::Json(o),
-                _ => anyhow::bail!("credentials must be a string or JSON object"),
-            }
-        } else if let Some(creds_content) = creds_content {
-            ServiceAccountDetails::Json(
-                serde_json::from_str(&creds_content)
-                    .context("Failed to parse credentials_content as a JSON object")?,
-            )
-        } else if let Some(path) = ctx.env.get("GOOGLE_APPLICATION_CREDENTIALS") {
-            ServiceAccountDetails::FilePath(path.to_string())
-        } else if let Some(creds_content) = ctx.env.get("GOOGLE_APPLICATION_CREDENTIALS_CONTENT") {
-            ServiceAccountDetails::Json(
-                serde_json::from_str(&creds_content)
-                    .context("Failed to parse credentials_content as a JSON object")?,
-            )
-        } else {
-            ServiceAccountDetails::None
-        }
-    };
-    let headers = properties.pull_headers()?;
-
-    let project_id = properties.remove_str("project_id")?;
-    let model_id = properties.remove_str("model")?;
-    let location = properties.remove_str("location")?;
-
-    // Ensure that project_id, model_id, and location are provided
-    let project_id = match project_id {
-        Some(project_id) => project_id,
-        None => anyhow::bail!("project_id must be provided"),
-    };
-    let model_id = match model_id {
-        Some(model_id) => model_id,
-        None => anyhow::bail!("model must be provided"),
-    };
-    let location = match location {
-        Some(location) => location,
-        None => anyhow::bail!("location must be provided"),
+    let ResolvedClientProperty::Vertex(props) = properties else {
+        anyhow::bail!(
+            "Invalid client property. Should have been a vertex property but got: {}",
+            properties.name()
+        );
     };
 
-    let supported_request_modes = properties.pull_supported_request_modes()?;
-
-    Ok(PostRequestProperties {
-        default_role,
-        base_url,
-        service_account_details,
-        headers,
-        properties: properties.finalize(),
-        project_id: Some(project_id),
-        model_id: Some(model_id),
-        location: Some(location),
-        proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),
-        allowed_metadata,
-        supported_request_modes,
-    })
+    Ok(props)
 }
 
 impl WithRetryPolicy for VertexClient {
@@ -190,14 +104,14 @@ impl WithRetryPolicy for VertexClient {
 }
 
 impl WithClientProperties for VertexClient {
-    fn client_properties(&self) -> &HashMap<String, serde_json::Value> {
-        &self.properties.properties
-    }
-    fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
+    fn allowed_metadata(&self) -> &AllowedRoleMetadata {
         &self.properties.allowed_metadata
     }
     fn supports_streaming(&self) -> bool {
-        self.properties.supported_request_modes.stream.unwrap_or(true)
+        self.properties
+            .supported_request_modes
+            .stream
+            .unwrap_or(true)
     }
 }
 
@@ -223,7 +137,7 @@ impl SseResponseTrait for VertexClient {
     ) -> StreamResponse {
         let prompt = prompt.clone();
         let client_name = self.context.name.clone();
-        let model_id = self.properties.model_id.clone().unwrap_or_default();
+        let model_id = self.properties.model.clone();
         let params = self.properties.properties.clone();
         Ok(Box::pin(
             resp.bytes_stream()
@@ -280,10 +194,13 @@ impl SseResponseTrait for VertexClient {
                                 )));
                             }
                         };
-
                         if let Some(choice) = event.candidates.get(0) {
-                            if let Some(content) = choice.content.parts.get(0) {
-                                inner.content += &content.text;
+                            if let Some(content) = choice
+                                .content
+                                .as_ref()
+                                .and_then(|c| c.parts.get(0).map(|p| p.text.as_ref()))
+                            {
+                                inner.content += content;
                             }
                             match choice.finish_reason.as_ref() {
                                 Some(FinishReason::Stop) => {
@@ -294,6 +211,7 @@ impl SseResponseTrait for VertexClient {
                                 _ => (),
                             }
                         }
+
                         inner.latency = instant_start.elapsed();
 
                         std::future::ready(Some(LLMResponse::Success(inner.clone())))
@@ -321,14 +239,13 @@ impl WithStreamChat for VertexClient {
 
 impl VertexClient {
     pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Self> {
-        let properties = super::super::resolve_properties_walker(client, ctx)?;
-        let properties = resolve_properties(properties, ctx)?;
+        let properties = resolve_properties(&client.elem().provider, client.options(), ctx)?;
         let default_role = properties.default_role.clone();
         Ok(Self {
             name: client.name().into(),
             context: RenderContext_Client {
                 name: client.name().into(),
-                provider: client.elem().provider.clone(),
+                provider: client.elem().provider.to_string(),
                 default_role,
             },
             features: ModelFeatures {
@@ -349,14 +266,14 @@ impl VertexClient {
     }
 
     pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<Self> {
-        let properties = resolve_properties(client.property_handler()?, ctx)?;
+        let properties = resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
         let default_role = properties.default_role.clone();
 
         Ok(Self {
             name: client.name.clone(),
             context: RenderContext_Client {
                 name: client.name.clone(),
-                provider: client.provider.clone(),
+                provider: client.provider.to_string(),
                 default_role,
             },
             features: ModelFeatures {
@@ -374,16 +291,8 @@ impl VertexClient {
 }
 
 async fn get_access_token(service_account: &ServiceAccount) -> Result<String> {
-    let now = Utc::now();
-    let claims = Claims {
-        iss: service_account.client_email.clone(),
-        scope: "https://www.googleapis.com/auth/cloud-platform".to_string(),
-        aud: "https://oauth2.googleapis.com/token".to_string(),
-        exp: (now + Duration::hours(1)).timestamp(),
-        iat: now.timestamp(),
-    };
-
     // Create the JWT
+    let claims = Claims::from_service_account(service_account);
 
     #[cfg(not(target_arch = "wasm32"))]
     let jwt = encode(
@@ -404,7 +313,7 @@ async fn get_access_token(service_account: &ServiceAccount) -> Result<String> {
         ("assertion", &jwt),
     ];
     let res: Value = client
-        .post("https://oauth2.googleapis.com/token")
+        .post(&service_account.token_uri)
         .form(&params)
         .send()
         .await?
@@ -439,41 +348,10 @@ impl RequestBuilder for VertexClient {
             should_stream = "streamGenerateContent?alt=sse";
         }
 
-        let location = self
-            .properties
-            .location
-            .clone()
-            .unwrap_or_else(|| "".to_string());
-        let project_id = self
-            .properties
-            .project_id
-            .clone()
-            .unwrap_or_else(|| "".to_string());
+        let base_url = self.properties.base_url.clone();
+        let model = self.properties.model.clone();
+        let baml_original_url = format!("{}/{}:{}", base_url, model, should_stream);
 
-        let model_id = self
-            .properties
-            .model_id
-            .clone()
-            .unwrap_or_else(|| "".to_string());
-
-        let base_url = self
-            .properties
-            .base_url
-            .clone()
-            .unwrap_or_else(|| "".to_string());
-
-        let baml_original_url = if base_url != "" {
-            format!("{}{}:{}", base_url, model_id, should_stream)
-        } else {
-            format!(
-                "https://{}-aiplatform.googleapis.com/v1/projects/{}/locations/{}/publishers/google/models/{}:{}",
-                location,
-                project_id,
-                location,
-                model_id,
-                should_stream
-            )
-        };
         let mut req = match (&self.properties.proxy_url, allow_proxy) {
             (Some(proxy_url), true) => {
                 let req = self.client.post(proxy_url.clone());
@@ -482,32 +360,11 @@ impl RequestBuilder for VertexClient {
             _ => self.client.post(baml_original_url),
         };
 
-        let access_token = match &self.properties.service_account_details {
-            ServiceAccountDetails::None => {
-                anyhow::bail!("No service account was specified.");
-            }
-            ServiceAccountDetails::RawAuthorizationHeader(token) => token.to_string(),
-            ServiceAccountDetails::FilePath(path) => {
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    let file = File::open(path)?;
-                    let reader = BufReader::new(file);
-                    let service_account: ServiceAccount = serde_json::from_reader(reader)?;
-
-                    get_access_token(&service_account).await?
-                }
-                #[cfg(target_arch = "wasm32")]
-                {
-                    anyhow::bail!(
-                        "Reading from files not supported in BAML playground. Pass in your credentials file as a string to the 'GOOGLE_APPLICATION_CREDENTIALS_CONTENT' environment variable."
-                    );
-                }
-            }
-            ServiceAccountDetails::Json(token) => {
-                let service_account: ServiceAccount =
-                    serde_json::from_value(serde_json::Value::Object(token.clone()))?;
-                get_access_token(&service_account).await?
-            }
+        let access_token = match &self.properties.authorization {
+            ResolvedServiceAccountDetails::RawAuthorizationHeader(token) => token.to_string(),
+            ResolvedServiceAccountDetails::Json(token) => get_access_token(&token)
+                .await
+                .context("Failed to get access token")?,
         };
 
         req = req.header("Authorization", format!("Bearer {}", access_token));
@@ -526,9 +383,12 @@ impl RequestBuilder for VertexClient {
             either::Either::Right(messages) => body_obj.extend(self.chat_to_message(messages)?),
         }
 
-        Ok(req.json(&body))
+        let req = req.json(&body);
+
+        Ok(req)
     }
-    fn request_options(&self) -> &HashMap<String, serde_json::Value> {
+
+    fn request_options(&self) -> &indexmap::IndexMap<String, serde_json::Value> {
         &self.properties.properties
     }
 }
@@ -566,12 +426,32 @@ impl WithChat for VertexClient {
                 code: ErrorCode::Other(200),
             });
         }
+
+        let content = if let Some(content) = response.candidates.get(0).and_then(|c| {
+            c.content
+                .as_ref()
+                .and_then(|c| c.parts.get(0).map(|p| p.text.clone()))
+        }) {
+            content
+        } else {
+            return LLMResponse::LLMFailure(LLMErrorResponse {
+                client: self.context.name.to_string(),
+                model: None,
+                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+                start_time: system_now,
+                request_options: self.properties.properties.clone(),
+                latency: instant_now.elapsed(),
+                message: "No content".to_string(),
+                code: ErrorCode::Other(200),
+            });
+        };
+
         let usage_metadata = response.usage_metadata.clone().unwrap();
 
         LLMResponse::Success(LLMCompleteResponse {
             client: self.context.name.to_string(),
             prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
-            content: response.candidates[0].content.parts[0].text.clone(),
+            content,
             start_time: system_now,
             latency: instant_now.elapsed(),
             request_options: self.properties.properties.clone(),

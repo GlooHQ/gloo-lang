@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
+use baml_types::BamlMap;
 use internal_baml_jinja::RenderedChatMessage;
 use reqwest::Response;
 use serde::de::DeserializeOwned;
@@ -16,7 +17,7 @@ pub trait RequestBuilder {
         stream: bool,
     ) -> Result<reqwest::RequestBuilder>;
 
-    fn request_options(&self) -> &HashMap<String, serde_json::Value>;
+    fn request_options(&self) -> &BamlMap<String, serde_json::Value>;
 
     fn http_client(&self) -> &reqwest::Client;
 }
@@ -91,6 +92,17 @@ pub async fn make_request(
 
     let status = response.status();
     if !status.is_success() {
+        let url = response.url().to_string();
+        let text = response.text().await.map_or_else(
+            |_| "<no response>".to_string(),
+            |text| {
+                if text.is_empty() {
+                    "<empty response>".to_string()
+                } else {
+                    text
+                }
+            },
+        );
         return Err(LLMResponse::LLMFailure(LLMErrorResponse {
             client: client.context().name.to_string(),
             model: None,
@@ -98,10 +110,7 @@ pub async fn make_request(
             start_time: system_now,
             request_options: client.request_options().clone(),
             latency: instant_now.elapsed(),
-            message: format!(
-                "Request failed: {}",
-                response.text().await.unwrap_or("<no response>".into())
-            ),
+            message: format!("Request failed: {}\n{}", url, text),
             code: ErrorCode::from_status(status),
         }));
     }

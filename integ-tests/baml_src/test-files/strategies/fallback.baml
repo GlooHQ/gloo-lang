@@ -35,7 +35,8 @@ client<llm> FaultyAzureClient {
   provider azure-openai
   options {
     model unknown-model
-    api_key env.OPENAI_API_KEY
+    resource_name "unknown-resource-id"
+    deployment_id "unknown-deployment-id"
   }
 }
 

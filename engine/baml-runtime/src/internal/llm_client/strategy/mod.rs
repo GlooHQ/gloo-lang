@@ -5,6 +5,7 @@ mod fallback;
 pub mod roundrobin;
 
 use internal_baml_core::ir::ClientWalker;
+use internal_llm_client::{ClientProvider, StrategyClientProvider};
 
 use crate::{
     client_registry::ClientProperty, runtime_interface::InternalClientLookup, RuntimeContext,
@@ -41,19 +42,23 @@ impl TryFrom<(&ClientWalker<'_>, &RuntimeContext)> for LLMStrategyProvider {
     type Error = anyhow::Error;
 
     fn try_from((client, ctx): (&ClientWalker, &RuntimeContext)) -> Result<Self> {
-        match client.elem().provider.as_str() {
-            "baml-round-robin" | "round-robin" => RoundRobinStrategy::try_from((client, ctx))
-                .map(Arc::new)
-                .map(LLMStrategyProvider::RoundRobin),
-            "baml-fallback" | "fallback" => {
-                FallbackStrategy::try_from((client, ctx)).map(LLMStrategyProvider::Fallback)
+        match &client.elem().provider {
+            ClientProvider::Strategy(strategy_client_provider) => {
+                match strategy_client_provider {
+                    StrategyClientProvider::RoundRobin => {
+                        RoundRobinStrategy::try_from((client, ctx))
+                            .map(Arc::new)
+                            .map(LLMStrategyProvider::RoundRobin)
+                    }
+                    StrategyClientProvider::Fallback => {
+                        FallbackStrategy::try_from((client, ctx)).map(LLMStrategyProvider::Fallback)
+                    }
+                }
             }
-            other => {
-                let options = ["round-robin", "fallback"];
-                anyhow::bail!(
-                    "Unsupported strategy provider: {}. Available ones are: {}",
-                    other,
-                    options.join(", ")
+            _ => {
+            anyhow::bail!(
+                    "Unsupported strategy provider: {}",
+                    client.elem().provider,
                 )
             }
         }
@@ -64,12 +69,16 @@ impl TryFrom<(&ClientProperty, &RuntimeContext)> for LLMStrategyProvider {
     type Error = anyhow::Error;
 
     fn try_from((client, ctx): (&ClientProperty, &RuntimeContext)) -> Result<Self> {
-        match client.provider.as_str() {
-            "baml-round-robin" | "round-robin" => RoundRobinStrategy::try_from((client, ctx))
-                .map(Arc::new)
-                .map(LLMStrategyProvider::RoundRobin),
-            "baml-fallback" | "fallback" => {
-                FallbackStrategy::try_from((client, ctx)).map(LLMStrategyProvider::Fallback)
+        match &client.provider {
+            ClientProvider::Strategy(strategy) => match strategy {
+                StrategyClientProvider::RoundRobin => {
+                    RoundRobinStrategy::try_from((client, ctx))
+                        .map(Arc::new)
+                    .map(LLMStrategyProvider::RoundRobin)
+                }
+                StrategyClientProvider::Fallback => {
+                    FallbackStrategy::try_from((client, ctx)).map(LLMStrategyProvider::Fallback)
+                }
             }
             other => {
                 let options = ["round-robin", "fallback"];

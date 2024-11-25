@@ -1,4 +1,5 @@
 mod render_output_format;
+use internal_llm_client::ClientSpec;
 use jsonish::BamlValueWithFlags;
 use render_output_format::render_output_format;
 
@@ -7,7 +8,7 @@ use baml_types::{BamlValue, FieldType};
 use internal_baml_core::{
     error_unsupported,
     ir::{
-        repr::{ClientSpec, IntermediateRepr},
+        repr::{IntermediateRepr},
         FunctionWalker, IRHelper,
     },
 };

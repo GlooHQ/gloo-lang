@@ -104,6 +104,7 @@ pub(crate) fn parse_generator(
                             .chain(vec![BOUNDARY_CLOUD_OUTPUT_TYPE].iter())
                             .map(|s| s.to_string())
                             .collect(),
+                        false,
                     ));
                 }
             }

@@ -1,3 +1,4 @@
+use internal_baml_diagnostics::Span;
 use internal_baml_schema_ast::ast::{Top, TopId, TypeExpId, TypeExpressionBlock};
 
 mod alias;
@@ -6,17 +7,17 @@ mod description;
 mod to_string_attribute;
 use crate::interner::StringId;
 use crate::{context::Context, types::ClassAttributes, types::EnumAttributes};
-use baml_types::Constraint;
+use baml_types::{Constraint, UnresolvedValue};
 use internal_baml_schema_ast::ast::{Expression, SubType};
 
 ///
 #[derive(Debug, Default)]
 pub struct Attributes {
     /// Description of the node, used in describing the node to the LLM.
-    pub description: Option<Expression>,
+    pub description: Option<UnresolvedValue<Span>>,
 
     /// Alias for the node used when communicating with the LLM.
-    pub alias: Option<StringId>,
+    pub alias: Option<UnresolvedValue<Span>>,
 
     /// Whether the node is a dynamic type.
     pub dynamic_type: Option<bool>,
@@ -30,22 +31,22 @@ pub struct Attributes {
 
 impl Attributes {
     /// Set a description.
-    pub fn add_description(&mut self, description: Expression) {
+    pub fn add_description(&mut self, description: UnresolvedValue<Span>) {
         self.description.replace(description);
     }
 
     /// Get the description.
-    pub fn description(&self) -> &Option<Expression> {
+    pub fn description(&self) -> &Option<UnresolvedValue<Span>> {
         &self.description
     }
 
     /// Set an alias.
-    pub fn add_alias(&mut self, alias: StringId) {
+    pub fn add_alias(&mut self, alias: UnresolvedValue<Span>) {
         self.alias.replace(alias);
     }
 
     /// Get the alias.
-    pub fn alias(&self) -> &Option<StringId> {
+    pub fn alias(&self) -> &Option<UnresolvedValue<Span>> {
         &self.alias
     }
 

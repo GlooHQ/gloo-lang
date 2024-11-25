@@ -1,7 +1,10 @@
+use std::str::FromStr;
+
 use baml_runtime::client_registry;
 use napi::Env;
 use napi::JsObject;
 use napi_derive::napi;
+use client_registry::ClientProvider;
 
 use crate::errors::invalid_argument_error;
 use crate::parse_ts_types;
@@ -35,12 +38,15 @@ impl ClientRegistry {
         }
         let args_map = args.as_map_owned().unwrap();
 
-        let client_property = baml_runtime::client_registry::ClientProperty {
-            name,
-            provider,
-            retry_policy,
-            options: args_map,
+
+        let provider = match ClientProvider::from_str(&provider) {
+            Ok(provider) => provider,
+            Err(e) => {
+                return Err(invalid_argument_error(&format!("Invalid provider: {:?}", e)));
+            }
         };
+
+        let client_property = client_registry::ClientProperty::new(name, provider, retry_policy, args_map);
 
         self.inner.add_client(client_property);
         Ok(())

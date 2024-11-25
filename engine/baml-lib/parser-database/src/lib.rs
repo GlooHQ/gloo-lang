@@ -45,7 +45,7 @@ use internal_baml_schema_ast::ast::SchemaAst;
 pub use tarjan::Tarjan;
 pub use types::{
     Attributes, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType, PromptAst,
-    PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType,
+    PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType, ClientProperties
 };
 
 use self::{context::Context, interner::StringId, types::Types};

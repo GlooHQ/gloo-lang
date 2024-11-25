@@ -16,20 +16,22 @@ test Foo {
   ]
 }
 
-// warning: Direct values are not supported. Please pass in parameters by name
-//   -->  tests/bad_syntax.baml:12
-//    | 
-// 11 |   functions [Foo]
-// 12 |   input [
-// 13 |     {
-// 14 |       str_field "hello"
-// 15 |     },,
-// 16 |   ]
-//    | 
 // error: Error validating: Invalid array syntax detected.
 //   -->  tests/bad_syntax.baml:15
 //    | 
 // 14 |       str_field "hello"
 // 15 |     },,
 // 16 |   ]
+//    | 
+// error: Property not known: "input". Did you mean one of these: "args", "functions"?
+//   -->  tests/bad_syntax.baml:12
+//    | 
+// 11 |   functions [Foo]
+// 12 |   input [
+//    | 
+// error: Error validating: Missing `args` property
+//   -->  tests/bad_syntax.baml:10
+//    | 
+//  9 | 
+// 10 | test Foo {
 //    | 

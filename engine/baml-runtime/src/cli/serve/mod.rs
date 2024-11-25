@@ -56,7 +56,7 @@ pub struct ServeArgs {
     no_version_check: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct BamlOptions {
     pub client_registry: Option<ClientRegistry>,
 }
