@@ -7,10 +7,7 @@ use anyhow::Result;
 use baml_types::{BamlValue, FieldType};
 use internal_baml_core::{
     error_unsupported,
-    ir::{
-        repr::{IntermediateRepr},
-        FunctionWalker, IRHelper,
-    },
+    ir::{repr::IntermediateRepr, FunctionWalker, IRHelper},
 };
 use internal_baml_jinja::{
     types::OutputFormatContent, RenderContext, RenderContext_Client, RenderedPrompt,
@@ -96,7 +93,7 @@ impl PromptRenderer {
                 })
                 .collect::<Vec<_>>(),
             ir,
-            &ctx.env,
+            ctx.env_vars(),
         )
     }
 }

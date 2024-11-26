@@ -27,7 +27,9 @@ use http::header;
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{ChatMessagePart, RenderContext_Client, RenderedChatMessage};
 use internal_llm_client::google_ai::ResolvedGoogleAI;
-use internal_llm_client::{AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty};
+use internal_llm_client::{
+    AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty,
+};
 use serde_json::json;
 use std::collections::HashMap;
 
@@ -343,13 +345,7 @@ impl WithChat for GoogleAIClient {
             start_time: system_now,
             latency: instant_now.elapsed(),
             request_options: self.properties.properties.clone(),
-            model: self
-                .properties
-                .properties
-                .get("model")
-                .and_then(|v| v.as_str().map(|s| s.to_string()))
-                .or_else(|| _ctx.env.get("default model").map(|s| s.to_string()))
-                .unwrap_or_else(|| "".to_string()),
+            model: self.properties.model.clone(),
             metadata: LLMCompleteResponseMetadata {
                 baml_is_complete: match response.candidates[0].finish_reason {
                     Some(FinishReason::Stop) => true,

@@ -88,7 +88,7 @@ impl<Meta> UnresolvedServiceAccountDetails<Meta> {
                         #[cfg(target_arch = "wasm32")]
                         {
                             anyhow::bail!(
-                                "Reading from files not supported in BAML playground. Pass in your credentials file as a string to the 'GOOGLE_APPLICATION_CREDENTIALS_CONTENT' environment variable."
+                                format!("Reading from files not supported in BAML playground. For the playground, pass in the contents of your credentials file as a string to the same environment variable you used for 'credentials'.\nFile: {}", value)
                             );
                         }
                     }

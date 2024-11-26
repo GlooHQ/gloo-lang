@@ -738,7 +738,7 @@ const TestResults: React.FC = () => {
         </Badge>
       </div>
 
-      <CustomErrorBoundary>
+      <CustomErrorBoundary message='Error loading test results or client graph'>
         {showClientGraph ? <ClientGraph /> : showTests ? <TestResultContent /> : <TestCaseList />}
       </CustomErrorBoundary>
     </div>

@@ -4,7 +4,6 @@ use crate::runtime_wasm::runtime_prompt::WasmPrompt;
 use anyhow::Context;
 use baml_runtime::internal::llm_client::orchestrator::OrchestrationScope;
 use baml_runtime::internal::llm_client::orchestrator::OrchestratorNode;
-use baml_runtime::internal::llm_client::AllowedMetadata;
 use baml_runtime::internal::prompt_renderer::PromptRenderer;
 use baml_runtime::BamlSrcReader;
 use baml_runtime::InternalRuntimeInterface;
@@ -16,6 +15,7 @@ use baml_types::{BamlMediaType, BamlValue, GeneratorOutputType, TypeValue};
 use indexmap::IndexMap;
 use internal_baml_codegen::version_check::GeneratorType;
 use internal_baml_codegen::version_check::{check_version, VersionCheckMode};
+use internal_llm_client::AllowedRoleMetadata;
 use jsonish::deserializer::deserialize_flags::Flag;
 use jsonish::BamlValueWithFlags;
 
@@ -459,9 +459,9 @@ impl WasmLLMFailure {
         self.scope.name()
     }
     pub fn prompt(&self) -> WasmPrompt {
-        // TODO: This is a hack. We shouldn't hardcode AllowedMetadata::All
+        // TODO: This is a hack. We shouldn't hardcode AllowedRoleMetadata::All
         // here, but instead plumb it through the LLMErrors
-        (&self.prompt, &self.scope, &AllowedMetadata::All).into()
+        (&self.prompt, &self.scope, &AllowedRoleMetadata::All).into()
     }
 }
 
@@ -473,9 +473,9 @@ impl WasmLLMResponse {
     }
 
     pub fn prompt(&self) -> WasmPrompt {
-        // TODO: This is a hack. We shouldn't hardcode AllowedMetadata::All
+        // TODO: This is a hack. We shouldn't hardcode AllowedRoleMetadata::All
         // here, but instead plumb it through the LLMErrors
-        (&self.prompt, &self.scope, &AllowedMetadata::All).into()
+        (&self.prompt, &self.scope, &AllowedRoleMetadata::All).into()
     }
 }
 
@@ -962,6 +962,12 @@ impl WasmRuntime {
 
     #[wasm_bindgen]
     pub fn list_functions(&self) -> Vec<WasmFunction> {
+        let ctx = &self
+            .runtime
+            .create_ctx_manager(BamlValue::String("wasm".to_string()), None);
+        let ctx = ctx.create_ctx_with_default();
+        let ctx = ctx.eval_ctx(false);
+
         self.runtime
             .internal()
             .ir()
@@ -1008,7 +1014,7 @@ impl WasmRuntime {
                     test_cases: f
                         .walk_tests()
                         .map(|tc| {
-                            let params = match tc.test_case_params(&self.runtime.env_vars()) {
+                            let params = match tc.test_case_params(&ctx) {
                                 Ok(params) => Ok(params
                                     .iter()
                                     .map(|(k, v)| {
@@ -1311,12 +1317,19 @@ impl WasmRuntime {
 
     #[wasm_bindgen]
     pub fn list_testcases(&self) -> Vec<WasmTestCase> {
+        let ctx = self
+            .runtime
+            .create_ctx_manager(BamlValue::String("wasm".to_string()), None);
+
+        let ctx = ctx.create_ctx_with_default();
+        let ctx = ctx.eval_ctx(true);
+
         self.runtime
             .internal()
             .ir()
             .walk_tests()
             .map(|tc| {
-                let params = match tc.test_case_params(&self.runtime.env_vars()) {
+                let params = match tc.test_case_params(&ctx) {
                     Ok(params) => Ok(params
                         .iter()
                         .map(|(k, v)| {
@@ -1513,18 +1526,17 @@ impl WasmFunction {
         wasm_call_context: &WasmCallContext,
         get_baml_src_cb: js_sys::Function,
     ) -> JsResult<WasmPrompt> {
-        let missing_env_vars = rt.runtime.internal().ir().required_env_vars();
         let ctx = rt
             .runtime
             .create_ctx_manager(
                 BamlValue::String("wasm".to_string()),
                 js_fn_to_baml_src_reader(get_baml_src_cb),
             )
-            .create_ctx_with_default(missing_env_vars.iter());
+            .create_ctx_with_default();
 
         let params = rt
             .runtime
-            .get_test_params(&self.name, &test_name, &ctx)
+            .get_test_params(&self.name, &test_name, &ctx, false)
             .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
 
         rt.runtime
@@ -1540,7 +1552,7 @@ impl WasmFunction {
     pub fn client_name(&self, rt: &WasmRuntime) -> Result<String, JsValue> {
         let rt: &BamlRuntime = &rt.runtime;
         let ctx_manager = rt.create_ctx_manager(BamlValue::String("wasm".to_string()), None);
-        let ctx = ctx_manager.create_ctx_with_default(rt.env_vars().keys().map(|k| k.as_str()));
+        let ctx = ctx_manager.create_ctx_with_default();
         let ir = rt.internal().ir();
         let walker = ir
             .find_function(&self.name)
@@ -1560,19 +1572,17 @@ impl WasmFunction {
         expand_images: bool,
         get_baml_src_cb: js_sys::Function,
     ) -> Result<String, wasm_bindgen::JsError> {
-        let missing_env_vars = rt.runtime.internal().ir().required_env_vars();
-
         let ctx = rt
             .runtime
             .create_ctx_manager(
                 BamlValue::String("wasm".to_string()),
                 js_fn_to_baml_src_reader(get_baml_src_cb),
             )
-            .create_ctx_with_default(missing_env_vars.iter());
+            .create_ctx_with_default();
 
         let params = rt
             .runtime
-            .get_test_params(&self.name, &test_name, &ctx)
+            .get_test_params(&self.name, &test_name, &ctx, false)
             .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
 
         let result = rt
@@ -1644,10 +1654,9 @@ impl WasmFunction {
     pub fn orchestration_graph(&self, rt: &WasmRuntime) -> Result<Vec<WasmScope>, JsValue> {
         let rt: &BamlRuntime = &rt.runtime;
 
-        let missing_env_vars = rt.internal().ir().required_env_vars();
         let ctx = rt
             .create_ctx_manager(BamlValue::String("wasm".to_string()), None)
-            .create_ctx_with_default(missing_env_vars.iter());
+            .create_ctx_with_default();
 
         let ir = rt.internal().ir();
         let walker = ir

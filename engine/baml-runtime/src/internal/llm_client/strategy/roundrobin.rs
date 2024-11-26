@@ -8,21 +8,23 @@ use std::{
 };
 
 use internal_baml_core::ir::ClientWalker;
-use internal_llm_client::{ClientProvider, ClientSpec, ResolvedClientProperty, UnresolvedClientProperty};
+use internal_llm_client::{
+    ClientProvider, ClientSpec, ResolvedClientProperty, UnresolvedClientProperty,
+};
 
 use crate::{
     client_registry::ClientProperty,
     internal::llm_client::orchestrator::{
-            ExecutionScope, IterOrchestrator, OrchestrationScope, OrchestrationState,
-            OrchestratorNodeIterator,
-        },
+        ExecutionScope, IterOrchestrator, OrchestrationScope, OrchestrationState,
+        OrchestratorNodeIterator,
+    },
     runtime_interface::InternalClientLookup,
     RuntimeContext,
 };
 use serde::Serialize;
 use serde::Serializer;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct RoundRobinStrategy {
     pub name: String,
     pub(super) retry_policy: Option<String>,
@@ -56,7 +58,7 @@ fn resolve_strategy(
     ctx: &RuntimeContext,
 ) -> Result<(Vec<ClientSpec>, usize)> {
     let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
-    let ResolvedClientProperty::RoundRobin(props) = properties  else {
+    let ResolvedClientProperty::RoundRobin(props) = properties else {
         anyhow::bail!(
             "Invalid client property. Should have been a round-robin property but got: {}",
             properties.name()
@@ -83,7 +85,8 @@ impl TryFrom<(&ClientProperty, &RuntimeContext)> for RoundRobinStrategy {
     fn try_from(
         (client, ctx): (&ClientProperty, &RuntimeContext),
     ) -> std::result::Result<Self, Self::Error> {
-        let (strategy, start) = resolve_strategy(&client.provider, &client.unresolved_options()?, ctx)?;
+        let (strategy, start) =
+            resolve_strategy(&client.provider, &client.unresolved_options()?, ctx)?;
 
         Ok(RoundRobinStrategy {
             name: client.name.clone(),

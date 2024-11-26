@@ -2,16 +2,14 @@ use anyhow::Result;
 use std::collections::HashSet;
 
 use baml_types::{GetEnvVar, StringOr};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub enum ClientSpec {
     Named(String),
     /// Shorthand for "<provider>/<model>"
     Shorthand(ClientProvider, String),
 }
-
 
 impl ClientSpec {
     pub fn as_str(&self) -> String {
@@ -31,9 +29,8 @@ impl ClientSpec {
     }
 }
 
-
 /// The provider for the client, e.g. baml-openai-chat
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum ClientProvider {
     /// The OpenAI client provider variant
     OpenAI(OpenAIClientProviderVariant),
@@ -46,11 +43,11 @@ pub enum ClientProvider {
     /// The Vertex client provider variant
     Vertex,
     /// The strategy client provider variant
-    Strategy(StrategyClientProvider)
+    Strategy(StrategyClientProvider),
 }
 
 /// The OpenAI client provider variant
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum OpenAIClientProviderVariant {
     /// The base OpenAI client provider variant
     Base,
@@ -63,7 +60,7 @@ pub enum OpenAIClientProviderVariant {
 }
 
 /// The strategy client provider variant
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum StrategyClientProvider {
     /// The round-robin strategy client provider variant
     RoundRobin,
@@ -139,7 +136,10 @@ impl std::str::FromStr for OpenAIClientProviderVariant {
             "ollama" => Ok(OpenAIClientProviderVariant::Ollama),
             "azure-openai" => Ok(OpenAIClientProviderVariant::Azure),
             "openai-generic" => Ok(OpenAIClientProviderVariant::Generic),
-            _ => Err(anyhow::anyhow!("Invalid OpenAI client provider variant: {}", s)),
+            _ => Err(anyhow::anyhow!(
+                "Invalid OpenAI client provider variant: {}",
+                s
+            )),
         }
     }
 }
@@ -151,15 +151,28 @@ impl std::str::FromStr for StrategyClientProvider {
         match s {
             "round-robin" => Ok(StrategyClientProvider::RoundRobin),
             "fallback" => Ok(StrategyClientProvider::Fallback),
-            _ => Err(anyhow::anyhow!("Invalid strategy client provider variant: {}", s)),
+            _ => Err(anyhow::anyhow!(
+                "Invalid strategy client provider variant: {}",
+                s
+            )),
         }
     }
 }
 
-
 impl ClientProvider {
     pub fn allowed_providers() -> &'static [&'static str] {
-        &["openai", "openai-generic", "azure-openai", "anthropic", "ollama", "round-robin", "fallback", "google-ai", "vertex-ai", "aws-bedrock"]
+        &[
+            "openai",
+            "openai-generic",
+            "azure-openai",
+            "anthropic",
+            "ollama",
+            "round-robin",
+            "fallback",
+            "google-ai",
+            "vertex-ai",
+            "aws-bedrock",
+        ]
     }
 }
 
@@ -203,7 +216,11 @@ impl UnresolvedAllowedRoleMetadata {
     pub fn required_env_vars(&self) -> HashSet<String> {
         match self {
             Self::Value(role) => role.required_env_vars(),
-            Self::Only(roles) => roles.iter().map(|role| role.required_env_vars()).flatten().collect(),
+            Self::Only(roles) => roles
+                .iter()
+                .map(|role| role.required_env_vars())
+                .flatten()
+                .collect(),
             _ => HashSet::new(),
         }
     }
@@ -217,10 +234,15 @@ impl UnresolvedAllowedRoleMetadata {
                     "none" => Ok(AllowedRoleMetadata::None),
                     _ => Err(anyhow::anyhow!("Invalid allowed role metadata: {}. Allowed values are 'all' or 'none' or an array of roles.", role)),
                 }
-            },
+            }
             Self::All => Ok(AllowedRoleMetadata::All),
             Self::None => Ok(AllowedRoleMetadata::None),
-            Self::Only(roles) => Ok(AllowedRoleMetadata::Only(roles.iter().map(|role| role.resolve(ctx)).collect::<Result<HashSet<_>>>()?)),
+            Self::Only(roles) => Ok(AllowedRoleMetadata::Only(
+                roles
+                    .iter()
+                    .map(|role| role.resolve(ctx))
+                    .collect::<Result<HashSet<_>>>()?,
+            )),
         }
     }
 }

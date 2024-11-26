@@ -515,13 +515,18 @@ export const currentClientsAtom = atom((get) => {
     return []
   }
 
-  const wasmScopes = func.orchestration_graph(runtime)
-  if (wasmScopes === null) {
-    return []
-  }
+  try {
+    const wasmScopes = func.orchestration_graph(runtime)
+    if (wasmScopes === null) {
+      return []
+    }
 
-  const nodes = createClientNodes(wasmScopes)
-  return nodes.map((node) => node.name)
+    const nodes = createClientNodes(wasmScopes)
+    return nodes.map((node) => node.name)
+  } catch (e) {
+    console.error(e)
+    return ['Error!']
+  }
 })
 
 // something about the orchestration graph is broken, comment it out to make it work
@@ -1101,7 +1106,7 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
           </div>
         )
       ) : (
-        <CustomErrorBoundary>{children}</CustomErrorBoundary>
+        <CustomErrorBoundary message='Error loading project'>{children}</CustomErrorBoundary>
       )}
     </>
   )

@@ -27,10 +27,7 @@ use anyhow::{Context, Result};
 use baml_types::{BamlMap, BamlValue, Constraint, EvaluationContext};
 use internal_baml_core::{
     internal_baml_diagnostics::SourceFile,
-    ir::{
-        repr::IntermediateRepr,
-        ArgCoercer, FunctionWalker, IRHelper,
-    },
+    ir::{repr::IntermediateRepr, ArgCoercer, FunctionWalker, IRHelper},
     validate,
 };
 use internal_baml_jinja::RenderedPrompt;
@@ -239,7 +236,7 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
         let func = self.get_function(function_name, ctx)?;
         let test = self.ir().find_test(&func, test_name)?;
 
-        let eval_ctx = EvaluationContext::new(&ctx.env, strict);
+        let eval_ctx = ctx.eval_ctx(strict);
 
         match test.test_case_params(&eval_ctx) {
             Ok(params) => {
@@ -280,7 +277,10 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
     }
 
     fn get_test_constraints(
-        &self, function_name: &str, test_name: &str, ctx: &RuntimeContext
+        &self,
+        function_name: &str,
+        test_name: &str,
+        ctx: &RuntimeContext,
     ) -> Result<Vec<Constraint>> {
         let func = self.get_function(function_name, ctx)?;
         let walker = self.ir().find_test(&func, test_name)?;

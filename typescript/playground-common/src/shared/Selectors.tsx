@@ -16,6 +16,7 @@ import SearchBarWithSelector from '../lib/searchbar'
 import Link from './Link'
 import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog'
 import { Snippets } from './Snippets'
+import CustomErrorBoundary from '../utils/ErrorFallback'
 
 const ClientHeader: React.FC = () => {
   const orchIndex = useAtomValue(orchIndexAtom)
@@ -190,13 +191,21 @@ export const ViewSelector: React.FC = () => {
   return (
     <div className='flex overflow-x-auto flex-row justify-between w-full'>
       <div className='flex overflow-x-auto flex-row gap-4 items-center px-2 py-1'>
-        <FunctionDropdown />
+        <CustomErrorBoundary message='Error loading function dropdown'>
+          <FunctionDropdown />
+        </CustomErrorBoundary>
         <div>
           <ChevronRight className='w-4 h-4' />
         </div>
-        <TestDropdown />
-        <ChevronRight className='w-4, h-4' />
-        <ClientHeader />
+        <CustomErrorBoundary message='Error loading test dropdown'>
+          <TestDropdown />
+        </CustomErrorBoundary>
+        <div>
+          <ChevronRight className='w-4, h-4' />
+        </div>
+        <CustomErrorBoundary message='Error loading client header'>
+          <ClientHeader />
+        </CustomErrorBoundary>
       </div>
       <div className='flex absolute right-1 top-2 z-10 flex-row gap-1 justify-center items-center text-end'>
         <Dialog>

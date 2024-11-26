@@ -36,6 +36,7 @@ import { vscode } from '../utils/vscode'
 import clsx from 'clsx'
 import { ErrorBoundary } from 'react-error-boundary'
 import { Badge } from '@/components/ui/badge'
+import CustomErrorBoundary from '../utils/ErrorFallback'
 
 const handleCopy = (text: string) => () => {
   navigator.clipboard.writeText(text)
@@ -365,7 +366,9 @@ enum Topic {
                 <div className='w-full h-full'>
                   <CheckboxHeader />
                   <div className='overflow-y-auto relative w-full' style={{ height: 'calc(100% - 32px)' }}>
-                    <PromptPreview />
+                    <CustomErrorBoundary message='Error loading prompt preview'>
+                      <PromptPreview />
+                    </CustomErrorBoundary>
                   </div>
                 </div>
               </ResizablePanelGroup>

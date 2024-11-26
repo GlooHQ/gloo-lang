@@ -139,7 +139,7 @@ impl OrchestrationScope {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub enum ExecutionScope {
     Direct(String),
     // PolicyName, RetryCount, RetryDelayMs

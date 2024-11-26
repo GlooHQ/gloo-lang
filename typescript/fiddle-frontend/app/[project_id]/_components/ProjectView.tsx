@@ -330,7 +330,7 @@ const PlaygroundView = () => {
   return (
     <>
       <AppStateProvider>
-        <CustomErrorBoundary>
+        <CustomErrorBoundary message='Error loading playground'>
           <Suspense fallback={<div>Loading...</div>}>
             <EventListener>
               <SettingsDialog />
