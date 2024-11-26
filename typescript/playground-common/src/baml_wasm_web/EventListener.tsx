@@ -34,9 +34,16 @@ const wasmAtomAsync = atom(async () => {
 
 const vscodeSettingsAtom = unwrap(
   atom(async () => {
+    try {
     const res = await vscode.getIsProxyEnabled()
     return {
       enablePlaygroundProxy: res,
+      }
+    } catch (e) {
+      console.error(`Error occurred while getting vscode settings:\n${e}`)
+      return {
+        enablePlaygroundProxy: false,
+      }
     }
   }),
 )
