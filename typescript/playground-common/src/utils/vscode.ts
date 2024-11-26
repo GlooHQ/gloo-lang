@@ -1,4 +1,10 @@
-import { decodeBuffer, GetVSCodeSettingsRequest, GetVSCodeSettingsResponse, GetWebviewUriRequest, GetWebviewUriResponse } from '../baml_wasm_web/rpc'
+import {
+  decodeBuffer,
+  GetVSCodeSettingsRequest,
+  GetVSCodeSettingsResponse,
+  GetWebviewUriRequest,
+  GetWebviewUriResponse,
+} from '../baml_wasm_web/rpc'
 import type { WebviewApi } from 'vscode-webview'
 
 const RPC_TIMEOUT_MS = 5000
@@ -85,9 +91,9 @@ class VSCodeAPIWrapper {
 
   public async getIsProxyEnabled() {
     const resp = await this.rpc<GetVSCodeSettingsRequest, GetVSCodeSettingsResponse>({
-      vscodeCommand: "GET_VSCODE_SETTINGS"
+      vscodeCommand: 'GET_VSCODE_SETTINGS',
     })
-    console.log("vscode settings", resp);
+    console.log('vscode settings', resp)
     return resp.enablePlaygroundProxy ?? true
   }
 

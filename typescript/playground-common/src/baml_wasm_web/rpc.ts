@@ -102,13 +102,12 @@ export interface GetVSCodeSettingsResponse {
   enablePlaygroundProxy: boolean
 }
 
-
 type ApiPairs = [
   // Echo is included here as an example of what a request/response pair looks like
   [EchoRequest, EchoResponse],
   [GetBamlSrcRequest, GetBamlSrcResponse],
   [GetWebviewUriRequest, GetWebviewUriResponse],
-  [GetVSCodeSettingsRequest, GetVSCodeSettingsResponse]
+  [GetVSCodeSettingsRequest, GetVSCodeSettingsResponse],
 ]
 
 // Serialization for binary data (like images)

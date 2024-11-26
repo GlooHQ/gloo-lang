@@ -86,12 +86,12 @@ function updateTestSuiteState(old_result: TestSuiteSummary, new_result: TestSuit
 export const useRunHooks = () => {
   const isRunning = useAtomValue(isRunningAtom)
 
-  const [enableProxy, setEnableProxy] = useState<undefined | boolean>();
+  const [enableProxy, setEnableProxy] = useState<undefined | boolean>()
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       const res = await vscode.getIsProxyEnabled()
-      console.log('enableproxy call');
-      setEnableProxy(res);
+      console.log('enableproxy call')
+      setEnableProxy(res)
     })()
   }, [])
 
