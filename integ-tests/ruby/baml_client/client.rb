@@ -1813,6 +1813,102 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        i1: T::Hash[String, String],i2: T::Hash[String, String],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T::Hash[String, String])
+    }
+    def InOutEnumMapKey(
+        *varargs,
+        i1:,i2:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("InOutEnumMapKey may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "InOutEnumMapKey",
+        {
+          i1: i1,i2: i2,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        i1: T::Hash[String, String],i2: T::Hash[String, String],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T::Hash[String, String])
+    }
+    def InOutLiteralStringUnionMapKey(
+        *varargs,
+        i1:,i2:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("InOutLiteralStringUnionMapKey may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "InOutLiteralStringUnionMapKey",
+        {
+          i1: i1,i2: i2,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        m: T::Hash[String, String],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T::Hash[String, String])
+    }
+    def InOutSingleLiteralStringMapKey(
+        *varargs,
+        m:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("InOutSingleLiteralStringMapKey may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "InOutSingleLiteralStringMapKey",
+        {
+          m: m,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(T.any(Integer, T::Boolean, String))
@@ -5663,6 +5759,111 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[Baml::PartialTypes::SearchParams, Baml::Types::SearchParams].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        i1: T::Hash[String, String],i2: T::Hash[String, String],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T::Hash[String, String]])
+    }
+    def InOutEnumMapKey(
+        *varargs,
+        i1:,i2:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("InOutEnumMapKey may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "InOutEnumMapKey",
+        {
+          i1: i1,i2: i2,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T::Hash[String, T.nilable(String)], T::Hash[String, String]].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        i1: T::Hash[String, String],i2: T::Hash[String, String],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T::Hash[String, String]])
+    }
+    def InOutLiteralStringUnionMapKey(
+        *varargs,
+        i1:,i2:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("InOutLiteralStringUnionMapKey may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "InOutLiteralStringUnionMapKey",
+        {
+          i1: i1,i2: i2,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T::Hash[String, T.nilable(String)], T::Hash[String, String]].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        m: T::Hash[String, String],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T::Hash[String, String]])
+    }
+    def InOutSingleLiteralStringMapKey(
+        *varargs,
+        m:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("InOutSingleLiteralStringMapKey may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "InOutSingleLiteralStringMapKey",
+        {
+          m: m,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T::Hash[String, T.nilable(String)], T::Hash[String, String]].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )

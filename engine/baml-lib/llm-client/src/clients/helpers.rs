@@ -238,7 +238,6 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             .map(|(key_span, value, meta)| (key_span, UnresolvedUrl(value), meta))
     }
 
-
     pub fn ensure_supported_request_modes(&mut self) -> SupportedRequestModes {
         let result = self.ensure_bool("supports_streaming", false);
         match result {
@@ -247,6 +246,10 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             },
             None => SupportedRequestModes { stream: None },
         }
+    }
+
+    pub fn ensure_any(&mut self, key: &str) -> Option<(Meta, UnresolvedValue<Meta>)> {
+        self.options.shift_remove(key)
     }
 
     pub fn ensure_allowed_metadata(&mut self) -> UnresolvedAllowedRoleMetadata {
@@ -396,14 +399,7 @@ fn ensure_array<Meta: Clone>(
 fn ensure_map<Meta: Clone>(
     options: &mut IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
     key: &str,
-) -> Result<
-    Option<(
-        Meta,
-        IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
-        Meta,
-    )>,
-    Error<Meta>,
-> {
+) -> Result<Option<(Meta, IndexMap<String, (Meta, UnresolvedValue<Meta>)>, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
         match value.to_map() {
             Ok((m, meta)) => Ok(Some((key_span, m, meta))),

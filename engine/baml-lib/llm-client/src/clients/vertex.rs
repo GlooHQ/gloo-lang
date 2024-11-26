@@ -9,10 +9,11 @@ use serde::Deserialize;
 
 use super::helpers::{Error, PropertyHandler, UnresolvedUrl};
 
-#[derive(Debug, Clone)]
-enum UnresolvedServiceAccountDetails {
+#[derive(Debug)]
+enum UnresolvedServiceAccountDetails<Meta> {
     RawAuthorizationHeader(StringOr),
-    MaybeFilePath(StringOr),
+    MaybeFilePathOrContent(StringOr),
+    Object(IndexMap<String, (Meta, UnresolvedValue<Meta>)>),
     Json(StringOr),
 }
 
@@ -29,11 +30,35 @@ pub enum ResolvedServiceAccountDetails {
     Json(ServiceAccount),
 }
 
-impl UnresolvedServiceAccountDetails {
+impl<Meta> UnresolvedServiceAccountDetails<Meta> {
+    fn without_meta(&self) -> UnresolvedServiceAccountDetails<()> {
+        match self {
+            UnresolvedServiceAccountDetails::RawAuthorizationHeader(s) => {
+                UnresolvedServiceAccountDetails::RawAuthorizationHeader(s.clone())
+            }
+            UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s) => {
+                UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s.clone())
+            }
+            UnresolvedServiceAccountDetails::Object(s) => UnresolvedServiceAccountDetails::Object(
+                s.iter()
+                    .map(|(k, v)| (k.clone(), ((), v.1.without_meta())))
+                    .collect(),
+            ),
+            UnresolvedServiceAccountDetails::Json(s) => {
+                UnresolvedServiceAccountDetails::Json(s.clone())
+            }
+        }
+    }
+
     fn required_env_vars(&self) -> HashSet<String> {
         match self {
             UnresolvedServiceAccountDetails::RawAuthorizationHeader(s) => s.required_env_vars(),
-            UnresolvedServiceAccountDetails::MaybeFilePath(s) => s.required_env_vars(),
+            UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s) => s.required_env_vars(),
+            UnresolvedServiceAccountDetails::Object(s) => s
+                .values()
+                .map(|(_, v)| v.required_env_vars())
+                .flatten()
+                .collect(),
             UnresolvedServiceAccountDetails::Json(s) => s.required_env_vars(),
         }
     }
@@ -43,7 +68,7 @@ impl UnresolvedServiceAccountDetails {
             UnresolvedServiceAccountDetails::RawAuthorizationHeader(s) => Ok(
                 ResolvedServiceAccountDetails::RawAuthorizationHeader(s.resolve(ctx)?),
             ),
-            UnresolvedServiceAccountDetails::MaybeFilePath(s) => {
+            UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s) => {
                 let value = s.resolve(ctx)?;
                 match serde_json::from_str(&value) {
                     Ok(json) => Ok(ResolvedServiceAccountDetails::Json(json)),
@@ -52,11 +77,12 @@ impl UnresolvedServiceAccountDetails {
                         {
                             // Not a valid JSON, so we assume it's a file path
                             // Load the file and parse it as JSON
-                            let file = std::fs::read_to_string(&value)
-                                .context(format!("Failed to read service account file: {}", value))?;
-                            let json = serde_json::from_str(&file).context(format!(
-                                "Failed to parse service account file as JSON"
+                            let file = std::fs::read_to_string(&value).context(format!(
+                                "Failed to read service account file: {}",
+                                value
                             ))?;
+                            let json = serde_json::from_str(&file)
+                                .context(format!("Failed to parse service account file as JSON"))?;
                             Ok(ResolvedServiceAccountDetails::Json(json))
                         }
                         #[cfg(target_arch = "wasm32")]
@@ -67,6 +93,16 @@ impl UnresolvedServiceAccountDetails {
                         }
                     }
                 }
+            }
+            UnresolvedServiceAccountDetails::Object(s) => {
+                let raw = s
+                    .iter()
+                    .map(|(k, v)| Ok((k, v.1.resolve_serde::<serde_json::Value>(ctx)?)))
+                    .collect::<Result<IndexMap<_, _>>>()?;
+                Ok(ResolvedServiceAccountDetails::Json(
+                    serde_json::from_value(serde_json::json!(raw))
+                        .context(format!("Failed to parse service account JSON"))?,
+                ))
             }
             UnresolvedServiceAccountDetails::Json(s) => {
                 let raw = s.resolve(ctx)?;
@@ -84,7 +120,7 @@ pub struct UnresolvedVertex<Meta> {
     // Either base_url or location
     base_url: either::Either<UnresolvedUrl, StringOr>,
     project_id: Option<StringOr>,
-    authorization: UnresolvedServiceAccountDetails,
+    authorization: UnresolvedServiceAccountDetails<Meta>,
     model: StringOr,
     headers: IndexMap<String, StringOr>,
     allowed_roles: Vec<StringOr>,
@@ -150,7 +186,7 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
         UnresolvedVertex {
             base_url: self.base_url.clone(),
             project_id: self.project_id.clone(),
-            authorization: self.authorization.clone(),
+            authorization: self.authorization.without_meta(),
             model: self.model.clone(),
             headers: self.headers.clone(),
             allowed_roles: self.allowed_roles.clone(),
@@ -239,63 +275,59 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
     }
 
     pub fn create_from(mut properties: PropertyHandler<Meta>) -> Result<Self, Vec<Error<Meta>>> {
-        let credentials = properties
-            .ensure_string("credentials", false)
-            .map(|(_, v, _)| v);
+        let authorization = {
+            let credentials = properties
+                .ensure_any("credentials")
+                .map(|(_, v)| v)
+                .and_then(|v| match v {
+                    UnresolvedValue::String(s, ..) => {
+                        Some(UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s))
+                    }
+                    UnresolvedValue::Map(m, ..) => Some(UnresolvedServiceAccountDetails::Object(m)),
+                    other => {
+                        properties.push_error(
+                            format!(
+                                "credentials must be a string or an object. Got: {}",
+                                other.r#type()
+                            ),
+                            other.meta().clone(),
+                        );
+                        None
+                    }
+                });
 
-        let credentials_content = properties
-            .ensure_string("credentials_content", false)
-            .map(|(_, v, _)| v);
+            let credentials_content = properties
+                .ensure_string("credentials_content", false)
+                .map(|(_, v, _)| UnresolvedServiceAccountDetails::Json(v));
 
-        let authz = properties
-            .ensure_string("authorization", false)
-            .map(|(_, v, _)| v);
+            let authz = properties
+                .ensure_string("authorization", false)
+                .map(|(_, v, _)| UnresolvedServiceAccountDetails::RawAuthorizationHeader(v));
 
-        let credentials = match (credentials, credentials_content) {
-            (Some(credentials), Some(credentials_content)) => {
-                if cfg!(target_arch = "wasm32") {
-                    Some(either::Either::Right(credentials_content))
-                } else {
-                    Some(either::Either::Left(credentials))
-                }
-            }
-            (Some(credentials), None) => Some(either::Either::Left(credentials)),
-            (None, Some(credentials_content)) => Some(either::Either::Right(credentials_content)),
-            (None, None) => {
-                if authz.is_some() {
-                    None
-                } else {
+            match (authz, credentials, credentials_content) {
+                (Some(authz), _, _) => Some(authz),
+                (None, Some(credentials), Some(credentials_content)) => {
                     if cfg!(target_arch = "wasm32") {
-                        Some(either::Either::Right(StringOr::EnvVar(
+                        Some(credentials_content)
+                    } else {
+                        Some(credentials)
+                    }
+                }
+                (None, Some(credentials), None) => Some(credentials),
+                (None, None, Some(credentials_content)) => Some(credentials_content),
+                (None, None, None) => {
+                    if cfg!(target_arch = "wasm32") {
+                        Some(UnresolvedServiceAccountDetails::Json(StringOr::EnvVar(
                             "GOOGLE_APPLICATION_CREDENTIALS_CONTENT".to_string(),
                         )))
                     } else {
-                        Some(either::Either::Left(StringOr::EnvVar(
-                            "GOOGLE_APPLICATION_CREDENTIALS".to_string(),
-                        )))
+                        Some(UnresolvedServiceAccountDetails::MaybeFilePathOrContent(
+                            StringOr::EnvVar("GOOGLE_APPLICATION_CREDENTIALS".to_string()),
+                        ))
                     }
                 }
             }
         };
-
-        let authorization = match (authz, credentials) {
-            (Some(authz), _) => Some(UnresolvedServiceAccountDetails::RawAuthorizationHeader(
-                authz,
-            )),
-            (None, Some(credentials)) => match credentials {
-                either::Either::Left(credentials) => {
-                    Some(UnresolvedServiceAccountDetails::MaybeFilePath(credentials))
-                }
-                either::Either::Right(credentials_content) => {
-                    Some(UnresolvedServiceAccountDetails::Json(credentials_content))
-                }
-            },
-            (None, None) => {
-                properties.push_option_error("Missing either authorization or credentials");
-                None
-            }
-        };
-
         let model = properties.ensure_string("model", true).map(|(_, v, _)| v);
 
         let base_url = {
@@ -309,10 +341,8 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
                 (None, Some(name)) => Some(either::Either::Right(name.1)),
                 (Some((key_1_span, ..)), Some((key_2_span, _))) => {
                     for key in [key_1_span, key_2_span] {
-                        properties.push_error(
-                            "Only one of base_url or location must be provided",
-                            key,
-                        );
+                        properties
+                            .push_error("Only one of base_url or location must be provided", key);
                     }
                     None
                 }
