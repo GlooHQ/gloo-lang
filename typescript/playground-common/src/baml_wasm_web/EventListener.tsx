@@ -32,6 +32,14 @@ const wasmAtomAsync = atom(async () => {
   return wasm
 })
 
+const vscodeSettingsAtom = unwrap(atom(async () => {
+  const res = await vscode.getIsProxyEnabled()
+    return {
+      enablePlaygroundProxy: res, 
+    }
+  }),
+)
+
 export const wasmAtom = unwrap(wasmAtomAsync)
 
 const defaultEnvKeyValues: [string, string][] = (() => {
@@ -119,6 +127,13 @@ type Selection = {
 }
 
 export const envVarsAtom = atom((get) => {
+  const vscodeSettings = get(vscodeSettingsAtom)
+  if (vscodeSettings?.enablePlaygroundProxy !== undefined && !vscodeSettings?.enablePlaygroundProxy) {
+    // filter it out
+    const envKeyValues = get(envKeyValuesAtom)
+    return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]).filter(([k]) => k !== 'BOUNDARY_PROXY_URL'))
+  }
+  
   const envKeyValues = get(envKeyValuesAtom)
   return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]))
 })
