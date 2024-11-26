@@ -1,14 +1,15 @@
-use std::collections::HashMap;
 use std::{
     collections::{HashSet, VecDeque},
     fmt,
 };
 
-use serde::ser::SerializeMap;
-use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
+use anyhow::{Context,Result};
+use std::collections::HashMap;
+use indexmap::IndexMap;
+use serde::{de::Visitor, ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::media::BamlMediaType;
-use crate::{BamlMap, BamlMedia, ResponseCheck};
+use crate::{media::BamlMediaType, ResponseCheck};
+use crate::{BamlMap, BamlMedia};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum BamlValue {
@@ -35,26 +36,6 @@ impl serde::Serialize for BamlValue {
             BamlValue::List(l) => l.serialize(serializer),
             BamlValue::Media(m) => {
                 m.serialize(serializer)
-                // let struct_name = match m.media_type() {
-                //     BamlMediaType::Image => "BamlImage",
-                //     BamlMediaType::Audio => "BamlAudio",
-                // };
-                // let mut s = serializer.serialize_struct(struct_name, 2)?;
-                // match m {
-                //     BamlMedia::File(_, f) => {
-                //         s.serialize_field("path", &f.path)?;
-                //         s.serialize_field("media_type", &f.media_type)?;
-                //     }
-                //     BamlMedia::Url(_, u) => {
-                //         s.serialize_field("url", &u.url)?;
-                //         s.serialize_field("media_type", &u.media_type)?;
-                //     }
-                //     BamlMedia::Base64(_, b) => {
-                //         s.serialize_field("base64", &b.base64)?;
-                //         s.serialize_field("media_type", &b.media_type)?;
-                //     }
-                // }
-                // s.end()
             }
             BamlValue::Enum(_, v) => serializer.serialize_str(v),
             BamlValue::Class(_, m) => m.serialize(serializer),
@@ -465,9 +446,9 @@ impl<T> BamlValueWithMeta<T> {
         }
     }
 
-    pub fn map_meta<F, U>(&self, f: F) -> BamlValueWithMeta<U>
+    pub fn map_meta<'a, F, U>(&'a self, f: F) -> BamlValueWithMeta<U>
     where
-        F: Fn(&T) -> U + Copy,
+        F: Fn(&'a T) -> U + Copy,
     {
         match self {
             BamlValueWithMeta::String(v, m) => BamlValueWithMeta::String(v.clone(), f(m)),
@@ -492,6 +473,98 @@ impl<T> BamlValueWithMeta<T> {
             ),
             BamlValueWithMeta::Null(m) => BamlValueWithMeta::Null(f(m)),
         }
+    }
+
+    pub fn map_meta_owned<F, U>(self, f: F) -> BamlValueWithMeta<U>
+    where
+        F: Fn(T) -> U + Copy,
+    {
+        match self {
+            BamlValueWithMeta::String(v, m) => BamlValueWithMeta::String(v, f(m)),
+            BamlValueWithMeta::Int(v, m) => BamlValueWithMeta::Int(v, f(m)),
+            BamlValueWithMeta::Float(v, m) => BamlValueWithMeta::Float(v, f(m)),
+            BamlValueWithMeta::Bool(v, m) => BamlValueWithMeta::Bool(v, f(m)),
+            BamlValueWithMeta::Map(v, m) => BamlValueWithMeta::Map(
+                v.into_iter().map(|(k, v)| (k, v.map_meta_owned(f))).collect(),
+                f(m),
+            ),
+            BamlValueWithMeta::List(v, m) => {
+                BamlValueWithMeta::List(v.into_iter().map(|v| v.map_meta_owned(f)).collect(), f(m))
+            }
+            BamlValueWithMeta::Media(v, m) => BamlValueWithMeta::Media(v, f(m)),
+            BamlValueWithMeta::Enum(v, e, m) => BamlValueWithMeta::Enum(v, e, f(m)),
+            BamlValueWithMeta::Class(n, fs, m) => BamlValueWithMeta::Class(
+                n,
+                fs.into_iter()
+                    .map(|(k, v)| (k, v.map_meta_owned(f)))
+                    .collect(),
+                f(m),
+            ),
+            BamlValueWithMeta::Null(m) => BamlValueWithMeta::Null(f(m)),
+        }
+    }
+
+    /// Combine two similar shaped baml values by tupling their metadata
+    /// on a node-by-node basis.
+    /// 
+    /// The baml value calling `zip_meta` is the "primary" one, whose value
+    /// data will live on in the returned baml value.
+    pub fn zip_meta<U: Clone + std::fmt::Debug>(self, other: &BamlValueWithMeta<U>) -> Result<BamlValueWithMeta<(T,U)>>
+    where T: std::fmt::Debug
+    {
+        let other_meta: U = other.meta().clone();
+        let error_msg = String::new(); // format!("Could not unify {:?} with {:?}.", self, other);
+        let ret = match (self, other) {
+            (BamlValueWithMeta::Null(meta1), _) => {
+                Result::<_,_>::Ok(BamlValueWithMeta::Null((meta1, other_meta)))
+            },
+            (BamlValueWithMeta::String(s1, meta1), BamlValueWithMeta::String(_s2, _)) if true => Ok(BamlValueWithMeta::String(s1, (meta1, other_meta))),
+            (BamlValueWithMeta::String(_,_), _) => anyhow::bail!("Unification error"),
+            (BamlValueWithMeta::Int(s1, meta1), BamlValueWithMeta::Int(_s2, _)) if true => Ok(BamlValueWithMeta::Int(s1, (meta1, other_meta))),
+            (BamlValueWithMeta::Int(_,_), _) => anyhow::bail!("Unification error"),
+            (BamlValueWithMeta::Float(s1, meta1), BamlValueWithMeta::Float(_s2, _)) if true => Ok(BamlValueWithMeta::Float(s1, (meta1, other_meta))),
+            (BamlValueWithMeta::Float(_,_), _) => anyhow::bail!("Unification error"),
+            (BamlValueWithMeta::Bool(s1, meta1), BamlValueWithMeta::Bool(_s2, _)) if true => Ok(BamlValueWithMeta::Bool(s1, (meta1, other_meta))),
+            (BamlValueWithMeta::Bool(_,_), _) => anyhow::bail!("Unification error"),
+            (BamlValueWithMeta::Map(s1, meta1), BamlValueWithMeta::Map(s2, _)) => {
+                let map_result = s1.into_iter().zip(s2).map(|((k1,v1), (_k2,v2))| {
+                    v1.zip_meta(v2).map(|res| (k1, res))
+                }).collect::<Result<IndexMap<_, _>>>()?;
+                Ok(BamlValueWithMeta::Map(map_result, (meta1, other_meta)))
+            },
+            (BamlValueWithMeta::Map(_,_), _) => anyhow::bail!("Unification error"),
+            (BamlValueWithMeta::List(l1, meta1), BamlValueWithMeta::List(l2, _)) => {
+                let list_result = l1.into_iter().zip(l2).map(|(item1, item2)| {
+                    item1.zip_meta(item2)
+                }).collect::<Result<Vec<_>>>()?;
+                Ok( BamlValueWithMeta::List(list_result, (meta1, other_meta)))
+                
+            }
+            (BamlValueWithMeta::List(_,_), _) => anyhow::bail!("Unification error"),
+            (BamlValueWithMeta::Media(m1, meta1), BamlValueWithMeta::Media(_m2, _)) if true => {
+                Ok(BamlValueWithMeta::Media(m1, (meta1, other_meta)))
+            }
+            (BamlValueWithMeta::Media(_, _), _) => anyhow::bail!("Unification error"),
+            (BamlValueWithMeta::Enum(x1, y1, meta1), BamlValueWithMeta::Enum(_x2, _y2, _)) if true => {
+                Ok(BamlValueWithMeta::Enum(x1, y1, (meta1, other_meta)))
+            }
+            (BamlValueWithMeta::Enum(_, _, _), _) => anyhow::bail!("Unification error"),
+            (BamlValueWithMeta::Class(name1, fields1, meta1), BamlValueWithMeta::Class(_name2, fields2, _)) if true => {
+                // TODO: We can remove a `clone` by checking that the fields
+                // are ordered the same way between the two classes, then consuming
+                // both classs' fields in parallel.
+                // let map_result = fields1.into_iter().zip(fields2).map(|((k1,v1),(_k2,v2))| {
+                //     v1.zip_meta(v2).map(|r| (k1, r))
+                // }).collect::<Result<IndexMap<_,_>>>()?;
+                let map_result = fields1.into_iter().map(|(k1, v1)| {
+                    let v2 = fields2.get(&k1).context("Missing expected key")?;
+                    v1.zip_meta(v2).map(|r| (k1, r))
+                }).collect::<Result<IndexMap<_,_>>>()?;
+                Ok(BamlValueWithMeta::Class(name1, map_result, (meta1, other_meta)))
+            }
+            (BamlValueWithMeta::Class(_, _, _), _) => anyhow::bail!("Unification error"),
+        };
+        ret.map_err(|_: anyhow::Error| anyhow::anyhow!(error_msg))
     }
 }
 
@@ -608,6 +681,7 @@ impl Serialize for BamlValueWithMeta<Vec<ResponseCheck>> {
     where
         S: Serializer,
     {
+        eprintln!("ABOUT TO SERIALIZE");
         match self {
             BamlValueWithMeta::String(v, cr) => serialize_with_checks(v, cr, serializer),
             BamlValueWithMeta::Int(v, cr) => serialize_with_checks(v, cr, serializer),
@@ -665,128 +739,186 @@ where
 fn add_checks<'a, S: SerializeMap>(
     map: &'a mut S,
     checks: &'a [ResponseCheck],
-) -> Result<(), S::Error> {
+) -> Result<(), S::Error>
+{
     if !checks.is_empty() {
-        let checks_map: HashMap<_, _> = checks
-            .iter()
-            .map(|check| (check.name.clone(), check))
-            .collect();
+        let checks_map: HashMap<_,_> = checks.iter().map(|check| (check.name.clone(), check)).collect();
         map.serialize_entry("checks", &checks_map)?;
     }
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// impl <T> Serialize for BamlValueWithMeta<T>
+//   where T: SerializeMetadata + std::fmt::Debug,
+// {
+// 
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: Serializer,
+//     {
+//         let bare_value = self.value();
+//         let metadata_fields = &self.meta().metadata_fields(&bare_value)?;
+//         match self {
+//            BamlValueWithMeta::String(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
+//            BamlValueWithMeta::Int(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
+//            BamlValueWithMeta::Float(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
+//            BamlValueWithMeta::Bool(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
+//            BamlValueWithMeta::Map(v, _metadata) => {
+//                let mut map = serializer.serialize_map(None)?;
+//                for (key, value) in v {
+//                    map.serialize_entry::<String, BamlValueWithMeta<T>>(key, value)?;
+//                }
+//                add_checks(&mut map, &self.meta().metadata_fields(&bare_value)?)?;
+//                map.end()
+//            }
+//            BamlValueWithMeta::List(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
+//            BamlValueWithMeta::Media(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
+//            BamlValueWithMeta::Enum(_enum_name, v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
+//            BamlValueWithMeta::Class(_class_name, v, _metadata) => {
+//                let metadata_fields = self.meta().metadata_fields(&bare_value);
+//                if metadata_fields.is_empty() {
+//                    let mut map = serializer.serialize_map(None)?;
+//                    v.into_iter().try_for_each(|(key, value)| {
+//                     map.serialize_entry(key, value)
+//                    })?;
+//                    add_checks(&mut map, &metadata_fields)?;
+//                    map.end()
+//                } else {
+//                    let mut checked_value = serializer.serialize_map(Some(2))?;
+//                    checked_value.serialize_entry("value", &v)?;
+//                    add_checks(&mut checked_value, &metadata_fields)?;
+//                    checked_value.end()
+//                }
+//            }
+//            BamlValueWithMeta::Null(_) => serialize_with_checks(&(), &self.meta().metadata_fields(), serializer),
+//        }
+//     }
+// }
+// 
+// fn serialize_with_checks<S, T: Serialize>(
+//     value: &T,
+//     metadata_fields: &Vec<(String, serde_json::Value)>,
+//     serializer: S,
+// ) -> Result<S::Ok, S::Error>
+// where
+//     S: Serializer,
+// {
+//     if !metadata_fields.is_empty() {
+//         let mut map = serializer.serialize_map(Some(2))?;
+//         map.serialize_entry("value", value)?;
+//         add_checks(&mut map, metadata_fields)?;
+//         map.end()
+//     } else {
+//         value.serialize(serializer)
+//     }
+// }
+// 
+// fn add_checks<'a, S: SerializeMap>(
+//     map: &'a mut S,
+//     metadata_fields: &Vec<(String, serde_json::Value)>,
+// ) -> Result<(), S::Error>
+// {
+//     metadata_fields.iter().try_for_each(|(field_name, value)| {
+//         map.serialize_entry(&field_name, &value)
+//     })?;
+//     Ok(())
+// }
+// 
+// pub trait SerializeMetadata {
+//     fn metadata_fields(&self, bare_value: &BamlValue) -> Result<Vec<(&str, serde_json::Value)>, serde_json::Error>;
+// }
+// 
+// // This instance is used in constraint tests.
+// // Consider modifying that test and deleting this instance.
+// impl SerializeMetadata for Vec<ResponseCheck> {
+//     fn metadata_fields(&self, _bare_value: &serde_json::Value) -> Result<Vec<(&str, serde_json::Value)>, serde_json::Error> {
+//         if !self.is_empty() {
+//             let checks_map: HashMap<_,_> = self.iter().map(|check| (check.name.clone(), check)).collect();
+//             let json_checks_map = serde_json::to_value(checks_map).expect("serialization of checks is safe");
+//             Ok(vec![("checks", json_checks_map)])
+//         } else {
+//             Ok(Vec::new())
+//         }
+//     }
+// }
+// 
+// impl <T> SerializeMetadata for (T, Vec<ResponseCheck>, Option<CompletionState>) {
+// 
+//     // If there are only checks:
+//     //   [("checks", checks), ("value", value)]
+//     // If there is completion state:
+//     //   [("state", state), ("value", value)]
+//     // If there are checks and completion state:
+//     //  [("state", state), ("value": { "checks": checks, "value": value })]
+//     // If there are neither checks nor completion state:
+//     // [("value", value)]
+//     fn metadata_fields(&self, bare_value: &BamlValue) -> Result<Vec<(&str, serde_json::Value)>, serde_json::Error> {
+//         let checks: Vec<(&str, &ResponseCheck)> = self.1.iter().map(|check| (check.name.as_str(), check)).collect();
+//         let completion_state: Option<&CompletionState> = self.2.as_ref();
+// 
+//         let checks_json = serde_json::to_value(&checks)?;
+//         let bare_value_json = serde_json::to_value(bare_value)?;
+// 
+//         match (checks.len(), completion_state) {
+//             (0, None) => Ok(vec![("value", bare_value_json)]),
+//             (_, None) => Ok(vec![("value", bare_value_json), ("checks", checks_json)]),
+//             (0, Some(state)) => Ok(vec![("value", bare_value_json), ("state", serde_json::to_value(state)?)]),
+//             (_, Some(state)) => Ok(vec![
+//                     ("state", serde_json::to_value(state)?),
+//                     ("value", serde_json::to_value(&vec![
+//                         ("value", bare_value_json),
+//                         ("checks", checks_json)
+//                     ].into_iter().collect::<HashMap<_,_>>())?)
+//                 ]),
+// 
+//         }
+//         // if !checks.is_empty() {
+//         //     let checks_json = serde_json::to_value(checks).expect("Serializing checks is safe.");
+//         //     fields.push(("checks".to_string(), checks_json));
+//         // }
+// 
+//         // let value_considering_checks = if checks.is_empty() {
+//         //     serde_json::to_value(bare_value)?
+//         // } else {
+//         //     let object = vec![
+//         //         ("value", serde_json::to_value(bare_value)?),
+//         //         ("checks", serde_json::to_value(fields)?),
+//         //     ].into_iter().collect::<HashMap<_,_>>();
+//         //     serde_json::to_value(object)?
+//         // };
+// 
+//         // let value_considering_completion_state = if let Some(state) = completion_state {
+//         //     vec![ ("state", serde_json::to_value(&state)?) ]
+//         // } else {
+//         //     value_considering_checks
+//         // }
+// 
+//         // Ok(value_considering_completion_state)
+//     }
+// 
+// }
 
-    #[test]
-    fn test_baml_value_with_meta_serialization() {
-        let baml_value: BamlValueWithMeta<Vec<ResponseCheck>> =
-            BamlValueWithMeta::String("hi".to_string(), vec![]);
-        let baml_value_2: BamlValueWithMeta<Vec<ResponseCheck>> = BamlValueWithMeta::Class(
-            "ContactInfo".to_string(),
-            vec![(
-                "primary".to_string(),
-                BamlValueWithMeta::Class(
-                    "PhoneNumber".to_string(),
-                    vec![(
-                        "value".to_string(),
-                        BamlValueWithMeta::String(
-                            "123-456-7890".to_string(),
-                            vec![ResponseCheck {
-                                name: "foo".to_string(),
-                                expression: "foo".to_string(),
-                                status: "succeeded".to_string(),
-                            }],
-                        ),
-                    )]
-                    .into_iter()
-                    .collect(),
-                    vec![],
-                ),
-            )]
-            .into_iter()
-            .collect(),
-            vec![],
-        );
-        assert!(serde_json::to_value(baml_value).is_ok());
-        assert!(serde_json::to_value(baml_value_2).is_ok());
-    }
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Completion {
+    pub state: CompletionState,
+    pub display: bool,
+    pub required_done: bool,
+}
 
-    #[test]
-    fn test_serialize_class_checks() {
-        let baml_value: BamlValueWithMeta<Vec<ResponseCheck>> = BamlValueWithMeta::Class(
-            "Foo".to_string(),
-            vec![
-                ("foo".to_string(), BamlValueWithMeta::Int(1, vec![])),
-                (
-                    "bar".to_string(),
-                    BamlValueWithMeta::String("hi".to_string(), vec![]),
-                ),
-            ]
-            .into_iter()
-            .collect(),
-            vec![ResponseCheck {
-                name: "bar_len_lt_foo".to_string(),
-                expression: "this.bar|length < this.foo".to_string(),
-                status: "failed".to_string(),
-            }],
-        );
-        let expected = serde_json::json!({
-            "value": {"foo": 1, "bar": "hi"},
-            "checks": {
-                "bar_len_lt_foo": {
-                    "name": "bar_len_lt_foo",
-                    "expression": "this.bar|length < this.foo",
-                    "status": "failed"
-                }
-            }
-        });
-        let json = serde_json::to_value(baml_value).unwrap();
-        assert_eq!(json, expected);
-    }
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub enum CompletionState {
+    Pending,
+    Incomplete,
+    Complete,
+}
 
-    #[test]
-    fn test_serialize_nested_class_checks() {
-        // Prepare an object for wrapping.
-        let foo: BamlValueWithMeta<Vec<ResponseCheck>> = BamlValueWithMeta::Class(
-            "Foo".to_string(),
-            vec![
-                ("foo".to_string(), BamlValueWithMeta::Int(1, vec![])),
-                (
-                    "bar".to_string(),
-                    BamlValueWithMeta::String("hi".to_string(), vec![]),
-                ),
-            ]
-            .into_iter()
-            .collect(),
-            vec![ResponseCheck {
-                name: "bar_len_lt_foo".to_string(),
-                expression: "this.bar|length < this.foo".to_string(),
-                status: "failed".to_string(),
-            }],
-        );
-
-        // Prepare the top-level value.
-        let baml_value = BamlValueWithMeta::Class(
-            "FooWrapper".to_string(),
-            vec![("foo".to_string(), foo)].into_iter().collect(),
-            vec![],
-        );
-        let expected = serde_json::json!({
-            "foo": {
-                "value": {"foo": 1, "bar": "hi"},
-                "checks": {
-                    "bar_len_lt_foo": {
-                        "name": "bar_len_lt_foo",
-                        "expression": "this.bar|length < this.foo",
-                        "status": "failed"
-                    }
-                }
-            }
-        });
-        let json = serde_json::to_value(baml_value).unwrap();
-        assert_eq!(json, expected);
+impl Default for Completion {
+    fn default() -> Self {
+        panic!("I hope we don't use this default");
+        Completion {
+            state: CompletionState::Complete,
+            display: false,
+            required_done: false,
+        }
     }
 }
