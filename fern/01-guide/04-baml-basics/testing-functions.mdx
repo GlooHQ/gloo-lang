@@ -27,6 +27,7 @@ test Test1 {
     // input is the first argument of ClassifyMessage
     input "Can't access my account using my usual login credentials, and each attempt results in an error message stating 'Invalid username or password.' I have tried resetting my password using the 'Forgot Password' link, but I haven't received the promised password reset email."
   }
+  @@assert( {{ this == AccountIssue }})
 }
 ```
 See the [interactive examples](https://promptfiddle.com)
@@ -274,4 +275,42 @@ test Test1 {
 
 ## Assertions
 
-This is coming soon! We'll be supporting assertions in test cases. For now -- when you run a test you'll only see errors parsing the output into the right schema, or LLM-provider errors.
+Test blocks in BAML code may contain checks and asserts. These attributes
+behave similarly to value-level [Checks and Asserts](/guide/baml-advanced/checks-and-asserts),
+with several additional variables available in the context of the jinja 
+expressions you can write in a test:
+
+  - The `_` variable contains fields `result`, `checks` and `latency_ms`.
+  - The `this` variable refers to the value computed by the test, and is
+    shorthand for `_.result`.
+  - In a given check or assert, `_.checks.$NAME` can refer to the NAME of any earlier
+    check that was run in the same test block. By referring to prior checks,
+    you can build compound checks and asserts, for example asserting that all
+    checks of a certain type passed.
+
+The following example illustrates how each of these features can be used to
+validate a test result.
+
+```rust
+test MyTest {
+  functions [EchoString]
+  args {
+    input "example input"
+  }
+  @@check( nonempty, {{ this|length > 0 }} )
+  @@check( small_enough, {{ _.result|length < 1000 }} )
+  @@assert( {{ _.checks.nonempty and _.checks.small_enough }})
+  @@assert( {{ _.latency_ms < 1000 }})
+}
+```
+
+`@@check` and `@@assert` behave differently:
+  - A `@@check` represents a property
+    of the test result that should either be manually checked or checked by a
+    subsequent stage in the test. Multiple `@@check` predicates can fail
+    without causing a hard failure of the test.
+  - An `@@assert` represents a hard guarantee. The first failing assert will halt
+    the remainder of the checks and asserts in this particular test.
+
+For more information about the syntax used inside `@@check` and `@@assert`
+attributes, see [Checks and Asserts](/guide/baml-advanced/checks-and-asserts)
