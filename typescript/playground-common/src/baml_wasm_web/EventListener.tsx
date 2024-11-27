@@ -139,15 +139,15 @@ export const envVarsAtom = atom((get) => {
     // NextJS environment doesnt have vscode settings, and proxy is always enabled
     return Object.fromEntries(defaultEnvKeyValues.map(([k, v]) => [k, v]))
   } else {
-  const vscodeSettings = get(vscodeSettingsAtom)
-  console.log('vscodeSettings', vscodeSettings)
-  if (vscodeSettings?.enablePlaygroundProxy !== undefined && !vscodeSettings?.enablePlaygroundProxy) {
-    // filter it out
-    const envKeyValues = get(envKeyValuesAtom)
-    return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]).filter(([k]) => k !== 'BOUNDARY_PROXY_URL'))
-  }
+    const vscodeSettings = get(vscodeSettingsAtom)
+    console.log('vscodeSettings', vscodeSettings)
+    if (vscodeSettings?.enablePlaygroundProxy !== undefined && !vscodeSettings?.enablePlaygroundProxy) {
+      // filter it out
+      const envKeyValues = get(envKeyValuesAtom)
+      return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]).filter(([k]) => k !== 'BOUNDARY_PROXY_URL'))
+    }
 
-  const envKeyValues = get(envKeyValuesAtom)
+    const envKeyValues = get(envKeyValuesAtom)
     return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]))
   }
 })
