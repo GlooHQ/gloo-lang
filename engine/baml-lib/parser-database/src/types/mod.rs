@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::Hash;
 
-use crate::coerce;
 use crate::types::configurations::visit_test_case;
+use crate::{coerce, ParserDatabase};
 use crate::{context::Context, DatamodelError};
 
 use baml_types::Constraint;
@@ -233,6 +233,11 @@ pub(super) struct Types {
     pub(super) class_dependencies: HashMap<ast::TypeExpId, HashSet<String>>,
     pub(super) enum_dependencies: HashMap<ast::TypeExpId, HashSet<String>>,
 
+    /// Graph of type aliases.
+    ///
+    /// This graph is only used to detect infinite cycles in type aliases.
+    pub(crate) type_aliases: HashMap<ast::TypeAliasId, HashSet<ast::TypeAliasId>>,
+
     /// Fully resolved type aliases.
     ///
     /// A type alias con point to one or many other type aliases.
@@ -374,29 +379,29 @@ fn visit_class<'db>(
 ///
 /// The type would resolve to `SomeClass | AnotherClass | int`, which is not
 /// stored in the AST.
-fn resolve_type_alias(field_type: &FieldType, ctx: &mut Context<'_>) -> FieldType {
+pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldType {
     match field_type {
         // For symbols we need to check if we're dealing with aliases.
         FieldType::Symbol(arity, ident, span) => {
-            let Some(string_id) = ctx.interner.lookup(ident.name()) else {
+            let Some(string_id) = db.interner.lookup(ident.name()) else {
                 unreachable!(
                     "Attempting to resolve alias `{ident}` that does not exist in the interner"
                 );
             };
 
-            let Some(top_id) = ctx.names.tops.get(&string_id) else {
+            let Some(top_id) = db.names.tops.get(&string_id) else {
                 unreachable!("Alias name `{ident}` is not registered in the context");
             };
 
             match top_id {
                 ast::TopId::TypeAlias(alias_id) => {
                     // Check if we can avoid deeper recursion.
-                    if let Some(resolved) = ctx.types.resolved_type_aliases.get(alias_id) {
+                    if let Some(resolved) = db.types.resolved_type_aliases.get(alias_id) {
                         return resolved.to_owned();
                     }
 
                     // Recurse... TODO: Recursive types and infinite cycles :(
-                    let resolved = resolve_type_alias(&ctx.ast[*alias_id].value, ctx);
+                    let resolved = resolve_type_alias(&db.ast[*alias_id].value, db);
 
                     // Sync arity. Basically stuff like:
                     //
@@ -421,7 +426,7 @@ fn resolve_type_alias(field_type: &FieldType, ctx: &mut Context<'_>) -> FieldTyp
         | FieldType::Tuple(arity, items, span, attrs) => {
             let resolved = items
                 .iter()
-                .map(|item| resolve_type_alias(item, ctx))
+                .map(|item| resolve_type_alias(item, db))
                 .collect();
 
             match field_type {
@@ -446,18 +451,47 @@ fn visit_type_alias<'db>(
     assignment: &'db ast::Assignment,
     ctx: &mut Context<'db>,
 ) {
-    // Maybe this can't even happen since we iterate over the vec of tops and
-    // just get IDs sequentially, but anyway check just in case.
-    if ctx.types.resolved_type_aliases.contains_key(&alias_id) {
-        return;
+    // Insert the entry as soon as we get here then if we find something we'll
+    // add edges to the graph. Otherwise no edges but we still need the Vertex
+    // in order for the cycles algorithm to work.
+    let alias_refs = ctx.types.type_aliases.entry(alias_id).or_default();
+
+    let mut stack = vec![&assignment.value];
+
+    while let Some(item) = stack.pop() {
+        match item {
+            FieldType::Symbol(_, ident, _) => {
+                let Some(string_id) = ctx.interner.lookup(ident.name()) else {
+                    unreachable!("Visiting alias `{ident}` that does not exist in the interner");
+                };
+
+                let Some(top_id) = ctx.names.tops.get(&string_id) else {
+                    unreachable!("Alias name `{ident}` is not registered in the context");
+                };
+
+                // Add alias to the graph.
+                if let ast::TopId::TypeAlias(nested_alias_id) = top_id {
+                    alias_refs.insert(*nested_alias_id);
+                }
+            }
+
+            FieldType::Union(_, items, ..) | FieldType::Tuple(_, items, ..) => {
+                stack.extend(items.iter());
+            }
+
+            FieldType::List(_, nested, ..) => {
+                stack.push(nested);
+            }
+
+            FieldType::Map(_, nested, ..) => {
+                let (key, value) = nested.as_ref();
+                stack.push(key);
+                stack.push(value);
+            }
+
+            _ => {}
+        }
     }
-
-    // Now resolve the type.
-    let resolved = resolve_type_alias(&assignment.value, ctx);
-
-    // TODO: Can we add types to the map recursively while solving them at
-    // the same time? It might speed up very long chains of aliases.
-    ctx.types.resolved_type_aliases.insert(alias_id, resolved);
 }
 
 fn visit_function<'db>(idx: ValExpId, function: &'db ast::ValueExprBlock, ctx: &mut Context<'db>) {

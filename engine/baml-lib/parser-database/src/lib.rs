@@ -42,6 +42,7 @@ pub use coerce_expression::{coerce, coerce_array, coerce_opt};
 pub use internal_baml_schema_ast::ast;
 use internal_baml_schema_ast::ast::SchemaAst;
 pub use tarjan::Tarjan;
+use types::resolve_type_alias;
 pub use types::{
     Attributes, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType, PromptAst,
     PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType,
@@ -173,6 +174,14 @@ impl ParserDatabase {
             .map(|cycle| cycle.into_iter().collect())
             .collect();
 
+        // Resolve type aliases.
+        // Cycles are already validated so this should not stack overflow and
+        // it should find the final type.
+        for alias_id in self.types.type_aliases.keys() {
+            let resolved = resolve_type_alias(&self.ast[*alias_id].value, &self);
+            self.types.resolved_type_aliases.insert(*alias_id, resolved);
+        }
+
         // Additionally ensure the same thing for functions, but since we've
         // already handled classes, this should be trivial.
         let extends = self
@@ -226,6 +235,15 @@ impl ParserDatabase {
     pub fn ast(&self) -> &ast::SchemaAst {
         &self.ast
     }
+
+    /// Returns the graph of type aliases.
+    ///
+    /// Each vertex is a type alias and each edge is a reference to another type
+    /// alias.
+    pub fn type_aliases(&self) -> &HashMap<ast::TypeAliasId, HashSet<ast::TypeAliasId>> {
+        &self.types.type_aliases
+    }
+
     /// The total number of enums in the schema. This is O(1).
     pub fn enums_count(&self) -> usize {
         self.types.enum_attributes.len()

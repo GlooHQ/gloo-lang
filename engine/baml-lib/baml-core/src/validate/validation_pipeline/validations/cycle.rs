@@ -51,6 +51,23 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
             ctx.db.ast()[component[0]].span().clone(),
         ));
     }
+
+    // TODO: Extract this into some generic function.
+    eprintln!("Type aliases: {:?}", ctx.db.type_aliases());
+    for component in Tarjan::components(&ctx.db.type_aliases()) {
+        let cycle = component
+            .iter()
+            .map(|id| ctx.db.ast()[*id].name().to_string())
+            .collect::<Vec<_>>()
+            .join(" -> ");
+
+        // TODO: We can push an error for every sinlge class here (that's what
+        // Rust does), for now it's an error for every cycle found.
+        ctx.push_error(DatamodelError::new_validation_error(
+            &format!("These aliases form a dependency cycle: {}", cycle),
+            ctx.db.ast()[component[0]].span().clone(),
+        ));
+    }
 }
 
 /// Inserts all the required dependencies of a field into the given set.
@@ -66,8 +83,33 @@ fn insert_required_deps(
 ) {
     match field {
         FieldType::Symbol(arity, ident, _) if arity.is_required() => {
-            if let Some(TypeWalker::Class(class)) = ctx.db.find_type_by_str(ident.name()) {
-                deps.insert(class.id);
+            match ctx.db.find_type_by_str(ident.name()) {
+                Some(TypeWalker::Class(class)) => {
+                    deps.insert(class.id);
+                }
+                Some(TypeWalker::TypeAlias(alias)) => {
+                    // TODO: By the time this code runs we would ideally want
+                    // type aliases to be resolved but we can't do that because
+                    // type alias cycles are not validated yet, we have to
+                    // do that in this file. Take a look at the `validate`
+                    // function at `baml-lib/baml-core/src/lib.rs`.
+                    //
+                    // First we run the `ParserDatabase::validate` function
+                    // which creates the alias graph by visiting all aliases.
+                    // Then we run the `validate::validate` which ends up
+                    // running this code here. Finally we run the
+                    // `ParserDatabase::finalize` which is the place where we
+                    // can resolve type aliases since we've already validated
+                    // that there are no cycles so we won't run into infinite
+                    // recursion. Ideally we want this:
+                    //
+                    // insert_required_deps(id, alias.resolved(), ctx, deps);
+
+                    // But we'll run this instead which will follow all the
+                    // alias pointers again until it finds the resolved type.
+                    insert_required_deps(id, alias.target(), ctx, deps);
+                }
+                _ => {}
             }
         }
 
