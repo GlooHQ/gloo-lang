@@ -2,14 +2,12 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 
-use internal_baml_core::ir::{repr::ClientSpec, ClientWalker};
+use internal_baml_core::ir::ClientWalker;
+use internal_llm_client::{ClientProvider, ClientSpec, ResolvedClientProperty, UnresolvedClientProperty};
 
 use crate::{
     client_registry::ClientProperty,
-    internal::llm_client::{
-        orchestrator::{ExecutionScope, IterOrchestrator, OrchestrationScope, OrchestrationState},
-        properties_hander::PropertiesHandler,
-    },
+    internal::llm_client::orchestrator::{ExecutionScope, IterOrchestrator, OrchestrationScope, OrchestrationState},
     runtime_interface::InternalClientLookup,
     RuntimeContext,
 };
@@ -22,34 +20,18 @@ pub struct FallbackStrategy {
 }
 
 fn resolve_strategy(
-    mut properties: PropertiesHandler,
-    _ctx: &RuntimeContext,
+    provider: &ClientProvider,
+    properties: &UnresolvedClientProperty<()>,
+    ctx: &RuntimeContext,
 ) -> Result<Vec<ClientSpec>> {
-    let strategy = properties
-        .remove_serde::<Vec<String>>("strategy")
-        .context("Failed to resolve strategy into string[]")?;
-
-    let strategy = if let Some(strategy) = strategy {
-        if strategy.is_empty() {
-            anyhow::bail!("Empty strategy array, at least one client is required");
-        }
-        strategy
-    } else {
-        anyhow::bail!("Missing a strategy field");
-    };
-
-    let properties = properties.finalize();
-    if !properties.is_empty() {
-        let supported_keys = ["strategy"];
-        let unknown_keys = properties.keys().map(String::from).collect::<Vec<_>>();
+    let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
+    let ResolvedClientProperty::Fallback(props) = properties  else {
         anyhow::bail!(
-            "Unknown keys: {}. Supported keys are: {}",
-            unknown_keys.join(", "),
-            supported_keys.join(", ")
+            "Invalid client property. Should have been a fallback property but got: {}",
+            properties.name()
         );
-    }
-
-    Ok(strategy.into_iter().map(ClientSpec::new_from_id).collect())
+    };
+    Ok(props.strategy)
 }
 
 impl TryFrom<(&ClientProperty, &RuntimeContext)> for FallbackStrategy {
@@ -58,7 +40,7 @@ impl TryFrom<(&ClientProperty, &RuntimeContext)> for FallbackStrategy {
     fn try_from(
         (client, ctx): (&ClientProperty, &RuntimeContext),
     ) -> std::result::Result<Self, Self::Error> {
-        let strategy = resolve_strategy(client.property_handler()?, ctx)?;
+        let strategy = resolve_strategy(&client.provider, &client.unresolved_options()?, ctx)?;
         Ok(Self {
             name: client.name.clone(),
             retry_policy: client.retry_policy.clone(),
@@ -71,8 +53,7 @@ impl TryFrom<(&ClientWalker<'_>, &RuntimeContext)> for FallbackStrategy {
     type Error = anyhow::Error;
 
     fn try_from((client, ctx): (&ClientWalker, &RuntimeContext)) -> Result<Self> {
-        let properties = super::super::resolve_properties_walker(client, ctx)?;
-        let strategy = resolve_strategy(properties, ctx)?;
+        let strategy = resolve_strategy(&client.elem().provider, client.options(), ctx)?;
         Ok(Self {
             name: client.item.elem.name.clone(),
             retry_policy: client.retry_policy().as_ref().map(String::from),

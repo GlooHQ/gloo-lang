@@ -2,6 +2,7 @@ use std::{collections::HashMap, path::PathBuf, pin::Pin};
 
 use anyhow::{Context, Result};
 use aws_smithy_types::byte_stream::error::Error;
+use internal_llm_client::AllowedRoleMetadata;
 use serde_json::{json, Map};
 
 mod chat;
@@ -33,8 +34,7 @@ pub trait WithRetryPolicy {
 }
 
 pub trait WithClientProperties {
-    fn client_properties(&self) -> &HashMap<String, serde_json::Value>;
-    fn allowed_metadata(&self) -> &super::AllowedMetadata;
+    fn allowed_metadata(&self) -> &AllowedRoleMetadata;
     fn supports_streaming(&self) -> bool;
 }
 
@@ -283,7 +283,11 @@ where
         .await?;
 
         let request_builder = self
-            .build_request(either::Right(&chat_messages), false, render_settings.stream && self.supports_streaming())
+            .build_request(
+                either::Right(&chat_messages),
+                false,
+                render_settings.stream && self.supports_streaming(),
+            )
             .await?;
         let mut request = request_builder.build()?;
         let url_header_value = {
@@ -334,7 +338,12 @@ pub trait WithStreamable {
 
 impl<T> WithStreamable for T
 where
-    T: WithClient + WithStreamChat + WithStreamCompletion + WithClientProperties + WithChat + WithCompletion,
+    T: WithClient
+        + WithStreamChat
+        + WithStreamCompletion
+        + WithClientProperties
+        + WithChat
+        + WithCompletion,
 {
     #[allow(async_fn_in_trait)]
     async fn stream(&self, ctx: &RuntimeContext, prompt: &RenderedPrompt) -> StreamResponse {
@@ -368,19 +377,15 @@ where
                     self.stream_chat(ctx, p).await
                 } else {
                     let res = self.chat(ctx, p).await;
-                    Ok(Box::pin(futures::stream::once(async move {
-                        res
-                    })))
+                    Ok(Box::pin(futures::stream::once(async move { res })))
                 }
-            },
+            }
             RenderedPrompt::Completion(p) => {
                 if self.supports_streaming() {
                     self.stream_completion(ctx, p).await
                 } else {
                     let res = self.completion(ctx, p).await;
-                    Ok(Box::pin(futures::stream::once(async move {
-                        res
-                    })))
+                    Ok(Box::pin(futures::stream::once(async move { res })))
                 }
             }
         }
@@ -615,15 +620,7 @@ async fn to_base64_with_inferred_mime_type(
     if let Some((mime_type, base64)) = as_base64(&media_url.url.as_str()) {
         return Ok((base64.to_string(), mime_type.to_string()));
     }
-    let response = match fetch_with_proxy(
-        &media_url.url,
-        ctx.env
-            .get("BOUNDARY_PROXY_URL")
-            .as_deref()
-            .map(|s| s.as_str()),
-    )
-    .await
-    {
+    let response = match fetch_with_proxy(&media_url.url, ctx.proxy_url()).await {
         Ok(response) => response,
         Err(e) => return Err(anyhow::anyhow!("Failed to fetch media: {e:?}")),
     };

@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 
 use baml_runtime::{
-    internal::llm_client::{
-        orchestrator::{ExecutionScope, OrchestrationScope},
-        AllowedMetadata,
-    },
+    internal::llm_client::orchestrator::{ExecutionScope, OrchestrationScope},
     ChatMessagePart, RenderedPrompt,
 };
+use internal_llm_client::AllowedRoleMetadata;
 use serde_json::json;
 
 use crate::runtime_wasm::ToJsValue;
@@ -23,7 +21,7 @@ pub struct WasmScope {
 pub struct WasmPrompt {
     prompt: RenderedPrompt,
     pub client_name: String,
-    allowed: AllowedMetadata,
+    allowed: AllowedRoleMetadata,
 }
 
 impl From<OrchestrationScope> for WasmScope {
@@ -32,9 +30,13 @@ impl From<OrchestrationScope> for WasmScope {
     }
 }
 
-impl From<(&RenderedPrompt, &OrchestrationScope, &AllowedMetadata)> for WasmPrompt {
+impl From<(&RenderedPrompt, &OrchestrationScope, &AllowedRoleMetadata)> for WasmPrompt {
     fn from(
-        (prompt, client_name, allowed): (&RenderedPrompt, &OrchestrationScope, &AllowedMetadata),
+        (prompt, client_name, allowed): (
+            &RenderedPrompt,
+            &OrchestrationScope,
+            &AllowedRoleMetadata,
+        ),
     ) -> Self {
         WasmPrompt {
             prompt: prompt.clone(),

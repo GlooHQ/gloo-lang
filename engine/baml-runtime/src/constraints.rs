@@ -329,7 +329,7 @@ mod tests {
             client: "test_client".to_string(),
             model: "test_model".to_string(),
             prompt: RenderedPrompt::Completion(String::new()),
-            request_options: HashMap::new(),
+            request_options: Default::default(),
             content: String::new(),
             start_time: web_time::SystemTime::UNIX_EPOCH,
             latency: web_time::Duration::from_millis(500),

@@ -83,7 +83,6 @@ client<llm> Gemini {
     safetySettings {
       category HARM_CATEGORY_HATE_SPEECH
       threshold BLOCK_LOW_AND_ABOVE
-
     }
   }
 }
@@ -92,10 +91,8 @@ client<llm> Vertex {
   provider vertex-ai  
   options {
     model gemini-1.5-pro
-    project_id sam-project-vertex-1
     location us-central1
     credentials env.INTEG_TESTS_GOOGLE_APPLICATION_CREDENTIALS
-
   }
 }
 
@@ -110,7 +107,6 @@ client<llm> AwsBedrock {
     // model_id "anthropic.claude-3-haiku-20240307-v1:0"
     model_id "meta.llama3-8b-instruct-v1:0"
     // model_id "mistral.mistral-7b-instruct-v0:2"
-    api_key ""
   }
 }
 
@@ -125,7 +121,6 @@ client<llm> AwsBedrockInvalidRegion {
     // model_id "anthropic.claude-3-haiku-20240307-v1:0"
     model_id "meta.llama3-8b-instruct-v1:0"
     // model_id "mistral.mistral-7b-instruct-v0:2"
-    api_key ""
   }
 }
 
@@ -151,7 +146,7 @@ client<llm> ClaudeWithCaching {
   options {
     model claude-3-haiku-20240307
     api_key env.ANTHROPIC_API_KEY
-    max_tokens 1000
+    max_tokens 500
     allowed_role_metadata ["cache_control"]
     headers {
       "anthropic-beta" "prompt-caching-2024-07-31"

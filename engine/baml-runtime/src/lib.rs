@@ -189,8 +189,11 @@ impl BamlRuntime {
         function_name: &str,
         test_name: &str,
         ctx: &RuntimeContext,
+        strict: bool,
     ) -> Result<(BamlMap<String, BamlValue>, Vec<Constraint>)> {
-        let params = self.inner.get_test_params(function_name, test_name, ctx)?;
+        let params = self
+            .inner
+            .get_test_params(function_name, test_name, ctx, strict)?;
         let constraints = self
             .inner
             .get_test_constraints(function_name, test_name, &ctx)?;
@@ -202,8 +205,10 @@ impl BamlRuntime {
         function_name: &str,
         test_name: &str,
         ctx: &RuntimeContext,
+        strict: bool,
     ) -> Result<BamlMap<String, BamlValue>> {
-        let (params, _) = self.get_test_params_and_constraints(function_name, test_name, ctx)?;
+        let (params, _) =
+            self.get_test_params_and_constraints(function_name, test_name, ctx, strict)?;
         Ok(params)
     }
 
@@ -222,7 +227,7 @@ impl BamlRuntime {
         let run_to_response = || async {
             let rctx = ctx.create_ctx(None, None)?;
             let (params, constraints) =
-                self.get_test_params_and_constraints(function_name, test_name, &rctx)?;
+                self.get_test_params_and_constraints(function_name, test_name, &rctx, true)?;
             let rctx_stream = ctx.create_ctx(None, None)?;
             let mut stream = self.inner.stream_function_impl(
                 function_name.into(),
@@ -241,7 +246,14 @@ impl BamlRuntime {
                 .context("Expected non-empty event chain")?;
             let complete_resp = match llm_resp {
                 LLMResponse::Success(complete_llm_response) => Ok(complete_llm_response),
-                _ => Err(anyhow::anyhow!("LLM Response was not successful")),
+                LLMResponse::InternalFailure(e) => Err(anyhow::anyhow!("{}", e)),
+                LLMResponse::UserFailure(e) => Err(anyhow::anyhow!("{}", e)),
+                LLMResponse::LLMFailure(e) => Err(anyhow::anyhow!(
+                    "{} {}\n\nRequest options: {}",
+                    e.code.to_string(),
+                    e.message,
+                    serde_json::to_string(&e.request_options).unwrap_or_default()
+                )),
             }?;
             let test_constraints_result = if constraints.is_empty() {
                 TestConstraintsResult::empty()

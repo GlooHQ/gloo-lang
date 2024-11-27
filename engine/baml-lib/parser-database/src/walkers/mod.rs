@@ -21,7 +21,7 @@ pub use client::*;
 pub use configuration::*;
 use either::Either;
 pub use field::*;
-pub use function::{ClientSpec, FunctionWalker};
+pub use function::FunctionWalker;
 use internal_baml_schema_ast::ast::{FieldType, Identifier, TopId, TypeExpId, WithName};
 pub use r#class::*;
 pub use r#enum::*;

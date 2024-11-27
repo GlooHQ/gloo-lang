@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use baml_types::EvaluationContext;
 use indexmap::IndexMap;
 use internal_baml_core::ir::repr::IntermediateRepr;
 use internal_baml_core::ir::IRHelper;
@@ -10,7 +11,7 @@ pub trait IntoMiniJinjaValue {
     fn into_minijinja_value(
         &self,
         ir: &IntermediateRepr,
-        env_vars: &HashMap<String, String>,
+        eval_ctx: &EvaluationContext<'_>,
     ) -> minijinja::Value;
 }
 
@@ -18,7 +19,7 @@ impl IntoMiniJinjaValue for BamlValue {
     fn into_minijinja_value(
         &self,
         ir: &IntermediateRepr,
-        env_vars: &HashMap<String, String>,
+        eval_ctx: &EvaluationContext<'_>,
     ) -> minijinja::Value {
         match self {
             BamlValue::String(s) => minijinja::Value::from(s.clone()),
@@ -28,17 +29,17 @@ impl IntoMiniJinjaValue for BamlValue {
             BamlValue::Map(m) => {
                 let map = m
                     .into_iter()
-                    .map(|(k, v)| (k.as_str(), v.into_minijinja_value(ir, env_vars)));
+                    .map(|(k, v)| (k.as_str(), v.into_minijinja_value(ir, eval_ctx)));
                 minijinja::Value::from_iter(map)
             }
             BamlValue::List(l) => {
                 let list: Vec<minijinja::Value> = l
                     .into_iter()
-                    .map(|v| v.into_minijinja_value(ir, env_vars))
+                    .map(|v| v.into_minijinja_value(ir, eval_ctx))
                     .collect();
                 minijinja::Value::from(list)
             }
-            BamlValue::Media(i) => i.into_minijinja_value(ir, env_vars),
+            BamlValue::Media(i) => i.into_minijinja_value(ir, eval_ctx),
             // For enums and classes we compute the aliases from the IR, and generate custom jinja structs that print out the alias if stringified.
             BamlValue::Enum(_name, value) => {
                 minijinja::Value::from(value.clone())
@@ -60,14 +61,14 @@ impl IntoMiniJinjaValue for BamlValue {
             BamlValue::Class(name, m) => {
                 let map = m
                     .into_iter()
-                    .map(|(k, v)| (k.as_str(), v.into_minijinja_value(ir, env_vars)));
+                    .map(|(k, v)| (k.as_str(), v.into_minijinja_value(ir, eval_ctx)));
 
                 let mut key_to_alias = IndexMap::new();
                 match ir.find_class(name) {
                     Ok(c) => {
                         for field in c.walk_fields() {
                             let key = field
-                                .alias(&env_vars)
+                                .alias(eval_ctx)
                                 .ok()
                                 .and_then(|a| a)
                                 .unwrap_or_else(|| field.name().to_string());
@@ -101,7 +102,7 @@ impl IntoMiniJinjaValue for BamlMedia {
     fn into_minijinja_value(
         &self,
         _ir: &IntermediateRepr,
-        _env_vars: &HashMap<String, String>,
+        _eval_ctx: &EvaluationContext<'_>,
     ) -> minijinja::Value {
         minijinja::Value::from_object(MinijinjaBamlMedia::from(self.clone()))
     }

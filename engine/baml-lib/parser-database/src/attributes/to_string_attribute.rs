@@ -8,7 +8,6 @@ use crate::{context::Context, types::Attributes};
 use super::alias::visit_alias_attribute;
 use super::constraint::visit_constraint_attributes;
 use super::description::visit_description_attribute;
-
 pub(super) fn visit(ctx: &mut Context<'_>, span: &Span, as_block: bool) -> Option<Attributes> {
     let mut modified = false;
 

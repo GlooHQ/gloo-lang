@@ -7,16 +7,16 @@ use std::{
     },
 };
 
-use internal_baml_core::ir::{repr::ClientSpec, ClientWalker};
+use internal_baml_core::ir::ClientWalker;
+use internal_llm_client::{
+    ClientProvider, ClientSpec, ResolvedClientProperty, UnresolvedClientProperty,
+};
 
 use crate::{
     client_registry::ClientProperty,
-    internal::llm_client::{
-        orchestrator::{
-            ExecutionScope, IterOrchestrator, OrchestrationScope, OrchestrationState,
-            OrchestratorNodeIterator,
-        },
-        properties_hander::PropertiesHandler,
+    internal::llm_client::orchestrator::{
+        ExecutionScope, IterOrchestrator, OrchestrationScope, OrchestrationState,
+        OrchestratorNodeIterator,
     },
     runtime_interface::InternalClientLookup,
     RuntimeContext,
@@ -24,13 +24,12 @@ use crate::{
 use serde::Serialize;
 use serde::Serializer;
 
-#[derive(Serialize, Debug)]
+#[derive(Debug, Serialize)]
 pub struct RoundRobinStrategy {
     pub name: String,
     pub(super) retry_policy: Option<String>,
     // TODO: We can add conditions to each client
     client_specs: Vec<ClientSpec>,
-    #[serde(serialize_with = "serialize_atomic")]
     current_index: AtomicUsize,
 }
 
@@ -54,58 +53,30 @@ impl RoundRobinStrategy {
 }
 
 fn resolve_strategy(
-    mut properties: PropertiesHandler,
-    _ctx: &RuntimeContext,
+    provider: &ClientProvider,
+    properties: &UnresolvedClientProperty<()>,
+    ctx: &RuntimeContext,
 ) -> Result<(Vec<ClientSpec>, usize)> {
-    let strategy = properties
-        .remove_serde::<Vec<String>>("strategy")
-        .context("Failed to parse strategy into string[]")?;
-
-    let strategy = if let Some(strategy) = strategy {
-        if strategy.is_empty() {
-            anyhow::bail!("Empty strategy array, at least one client is required");
-        }
-        strategy
-    } else {
-        anyhow::bail!("Missing a strategy field");
-    };
-
-    let start = properties
-        .remove_serde::<usize>("start")
-        .context("Failed to parse start: not a number")?;
-
-    let properties = properties.finalize();
-    if !properties.is_empty() {
-        let supported_keys = ["strategy", "start"];
-        let unknown_keys = properties.keys().map(String::from).collect::<Vec<_>>();
+    let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
+    let ResolvedClientProperty::RoundRobin(props) = properties else {
         anyhow::bail!(
-            "Unknown keys: {}. Supported keys are: {}",
-            unknown_keys.join(", "),
-            supported_keys.join(", ")
+            "Invalid client property. Should have been a round-robin property but got: {}",
+            properties.name()
         );
-    }
-
-    let start = match start {
-        Some(start) => start % strategy.len(),
+    };
+    let start = match props.start_index {
+        Some(start) => (start as usize) % props.strategy.len(),
         None => {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                fastrand::usize(..strategy.len())
-            }
-
-            // For VSCode, we don't want a random start point,
-            // as it can make rendering inconsistent
-            #[cfg(target_arch = "wasm32")]
-            {
+            if cfg!(target_arch = "wasm32") {
+                // For VSCode, we don't want a random start point,
+                // as it can make rendering inconsistent
                 0
+            } else {
+                fastrand::usize(..props.strategy.len())
             }
         }
     };
-
-    Ok((
-        strategy.into_iter().map(ClientSpec::new_from_id).collect(),
-        start,
-    ))
+    Ok((props.strategy, start))
 }
 
 impl TryFrom<(&ClientProperty, &RuntimeContext)> for RoundRobinStrategy {
@@ -114,7 +85,8 @@ impl TryFrom<(&ClientProperty, &RuntimeContext)> for RoundRobinStrategy {
     fn try_from(
         (client, ctx): (&ClientProperty, &RuntimeContext),
     ) -> std::result::Result<Self, Self::Error> {
-        let (strategy, start) = resolve_strategy(client.property_handler()?, ctx)?;
+        let (strategy, start) =
+            resolve_strategy(&client.provider, &client.unresolved_options()?, ctx)?;
 
         Ok(RoundRobinStrategy {
             name: client.name.clone(),
@@ -129,8 +101,7 @@ impl TryFrom<(&ClientWalker<'_>, &RuntimeContext)> for RoundRobinStrategy {
     type Error = anyhow::Error;
 
     fn try_from((client, ctx): (&ClientWalker, &RuntimeContext)) -> Result<Self> {
-        let properties = super::super::resolve_properties_walker(client, ctx)?;
-        let (strategy, start) = resolve_strategy(properties, ctx)?;
+        let (strategy, start) = resolve_strategy(&client.elem().provider, client.options(), ctx)?;
         Ok(Self {
             name: client.item.elem.name.clone(),
             retry_policy: client.retry_policy().as_ref().map(String::from),

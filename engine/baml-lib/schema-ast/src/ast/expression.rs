@@ -1,4 +1,7 @@
-use baml_types::TypeValue;
+use baml_types::{TypeValue, UnresolvedValue as UnresolvedValueBase};
+use internal_baml_diagnostics::Diagnostics;
+
+type UnresolvedValue = UnresolvedValueBase<Span>;
 
 use crate::ast::Span;
 use bstd::dedent;
@@ -322,6 +325,60 @@ impl Expression {
                 });
             }
             (Map(_, _), _) => panic!("Types do not match: {:?} and {:?}", self, other),
+        }
+    }
+
+    pub fn to_unresolved_value(&self, diagnostics: &mut internal_baml_diagnostics::Diagnostics,) -> Option<UnresolvedValue> {
+        use baml_types::StringOr;
+
+        match self {
+            Expression::BoolValue(val, span) => Some(UnresolvedValue::Bool(*val, span.clone())),
+            Expression::NumericValue(val, span) => Some(UnresolvedValue::Numeric(val.clone(), span.clone())),
+            Expression::Identifier(identifier) => match identifier {
+                Identifier::ENV(val, span) => Some(UnresolvedValue::String(StringOr::EnvVar(val.to_string()), span.clone())),
+                Identifier::Ref(ref_identifier, span) => {
+                    Some(UnresolvedValue::String(StringOr::Value(ref_identifier.full_name.as_str().to_string()), span.clone()))
+                }
+                Identifier::Invalid(val, span)
+                | Identifier::String(val, span)
+                | Identifier::Local(val, span) => {
+                    match val.as_str() {
+                        "null" => Some(UnresolvedValue::Null(span.clone())),
+                        "true" => Some(UnresolvedValue::Bool(true, span.clone())),
+                        "false" => Some(UnresolvedValue::Bool(false, span.clone())),
+                        _ => Some(UnresolvedValue::String(StringOr::Value(val.to_string()), span.clone())),
+                    }
+                },
+            },
+            Expression::StringValue(val, span) => Some(UnresolvedValue::String(StringOr::Value(val.to_string()), span.clone())),
+            Expression::RawStringValue(raw_string) => {
+                // Do standard dedenting / trimming.
+                let val = raw_string.value();
+                Some(UnresolvedValue::String(StringOr::Value(val.to_string()), raw_string.span().clone()))
+            }
+            Expression::Array(vec, span) => {
+                let values = vec
+                    .iter()
+                    .filter_map(|e| e.to_unresolved_value(diagnostics))
+                    .collect::<Vec<_>>();
+                Some(UnresolvedValue::Array(values, span.clone()))
+            }
+            Expression::Map(map, span) => {
+                let values = map
+                    .iter()
+                    .filter_map(|(k, v)| {
+                        let key = k.to_unresolved_value(diagnostics);
+                        if let Some(UnresolvedValue::String(StringOr::Value(key), key_span)) = key {
+                            if let Some(value) = v.to_unresolved_value(diagnostics) {
+                                return Some((key, (key_span, value)));
+                            }
+                        }
+                        None
+                    })
+                    .collect::<_>();
+                Some(UnresolvedValue::Map(values, span.clone()))
+            }
+            Expression::JinjaExpressionValue(jinja_expression, span) => Some(UnresolvedValue::String(StringOr::JinjaExpression(jinja_expression.clone()), span.clone())),
         }
     }
 }

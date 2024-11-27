@@ -16,8 +16,9 @@ BAML LLM functions plug into python, TS, and other languages, which makes it eas
 
 BAML outperforms all other current methods of obtaining structured data, even when using it with GPT3.5. It also outperforms models fine-tuned for tool-use using the [Berkeley Function Calling Benchmark](https://gorilla.cs.berkeley.edu/leaderboard.html). See our [interactive results](https://www.boundaryml.com/blog/sota-function-calling?q=0). [Read more on our Schema-Aligned Parser](https://www.boundaryml.com/blog/schema-aligned-parsing). 
 
-<img src="docs/assets/bfcl-baml-latest.png" width="80%" alt="Boundary Studio">
+<img src="docs/old/assets/bfcl-baml-latest.png" width="80%" alt="Boundary Studio">
 
+## Documentation - [docs.boundaryml.com](https://docs.boundaryml.com)
 ## Try it out in the playground -- [PromptFiddle.com](https://promptfiddle.com)
 
 Share your creations and ask questions in our [Discord](https://discord.gg/BTNBeXGuaS).

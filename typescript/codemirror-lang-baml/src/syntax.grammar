@@ -51,7 +51,7 @@ ClientDecl {
 }
 
 TestDecl {
-  "test" IdentifierDecl "{" TupleValue* "}" 
+  "test" IdentifierDecl "{" (BlockAttribute | TupleValue)* "}" 
 }
 
 LiteralDecl { NumericLiteral | QuotedString | UnquotedString }

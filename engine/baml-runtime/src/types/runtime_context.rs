@@ -1,7 +1,7 @@
 use anyhow::Result;
-use baml_types::BamlValue;
+use baml_types::{BamlValue, EvaluationContext, UnresolvedValue};
 use indexmap::IndexMap;
-use internal_baml_core::ir::{repr::Expression, FieldType};
+use internal_baml_core::ir::FieldType;
 use serde;
 use serde_json;
 use std::{collections::HashMap, sync::Arc};
@@ -53,7 +53,7 @@ cfg_if::cfg_if!(
 pub struct RuntimeContext {
     // path to baml_src in the local filesystem
     pub baml_src: Arc<BamlSrcReader>,
-    pub env: HashMap<String, String>,
+    env: HashMap<String, String>,
     pub tags: HashMap<String, BamlValue>,
     pub client_overrides: Option<(Option<String>, HashMap<String, Arc<LLMProvider>>)>,
     pub class_override: IndexMap<String, RuntimeClassOverride>,
@@ -61,20 +61,51 @@ pub struct RuntimeContext {
 }
 
 impl RuntimeContext {
+    pub fn eval_ctx<'a>(&'a self, strict: bool) -> EvaluationContext<'a> {
+        EvaluationContext::new(&self.env, !strict)
+    }
+
+    pub fn env_vars(&self) -> &HashMap<String, String> {
+        &self.env
+    }
+
+    pub fn proxy_url(&self) -> Option<&str> {
+        self.env.get("BOUNDARY_PROXY_URL").map(|s| s.as_str())
+    }
+
+    pub fn new(
+        baml_src: Arc<BamlSrcReader>,
+        env: HashMap<String, String>,
+        tags: HashMap<String, BamlValue>,
+        client_overrides: Option<(Option<String>, HashMap<String, Arc<LLMProvider>>)>,
+        class_override: IndexMap<String, RuntimeClassOverride>,
+        enum_overrides: IndexMap<String, RuntimeEnumOverride>,
+    ) -> RuntimeContext {
+        RuntimeContext {
+            baml_src,
+            env,
+            tags,
+            client_overrides,
+            class_override,
+            enum_overrides,
+        }
+    }
+
     pub fn resolve_expression<T: serde::de::DeserializeOwned>(
         &self,
-        expr: &Expression,
+        expr: &UnresolvedValue<()>,
+        // If true, will return an error if any environment variables are not set
+        // otherwise, will return a value with the missing environment variables replaced with the string "${key}"
+        strict: bool,
     ) -> Result<T> {
-        match super::expression_helper::to_value(self, expr) {
-            Ok(v) => serde_json::from_value(v).map_err(|e| e.into()),
-            Err(e) => Err(e),
-        }
-        .map_err(|e| {
-            anyhow::anyhow!(
+        let ctx = EvaluationContext::new(&self.env, strict);
+        match expr.resolve_serde::<T>(&ctx) {
+            Ok(v) => Ok(v),
+            Err(e) => anyhow::bail!(
                 "Failed to resolve expression {:?} with error: {:?}",
                 expr,
                 e
-            )
-        })
+            ),
+        }
     }
 }

@@ -3,6 +3,7 @@ use magnus::{
     class, function, method, scan_args::scan_args, Error, Module, Object, RHash, Ruby, Value,
 };
 use std::cell::RefCell;
+use std::str::FromStr;
 
 use crate::ruby_to_json;
 use crate::Result;
@@ -35,12 +36,18 @@ impl ClientRegistry {
             }
         };
 
-        let client_property = baml_runtime::client_registry::ClientProperty {
-            name,
-            provider,
-            retry_policy,
-            options,
+
+        let provider = match client_registry::ClientProvider::from_str(&provider) {
+            Ok(provider) => provider,
+            Err(e) => {
+                return Err(Error::new(
+                    ruby.exception_syntax_error(),
+                    format!("Invalid provider: {:?}", e),
+                ));
+            }
         };
+
+        let client_property = client_registry::ClientProperty::new(name, provider, retry_policy, options);
 
         rb_self.inner.borrow_mut().add_client(client_property);
         Ok(())

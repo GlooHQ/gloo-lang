@@ -3,7 +3,14 @@ import { type Disposable, Uri, ViewColumn, type Webview, type WebviewPanel, wind
 import * as vscode from 'vscode'
 import { getNonce } from '../utils/getNonce'
 import { getUri } from '../utils/getUri'
-import { EchoResponse, GetBamlSrcResponse, GetWebviewUriResponse, WebviewToVscodeRpc, encodeBuffer } from '../rpc'
+import {
+  EchoResponse,
+  GetBamlSrcResponse,
+  GetVSCodeSettingsResponse,
+  GetWebviewUriResponse,
+  WebviewToVscodeRpc,
+  encodeBuffer,
+} from '../rpc'
 
 import { type Config, adjectives, animals, colors, uniqueNamesGenerator } from 'unique-names-generator'
 import { URI } from 'vscode-uri'
@@ -309,6 +316,11 @@ export class WebPanelView {
             }
             this._panel.webview.postMessage({ rpcId: message.rpcId, rpcMethod: vscodeCommand, data: webviewUriResp })
             return
+          case 'GET_VSCODE_SETTINGS':
+            const responseData: GetVSCodeSettingsResponse = {
+              enablePlaygroundProxy: bamlConfig.config?.enablePlaygroundProxy ?? true,
+            }
+            this._panel.webview.postMessage({ rpcId: message.rpcId, rpcMethod: vscodeCommand, data: responseData })
         }
       },
       undefined,

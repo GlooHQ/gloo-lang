@@ -1,4 +1,5 @@
 use internal_baml_schema_ast::ast::{Expression, WithSpan};
+use internal_llm_client::ClientProvider;
 
 use crate::{
     ast::{self, WithIdentifier},
@@ -25,67 +26,67 @@ impl<'db> ClientWalker<'db> {
     }
 
     /// The provider for the client, e.g. baml-openai-chat
-    pub fn provider(self) -> &'db str {
-        self.properties().provider.0.as_str()
+    pub fn provider(self) -> &'db ClientProvider {
+        &self.properties().provider.0
     }
 
-    /// The model specified for the client, e.g. "gpt-3.5-turbo"
-    pub fn model(self) -> Option<&'db str> {
-        let Some((_, model)) = self.properties().options.iter().find(|(k, _)| k == "model") else {
-            return None;
-        };
-        let Some((model, _)) = model.as_string_value() else {
-            return None;
-        };
-        Some(model)
-    }
+    // The model specified for the client, e.g. "gpt-3.5-turbo"
+    // pub fn model(self) -> Option<&'db str> {
+    //     let Some((_, model)) = self.properties().options.iter().find(|(k, _)| k == "model") else {
+    //         return None;
+    //     };
+    //     let Some((model, _)) = model.as_string_value() else {
+    //         return None;
+    //     };
+    //     Some(model)
+    // }
 
-    /// Returns the list of all non-strategy clients (i.e. flattens fallback/round-robin clients to their constituent clients)
-    pub fn flat_clients(self) -> Vec<ClientWalker<'db>> {
-        // TODO(sam): how are fallback/round-robin clients represented here?
-        let provider = self.properties().provider.0.as_str();
+    // / Returns the list of all non-strategy clients (i.e. flattens fallback/round-robin clients to their constituent clients)
+    // pub fn flat_clients(self) -> Vec<ClientWalker<'db>> {
+    //     // TODO(sam): how are fallback/round-robin clients represented here?
+    //     let provider = self.properties().provider.0.as_str();
 
-        if provider == "baml-fallback" || provider == "baml-round-robin" {
-            let Some((_, strategy)) = self
-                .properties()
-                .options
-                .iter()
-                .find(|(k, _)| k == "strategy")
-            else {
-                return vec![];
-            };
-            let Expression::Array(strategy, _span) = strategy else {
-                return vec![];
-            };
+    //     if provider == "baml-fallback" || provider == "baml-round-robin" {
+    //         let Some((_, strategy)) = self
+    //             .properties()
+    //             .options
+    //             .iter()
+    //             .find(|(k, _)| k == "strategy")
+    //         else {
+    //             return vec![];
+    //         };
+    //         let Expression::Array(strategy, _span) = strategy else {
+    //             return vec![];
+    //         };
 
-            let mut clients = vec![];
-            for entry in strategy {
-                if let Some((s, _)) = entry.as_string_value() {
-                    clients.push(s);
-                }
-                if let Some((m, _)) = entry.as_map() {
-                    if let Some((_, client_name)) = m
-                        .iter()
-                        .filter(|(k, _)| k.as_string_value().map_or(false, |(s, _)| s == "client"))
-                        .nth(0)
-                    {
-                        if let Some((client_name, _)) = client_name.as_string_value() {
-                            clients.push(client_name);
-                        };
-                    };
-                }
-            }
-            let clients = clients
-                .into_iter()
-                .filter_map(|client_name| self.db.find_client(client_name))
-                .flat_map(|client| client.flat_clients().into_iter())
-                .collect::<Vec<_>>();
+    //         let mut clients = vec![];
+    //         for entry in strategy {
+    //             if let Some((s, _)) = entry.as_string_value() {
+    //                 clients.push(s);
+    //             }
+    //             if let Some((m, _)) = entry.as_map() {
+    //                 if let Some((_, client_name)) = m
+    //                     .iter()
+    //                     .filter(|(k, _)| k.as_string_value().map_or(false, |(s, _)| s == "client"))
+    //                     .nth(0)
+    //                 {
+    //                     if let Some((client_name, _)) = client_name.as_string_value() {
+    //                         clients.push(client_name);
+    //                     };
+    //                 };
+    //             }
+    //         }
+    //         let clients = clients
+    //             .into_iter()
+    //             .filter_map(|client_name| self.db.find_client(client_name))
+    //             .flat_map(|client| client.flat_clients().into_iter())
+    //             .collect::<Vec<_>>();
 
-            return clients;
-        }
+    //         return clients;
+    //     }
 
-        vec![self]
-    }
+    //     vec![self]
+    // }
 }
 
 // with identifier

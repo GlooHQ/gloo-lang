@@ -45,7 +45,7 @@ pub use tarjan::Tarjan;
 use types::resolve_type_alias;
 pub use types::{
     Attributes, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType, PromptAst,
-    PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType,
+    PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType, ClientProperties
 };
 pub use walkers::TypeWalker;
 

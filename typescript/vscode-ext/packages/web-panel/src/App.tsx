@@ -20,20 +20,26 @@ import { useFeedbackWidget } from './lib/feedback_widget'
 function App() {
   useFeedbackWidget()
   return (
-    <CustomErrorBoundary>
+    <CustomErrorBoundary message='Error loading playground'>
       <DevTools />
       <Suspense fallback={<div>Loading...</div>}>
         <EventListener>
           <AppStateProvider>
             <div className='flex flex-col w-full gap-2 px-2 pb-1 h-[100vh] overflow-y-clip'>
               <div className='flex flex-row items-center justify-start gap-1'>
-                <ViewSelector />
+                <CustomErrorBoundary message='Error loading view selector'>
+                  <ViewSelector />
+                </CustomErrorBoundary>
               </div>
               <Separator className='bg-vscode-textSeparator-foreground' />
               <FunctionPanel />
             </div>
-            <SettingsDialog />
-            <IntroToChecksDialog />
+            <CustomErrorBoundary message='Error loading settings dialog'>
+              <SettingsDialog />
+            </CustomErrorBoundary>
+            <CustomErrorBoundary message='Error loading intro to checks dialog'>
+              <IntroToChecksDialog />
+            </CustomErrorBoundary>
           </AppStateProvider>{' '}
         </EventListener>
       </Suspense>

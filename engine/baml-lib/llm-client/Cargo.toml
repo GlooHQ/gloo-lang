@@ -1,0 +1,29 @@
+[package]
+name = "internal-llm-client"
+edition = "2021"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+license-file.workspace = true
+
+[lints.rust]
+dead_code = "deny"
+unused_imports = "deny"
+unused_variables = "deny"
+
+[dependencies]
+baml-types = { path = "../baml-types" }
+# internal-baml-core = { path = "../baml-core" }
+# internal-baml-parser-database = { path = "../parser-database" }
+anyhow.workspace = true
+indexmap.workspace = true
+log.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+enum_dispatch = "0.3.13"
+strum.workspace = true
+derive_more.workspace = true
+either.workspace = true
+
+[dev-dependencies]
+env_logger = "0.11.3"

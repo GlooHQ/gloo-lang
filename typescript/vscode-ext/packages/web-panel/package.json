@@ -11,7 +11,7 @@
     "watch": "NODE_ENV=development vite build --watch"
   },
   "dependencies": {
-    "@baml/codemirror-lang": "workspace:*",
+    "@boundaryml/baml-lezer": "workspace:*",
     "@baml/common": "workspace:^",
     "@codemirror/lang-javascript": "^6.2.2",
     "@codemirror/lang-python": "^6.1.6",

@@ -1,18 +1,18 @@
 use crate::internal::llm_client::{
-    properties_hander::PropertiesHandler,
     traits::{ToProviderMessage, ToProviderMessageExt, WithClientProperties},
-    AllowedMetadata, ResolveMediaUrls, SupportedRequestModes,
+    ResolveMediaUrls,
 };
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use baml_types::{BamlMedia, BamlMediaContent};
+use baml_types::{BamlMap, BamlMedia, BamlMediaContent};
 use eventsource_stream::Eventsource;
 use futures::StreamExt;
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{
     ChatMessagePart, RenderContext_Client, RenderedChatMessage, RenderedPrompt,
 };
+use internal_llm_client::{anthropic::ResolvedAnthropic, AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty};
 
 use crate::{
     client_registry::ClientProperty,
@@ -36,26 +36,13 @@ use crate::RuntimeContext;
 
 use super::types::MessageChunk;
 
-// stores properties required for making a post request to the API
-struct PostRequestProperities {
-    default_role: String,
-    base_url: String,
-    api_key: Option<String>,
-    headers: HashMap<String, String>,
-    proxy_url: Option<String>,
-    allowed_metadata: AllowedMetadata,
-    // These are passed directly to the Anthropic API.
-    properties: HashMap<String, serde_json::Value>,
-    supported_request_modes: SupportedRequestModes,
-}
-
 // represents client that interacts with the Anthropic API
 pub struct AnthropicClient {
     pub name: String,
     retry_policy: Option<String>,
     context: RenderContext_Client,
     features: ModelFeatures,
-    properties: PostRequestProperities,
+    properties: ResolvedAnthropic,
 
     // clients
     client: reqwest::Client,
@@ -64,47 +51,21 @@ pub struct AnthropicClient {
 // resolves/constructs PostRequestProperties from the client's options and runtime context, fleshing out the needed headers and parameters
 // basically just reads the client's options and matches them to needed properties or defaults them
 fn resolve_properties(
-    mut properties: PropertiesHandler,
+    provider: &ClientProvider,
+    properties: &UnresolvedClientProperty<()>,
     ctx: &RuntimeContext,
-) -> Result<PostRequestProperities> {
-    // this is a required field
+) -> Result<ResolvedAnthropic, anyhow::Error> {
+    let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
 
-    let default_role = properties.pull_default_role("system")?;
-    let base_url = properties
-        .pull_base_url()?
-        .unwrap_or_else(|| "https://api.anthropic.com".into());
-    let api_key = properties
-        .pull_api_key()?
-        .or_else(|| ctx.env.get("ANTHROPIC_API_KEY").map(|s| s.to_string()));
+    let ResolvedClientProperty::Anthropic(props) = properties else {
+        anyhow::bail!(
+            "Invalid client property. Should have been a anthropic property but got: {}",
+            properties.name()
+        );
+    };
 
-    let allowed_metadata = properties.pull_allowed_role_metadata()?;
-    let mut headers = properties.pull_headers()?;
-    headers
-        .entry("anthropic-version".to_string())
-        .or_insert("2023-06-01".to_string());
-
-        let supported_request_modes = properties.pull_supported_request_modes()?;
-
-    let mut properties = properties.finalize();
-    // Anthropic has a very low max_tokens by default, so we increase it to 4096.
-    properties
-        .entry("max_tokens".into())
-        .or_insert_with(|| 4096.into());
-    let properties = properties;
-
-
-    Ok(PostRequestProperities {
-        default_role,
-        base_url,
-        api_key,
-        headers,
-        allowed_metadata,
-        properties,
-        proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),
-        supported_request_modes,
-    })
+    Ok(props)
 }
-
 // getters for client info
 impl WithRetryPolicy for AnthropicClient {
     fn retry_policy_name(&self) -> Option<&str> {
@@ -113,11 +74,8 @@ impl WithRetryPolicy for AnthropicClient {
 }
 
 impl WithClientProperties for AnthropicClient {
-    fn allowed_metadata(&self) -> &AllowedMetadata {
+    fn allowed_metadata(&self) -> &AllowedRoleMetadata {
         &self.properties.allowed_metadata
-    }
-    fn client_properties(&self) -> &HashMap<String, serde_json::Value> {
-        &self.properties.properties
     }
     fn supports_streaming(&self) -> bool {
         self.properties.supported_request_modes.stream.unwrap_or(true)
@@ -292,13 +250,13 @@ impl WithStreamChat for AnthropicClient {
 // constructs base client and resolves properties based on context
 impl AnthropicClient {
     pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<Self> {
-        let properties = resolve_properties(client.property_handler()?, ctx)?;
+        let properties = resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
         let default_role = properties.default_role.clone();
         Ok(Self {
             name: client.name.clone(),
             context: RenderContext_Client {
                 name: client.name.clone(),
-                provider: client.provider.clone(),
+                provider: client.provider.to_string(),
                 default_role,
             },
             features: ModelFeatures {
@@ -315,14 +273,13 @@ impl AnthropicClient {
     }
 
     pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<AnthropicClient> {
-        let properties = super::super::resolve_properties_walker(client, ctx)?;
-        let properties = resolve_properties(properties, ctx)?;
+        let properties = resolve_properties(&client.elem().provider, &client.options(), ctx)?;
         let default_role = properties.default_role.clone();
         Ok(Self {
             name: client.name().into(),
             context: RenderContext_Client {
                 name: client.name().into(),
-                provider: client.elem().provider.clone(),
+                provider: client.elem().provider.to_string(),
                 default_role,
             },
             features: ModelFeatures {
@@ -373,9 +330,7 @@ impl RequestBuilder for AnthropicClient {
         for (key, value) in &self.properties.headers {
             req = req.header(key, value);
         }
-        if let Some(key) = &self.properties.api_key {
-            req = req.header("x-api-key", key);
-        }
+        req = req.header("x-api-key", self.properties.api_key.clone());
 
         if allow_proxy {
             req = req.header("baml-original-url", self.properties.base_url.as_str());
@@ -398,7 +353,7 @@ impl RequestBuilder for AnthropicClient {
         Ok(req.json(&body))
     }
 
-    fn request_options(&self) -> &HashMap<String, serde_json::Value> {
+    fn request_options(&self) -> &BamlMap<String, serde_json::Value> {
         &self.properties.properties
     }
 }

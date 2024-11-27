@@ -1,6 +1,6 @@
 import { atom, useAtomValue } from 'jotai'
 import { atomFamily, useAtomCallback } from 'jotai/utils'
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { selectedFunctionAtom, selectedRuntimeAtom } from '../EventListener'
 import type { WasmFunctionResponse, WasmTestResponse } from '@gloo-ai/baml-schema-wasm-web/baml_schema_build'
 import { vscode } from '../../utils/vscode'
@@ -85,6 +85,15 @@ function updateTestSuiteState(old_result: TestSuiteSummary, new_result: TestSuit
 
 export const useRunHooks = () => {
   const isRunning = useAtomValue(isRunningAtom)
+
+  const [enableProxy, setEnableProxy] = useState<undefined | boolean>()
+  useEffect(() => {
+    ;(async () => {
+      const res = await vscode.getIsProxyEnabled()
+      console.log('enableproxy call')
+      setEnableProxy(res)
+    })()
+  }, [])
 
   const runTest = useAtomCallback(
     useCallback(
@@ -241,7 +250,7 @@ export const useRunHooks = () => {
 
         set(isRunningAtom, false)
       },
-      [isRunningAtom, selectedRuntimeAtom, selectedFunctionAtom],
+      [isRunningAtom, selectedRuntimeAtom, selectedFunctionAtom, enableProxy],
     ),
   )
 

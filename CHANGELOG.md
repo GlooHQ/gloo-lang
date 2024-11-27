@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.69.0](https://github.com/boundaryml/baml/compare/0.68.0..0.69.0) - 2024-11-26
+
+### Documentation
+- Move documentation link higher in README.md for better visibility (#1190) - ([aaa1149](https://github.com/boundaryml/baml/commit/aaa1149acca0b4552b2d84aba6e6ee933a3a6d6b)) - Dex
+- Update Vertex docs for different publishers (#1191) - ([66b2274](https://github.com/boundaryml/baml/commit/66b2274f895615f15b5a6edba51444b7d98dcaa5)) - Antonio Sarosi
+- Update TypeScript installation docs to use `pnpm exec` instead of deprecated `pnpx` (#1144) - ([56194b8](https://github.com/boundaryml/baml/commit/56194b8084a08447dfb6ca5bf537289cd36022c4)) - Manav Bokinala
+- Update LM Studio documentation (#1176) - ([7689ce7](https://github.com/boundaryml/baml/commit/7689ce7c3c42d49a020b81e0bdca16ef8e0209c7)) - Jeff Winkler
+
+### Features
+- Support enums & literals as map keys (#1178) - ([39e0271](https://github.com/boundaryml/baml/commit/39e0271f605234535cc53470a6aedff07aaa0c6c)) - Antonio Sarosi
+- Parse triple backtick strings, discarding the info header (#1162) - ([353b21e](https://github.com/boundaryml/baml/commit/353b21e0ba3689420dfea6ff50a9454cf87fa199)) - Samuel Lijin
+- Add ability to validate types for template strings (#1161) - ([a578cc2](https://github.com/boundaryml/baml/commit/a578cc287abbd9c23697adc4c83bcf0979916fcf)) - hellovai
+- Support single line quoteless JSON parsing (#1170) - ([b1b9cab](https://github.com/boundaryml/baml/commit/b1b9cabcd51f87afef0ef54c7ecd0e2349d97f83)) - hellovai
+- Generated code includes docstrings from BAML source docstrings (#1177) - ([170ece9](https://github.com/boundaryml/baml/commit/170ece9e8d72e235a7f5d628739899cd564ee995)) - Greg Hale
+- Add ability to parse clients statically whenever possible (#1193) - ([03d9475](https://github.com/boundaryml/baml/commit/03d947581ceb56a3c3498f2746f697ce06a55077)) - hellovai
+- Support setting all env vars for AWS-bedrock (#1179) - ([fcdbdfb](https://github.com/boundaryml/baml/commit/fcdbdfbb80e5e7d09411b0e55aa0039b0be998bc)) - hellovai
+- Add constraints to test blocks (#1185) - ([cafd2ea](https://github.com/boundaryml/baml/commit/cafd2ea35ac0d3129ddddb7c4fc81561a7316657)) - Greg Hale
+- Add sum jinja filter (#1174) - ([2353862](https://github.com/boundaryml/baml/commit/2353862730ed3be9b354a9f6a6c20c4c75a6058f)) - Greg Hale
+- Add openrouter key (#1186) - ([28d58c0](https://github.com/boundaryml/baml/commit/28d58c060320154bddfef03bdd6de67d27e26c0f)) - aaronvg
+
+### Bug Fixes
+- Fix image path in README.md (#1190) - ([aaa1149](https://github.com/boundaryml/baml/commit/aaa1149acca0b4552b2d84aba6e6ee933a3a6d6b)) - Dex
+- Fix template string highlights (#1182) - ([60c823a](https://github.com/boundaryml/baml/commit/60c823a000507e6667670f96f1607ba2ea160c57)) - aaronvg
+- Fix nextjs and TS server hot-reload (#1183) - ([22e6bbb](https://github.com/boundaryml/baml/commit/22e6bbb7dbe125b40f72d37e6fb8a73e603aade8)) - aaronvg
+- Fix lang name (#1188) - ([8c3d536](https://github.com/boundaryml/baml/commit/8c3d5363dd36c32a512430f970da8c76788335e3)) - aaronvg
+- Make id optional as gemini doesn't include it in openai generic (#1187) - ([97d1cd4](https://github.com/boundaryml/baml/commit/97d1cd48dc80bdfaeb08bf8a27b65c21a48145bd)) - aaronvg
+- Correctly compute required_env_vars even for shorthand clients (#1164) - ([8b51b6e](https://github.com/boundaryml/baml/commit/8b51b6eb186b8c2853139e37e87a69a87e893059)) - hellovai
+- Report wrong keyword errors in type defs (#1166) - ([3b1d152](https://github.com/boundaryml/baml/commit/3b1d15230c9ba6dae3cb8d9f0f7f7e9b75f8f00e)) - Antonio Sarosi
+- Remove win32-arm64 support for now to fix yarn and deno builds (#1173) - ([c0234d7](https://github.com/boundaryml/baml/commit/c0234d730915506097ff17b54afd7316fdc850cd)) - aaronvg
+- Validate fieldnames and types when using pydantic codegen (#1189) - ([93b393d](https://github.com/boundaryml/baml/commit/93b393ded048817fdb7ffef65cb698f9edb14764)) - Greg Hale
+
+
 ## [0.68.0](https://github.com/boundaryml/baml/compare/0.67.0..0.68.0) - 2024-11-11
 
 ### Documentation

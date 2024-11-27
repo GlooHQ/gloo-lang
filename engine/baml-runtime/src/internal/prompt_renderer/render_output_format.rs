@@ -122,14 +122,16 @@ fn find_existing_class_field<'a>(
         desc = OverridableValue::<String>::from(attrs.meta.get("description"));
     }
 
+    let eval_ctx = ctx.eval_ctx(false);
+
     if matches!(alias, OverridableValue::Unset) {
-        if let Some(_alias) = field_walker.alias(&ctx.env)? {
+        if let Some(_alias) = field_walker.alias(&eval_ctx)? {
             alias = OverridableValue::Set(_alias);
         }
     }
 
     if matches!(desc, OverridableValue::Unset) {
-        if let Some(_desc) = field_walker.description(&ctx.env)? {
+        if let Some(_desc) = field_walker.description(&eval_ctx)? {
             desc = OverridableValue::Set(_desc);
         }
     }
@@ -176,18 +178,19 @@ fn find_enum_value(
         desc = OverridableValue::<String>::from(attrs.meta.get("description"));
     }
 
+    let eval_ctx = ctx.eval_ctx(false);
     if let Some(value) = value_walker {
-        if value.skip(&ctx.env)? && !matches!(skip, OverridableValue::Set(false)) {
+        if value.skip(&eval_ctx)? && !matches!(skip, OverridableValue::Set(false)) {
             return Ok(None);
         }
         if matches!(alias, OverridableValue::Unset) {
-            if let Some(_alias) = value.alias(&ctx.env)? {
+            if let Some(_alias) = value.alias(&eval_ctx)? {
                 alias = OverridableValue::Set(_alias);
             }
         }
 
         if matches!(desc, OverridableValue::Unset) {
-            if let Some(_desc) = value.description(&ctx.env)? {
+            if let Some(_desc) = value.description(&eval_ctx)? {
                 desc = OverridableValue::Set(_desc);
             }
         }
@@ -213,6 +216,8 @@ fn relevant_data_models<'a>(
     let mut classes = Vec::new();
     let mut recursive_classes = IndexSet::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
+
+    let eval_ctx = ctx.eval_ctx(false);
 
     while let Some(output) = start.pop() {
         match ir.distribute_constraints(&output) {
@@ -247,7 +252,7 @@ fn relevant_data_models<'a>(
 
                     if matches!(alias, OverridableValue::Unset) {
                         if let Ok(walker) = walker {
-                            if let Some(a) = walker.alias(&ctx.env)? {
+                            if let Some(a) = walker.alias(&eval_ctx)? {
                                 alias = OverridableValue::Set(a);
                             }
                         }
@@ -324,7 +329,7 @@ fn relevant_data_models<'a>(
 
                     if matches!(alias, OverridableValue::Unset) {
                         if let Ok(walker) = walker {
-                            if let Some(a) = walker.alias(&ctx.env)? {
+                            if let Some(a) = walker.alias(&eval_ctx)? {
                                 alias = OverridableValue::Set(a);
                             }
                         }

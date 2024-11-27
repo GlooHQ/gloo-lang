@@ -1,5 +1,7 @@
 // This is designed to build any type of client, not just primitives
 use anyhow::{Context, Result};
+pub use internal_llm_client::ClientProvider;
+use internal_llm_client::{ClientSpec, PropertyHandler, UnresolvedClientProperty};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -16,15 +18,57 @@ pub enum PrimitiveClient {
     Vertex,
 }
 
-#[derive(Serialize, Clone, Deserialize, Debug)]
+#[derive(Clone, Deserialize, Debug)]
 pub struct ClientProperty {
     pub name: String,
-    pub provider: String,
+    pub provider: ClientProvider,
     pub retry_policy: Option<String>,
-    pub options: BamlMap<String, BamlValue>,
+    options: BamlMap<String, BamlValue>,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+impl ClientProperty {
+    pub fn new(name: String, provider: ClientProvider, retry_policy: Option<String>, options: BamlMap<String, BamlValue>) -> Self {
+        Self {
+            name,
+            provider,
+            retry_policy,
+            options,
+        }
+    }
+
+    pub fn from_shorthand(provider: &ClientProvider, model: &str) -> Self {
+        Self {
+            name: format!("{}/{}", provider, model),
+            provider: provider.clone(),
+            retry_policy: None,
+            options: vec![("model".to_string(), BamlValue::String(model.to_string()))]
+                .into_iter()
+                .collect(),
+        }
+    }
+
+    pub fn unresolved_options(&self) -> Result<UnresolvedClientProperty<()>> {
+        let property = PropertyHandler::new(
+            self.options
+                .iter()
+                .map(|(k, v)| Ok((k.clone(), ((), v.to_resolvable()?))))
+                .collect::<Result<_>>()?,
+            (),
+        );
+        self.provider.parse_client_property(property).map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to parse client options for {}:\n{}",
+                self.name,
+                e.into_iter()
+                    .map(|e| e.message)
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            )
+        })
+    }
+}
+
+#[derive(Clone, Deserialize, Debug)]
 pub struct ClientRegistry {
     #[serde(deserialize_with = "deserialize_clients")]
     clients: HashMap<String, ClientProperty>,

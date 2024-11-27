@@ -16,7 +16,6 @@ type BamlContext = (uuid::Uuid, String, HashMap<String, BamlValue>);
 #[derive(Clone)]
 pub struct RuntimeContextManager {
     baml_src_reader: Arc<BamlSrcReader>,
-
     context: Arc<Mutex<Vec<BamlContext>>>,
     env_vars: HashMap<String, String>,
     global_tags: Arc<Mutex<HashMap<String, BamlValue>>>,
@@ -129,14 +128,14 @@ impl RuntimeContextManager {
 
         let (cls, enm) = tb.map(|tb| tb.to_overrides()).unwrap_or_default();
 
-        let mut ctx = RuntimeContext {
-            baml_src: self.baml_src_reader.clone(),
-            env: self.env_vars.clone(),
+        let mut ctx = RuntimeContext::new(
+            self.baml_src_reader.clone(),
+            self.env_vars.clone(),
             tags,
-            client_overrides: Default::default(),
-            class_override: cls,
-            enum_overrides: enm,
-        };
+            Default::default(),
+            cls,
+            enm,
+        );
 
         let client_overrides = match cb {
             Some(cb) => Some(
@@ -151,24 +150,17 @@ impl RuntimeContextManager {
         Ok(ctx)
     }
 
-    pub fn create_ctx_with_default<T: AsRef<str>>(
-        &self,
-        env_vars: impl Iterator<Item = T>,
-    ) -> RuntimeContext {
+    pub fn create_ctx_with_default(&self) -> RuntimeContext {
         let ctx = self.context.lock().unwrap();
 
-        let env_vars = env_vars
-            .map(|x| (x.as_ref().to_string(), format!("${{{}}}", x.as_ref())))
-            .chain(self.env_vars.iter().map(|(k, v)| (k.clone(), v.clone())));
-
-        RuntimeContext {
-            baml_src: self.baml_src_reader.clone(),
-            env: env_vars.collect(),
-            tags: ctx.last().map(|(.., x)| x).cloned().unwrap_or_default(),
-            client_overrides: Default::default(),
-            class_override: Default::default(),
-            enum_overrides: Default::default(),
-        }
+        RuntimeContext::new(
+            self.baml_src_reader.clone(),
+            self.env_vars.clone(),
+            ctx.last().map(|(.., x)| x).cloned().unwrap_or_default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+        )
     }
 
     pub fn context_depth(&self) -> usize {

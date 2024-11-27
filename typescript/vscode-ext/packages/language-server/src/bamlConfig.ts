@@ -4,6 +4,7 @@ export const bamlConfigSchema = z
     cliPath: z.optional(z.string().nullable()).default(null),
     generateCodeOnSave: z.enum(['never', 'always']).default('always'),
     restartTSServerOnSave: z.boolean().default(false),
+    enablePlaygroundProxy: z.boolean().default(true),
     envCommand: z.string().default('env'),
     fileWatcher: z.boolean().default(false),
     trace: z.object({

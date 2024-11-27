@@ -9,18 +9,20 @@ use anyhow::{Context, Result};
 use aws_smithy_json::serialize::JsonObjectWriter;
 use aws_smithy_runtime_api::client::result::SdkError;
 use aws_smithy_types::Blob;
-use baml_types::BamlMediaContent;
+use baml_types::{BamlMap, BamlMediaContent};
 use baml_types::{BamlMedia, BamlMediaType};
 use futures::stream;
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{ChatMessagePart, RenderContext_Client, RenderedChatMessage};
+use internal_llm_client::aws_bedrock::ResolvedAwsBedrock;
+use internal_llm_client::{AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty};
 use serde::Deserialize;
 use serde_json::Map;
 use web_time::Instant;
 use web_time::SystemTime;
 
+use crate::client_registry::ClientProperty;
 use crate::internal::llm_client::traits::{ToProviderMessageExt, WithClientProperties};
-use crate::internal::llm_client::{AllowedMetadata, SupportedRequestModes};
 use crate::internal::llm_client::{
     primitive::request::RequestBuilder,
     traits::{
@@ -33,96 +35,40 @@ use crate::internal::llm_client::{
 
 use crate::{RenderCurlSettings, RuntimeContext};
 
-// stores properties required for making a post request to the API
-struct RequestProperties {
-    model_id: String,
-
-
-    // (region, access_key_id, secret_access_key)
-    aws_access: (Option<String>, Option<String>, Option<String>),
-
-    default_role: String,
-    inference_config: Option<bedrock::types::InferenceConfiguration>,
-    allowed_metadata: AllowedMetadata,
-
-    request_options: HashMap<String, serde_json::Value>,
-    ctx_env: HashMap<String, String>,
-    supported_request_modes: SupportedRequestModes,
-}
-
 // represents client that interacts with the Anthropic API
 pub struct AwsClient {
     pub name: String,
     retry_policy: Option<String>,
     context: RenderContext_Client,
     features: ModelFeatures,
-    properties: RequestProperties,
+    properties: ResolvedAwsBedrock,
 }
 
-fn resolve_properties(client: &ClientWalker, ctx: &RuntimeContext) -> Result<RequestProperties> {
-    let mut properties = super::super::resolve_properties_walker(client, ctx)?;
+fn resolve_properties(
+    provider: &ClientProvider,
+    properties: &UnresolvedClientProperty<()>,
+    ctx: &RuntimeContext,
+) -> Result<ResolvedAwsBedrock> {
 
-    let model_id = {
-        // We allow `provider aws-bedrock` to specify the model using either `model_id` or `model`:
-        //
-        //  - the Bedrock API itself only accepts `model_id`
-        //  - but all other providers specify the model using `model`, so for someone used to using
-        //    "openai/gpt-4o", they'll expect to be able to use `model gpt-4o`
-        //  - if I were on the bedrock team, I would be _very_ hesitant to add a new request field
-        //    `model` if I already have `model_id`, so I think using `model` isn't too risky
-        let maybe_model_id = properties.remove_str("model_id")?;
-        let maybe_model = properties.remove_str("model")?;
-
-        match (maybe_model_id, maybe_model) {
-            (Some(model_id), Some(model)) => anyhow::bail!("model_id and model cannot both be provided"),
-            (Some(model_id), None) => model_id,
-            (None, Some(model)) => model,
-            _ => anyhow::bail!("model_id or model is required"),
-        }
+    let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
+    let ResolvedClientProperty::AWSBedrock(props) = properties else {
+        anyhow::bail!("Invalid client property. Should have been a aws-bedrock property but got: {}", properties.name());
     };
 
-    let default_role = properties.pull_default_role("user")?;
-    let allowed_metadata = properties.pull_allowed_role_metadata()?;
-
-    let inference_config = properties
-        .remove_serde::<super::types::InferenceConfiguration>("inference_configuration")?
-        .map(|c| c.into());
-
-    let aws_region = properties
-        .remove_str("region")
-        .unwrap_or_else(|_| ctx.env.get("AWS_REGION").map(|s| s.to_string()));
-
-    let aws_access_key_id = properties.remove_str("aws_access_key_id")
-        .unwrap_or_else(|_| ctx.env.get("AWS_ACCESS_KEY_ID").map(|s| s.to_string()));
-    let aws_secret_access_key = properties.remove_str("aws_secret_access_key")
-        .unwrap_or_else(|_| ctx.env.get("AWS_SECRET_ACCESS_KEY").map(|s| s.to_string()));
-
-    let supported_request_modes = properties.pull_supported_request_modes()?;
-
-    let properties = properties.finalize();
-
-    Ok(RequestProperties {
-        model_id,
-        aws_access: (aws_region, aws_access_key_id, aws_secret_access_key),
-        default_role,
-        inference_config,
-        allowed_metadata,
-        request_options: properties,
-        ctx_env: ctx.env.clone(),
-        supported_request_modes,
-    })
+    Ok(props)
 }
 
 impl AwsClient {
-    pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<AwsClient> {
-        let post_properties = resolve_properties(client, ctx)?;
-        let default_role = post_properties.default_role.clone(); // clone before moving
+
+    pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<AwsClient> {
+        let properties = resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
+        let default_role = properties.default_role.clone();
 
         Ok(Self {
-            name: client.name().into(),
+            name: client.name.clone(),
             context: RenderContext_Client {
-                name: client.name().into(),
-                provider: client.elem().provider.clone(),
+                name: client.name.clone(),
+                provider: client.provider.to_string(),
                 default_role,
             },
             features: ModelFeatures {
@@ -130,85 +76,71 @@ impl AwsClient {
                 completion: false,
                 anthropic_system_constraints: true,
                 resolve_media_urls: ResolveMediaUrls::Always,
-                allowed_metadata: post_properties.allowed_metadata.clone(),
+                allowed_metadata: properties.allowed_role_metadata.clone(),
+            },
+            retry_policy: client
+                .retry_policy
+                .as_ref()
+                .map(|s| s.to_string()),
+            properties,
+        })
+    }
+
+    pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<AwsClient> {
+        let properties = resolve_properties(&client.elem().provider, &client.options(), ctx)?;
+        let default_role = properties.default_role.clone(); // clone before moving
+
+        Ok(Self {
+            name: client.name().into(),
+            context: RenderContext_Client {
+                name: client.name().into(),
+                provider: client.elem().provider.to_string(),
+                default_role,
+            },
+            features: ModelFeatures {
+                chat: true,
+                completion: false,
+                anthropic_system_constraints: true,
+                resolve_media_urls: ResolveMediaUrls::Always,
+                allowed_metadata: properties.allowed_role_metadata.clone(),
             },
             retry_policy: client
                 .elem()
                 .retry_policy_id
                 .as_ref()
                 .map(|s| s.to_string()),
-            properties: post_properties,
+            properties,
         })
     }
 
-    pub fn request_options(&self) -> &std::collections::HashMap<String, serde_json::Value> {
-        &self.properties.request_options
+    pub fn request_options(&self) -> &BamlMap<String, serde_json::Value> {
+        // TODO:(vbv) - use inference config for this.
+        static DEFAULT_REQUEST_OPTIONS: std::sync::OnceLock<BamlMap<String, serde_json::Value>> = std::sync::OnceLock::new();
+        DEFAULT_REQUEST_OPTIONS.get_or_init(|| Default::default())
     }
 
     // TODO: this should be memoized on client construction, but because config loading is async,
     // we can't do this in AwsClient::new (which is called from LLMPRimitiveProvider::try_from)
     async fn client_anyhow(&self) -> Result<bedrock::Client> {
 
-        let (aws_region, aws_access_key_id, aws_secret_access_key) = &self.properties.aws_access;
-
-        #[cfg(not(target_arch = "wasm32"))]
-        let loader: ConfigLoader = aws_config::defaults(BehaviorVersion::latest());
-
         #[cfg(target_arch = "wasm32")]
-        let loader: ConfigLoader = {
-            use aws_config::Region;
-            use aws_credential_types::Credentials;
-            
-            let (aws_region, aws_access_key_id, aws_secret_access_key) = match (
-                aws_region,
-                aws_access_key_id,
-                aws_secret_access_key,
-            ) {
-                (Some(aws_region), Some(aws_access_key_id), Some(aws_secret_access_key)) => {
-                    (aws_region, aws_access_key_id, aws_secret_access_key)
-                }
-                _ => {
-                    anyhow::bail!(
-                        "AWS_REGION, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be configured for AWS Bedrock for Web Assembly"
-                    )
-                }
-            };
+        let mut loader = super::wasm::load_aws_config();
+        #[cfg(not(target_arch = "wasm32"))]
+        let mut loader = aws_config::defaults(BehaviorVersion::latest());
 
-            let loader = super::wasm::load_aws_config()
-                .region(Region::new(aws_region.clone()))
-                .credentials_provider(Credentials::new(
-                    aws_access_key_id.clone(),
-                    aws_secret_access_key.clone(),
-                    None,
-                    None,
-                    "baml-runtime/wasm",
-                ));
+        if let Some(aws_region) = self.properties.region.as_ref() {
+            loader = loader.region(Region::new(aws_region.clone()));
+        }
 
-            loader
-        };
-
-        let loader = if let Some(aws_region) = aws_region {
-            loader.region(Region::new(aws_region.clone()))
-        } else {
-            loader
-        };
-
-
-        let loader = match (aws_access_key_id, aws_secret_access_key) {
-            (Some(aws_access_key_id), Some(aws_secret_access_key)) => {
-            loader.credentials_provider(Credentials::new(
+        if let (Some(aws_access_key_id), Some(aws_secret_access_key)) = (self.properties.access_key_id.as_ref(), self.properties.secret_access_key.as_ref()) {
+            loader = loader.credentials_provider(Credentials::new(
                 aws_access_key_id.clone(),
                 aws_secret_access_key.clone(),
                 None,
                 None,
-                "baml-runtime/wasm",
-                ))
-            }
-            (Some(_), None) | (None, Some(_)) => {
-                anyhow::bail!("AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be configured or not configured together for AWS Bedrock")
-            }
-            _ => loader,
-        };
+                "baml-runtime",
+            ));
+        }
 
         let config = loader
             .retry_config(RetryConfig::disabled())
@@ -273,9 +205,14 @@ impl AwsClient {
             .map(|m| self.role_to_message(m))
             .collect::<Result<Vec<_>>>()?;
 
+        let inference_config = match self.properties.inference_config.as_ref() {
+            Some(curr) => Some(aws_sdk_bedrockruntime::types::InferenceConfiguration::builder().set_max_tokens(curr.max_tokens).set_temperature(curr.temperature).set_top_p(curr.top_p).set_stop_sequences(curr.stop_sequences.clone()).build()),
+            None => None,
+        };
+
         bedrock::operation::converse::ConverseInput::builder()
-            .set_inference_config(self.properties.inference_config.clone())
-            .set_model_id(Some(self.properties.model_id.clone()))
+            .set_inference_config(inference_config)
+            .set_model_id(Some(self.properties.model.clone()))
             .set_system(system_message)
             .set_messages(Some(converse_messages))
             .build()
@@ -329,11 +266,8 @@ impl WithRetryPolicy for AwsClient {
 }
 
 impl WithClientProperties for AwsClient {
-    fn client_properties(&self) -> &HashMap<String, serde_json::Value> {
-        &self.properties.request_options
-    }
-    fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
-        &self.properties.allowed_metadata
+    fn allowed_metadata(&self) -> &AllowedRoleMetadata {
+        &self.properties.allowed_role_metadata
     }
     fn supports_streaming(&self) -> bool {
         self.properties.supported_request_modes.stream.unwrap_or(true)
@@ -359,8 +293,9 @@ impl WithStreamChat for AwsClient {
         chat_messages: &Vec<RenderedChatMessage>,
     ) -> StreamResponse {
         let client = self.context.name.to_string();
-        let model = Some(self.properties.model_id.clone());
-        let request_options = self.properties.request_options.clone();
+        let model = Some(self.properties.model.clone());
+        // TODO:(vbv) - use inference config for this.
+        let request_options = Default::default();
         let prompt = internal_baml_jinja::RenderedPrompt::Chat(chat_messages.clone());
 
         let aws_client = match self.client_anyhow().await {
@@ -454,7 +389,7 @@ impl WithStreamChat for AwsClient {
                     content: "".to_string(),
                     start_time: system_start,
                     latency: instant_start.elapsed(),
-                    model: self.properties.model_id.clone(),
+                    model: self.properties.model.clone(),
                     request_options,
                     metadata: LLMCompleteResponseMetadata {
                         baml_is_complete: false,
@@ -659,8 +594,9 @@ impl WithChat for AwsClient {
         chat_messages: &Vec<RenderedChatMessage>,
     ) -> LLMResponse {
         let client = self.context.name.to_string();
-        let model = Some(self.properties.model_id.clone());
-        let request_options = self.properties.request_options.clone();
+        let model = Some(self.properties.model.clone());
+        // TODO:(vbv) - use inference config for this.
+        let request_options = Default::default();
         let prompt = internal_baml_jinja::RenderedPrompt::Chat(chat_messages.clone());
 
         let aws_client = match self.client_anyhow().await {
@@ -729,7 +665,7 @@ impl WithChat for AwsClient {
                 start_time: system_start.clone(),
                 latency: instant_start.elapsed(),
                 request_options,
-                model: self.properties.model_id.clone(),
+                model: self.properties.model.clone(),
                 metadata: LLMCompleteResponseMetadata {
                     baml_is_complete: match response.stop_reason {
                         bedrock::types::StopReason::StopSequence

@@ -84,7 +84,7 @@ impl OrchestratorNode {
     }
 }
 
-#[derive(Debug, Default, Clone, Serialize)]
+#[derive(Debug, Default, Clone)]
 pub struct OrchestrationScope {
     pub scope: Vec<ExecutionScope>,
 }

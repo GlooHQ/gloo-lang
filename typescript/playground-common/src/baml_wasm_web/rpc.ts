@@ -94,11 +94,20 @@ export interface GetWebviewUriResponse {
   readError?: string
 }
 
+export interface GetVSCodeSettingsRequest {
+  vscodeCommand: 'GET_VSCODE_SETTINGS'
+}
+
+export interface GetVSCodeSettingsResponse {
+  enablePlaygroundProxy: boolean
+}
+
 type ApiPairs = [
   // Echo is included here as an example of what a request/response pair looks like
   [EchoRequest, EchoResponse],
   [GetBamlSrcRequest, GetBamlSrcResponse],
   [GetWebviewUriRequest, GetWebviewUriResponse],
+  [GetVSCodeSettingsRequest, GetVSCodeSettingsResponse],
 ]
 
 // Serialization for binary data (like images)

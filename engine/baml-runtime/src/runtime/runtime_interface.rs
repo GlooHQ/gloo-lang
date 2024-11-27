@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use super::InternalBamlRuntime;
 use crate::internal::llm_client::traits::WithClientProperties;
-use crate::internal::llm_client::{AllowedMetadata, LLMResponse};
+use crate::internal::llm_client::LLMResponse;
 use crate::{
     client_registry::ClientProperty,
     internal::{
@@ -24,16 +24,14 @@ use crate::{
     RuntimeContext, RuntimeInterface,
 };
 use anyhow::{Context, Result};
-use baml_types::{BamlMap, BamlValue, Constraint};
+use baml_types::{BamlMap, BamlValue, Constraint, EvaluationContext};
 use internal_baml_core::{
     internal_baml_diagnostics::SourceFile,
-    ir::{
-        repr::{ClientSpec, IntermediateRepr},
-        ArgCoercer, FunctionWalker, IRHelper,
-    },
+    ir::{repr::IntermediateRepr, ArgCoercer, FunctionWalker, IRHelper},
     validate,
 };
 use internal_baml_jinja::RenderedPrompt;
+use internal_llm_client::{AllowedRoleMetadata, ClientSpec};
 
 impl<'a> InternalClientLookup<'a> for InternalBamlRuntime {
     // Gets a top-level client/strategy by name
@@ -44,14 +42,7 @@ impl<'a> InternalClientLookup<'a> for InternalBamlRuntime {
     ) -> Result<Arc<LLMProvider>> {
         match client_spec {
             ClientSpec::Shorthand(provider, model) => {
-                let client_property = ClientProperty {
-                    name: format!("{}/{}", provider, model),
-                    provider: provider.into(),
-                    retry_policy: None,
-                    options: vec![("model".to_string(), BamlValue::String(model.to_string()))]
-                        .into_iter()
-                        .collect(),
-                };
+                let client_property = ClientProperty::from_shorthand(provider, model);
                 // TODO: allow other providers
                 let llm_primitive_provider =
                     LLMPrimitiveProvider::try_from((&client_property, ctx))
@@ -150,7 +141,7 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
         ctx: &RuntimeContext,
         params: &BamlMap<String, BamlValue>,
         node_index: Option<usize>,
-    ) -> Result<(RenderedPrompt, OrchestrationScope, AllowedMetadata)> {
+    ) -> Result<(RenderedPrompt, OrchestrationScope, AllowedRoleMetadata)> {
         let func = self.get_function(function_name, ctx)?;
         let baml_args = self.ir().check_function_params(
             &func,
@@ -240,11 +231,14 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
         function_name: &str,
         test_name: &str,
         ctx: &RuntimeContext,
+        strict: bool,
     ) -> Result<BamlMap<String, BamlValue>> {
         let func = self.get_function(function_name, ctx)?;
         let test = self.ir().find_test(&func, test_name)?;
 
-        match test.test_case_params(&ctx.env) {
+        let eval_ctx = ctx.eval_ctx(strict);
+
+        match test.test_case_params(&eval_ctx) {
             Ok(params) => {
                 // Collect all errors and return them as a single error.
                 let mut errors = Vec::new();
@@ -283,7 +277,10 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
     }
 
     fn get_test_constraints(
-        &self, function_name: &str, test_name: &str, ctx: &RuntimeContext
+        &self,
+        function_name: &str,
+        test_name: &str,
+        ctx: &RuntimeContext,
     ) -> Result<Vec<Constraint>> {
         let func = self.get_function(function_name, ctx)?;
         let walker = self.ir().find_test(&func, test_name)?;

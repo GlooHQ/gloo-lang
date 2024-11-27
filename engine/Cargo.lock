@@ -3,6 +3,12 @@
 version = 3
 
 [[package]]
+name = "Inflector"
+version = "0.11.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3"
+
+[[package]]
 name = "addr2line"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -25,6 +31,12 @@ checksum = "8e60d3430d3a69478ad0993f19238d2df97c507009a52b3c10addcd7f6bcb916"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "aliasable"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "250f629c0161ad8107cf89319e990051fae62832fd343083bea452d93e2205fd"
 
 [[package]]
 name = "ambassador"
@@ -773,7 +785,7 @@ dependencies = [
 
 [[package]]
 name = "baml-cli"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "ambassador",
  "anyhow",
@@ -860,7 +872,7 @@ dependencies = [
 
 [[package]]
 name = "baml-lib"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "base64 0.13.1",
  "dissimilar",
@@ -900,7 +912,7 @@ dependencies = [
 
 [[package]]
 name = "baml-runtime"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "ambassador",
  "anyhow",
@@ -948,6 +960,7 @@ dependencies = [
  "internal-baml-codegen",
  "internal-baml-core",
  "internal-baml-jinja",
+ "internal-llm-client",
  "js-sys",
  "json_comments",
  "jsonish",
@@ -995,7 +1008,7 @@ dependencies = [
 
 [[package]]
 name = "baml-schema-build"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "anyhow",
  "baml-runtime",
@@ -1011,6 +1024,7 @@ dependencies = [
  "indoc",
  "internal-baml-codegen",
  "internal-baml-core",
+ "internal-llm-client",
  "itertools 0.13.0",
  "js-sys",
  "jsonish",
@@ -1032,7 +1046,7 @@ dependencies = [
 
 [[package]]
 name = "baml-types"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1040,6 +1054,7 @@ dependencies = [
  "indexmap 2.2.6",
  "log",
  "minijinja",
+ "once_cell",
  "serde",
  "serde_json",
  "strum",
@@ -1106,14 +1121,14 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.69.4"
+version = "0.69.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a00dc851838a2120612785d195287475a3ac45514741da670b735818822129a0"
+checksum = "271383c67ccabffb7381723dea0672a673f292304fcb45c01cc648c7a8d58088"
 dependencies = [
  "bitflags 2.6.0",
  "cexpr",
  "clang-sys",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "lazy_static",
  "lazycell",
  "proc-macro2",
@@ -1160,7 +1175,7 @@ dependencies = [
 
 [[package]]
 name = "bstd"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -2544,7 +2559,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-codegen"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2569,7 +2584,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-core"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2588,6 +2603,7 @@ dependencies = [
  "internal-baml-parser-database",
  "internal-baml-prompt-parser",
  "internal-baml-schema-ast",
+ "internal-llm-client",
  "itertools 0.13.0",
  "log",
  "minijinja",
@@ -2605,7 +2621,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-diagnostics"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "anyhow",
  "colored",
@@ -2618,7 +2634,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-jinja"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2639,7 +2655,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-jinja-types"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2658,7 +2674,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-parser-database"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2670,8 +2686,10 @@ dependencies = [
  "internal-baml-jinja-types",
  "internal-baml-prompt-parser",
  "internal-baml-schema-ast",
+ "internal-llm-client",
  "itertools 0.13.0",
  "log",
+ "ouroboros",
  "regex",
  "rustc-hash",
  "serde",
@@ -2681,7 +2699,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-prompt-parser"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "internal-baml-diagnostics",
  "internal-baml-schema-ast",
@@ -2693,7 +2711,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-schema-ast"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "baml-types",
  "bstd",
@@ -2705,6 +2723,23 @@ dependencies = [
  "serde",
  "serde_json",
  "test-log",
+]
+
+[[package]]
+name = "internal-llm-client"
+version = "0.69.0"
+dependencies = [
+ "anyhow",
+ "baml-types",
+ "derive_more",
+ "either",
+ "enum_dispatch",
+ "env_logger",
+ "indexmap 2.2.6",
+ "log",
+ "serde",
+ "serde_json",
+ "strum",
 ]
 
 [[package]]
@@ -2760,15 +2795,6 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
@@ -2799,7 +2825,7 @@ checksum = "9dbbfed4e59ba9750e15ba154fdfd9329cee16ff3df539c2666b70f58cc32105"
 
 [[package]]
 name = "jsonish"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "anyhow",
  "assert-json-diff",
@@ -3363,6 +3389,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "ouroboros"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84236d64f1718c387232287cf036eb6632a5ecff226f4ff9dccb8c2b79ba0bde"
+dependencies = [
+ "aliasable",
+ "ouroboros_macro",
+ "stable_deref_trait",
+]
+
+[[package]]
+name = "ouroboros_macro"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f463857a6eb96c0136b1d56e56c718350cef30412ec065b48294799a088bca68"
+dependencies = [
+ "Inflector",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "outref"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3624,6 +3674,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "proc-macro-error"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
+dependencies = [
+ "proc-macro-error-attr",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+ "version_check",
+]
+
+[[package]]
+name = "proc-macro-error-attr"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "version_check",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3789,18 +3863,18 @@ dependencies = [
 
 [[package]]
 name = "rb-sys"
-version = "0.9.99"
+version = "0.9.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d83151cfea2b67db2444f68c53b119ff77cff235ad711c765072e4daf8f3185b"
+checksum = "91dbe37ab6ac2fba187480fb6544b92445e41e5c6f553bf0c33743f3c450a1df"
 dependencies = [
  "rb-sys-build",
 ]
 
 [[package]]
 name = "rb-sys-build"
-version = "0.9.99"
+version = "0.9.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32d038214c118ad4a75db555ccb78672e17e1c5c10f344456cd129008dbaa7de"
+checksum = "c4d56a49dcb646b70b758789c0d16c055a386a4f2a3346333abb69850fa860ce"
 dependencies = [
  "bindgen",
  "lazy_static",
@@ -4484,6 +4558,12 @@ name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
+
+[[package]]
+name = "stable_deref_trait"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
 name = "static_assertions"

@@ -1,4 +1,4 @@
-use baml_types::{BamlMedia, BamlValue};
+use baml_types::{BamlMedia, BamlValue, EvaluationContext};
 use colored::*;
 mod chat_message_part;
 
@@ -408,8 +408,8 @@ pub fn render_prompt(
     if !matches!(args, BamlValue::Map(_)) {
         anyhow::bail!("args must be a map");
     }
-
-    let minijinja_args: minijinja::Value = args.clone().into_minijinja_value(&ir, env_vars);
+    let eval_ctx = EvaluationContext::new(env_vars, false);
+    let minijinja_args: minijinja::Value = args.clone().into_minijinja_value(&ir, &eval_ctx);
     let default_role = ctx.client.default_role.clone();
     let rendered = render_minijinja(
         template,

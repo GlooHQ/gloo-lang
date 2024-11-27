@@ -1,0 +1,469 @@
+use std::{borrow::Cow, collections::HashSet};
+
+use baml_types::{GetEnvVar, StringOr, UnresolvedValue};
+use indexmap::IndexMap;
+
+use crate::{SupportedRequestModes, UnresolvedAllowedRoleMetadata};
+
+#[derive(Debug, Clone)]
+pub struct UnresolvedUrl(StringOr);
+
+impl UnresolvedUrl {
+    pub fn resolve(&self, ctx: &impl GetEnvVar) -> anyhow::Result<String> {
+        let mut url = self.0.resolve(ctx)?;
+        // Strip trailing slash
+        if url.ends_with('/') {
+            url.pop();
+        }
+        Ok(url)
+    }
+
+    pub fn new_static(url: impl Into<String>) -> Self {
+        Self(StringOr::Value(url.into()))
+    }
+
+    pub fn required_env_vars(&self) -> HashSet<String> {
+        self.0.required_env_vars()
+    }
+}
+
+pub struct Error<Meta> {
+    pub message: String,
+    pub span: Meta,
+}
+
+impl<Meta> Error<Meta> {
+    pub fn new(message: impl Into<Cow<'static, str>>, span: Meta) -> Self {
+        Self {
+            message: message.into().to_string(),
+            span,
+        }
+    }
+}
+
+pub struct PropertyHandler<Meta> {
+    options: IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
+    span: Meta,
+    errors: Vec<Error<Meta>>,
+}
+
+impl<Meta: Clone> PropertyHandler<Meta> {
+    pub fn new(options: IndexMap<String, (Meta, UnresolvedValue<Meta>)>, span: Meta) -> Self {
+        Self {
+            options,
+            span,
+            errors: Vec::new(),
+        }
+    }
+
+    pub fn push_option_error(&mut self, message: impl Into<Cow<'static, str>>) {
+        self.errors.push(Error::new(message, self.span.clone()));
+    }
+
+    pub fn push_error(&mut self, message: impl Into<Cow<'static, str>>, span: Meta) {
+        self.errors.push(Error::new(message, span));
+    }
+
+    pub fn ensure_string(&mut self, key: &str, required: bool) -> Option<(Meta, StringOr, Meta)> {
+        let result = match ensure_string(&mut self.options, key) {
+            Ok(result) => {
+                if required && result.is_none() {
+                    self.push_option_error(format!("Missing required property: {}", key));
+                }
+                result
+            }
+            Err(e) => {
+                self.errors.push(e);
+                return None;
+            }
+        };
+
+        let final_result =
+            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
+
+        final_result
+    }
+
+    pub fn ensure_map(
+        &mut self,
+        key: &str,
+        required: bool,
+    ) -> Option<(Meta, IndexMap<String, (Meta, UnresolvedValue<Meta>)>, Meta)> {
+        let result = match ensure_map(&mut self.options, key) {
+            Ok(result) => {
+                if required && result.is_none() {
+                    self.push_option_error(format!("Missing required property: {}", key));
+                }
+                result
+            }
+            Err(e) => {
+                self.errors.push(e);
+                return None;
+            }
+        };
+
+        let final_result =
+            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
+
+        final_result
+    }
+
+    pub fn ensure_array(
+        &mut self,
+        key: &str,
+        required: bool,
+    ) -> Option<(Meta, Vec<UnresolvedValue<Meta>>, Meta)> {
+        let result = match ensure_array(&mut self.options, key) {
+            Ok(result) => {
+                if required && result.is_none() {
+                    self.push_option_error(format!("Missing required property: {}", key));
+                }
+                result
+            }
+            Err(e) => {
+                self.errors.push(e);
+                return None;
+            }
+        };
+
+        let final_result =
+            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
+
+        final_result
+    }
+
+    pub fn ensure_bool(&mut self, key: &str, required: bool) -> Option<(Meta, bool, Meta)> {
+        let result = match ensure_bool(&mut self.options, key) {
+            Ok(result) => {
+                if required && result.is_none() {
+                    self.push_option_error(format!("Missing required property: {}", key));
+                }
+                result
+            }
+            Err(e) => {
+                self.errors.push(e);
+                return None;
+            }
+        };
+
+        let final_result =
+            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
+
+        final_result
+    }
+
+    pub fn ensure_int(&mut self, key: &str, required: bool) -> Option<(Meta, i32, Meta)> {
+        let result = match ensure_int(&mut self.options, key) {
+            Ok(result) => {
+                if required && result.is_none() {
+                    self.push_option_error(format!("Missing required property: {}", key));
+                }
+                result
+            }
+            Err(e) => {
+                self.errors.push(e);
+                return None;
+            }
+        };
+
+        let final_result =
+            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
+
+        final_result
+    }
+
+    pub fn ensure_allowed_roles(&mut self) -> Option<Vec<StringOr>> {
+        self.ensure_array("allowed_roles", false)
+            .map(|(_, value, _)| {
+                value
+                    .into_iter()
+                    .filter_map(|v| match v.as_str() {
+                        Some(s) => Some(s.clone()),
+                        None => {
+                            self.push_error(
+                                format!(
+                                    "values in allowed_roles must be strings. Got: {}",
+                                    v.r#type()
+                                ),
+                                v.meta().clone(),
+                            );
+                            None
+                        }
+                    })
+                    .collect()
+            })
+    }
+
+    pub fn ensure_default_role(
+        &mut self,
+        allowed_roles: &[StringOr],
+        default_role_index: usize,
+    ) -> Option<StringOr> {
+        self.ensure_string("default_role", false)
+            .and_then(|(_, value, span)| {
+                if allowed_roles.iter().any(|v| value.maybe_eq(v)) {
+                    Some(value)
+                } else {
+                    let allowed_roles_str = allowed_roles
+                        .iter()
+                        .map(|v| format!("{:?}", v))
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    self.push_error(
+                        format!(
+                            "default_role must be one of {}. Got: {}",
+                            allowed_roles_str, value
+                        ),
+                        span,
+                    );
+                    None
+                }
+            })
+            .or_else(|| allowed_roles.get(default_role_index).cloned())
+    }
+
+    pub fn ensure_api_key(&mut self) -> Option<StringOr> {
+        self.ensure_string("api_key", false)
+            .map(|(_, value, _)| value)
+    }
+
+    pub fn ensure_base_url_with_default(&mut self, default: UnresolvedUrl) -> UnresolvedUrl {
+        self.ensure_string("base_url", false)
+            .map(|(_, value, _)| UnresolvedUrl(value))
+            .unwrap_or(default)
+    }
+
+    pub fn ensure_base_url(&mut self, required: bool) -> Option<(Meta, UnresolvedUrl, Meta)> {
+        self.ensure_string("base_url", required)
+            .map(|(key_span, value, meta)| (key_span, UnresolvedUrl(value), meta))
+    }
+
+    pub fn ensure_supported_request_modes(&mut self) -> SupportedRequestModes {
+        let result = self.ensure_bool("supports_streaming", false);
+        match result {
+            Some((_, value, _)) => SupportedRequestModes {
+                stream: Some(value),
+            },
+            None => SupportedRequestModes { stream: None },
+        }
+    }
+
+    pub fn ensure_any(&mut self, key: &str) -> Option<(Meta, UnresolvedValue<Meta>)> {
+        self.options.shift_remove(key)
+    }
+
+    pub fn ensure_allowed_metadata(&mut self) -> UnresolvedAllowedRoleMetadata {
+        if let Some((_, value)) = self.options.shift_remove("allowed_role_metadata") {
+            if let Some(allowed_metadata) = value.as_array() {
+                let allowed_metadata = allowed_metadata
+                    .iter()
+                    .filter_map(|v| match v.as_str() {
+                        Some(s) => Some(s.clone()),
+                        None => {
+                            self.push_error(
+                                "values in allowed_role_metadata must be strings.",
+                                v.meta().clone(),
+                            );
+                            None
+                        }
+                    })
+                    .collect();
+                return UnresolvedAllowedRoleMetadata::Only(allowed_metadata);
+            } else if let Some(allowed_metadata) = value.as_str() {
+                return UnresolvedAllowedRoleMetadata::Value(allowed_metadata.clone());
+            } else {
+                self.push_error(
+                    "allowed_role_metadata must be an array of keys or \"all\" or \"none\". For example: ['key1', 'key2']",
+                    value.meta().clone(),
+                );
+            }
+        }
+        UnresolvedAllowedRoleMetadata::None
+    }
+
+    pub fn ensure_headers(&mut self) -> Option<IndexMap<String, StringOr>> {
+        self.ensure_map("headers", false).map(|(_, value, _)| {
+            value
+                .into_iter()
+                .filter_map(|(k, (_, v))| match v.as_str() {
+                    Some(s) => Some((k, s.clone())),
+                    None => {
+                        self.push_error(
+                            format!(
+                                "Header key {} must have a string value. Got: {}",
+                                k,
+                                v.r#type()
+                            ),
+                            v.meta().clone(),
+                        );
+                        None
+                    }
+                })
+                .collect()
+        })
+    }
+
+    pub fn ensure_strategy(
+        &mut self,
+    ) -> Option<Vec<(either::Either<StringOr, crate::ClientSpec>, Meta)>> {
+        self.ensure_array("strategy", true)
+            .map(|(_, value, value_span)| {
+                if value.is_empty() {
+                    self.push_error("strategy must not be empty", value_span);
+                }
+                value
+                    .into_iter()
+                    .filter_map(|v| match v.as_str() {
+                        Some(s) => {
+                            if let StringOr::Value(value) = s {
+                                if let Ok(client_spec) =
+                                    crate::ClientSpec::new_from_id(value.as_str()).map_err(|e| {
+                                        self.push_error(
+                                            format!("Invalid strategy: {}", e),
+                                            v.meta().clone(),
+                                        );
+                                    })
+                                {
+                                    Some((either::Either::Right(client_spec), v.meta().clone()))
+                                } else {
+                                    Some((either::Either::Left(s.clone()), v.meta().clone()))
+                                }
+                            } else {
+                                Some((either::Either::Left(s.clone()), v.meta().clone()))
+                            }
+                        }
+                        None => {
+                            self.push_error(
+                                format!("values in strategy must be strings. Got: {}", v.r#type()),
+                                v.meta().clone(),
+                            );
+                            None
+                        }
+                    })
+                    .collect()
+            })
+    }
+
+    pub fn finalize_empty(self) -> Vec<Error<Meta>> {
+        let mut errors = self.errors;
+        for (k, (key_span, _)) in self.options {
+            errors.push(Error::new(format!("Unsupported property: {}", k), key_span));
+        }
+        errors
+    }
+
+    pub fn finalize(
+        self,
+    ) -> (
+        IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
+        Vec<Error<Meta>>,
+    ) {
+        (self.options, self.errors)
+    }
+}
+
+fn ensure_string<Meta: Clone>(
+    options: &mut IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
+    key: &str,
+) -> Result<Option<(Meta, StringOr, Meta)>, Error<Meta>> {
+    if let Some((key_span, value)) = options.shift_remove(key) {
+        match value.to_str() {
+            Ok((s, meta)) => Ok(Some((key_span, s, meta))),
+            Err(other) => Err(Error {
+                message: format!("{} must be a string. Got: {}", key, other.r#type()),
+                span: other.meta().clone(),
+            }),
+        }
+    } else {
+        Ok(None)
+    }
+}
+
+fn ensure_array<Meta: Clone>(
+    options: &mut IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
+    key: &str,
+) -> Result<Option<(Meta, Vec<UnresolvedValue<Meta>>, Meta)>, Error<Meta>> {
+    if let Some((key_span, value)) = options.shift_remove(key) {
+        match value.to_array() {
+            Ok((a, meta)) => Ok(Some((key_span, a, meta))),
+            Err(other) => Err(Error {
+                message: format!("{} must be an array. Got: {}", key, other.r#type()),
+                span: other.meta().clone(),
+            }),
+        }
+    } else {
+        Ok(None)
+    }
+}
+
+fn ensure_map<Meta: Clone>(
+    options: &mut IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
+    key: &str,
+) -> Result<Option<(Meta, IndexMap<String, (Meta, UnresolvedValue<Meta>)>, Meta)>, Error<Meta>> {
+    if let Some((key_span, value)) = options.shift_remove(key) {
+        match value.to_map() {
+            Ok((m, meta)) => Ok(Some((key_span, m, meta))),
+            Err(other) => Err(Error {
+                message: format!("{} must be a map. Got: {}", key, other.r#type()),
+                span: other.meta().clone(),
+            }),
+        }
+    } else {
+        Ok(None)
+    }
+}
+
+fn ensure_bool<Meta: Clone>(
+    options: &mut IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
+    key: &str,
+) -> Result<Option<(Meta, bool, Meta)>, Error<Meta>> {
+    if let Some((key_span, value)) = options.shift_remove(key) {
+        match value.to_bool() {
+            Ok((b, meta)) => Ok(Some((key_span, b, meta))),
+            Err(other) => Err(Error {
+                message: format!("{} must be a bool. Got: {}", key, other.r#type()),
+                span: other.meta().clone(),
+            }),
+        }
+    } else {
+        Ok(None)
+    }
+}
+
+fn ensure_int<Meta: Clone>(
+    options: &mut IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
+    key: &str,
+) -> Result<Option<(Meta, i32, Meta)>, Error<Meta>> {
+    if let Some((key_span, value)) = options.shift_remove(key) {
+        match value.to_numeric() {
+            Ok((i, meta)) => {
+                if let Ok(i) = i.parse::<i32>() {
+                    Ok(Some((key_span, i, meta)))
+                } else {
+                    Err(Error {
+                        message: format!("{} must be an integer. Got: {}", key, i),
+                        span: meta,
+                    })
+                }
+            }
+            Err(other) => Err(Error {
+                message: format!("{} must be an integer. Got: {}", key, other.r#type()),
+                span: other.meta().clone(),
+            }),
+        }
+    } else {
+        Ok(None)
+    }
+}
+
+pub(crate) fn get_proxy_url(ctx: &impl GetEnvVar) -> Option<String> {
+    if cfg!(target_arch = "wasm32") {
+        // We don't want to accidentally set this unless the user explicitly
+        // specifies it, so we enforce allow_missing_env_var=false here
+        StringOr::EnvVar("BOUNDARY_PROXY_URL".to_string())
+            .resolve(&ctx.set_allow_missing_env_var(false))
+            .ok()
+    } else {
+        None
+    }
+}

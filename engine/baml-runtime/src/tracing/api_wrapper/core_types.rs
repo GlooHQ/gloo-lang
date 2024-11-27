@@ -1,5 +1,6 @@
 use std::{collections::HashMap, path::PathBuf};
 
+use baml_types::BamlMap;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -181,7 +182,7 @@ pub enum Role {
 pub(crate) struct LLMEventInput {
     pub prompt: LLMEventInputPrompt,
     #[serde(rename = "invocation_params")]
-    pub request_options: HashMap<String, Value>,
+    pub request_options: BamlMap<String, Value>,
 }
 
 #[derive(Serialize, Debug, Clone)]

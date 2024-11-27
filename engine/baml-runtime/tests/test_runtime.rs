@@ -180,9 +180,9 @@ mod internal_tests {
 
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
-            .create_ctx_with_default(missing_env_vars.iter());
+            .create_ctx_with_default();
 
-        let params = runtime.get_test_params(function_name, test_name, &ctx)?;
+        let params = runtime.get_test_params(function_name, test_name, &ctx, true)?;
 
         let render_prompt_future =
             runtime
@@ -260,9 +260,9 @@ mod internal_tests {
 
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
-            .create_ctx_with_default(missing_env_vars.iter());
+            .create_ctx_with_default();
 
-        let params = runtime.get_test_params(function_name, test_name, &ctx)?;
+        let params = runtime.get_test_params(function_name, test_name, &ctx, true)?;
 
         let render_prompt_future =
             runtime
@@ -341,11 +341,11 @@ test ImageReceiptTest {
 
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
-            .create_ctx_with_default(missing_env_vars.iter());
+            .create_ctx_with_default();
 
         let function_name = "ExtractReceipt";
         let test_name = "ImageReceiptTest";
-        let params = runtime.get_test_params(function_name, test_name, &ctx)?;
+        let params = runtime.get_test_params(function_name, test_name, &ctx, true)?;
         let render_prompt_future =
             runtime
                 .internal()
@@ -424,11 +424,11 @@ test TestName {
 
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
-            .create_ctx_with_default(missing_env_vars.iter());
+            .create_ctx_with_default();
 
         let function_name = "Bot";
         let test_name = "TestName";
-        let params = runtime.get_test_params(function_name, test_name, &ctx)?;
+        let params = runtime.get_test_params(function_name, test_name, &ctx, true)?;
         let render_prompt_future =
             runtime
                 .internal()
@@ -494,11 +494,11 @@ test TestTree {
 
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
-            .create_ctx_with_default(missing_env_vars.iter());
+            .create_ctx_with_default();
 
         let function_name = "BuildTree";
         let test_name = "TestTree";
-        let params = runtime.get_test_params(function_name, test_name, &ctx)?;
+        let params = runtime.get_test_params(function_name, test_name, &ctx, true)?;
         let render_prompt_future =
             runtime
                 .internal()

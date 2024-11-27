@@ -1,14 +1,13 @@
 use anyhow::Result;
 use baml_types::{BamlMap, BamlValue, Constraint};
 use internal_baml_core::internal_baml_diagnostics::Diagnostics;
-use internal_baml_core::ir::repr::ClientSpec;
 use internal_baml_core::ir::{repr::IntermediateRepr, FunctionWalker};
 use internal_baml_jinja::RenderedPrompt;
+use internal_llm_client::{AllowedRoleMetadata, ClientSpec};
 use std::{collections::HashMap, sync::Arc};
 
 use crate::internal::llm_client::llm_provider::LLMProvider;
 use crate::internal::llm_client::orchestrator::{OrchestrationScope, OrchestratorNode};
-use crate::internal::llm_client::AllowedMetadata;
 use crate::tracing::{BamlTracer, TracingSpan};
 use crate::types::on_log_event::LogEventCallbackSync;
 use crate::{
@@ -139,7 +138,7 @@ pub trait InternalRuntimeInterface {
         ctx: &RuntimeContext,
         params: &BamlMap<String, BamlValue>,
         node_index: Option<usize>,
-    ) -> Result<(RenderedPrompt, OrchestrationScope, AllowedMetadata)>;
+    ) -> Result<(RenderedPrompt, OrchestrationScope, AllowedRoleMetadata)>;
 
     #[allow(async_fn_in_trait)]
     async fn render_raw_curl(
@@ -158,6 +157,7 @@ pub trait InternalRuntimeInterface {
         function_name: &str,
         test_name: &str,
         ctx: &RuntimeContext,
+        strict: bool,
     ) -> Result<BamlMap<String, BamlValue>>;
 
     fn get_test_constraints(

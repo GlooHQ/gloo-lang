@@ -1,9 +1,8 @@
 use crate::client_registry::ClientProperty;
-use crate::internal::llm_client::properties_hander::{PropertiesHandler};
 use crate::internal::llm_client::traits::{
     ToProviderMessage, ToProviderMessageExt, WithClientProperties,
 };
-use crate::internal::llm_client::{AllowedMetadata, ResolveMediaUrls, SupportedRequestModes};
+use crate::internal::llm_client::ResolveMediaUrls;
 use crate::RuntimeContext;
 use crate::{
     internal::llm_client::{
@@ -21,25 +20,18 @@ use crate::{
     request::create_client,
 };
 use anyhow::{Context, Result};
-use baml_types::{BamlMedia, BamlMediaContent};
+use baml_types::{BamlMap, BamlMedia, BamlMediaContent};
 use eventsource_stream::Eventsource;
 use futures::StreamExt;
 use http::header;
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{ChatMessagePart, RenderContext_Client, RenderedChatMessage};
+use internal_llm_client::google_ai::ResolvedGoogleAI;
+use internal_llm_client::{
+    AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty,
+};
 use serde_json::json;
 use std::collections::HashMap;
-struct PostRequestProperities {
-    default_role: String,
-    api_key: Option<String>,
-    headers: HashMap<String, String>,
-    base_url: String,
-    proxy_url: Option<String>,
-    model_id: Option<String>,
-    properties: HashMap<String, serde_json::Value>,
-    allowed_metadata: AllowedMetadata,
-    supported_request_modes: SupportedRequestModes,
-}
 
 pub struct GoogleAIClient {
     pub name: String,
@@ -47,42 +39,24 @@ pub struct GoogleAIClient {
     pub retry_policy: Option<String>,
     pub context: RenderContext_Client,
     pub features: ModelFeatures,
-    properties: PostRequestProperities,
+    properties: ResolvedGoogleAI,
 }
 
 fn resolve_properties(
-    mut properties: PropertiesHandler,
+    provider: &ClientProvider,
+    properties: &UnresolvedClientProperty<()>,
     ctx: &RuntimeContext,
-) -> Result<PostRequestProperities, anyhow::Error> {
-    let default_role = properties.pull_default_role("user")?;
-    let api_key = properties
-        .pull_api_key()?
-        .or_else(|| ctx.env.get("GOOGLE_API_KEY").map(|s| s.to_string()));
+) -> Result<ResolvedGoogleAI, anyhow::Error> {
+    let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
 
-    let model_id = properties
-        .remove_str("model")?
-        .unwrap_or_else(|| "gemini-1.5-flash".to_string());
+    let ResolvedClientProperty::GoogleAI(props) = properties else {
+        anyhow::bail!(
+            "Invalid client property. Should have been a google-ai property but got: {}",
+            properties.name()
+        );
+    };
 
-    let base_url = properties
-        .pull_base_url()?
-        .unwrap_or_else(|| "https://generativelanguage.googleapis.com/v1beta".to_string());
-
-    let allowed_metadata = properties.pull_allowed_role_metadata()?;
-    let headers = properties.pull_headers()?;
-
-    let supported_request_modes = properties.pull_supported_request_modes()?;
-
-    Ok(PostRequestProperities {
-        default_role,
-        api_key,
-        headers,
-        base_url,
-        proxy_url: ctx.env.get("BOUNDARY_PROXY_URL").map(|s| s.to_string()),
-        model_id: Some(model_id),
-        properties: properties.finalize(),
-        allowed_metadata,
-        supported_request_modes,
-    })
+    Ok(props)
 }
 
 impl WithRetryPolicy for GoogleAIClient {
@@ -92,14 +66,14 @@ impl WithRetryPolicy for GoogleAIClient {
 }
 
 impl WithClientProperties for GoogleAIClient {
-    fn client_properties(&self) -> &HashMap<String, serde_json::Value> {
-        &self.properties.properties
-    }
-    fn allowed_metadata(&self) -> &crate::internal::llm_client::AllowedMetadata {
+    fn allowed_metadata(&self) -> &AllowedRoleMetadata {
         &self.properties.allowed_metadata
     }
     fn supports_streaming(&self) -> bool {
-        self.properties.supported_request_modes.stream.unwrap_or(true)
+        self.properties
+            .supported_request_modes
+            .stream
+            .unwrap_or(true)
     }
 }
 
@@ -125,7 +99,7 @@ impl SseResponseTrait for GoogleAIClient {
     ) -> StreamResponse {
         let prompt = prompt.clone();
         let client_name = self.context.name.clone();
-        let model_id = self.properties.model_id.clone().unwrap_or_default();
+        let model_id = self.properties.model.clone();
         let params = self.properties.properties.clone();
         Ok(Box::pin(
             resp.bytes_stream()
@@ -223,14 +197,13 @@ impl WithStreamChat for GoogleAIClient {
 
 impl GoogleAIClient {
     pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Self> {
-        let properties = super::super::resolve_properties_walker(client, ctx)?;
-        let properties = resolve_properties(properties, ctx)?;
+        let properties = resolve_properties(&client.elem().provider, &client.options(), ctx)?;
         let default_role = properties.default_role.clone();
         Ok(Self {
             name: client.name().into(),
             context: RenderContext_Client {
                 name: client.name().into(),
-                provider: client.elem().provider.clone(),
+                provider: client.elem().provider.to_string(),
                 default_role,
             },
             features: ModelFeatures {
@@ -251,14 +224,14 @@ impl GoogleAIClient {
     }
 
     pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<Self> {
-        let properties = resolve_properties(client.property_handler()?, ctx)?;
+        let properties = resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
         let default_role = properties.default_role.clone();
 
         Ok(Self {
             name: client.name.clone(),
             context: RenderContext_Client {
                 name: client.name.clone(),
-                provider: client.provider.clone(),
+                provider: client.provider.to_string(),
                 default_role,
             },
             features: ModelFeatures {
@@ -294,7 +267,7 @@ impl RequestBuilder for GoogleAIClient {
         let baml_original_url = format!(
             "{}/models/{}:{}",
             self.properties.base_url,
-            self.properties.model_id.as_ref().unwrap_or(&"".to_string()),
+            self.properties.model.clone(),
             should_stream
         );
 
@@ -310,13 +283,7 @@ impl RequestBuilder for GoogleAIClient {
             req = req.header(key, value);
         }
 
-        req = req.header(
-            "x-goog-api-key",
-            self.properties
-                .api_key
-                .clone()
-                .unwrap_or_else(|| "".to_string()),
-        );
+        req = req.header("x-goog-api-key", self.properties.api_key.clone());
 
         let mut body = json!(self.properties.properties);
         let body_obj = body.as_object_mut().unwrap();
@@ -332,7 +299,7 @@ impl RequestBuilder for GoogleAIClient {
         Ok(req.json(&body))
     }
 
-    fn request_options(&self) -> &HashMap<String, serde_json::Value> {
+    fn request_options(&self) -> &BamlMap<String, serde_json::Value> {
         &self.properties.properties
     }
 }
@@ -378,13 +345,7 @@ impl WithChat for GoogleAIClient {
             start_time: system_now,
             latency: instant_now.elapsed(),
             request_options: self.properties.properties.clone(),
-            model: self
-                .properties
-                .properties
-                .get("model")
-                .and_then(|v| v.as_str().map(|s| s.to_string()))
-                .or_else(|| _ctx.env.get("default model").map(|s| s.to_string()))
-                .unwrap_or_else(|| "".to_string()),
+            model: self.properties.model.clone(),
             metadata: LLMCompleteResponseMetadata {
                 baml_is_complete: match response.candidates[0].finish_reason {
                     Some(FinishReason::Stop) => true,

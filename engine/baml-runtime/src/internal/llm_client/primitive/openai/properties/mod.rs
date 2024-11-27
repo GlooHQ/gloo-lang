@@ -1,20 +1,21 @@
-pub(crate) mod azure;
-pub(crate) mod generic;
-pub(crate) mod ollama;
-pub(crate) mod openai;
+use internal_llm_client::{openai::ResolvedOpenAI, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty};
 
-use crate::internal::llm_client::{AllowedMetadata, SupportedRequestModes};
-use std::collections::HashMap;
+use crate::RuntimeContext;
 
-pub struct PostRequestProperties {
-    pub default_role: String,
-    pub base_url: String,
-    pub api_key: Option<String>,
-    pub headers: HashMap<String, String>,
-    pub query_params: HashMap<String, String>,
-    pub proxy_url: Option<String>,
-    // These are passed directly to the OpenAI API.
-    pub properties: HashMap<String, serde_json::Value>,
-    pub allowed_metadata: AllowedMetadata,
-    pub supported_request_modes: SupportedRequestModes,
+
+pub fn resolve_properties(
+    provider: &ClientProvider,
+    properties: &UnresolvedClientProperty<()>,
+    ctx: &RuntimeContext,
+) -> anyhow::Result<ResolvedOpenAI> {
+    let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
+
+    let ResolvedClientProperty::OpenAI(props) = properties else {
+        anyhow::bail!(
+            "Invalid client property. Should have been a openai property but got: {}",
+            properties.name()
+        );
+    };
+
+    Ok(props)
 }

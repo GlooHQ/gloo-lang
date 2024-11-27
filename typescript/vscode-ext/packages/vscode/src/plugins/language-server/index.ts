@@ -21,6 +21,7 @@ const packageJson = require('../../../../package.json') // eslint-disable-line
 const BamlConfig = z.optional(
   z.object({
     path: z.string().optional(),
+    enablePlaygroundProxy: z.boolean().default(true),
     trace: z.optional(
       z.object({
         server: z.string(),
@@ -29,7 +30,6 @@ const BamlConfig = z.optional(
   }),
 )
 type BamlConfig = z.infer<typeof BamlConfig>
-let config: BamlConfig | null = null
 let client: LanguageClient
 let serverModule: string
 let telemetry: TelemetryReporter
@@ -130,9 +130,9 @@ const sleep = (time: number) => {
 const getConfig = async () => {
   try {
     console.log('getting config')
-    const configResponse = await workspace.getConfiguration('baml')
+    const configResponse = workspace.getConfiguration('baml')
     console.log('configResponse ' + JSON.stringify(configResponse, null, 2))
-    config = BamlConfig.parse(configResponse)
+    bamlConfig.config = BamlConfig.parse(configResponse)
   } catch (e: any) {
     if (e instanceof Error) {
       console.log('Error getting config' + e.message + ' ' + e.stack)
@@ -255,7 +255,7 @@ const activateClient = (
           console.log(`checking for updates ${new Date().toString()}`)
           checkForUpdates({ showIfNoUpdates: false })
         },
-        60 * 60 * 1000 /* 1h in milliseconds: min/hr * secs/min * ms/sec */,
+        6 * 60 * 60 * 1000 /* 6h in milliseconds: min/hr * secs/min * ms/sec */,
       ),
     )
   })
