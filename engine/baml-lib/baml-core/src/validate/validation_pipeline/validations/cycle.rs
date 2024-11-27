@@ -1,8 +1,12 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+    ops::Index,
+};
 
 use internal_baml_diagnostics::DatamodelError;
 use internal_baml_parser_database::{Tarjan, TypeWalker};
-use internal_baml_schema_ast::ast::{FieldType, TypeExpId, WithName, WithSpan};
+use internal_baml_schema_ast::ast::{FieldType, SchemaAst, TypeExpId, WithName, WithSpan};
 
 use crate::validate::validation_pipeline::context::Context;
 
@@ -37,7 +41,36 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
         (class.id, dependencies)
     }));
 
-    for component in Tarjan::components(&dependency_graph) {
+    report_infinite_cycles(
+        &dependency_graph,
+        ctx,
+        "These classes form a dependency cycle",
+    );
+
+    // The graph for aliases is already built when visiting each alias. Maybe
+    // we can use the same logic for the required dependencies graph above.
+    report_infinite_cycles(
+        &ctx.db.type_alias_dependencies(),
+        ctx,
+        "These aliases form a dependency cycle",
+    );
+}
+
+/// Finds and reports all the infinite cycles in the given graph.
+///
+/// It prints errors like this:
+///
+/// "Error validating: These classes form a dependency cycle: A -> B -> C"
+fn report_infinite_cycles<V: Ord + Eq + Hash + Copy>(
+    graph: &HashMap<V, HashSet<V>>,
+    ctx: &mut Context<'_>,
+    message: &str,
+) where
+    SchemaAst: Index<V>,
+    <SchemaAst as Index<V>>::Output: WithName,
+    <SchemaAst as Index<V>>::Output: WithSpan,
+{
+    for component in Tarjan::components(graph) {
         let cycle = component
             .iter()
             .map(|id| ctx.db.ast()[*id].name().to_string())
@@ -47,24 +80,7 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
         // TODO: We can push an error for every sinlge class here (that's what
         // Rust does), for now it's an error for every cycle found.
         ctx.push_error(DatamodelError::new_validation_error(
-            &format!("These classes form a dependency cycle: {}", cycle),
-            ctx.db.ast()[component[0]].span().clone(),
-        ));
-    }
-
-    // TODO: Extract this into some generic function.
-    eprintln!("Type aliases: {:?}", ctx.db.type_aliases());
-    for component in Tarjan::components(&ctx.db.type_aliases()) {
-        let cycle = component
-            .iter()
-            .map(|id| ctx.db.ast()[*id].name().to_string())
-            .collect::<Vec<_>>()
-            .join(" -> ");
-
-        // TODO: We can push an error for every sinlge class here (that's what
-        // Rust does), for now it's an error for every cycle found.
-        ctx.push_error(DatamodelError::new_validation_error(
-            &format!("These aliases form a dependency cycle: {}", cycle),
+            &format!("{message}: {cycle}"),
             ctx.db.ast()[component[0]].span().clone(),
         ));
     }

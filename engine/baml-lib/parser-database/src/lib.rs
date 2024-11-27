@@ -177,7 +177,7 @@ impl ParserDatabase {
         // Resolve type aliases.
         // Cycles are already validated so this should not stack overflow and
         // it should find the final type.
-        for alias_id in self.types.type_aliases.keys() {
+        for alias_id in self.types.type_alias_dependencies.keys() {
             let resolved = resolve_type_alias(&self.ast[*alias_id].value, &self);
             self.types.resolved_type_aliases.insert(*alias_id, resolved);
         }
@@ -240,8 +240,8 @@ impl ParserDatabase {
     ///
     /// Each vertex is a type alias and each edge is a reference to another type
     /// alias.
-    pub fn type_aliases(&self) -> &HashMap<ast::TypeAliasId, HashSet<ast::TypeAliasId>> {
-        &self.types.type_aliases
+    pub fn type_alias_dependencies(&self) -> &HashMap<ast::TypeAliasId, HashSet<ast::TypeAliasId>> {
+        &self.types.type_alias_dependencies
     }
 
     /// The total number of enums in the schema. This is O(1).

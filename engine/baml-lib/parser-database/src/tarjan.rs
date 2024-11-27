@@ -50,7 +50,7 @@ pub struct Tarjan<'g, V> {
 }
 
 // V is Copy because we mostly use opaque identifiers for class or alias IDs.
-// In practice T ends up being a u32, but if for some reason this needs to
+// In practice V ends up being a u32, but if for some reason this needs to
 // be used with strings then we can make V Clone instead of Copy and refactor
 // the code below.
 impl<'g, V: Eq + Ord + Hash + Copy> Tarjan<'g, V> {

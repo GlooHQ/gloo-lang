@@ -236,7 +236,7 @@ pub(super) struct Types {
     /// Graph of type aliases.
     ///
     /// This graph is only used to detect infinite cycles in type aliases.
-    pub(crate) type_aliases: HashMap<ast::TypeAliasId, HashSet<ast::TypeAliasId>>,
+    pub(crate) type_alias_dependencies: HashMap<ast::TypeAliasId, HashSet<ast::TypeAliasId>>,
 
     /// Fully resolved type aliases.
     ///
@@ -454,7 +454,11 @@ fn visit_type_alias<'db>(
     // Insert the entry as soon as we get here then if we find something we'll
     // add edges to the graph. Otherwise no edges but we still need the Vertex
     // in order for the cycles algorithm to work.
-    let alias_refs = ctx.types.type_aliases.entry(alias_id).or_default();
+    let alias_refs = ctx
+        .types
+        .type_alias_dependencies
+        .entry(alias_id)
+        .or_default();
 
     let mut stack = vec![&assignment.value];
 
