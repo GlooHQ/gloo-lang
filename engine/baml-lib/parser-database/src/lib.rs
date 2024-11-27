@@ -124,7 +124,7 @@ impl ParserDatabase {
         ctx.diagnostics.to_result()
     }
 
-    /// Updates the prompt
+    /// Last changes after validation.
     pub fn finalize(&mut self, diag: &mut Diagnostics) {
         self.finalize_dependencies(diag);
     }
@@ -181,51 +181,17 @@ impl ParserDatabase {
             .map(|cycle| cycle.into_iter().collect())
             .collect();
 
-        // Additionally ensure the same thing for functions, but since we've
-        // already handled classes, this should be trivial.
+        // Fully resolve function dependencies.
         let extends = self
             .types
             .function
             .iter()
-            .map(|(&k, func)| {
+            .map(|(&id, func)| {
                 let (input, output) = &func.dependencies;
-                let input_deps = input
-                    .iter()
-                    .filter_map(|f| match self.find_type_by_str(f) {
-                        Some(TypeWalker::Class(walker)) => {
-                            Some(walker.dependencies().iter().cloned())
-                        }
-                        Some(TypeWalker::Enum(_)) => None,
-                        Some(TypeWalker::TypeAlias(walker)) => match walker.resolved_as_walker() {
-                            Some(TypeWalker::Class(inner_walker)) => {
-                                Some(inner_walker.dependencies().iter().cloned())
-                            }
-                            _ => None,
-                        },
-                        _ => panic!("Unknown class `{f}`"),
-                    })
-                    .flatten()
-                    .collect::<HashSet<_>>();
+                let input_deps = self.collect_dependency_tree(input);
+                let output_deps = self.collect_dependency_tree(output);
 
-                let output_deps = output
-                    .iter()
-                    .filter_map(|f| match self.find_type_by_str(f) {
-                        Some(TypeWalker::Class(walker)) => {
-                            Some(walker.dependencies().iter().cloned())
-                        }
-                        Some(TypeWalker::Enum(_)) => None,
-                        Some(TypeWalker::TypeAlias(walker)) => match walker.resolved_as_walker() {
-                            Some(TypeWalker::Class(inner_walker)) => {
-                                Some(inner_walker.dependencies().iter().cloned())
-                            }
-                            _ => None,
-                        },
-                        _ => panic!("Unknown class `{f}`"),
-                    })
-                    .flatten()
-                    .collect::<HashSet<_>>();
-
-                (k, (input_deps, output_deps))
+                (id, (input_deps, output_deps))
             })
             .collect::<Vec<_>>();
 
@@ -234,6 +200,54 @@ impl ParserDatabase {
             val.dependencies.0.extend(input);
             val.dependencies.1.extend(output);
         }
+    }
+
+    /// Resolve the entire tree of dependencies for functions.
+    ///
+    /// Initial passes through the AST can only resolve one level of
+    /// dependencies for functions. This method will go through that first level
+    /// and collect all the dependencies of the dependencies.
+    fn collect_dependency_tree(&self, deps: &HashSet<String>) -> HashSet<String> {
+        let mut collected_deps = HashSet::new();
+        let mut stack = Vec::from_iter(deps.iter().map(|dep| dep.as_str()));
+
+        while let Some(dep) = stack.pop() {
+            match self.find_type_by_str(dep) {
+                // Add all the dependencies of the class.
+                Some(TypeWalker::Class(walker)) => {
+                    for nested_dep in walker.dependencies() {
+                        if collected_deps.insert(nested_dep.to_owned()) {
+                            // Recurse if not already visited.
+                            stack.push(nested_dep);
+                        }
+                    }
+                }
+
+                // For aliases just get the resolved identifiers and
+                // push them into the stack. If we find resolved classes we'll
+                // add their dependencies as well. Note that this is not
+                // "recursive" per se because type aliases can never "resolve"
+                // to other type aliases.
+                Some(TypeWalker::TypeAlias(walker)) => {
+                    stack.extend(walker.resolved().flat_idns().iter().map(|ident| {
+                        // Add the resolved name itself to the deps.
+                        collected_deps.insert(ident.name().to_owned());
+                        // Push the resolved name into the stack in case
+                        // it's a class, we'll have to add its deps as
+                        // well.
+                        ident.name()
+                    }))
+                }
+
+                // Skip enums.
+                Some(TypeWalker::Enum(_)) => {}
+
+                // This should not happen.
+                _ => panic!("Unknown class `{dep}`"),
+            }
+        }
+
+        collected_deps
     }
 
     /// The parsed AST.
