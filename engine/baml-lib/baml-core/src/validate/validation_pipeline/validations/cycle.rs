@@ -6,12 +6,22 @@ use std::{
 
 use internal_baml_diagnostics::DatamodelError;
 use internal_baml_parser_database::{Tarjan, TypeWalker};
-use internal_baml_schema_ast::ast::{FieldType, SchemaAst, TypeExpId, WithName, WithSpan};
+use internal_baml_schema_ast::ast::{
+    FieldType, SchemaAst, TypeAliasId, TypeExpId, WithName, WithSpan,
+};
 
 use crate::validate::validation_pipeline::context::Context;
 
 /// Validates if the dependency graph contains one or more infinite cycles.
 pub(super) fn validate(ctx: &mut Context<'_>) {
+    // Solve cycles first. We need that information in case a class points to
+    // an unresolveble type alias.
+    let alias_cycles = report_infinite_cycles(
+        &ctx.db.type_alias_dependencies(),
+        ctx,
+        "These aliases form a dependency cycle",
+    );
+
     // First, build a graph of all the "required" dependencies represented as an
     // adjacency list. We're only going to consider type dependencies that can
     // actually cause infinite recursion. Unions and optionals can stop the
@@ -34,7 +44,13 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
 
         for field in &expr_block.fields {
             if let Some(field_type) = &field.expr {
-                insert_required_deps(class.id, field_type, ctx, &mut dependencies);
+                insert_required_deps(
+                    class.id,
+                    field_type,
+                    ctx,
+                    &mut dependencies,
+                    &alias_cycles.iter().flatten().copied().collect(),
+                );
             }
         }
 
@@ -45,14 +61,6 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
         &dependency_graph,
         ctx,
         "These classes form a dependency cycle",
-    );
-
-    // The graph for aliases is already built when visiting each alias. Maybe
-    // we can use the same logic for the required dependencies graph above.
-    report_infinite_cycles(
-        &ctx.db.type_alias_dependencies(),
-        ctx,
-        "These aliases form a dependency cycle",
     );
 }
 
@@ -65,12 +73,15 @@ fn report_infinite_cycles<V: Ord + Eq + Hash + Copy>(
     graph: &HashMap<V, HashSet<V>>,
     ctx: &mut Context<'_>,
     message: &str,
-) where
+) -> Vec<Vec<V>>
+where
     SchemaAst: Index<V>,
     <SchemaAst as Index<V>>::Output: WithName,
     <SchemaAst as Index<V>>::Output: WithSpan,
 {
-    for component in Tarjan::components(graph) {
+    let components = Tarjan::components(graph);
+
+    for component in &components {
         let cycle = component
             .iter()
             .map(|id| ctx.db.ast()[*id].name().to_string())
@@ -84,6 +95,8 @@ fn report_infinite_cycles<V: Ord + Eq + Hash + Copy>(
             ctx.db.ast()[component[0]].span().clone(),
         ));
     }
+
+    components
 }
 
 /// Inserts all the required dependencies of a field into the given set.
@@ -91,11 +104,14 @@ fn report_infinite_cycles<V: Ord + Eq + Hash + Copy>(
 /// Recursively deals with unions of unions. Can be implemented iteratively with
 /// a while loop and a stack/queue if this ends up being slow / inefficient or
 /// it reaches stack overflows with large inputs.
+///
+/// TODO: Use a struct to keep all this state. Too many parameters already.
 fn insert_required_deps(
     id: TypeExpId,
     field: &FieldType,
     ctx: &Context<'_>,
     deps: &mut HashSet<TypeExpId>,
+    alias_cycles: &HashSet<TypeAliasId>,
 ) {
     match field {
         FieldType::Symbol(arity, ident, _) if arity.is_required() => {
@@ -123,7 +139,11 @@ fn insert_required_deps(
 
                     // But we'll run this instead which will follow all the
                     // alias pointers again until it finds the resolved type.
-                    insert_required_deps(id, alias.target(), ctx, deps);
+                    // We also have to stop recursion if we know the alias is
+                    // part of a cycle.
+                    if !alias_cycles.contains(&alias.id) {
+                        insert_required_deps(id, alias.target(), ctx, deps, alias_cycles)
+                    }
                 }
                 _ => {}
             }
@@ -139,7 +159,7 @@ fn insert_required_deps(
             let mut nested_deps = HashSet::new();
 
             for f in field_types {
-                insert_required_deps(id, f, ctx, &mut nested_deps);
+                insert_required_deps(id, f, ctx, &mut nested_deps, alias_cycles);
 
                 // No nested deps found on this component, this makes the
                 // union finite, so no need to go deeper.

@@ -26,15 +26,16 @@ class Recursive {
 
 type RecAlias = Recursive
 
-// error: Error validating: These classes form a dependency cycle: Recursive
-//   -->  class/recursive_type_aliases.baml:22
-//    | 
-// 21 | // Recursive class with alias pointing to itself.
-// 22 | class Recursive {
-// 23 |     value int
-// 24 |     ptr RecAlias
-// 25 | }
-//    | 
+// Class that points to alias which enters infinite cycle.
+class InfiniteCycle {
+    value int
+    ptr EnterCycle
+}
+
+type EnterCycle = NoStop
+
+type NoStop = EnterCycle
+
 // error: Error validating: These aliases form a dependency cycle: One -> Two
 //   -->  class/recursive_type_aliases.baml:10
 //    | 
@@ -46,4 +47,19 @@ type RecAlias = Recursive
 //    | 
 // 14 | // Cycle. Same as above but longer.
 // 15 | type A = B
+//    | 
+// error: Error validating: These aliases form a dependency cycle: EnterCycle -> NoStop
+//   -->  class/recursive_type_aliases.baml:35
+//    | 
+// 34 | 
+// 35 | type EnterCycle = NoStop
+//    | 
+// error: Error validating: These classes form a dependency cycle: Recursive
+//   -->  class/recursive_type_aliases.baml:22
+//    | 
+// 21 | // Recursive class with alias pointing to itself.
+// 22 | class Recursive {
+// 23 |     value int
+// 24 |     ptr RecAlias
+// 25 | }
 //    | 
