@@ -1,13 +1,13 @@
 'use client'
 import React from 'react'
-import { BAML, theme } from '@baml/codemirror-lang'
+import { BAML, theme } from '@boundaryml/baml-lezer'
 import { python } from '@codemirror/lang-python'
 import { javascript } from '@codemirror/lang-javascript'
 
 import CodeMirror, { EditorView } from '@uiw/react-codemirror'
 
 export const CodeMirrorViewer = ({ fileContent, lang }: { fileContent: string; lang: string }) => {
-  let extensions = [EditorView.lineWrapping]
+  const extensions = [EditorView.lineWrapping]
 
   if (lang === 'python') {
     extensions.push(python())

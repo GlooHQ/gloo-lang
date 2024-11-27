@@ -67,7 +67,7 @@ export const BAMLLanguage = LRLanguage.define({
 
         'FieldAttribute/@': t.attributeName,
         'FieldAttribute/IdentifierDecl': t.attributeName,
-        'BlockAttribute/@@': t.attributeName,
+        BlockAttribute: t.attributeName,
         'BlockAttribute/IdentifierDecl': t.attributeName,
 
         'SimpleTypeExpr/IdentifierDecl': t.typeName,

@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@baml/codemirror-lang": "workspace:*",
+    "@boundaryml/baml-lezer": "workspace:*",
     "@baml/common": "workspace:*",
     "@baml/playground-common": "workspace:*",
     "@codemirror/autocomplete": "^6.15.0",
