@@ -151,9 +151,9 @@ navigation:
           - page: Prompt Caching / Message Role Metadata
             icon: fa-regular fa-database
             path: 01-guide/05-baml-advanced/prompt-caching.mdx
-          - page: Validations
+          - page: Checks and Asserts
             icon: fa-regular fa-check-circle
-            path: 01-guide/05-baml-advanced/validations.mdx
+            path: 01-guide/05-baml-advanced/checks-and-asserts.mdx
       - section: Boundary Cloud
         contents:
           - section: Functions

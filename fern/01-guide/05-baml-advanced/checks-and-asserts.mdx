@@ -1,5 +1,5 @@
 
-With custom type validations, you can set specific rules to ensure your data's
+With checks and asserts, you can set specific rules to ensure your data's
 value falls within an acceptable range.
 
 BAML provides two types of validations:
@@ -117,7 +117,7 @@ class Person {
 
 ## Assertion Errors
 
-When validations fail, your BAML function will raise a `BamlValidationError`
+When asserts fail, your BAML function will raise a `BamlValidationError`
 exception, same as when parsing fails. You can catch this exception and handle
 it as you see fit.
 
@@ -199,8 +199,8 @@ const main = () => {
 
 ## Checks
 
-`@check` attributes add validations without raising exceptions if they fail.
-Types with `@check` attributes allow the validations to be inspected at
+`@check` attributes add validation without raising exceptions if they fail.
+Types with `@check` attributes allow the checks to be inspected at
 runtime.
 
 
