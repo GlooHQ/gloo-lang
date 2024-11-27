@@ -130,6 +130,14 @@ impl ParserDatabase {
     }
 
     fn finalize_dependencies(&mut self, diag: &mut Diagnostics) {
+        // Resolve type aliases.
+        // Cycles are already validated so this should not stack overflow and
+        // it should find the final type.
+        for alias_id in self.types.type_alias_dependencies.keys() {
+            let resolved = resolve_type_alias(&self.ast[*alias_id].value, &self);
+            self.types.resolved_type_aliases.insert(*alias_id, resolved);
+        }
+
         // NOTE: Class dependency cycles are already checked at
         // baml-lib/baml-core/src/validate/validation_pipeline/validations/cycle.rs
         //
@@ -151,15 +159,14 @@ impl ParserDatabase {
         // instead of strings (class names). That requires less conversions when
         // working with the graph. Once the work is done, IDs can be converted
         // to names where needed.
-        let cycles = Tarjan::components(&HashMap::from_iter(
+        let finite_cycles = Tarjan::components(&HashMap::from_iter(
             self.types.class_dependencies.iter().map(|(id, deps)| {
                 let deps =
                     HashSet::from_iter(deps.iter().filter_map(
                         |dep| match self.find_type_by_str(dep) {
                             Some(TypeWalker::Class(cls)) => Some(cls.id),
                             Some(TypeWalker::Enum(_)) => None,
-                            // TODO: Does this interfere with recursive types?
-                            Some(TypeWalker::TypeAlias(_)) => todo!(),
+                            Some(TypeWalker::TypeAlias(_)) => None,
                             None => panic!("Unknown class `{dep}`"),
                         },
                     ));
@@ -169,18 +176,10 @@ impl ParserDatabase {
 
         // Inject finite cycles into parser DB. This will then be passed into
         // the IR and then into the Jinja output format.
-        self.types.finite_recursive_cycles = cycles
+        self.types.finite_recursive_cycles = finite_cycles
             .into_iter()
             .map(|cycle| cycle.into_iter().collect())
             .collect();
-
-        // Resolve type aliases.
-        // Cycles are already validated so this should not stack overflow and
-        // it should find the final type.
-        for alias_id in self.types.type_alias_dependencies.keys() {
-            let resolved = resolve_type_alias(&self.ast[*alias_id].value, &self);
-            self.types.resolved_type_aliases.insert(*alias_id, resolved);
-        }
 
         // Additionally ensure the same thing for functions, but since we've
         // already handled classes, this should be trivial.
