@@ -40,7 +40,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 pub use coerce_expression::{coerce, coerce_array, coerce_opt};
 pub use internal_baml_schema_ast::ast;
-use internal_baml_schema_ast::ast::SchemaAst;
+use internal_baml_schema_ast::ast::{FieldType, SchemaAst, WithName};
 pub use tarjan::Tarjan;
 use types::resolve_type_alias;
 pub use types::{
@@ -197,9 +197,12 @@ impl ParserDatabase {
                             Some(walker.dependencies().iter().cloned())
                         }
                         Some(TypeWalker::Enum(_)) => None,
-                        // TODO: Alias can point to classes enums, unions...
-                        // what do we do here?
-                        Some(TypeWalker::TypeAlias(walker)) => None,
+                        Some(TypeWalker::TypeAlias(walker)) => match walker.resolved_as_walker() {
+                            Some(TypeWalker::Class(inner_walker)) => {
+                                Some(inner_walker.dependencies().iter().cloned())
+                            }
+                            _ => None,
+                        },
                         _ => panic!("Unknown class `{f}`"),
                     })
                     .flatten()
@@ -212,10 +215,13 @@ impl ParserDatabase {
                             Some(walker.dependencies().iter().cloned())
                         }
                         Some(TypeWalker::Enum(_)) => None,
-                        // TODO: Alias can point to classes enums, unions...
-                        // what do we do here?
-                        Some(TypeWalker::TypeAlias(walker)) => None,
-                        _ => panic!("Unknown class `{}`", f),
+                        Some(TypeWalker::TypeAlias(walker)) => match walker.resolved_as_walker() {
+                            Some(TypeWalker::Class(inner_walker)) => {
+                                Some(inner_walker.dependencies().iter().cloned())
+                            }
+                            _ => None,
+                        },
+                        _ => panic!("Unknown class `{f}`"),
                     })
                     .flatten()
                     .collect::<HashSet<_>>();
