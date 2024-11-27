@@ -379,6 +379,9 @@ fn visit_class<'db>(
 ///
 /// The type would resolve to `SomeClass | AnotherClass | int`, which is not
 /// stored in the AST.
+///
+/// **Important**: This function can only be called once infinite cycles have
+/// been detected! Otherwise it'll stack overflow.
 pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldType {
     match field_type {
         // For symbols we need to check if we're dealing with aliases.
@@ -400,7 +403,7 @@ pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldT
                         return resolved.to_owned();
                     }
 
-                    // Recurse... TODO: Recursive types and infinite cycles :(
+                    // Recurse...
                     let resolved = resolve_type_alias(&db.ast[*alias_id].value, db);
 
                     // Sync arity. Basically stuff like:

@@ -245,10 +245,7 @@ impl FieldType {
                         .zip(other_items)
                         .all(|(self_item, other_item)| self_item.is_subtype_of(other_item))
             }
-            // TODO: Can this cause infinite recursion?
-            // Should the final resolved type (following all the aliases) be
-            // included in the variant so that we skip recursion?
-            (FieldType::Alias { target, .. }, _) => target.is_subtype_of(other),
+            (FieldType::Alias { resolution, .. }, _) => resolution.is_subtype_of(other),
             (FieldType::Tuple(_), _) => false,
             (FieldType::Primitive(_), _) => false,
             (FieldType::Enum(_), _) => false,
