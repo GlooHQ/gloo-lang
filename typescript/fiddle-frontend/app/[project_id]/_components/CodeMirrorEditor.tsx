@@ -2,7 +2,7 @@
 import { EditorFile } from '@/app/actions'
 import { BAML_DIR } from '@/lib/constants'
 import type { BAMLProject } from '@/lib/exampleProjects'
-import { BAML, theme } from '@baml/codemirror-lang'
+import { BAML, theme } from '@boundaryml/baml-lezer'
 import type { ParserDatabase } from '@baml/common'
 import {
   availableFunctionsAtom,
@@ -238,7 +238,7 @@ export const CodeMirrorEditor = ({ project }: { project: BAMLProject }) => {
         />
         <div className='absolute bottom-3 pl-8  inset-x-0 right-[10px] h-[20px] p-2'>
           {numErrors.errors > 0 && (
-            <div className='w-full p-1 px-5 text-xs text-white bg-red-500 rounded-md'>
+            <div className='p-1 px-5 w-full text-xs text-white bg-red-500 rounded-md'>
               {numErrors.errors} {numErrors.errors === 1 ? 'error' : 'errors'}
             </div>
           )}

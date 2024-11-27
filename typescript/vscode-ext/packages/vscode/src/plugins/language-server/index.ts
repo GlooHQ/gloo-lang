@@ -255,7 +255,7 @@ const activateClient = (
           console.log(`checking for updates ${new Date().toString()}`)
           checkForUpdates({ showIfNoUpdates: false })
         },
-        60 * 60 * 1000 /* 1h in milliseconds: min/hr * secs/min * ms/sec */,
+        6 * 60 * 60 * 1000 /* 6h in milliseconds: min/hr * secs/min * ms/sec */,
       ),
     )
   })

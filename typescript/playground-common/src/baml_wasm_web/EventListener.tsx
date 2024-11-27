@@ -42,7 +42,7 @@ const vscodeSettingsAtom = unwrap(
     } catch (e) {
       console.error(`Error occurred while getting vscode settings:\n${e}`)
       return {
-        enablePlaygroundProxy: false,
+        enablePlaygroundProxy: true,
       }
     }
   }),
@@ -135,15 +135,21 @@ type Selection = {
 }
 
 export const envVarsAtom = atom((get) => {
-  const vscodeSettings = get(vscodeSettingsAtom)
-  if (vscodeSettings?.enablePlaygroundProxy !== undefined && !vscodeSettings?.enablePlaygroundProxy) {
-    // filter it out
-    const envKeyValues = get(envKeyValuesAtom)
-    return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]).filter(([k]) => k !== 'BOUNDARY_PROXY_URL'))
-  }
+  if ((window as any).next?.version) {
+    // NextJS environment doesnt have vscode settings, and proxy is always enabled
+    return Object.fromEntries(defaultEnvKeyValues.map(([k, v]) => [k, v]))
+  } else {
+    const vscodeSettings = get(vscodeSettingsAtom)
+    console.log('vscodeSettings', vscodeSettings)
+    if (vscodeSettings?.enablePlaygroundProxy !== undefined && !vscodeSettings?.enablePlaygroundProxy) {
+      // filter it out
+      const envKeyValues = get(envKeyValuesAtom)
+      return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]).filter(([k]) => k !== 'BOUNDARY_PROXY_URL'))
+    }
 
-  const envKeyValues = get(envKeyValuesAtom)
-  return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]))
+    const envKeyValues = get(envKeyValuesAtom)
+    return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]))
+  }
 })
 
 const selectedProjectAtom = atom(
