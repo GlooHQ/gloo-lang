@@ -26,6 +26,22 @@ class Recursive {
 
 type RecAlias = Recursive
 
+// Same but finite.
+class FiniteRecursive {
+    value int
+    ptr FiniteRecAlias?
+}
+
+type FiniteRecAlias = FiniteRecursive
+
+// Move the "finite" condition to the alias itself. Should still work.
+class RecursiveWithOptionalAlias {
+    value int
+    ptr RecOptionalAlias
+}
+
+type RecOptionalAlias = RecursiveWithOptionalAlias?
+
 // Class that points to alias which enters infinite cycle.
 class InfiniteCycle {
     value int
@@ -49,10 +65,10 @@ type NoStop = EnterCycle
 // 15 | type A = B
 //    | 
 // error: Error validating: These aliases form a dependency cycle: EnterCycle -> NoStop
-//   -->  class/recursive_type_aliases.baml:35
+//   -->  class/recursive_type_aliases.baml:51
 //    | 
-// 34 | 
-// 35 | type EnterCycle = NoStop
+// 50 | 
+// 51 | type EnterCycle = NoStop
 //    | 
 // error: Error validating: These classes form a dependency cycle: Recursive
 //   -->  class/recursive_type_aliases.baml:22
