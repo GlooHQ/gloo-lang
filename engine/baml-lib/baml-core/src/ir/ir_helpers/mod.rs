@@ -290,8 +290,9 @@ impl IRHelper for IntermediateRepr {
 
                         if !map_type.is_subtype_of(&field_type) {
                             anyhow::bail!("Could not unify {:?} with {:?}", map_type, field_type);
-                        } else {
-                            let mapped_fields: BamlMap<String, BamlValueWithMeta<FieldType>> =
+                        }
+
+                        let mapped_fields: BamlMap<String, BamlValueWithMeta<FieldType>> =
                                     pairs
                                     .into_iter()
                                     .map(|(key, val)| {
@@ -299,8 +300,7 @@ impl IRHelper for IntermediateRepr {
                                         Ok((key, sub_value))
                                     })
                                     .collect::<anyhow::Result<BamlMap<String,BamlValueWithMeta<FieldType>>>>()?;
-                            Ok(BamlValueWithMeta::Map(mapped_fields, field_type))
-                        }
+                        Ok(BamlValueWithMeta::Map(mapped_fields, field_type))
                     }
                     None => Ok(BamlValueWithMeta::Map(BamlMap::new(), field_type)),
                 }

@@ -78,6 +78,18 @@ describe "ruby<->baml integration tests" do
 
     res = b.InOutSingleLiteralStringMapKey(m: {"key" => "1"})
     assert_equal res['key'], "1"
+
+    res = b.PrimitiveAlias(p: "test")
+    assert_equal res, "test"
+
+    res = b.MapAlias(m: {"A" => ["B", "C"], "B" => [], "C" => []})
+    assert_equal res, {"A" => ["B", "C"], "B" => [], "C" => []}
+
+    res = b.NestedAlias(c: "test")
+    assert_equal res, "test"
+
+    res = b.NestedAlias(c: {"A" => ["B", "C"], "B" => [], "C" => []})
+    assert_equal res, {"A" => ["B", "C"], "B" => [], "C" => []}
   end
 
   it "accepts subclass of baml type" do

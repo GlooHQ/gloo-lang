@@ -249,6 +249,24 @@ class TestAllInputs:
         res = await b.InOutSingleLiteralStringMapKey({"key": "1"})
         assert res["key"] == "1"
 
+    @pytest.mark.asyncio
+    async def test_primitive_union_alias(self):
+        res = await b.PrimitiveAlias("test")
+        assert res == "test"
+
+    @pytest.mark.asyncio
+    async def test_map_alias(self):
+        res = await b.MapAlias({"A": ["B", "C"], "B": [], "C": []})
+        assert res == {"A": ["B", "C"], "B": [], "C": []}
+
+    @pytest.mark.asyncio
+    async def test_alias_union(self):
+        res = await b.NestedAlias("test")
+        assert res == "test"
+
+        res = await b.NestedAlias({"A": ["B", "C"], "B": [], "C": []})
+        assert res == {"A": ["B", "C"], "B": [], "C": []}
+
 
 class MyCustomClass(NamedArgsSingleClass):
     date: datetime.datetime

@@ -148,6 +148,24 @@ describe('Integ tests', () => {
       const res = await b.InOutSingleLiteralStringMapKey({ key: '1' })
       expect(res).toHaveProperty('key', '1')
     })
+
+    it('primitive union alias', async () => {
+      const res = await b.PrimitiveAlias('test')
+      expect(res).toEqual('test')
+    })
+
+    it('map alias', async () => {
+      const res = await b.MapAlias({ A: ['B', 'C'], B: [], C: [] })
+      expect(res).toEqual({ A: ['B', 'C'], B: [], C: [] })
+    })
+
+    it('alias union', async () => {
+      let res = await b.NestedAlias('test')
+      expect(res).toEqual('test')
+
+      res = await b.NestedAlias({ A: ['B', 'C'], B: [], C: [] })
+      expect(res).toEqual({ A: ['B', 'C'], B: [], C: [] })
+    })
   })
 
   it('should work for all outputs', async () => {

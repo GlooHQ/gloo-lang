@@ -184,6 +184,8 @@ impl FieldType {
         }
 
         match (self, other) {
+            (FieldType::Alias { resolution, .. }, _) => resolution.is_subtype_of(other),
+            (_, FieldType::Alias { resolution, .. }) => self.is_subtype_of(resolution),
             (FieldType::Primitive(TypeValue::Null), FieldType::Optional(_)) => true,
             (FieldType::Optional(self_item), FieldType::Optional(other_item)) => {
                 self_item.is_subtype_of(other_item)
@@ -245,7 +247,6 @@ impl FieldType {
                         .zip(other_items)
                         .all(|(self_item, other_item)| self_item.is_subtype_of(other_item))
             }
-            (FieldType::Alias { resolution, .. }, _) => resolution.is_subtype_of(other),
             (FieldType::Tuple(_), _) => false,
             (FieldType::Primitive(_), _) => false,
             (FieldType::Enum(_), _) => false,
