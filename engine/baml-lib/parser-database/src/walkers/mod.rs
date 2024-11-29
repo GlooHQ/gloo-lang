@@ -142,6 +142,14 @@ impl<'db> crate::ParserDatabase {
         &self.types.finite_recursive_cycles
     }
 
+    /// Returns the resolved aliases map.
+    pub fn resolved_type_alias_by_name(&self, alias: &str) -> Option<&FieldType> {
+        match self.find_type_by_str(alias) {
+            Some(TypeWalker::TypeAlias(walker)) => Some(walker.resolved()),
+            _ => None,
+        }
+    }
+
     /// Traverse a schema element by id.
     pub fn walk<I>(&self, id: I) -> Walker<'_, I> {
         Walker { db: self, id }

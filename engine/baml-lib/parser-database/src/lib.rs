@@ -44,8 +44,8 @@ use internal_baml_schema_ast::ast::{FieldType, SchemaAst, WithName};
 pub use tarjan::Tarjan;
 use types::resolve_type_alias;
 pub use types::{
-    Attributes, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType, PromptAst,
-    PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType, ClientProperties
+    Attributes, ClientProperties, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType,
+    PromptAst, PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType,
 };
 pub use walkers::TypeWalker;
 
@@ -288,10 +288,12 @@ mod test {
     use std::path::PathBuf;
 
     use super::*;
+    use ast::FieldArity;
+    use baml_types::TypeValue;
     use internal_baml_diagnostics::{Diagnostics, SourceFile};
     use internal_baml_schema_ast::parse_schema;
 
-    fn assert_finite_cycles(baml: &'static str, expected: &[&[&str]]) -> Result<(), Diagnostics> {
+    fn parse(baml: &'static str) -> Result<ParserDatabase, Diagnostics> {
         let mut db = ParserDatabase::new();
         let source = SourceFile::new_static(PathBuf::from("test.baml"), baml);
         let (ast, mut diag) = parse_schema(&source.path_buf(), &source)?;
@@ -299,6 +301,14 @@ mod test {
         db.add_ast(ast);
         db.validate(&mut diag)?;
         db.finalize(&mut diag);
+
+        diag.to_result()?;
+
+        Ok(db)
+    }
+
+    fn assert_finite_cycles(baml: &'static str, expected: &[&[&str]]) -> Result<(), Diagnostics> {
+        let mut db = parse(baml)?;
 
         assert_eq!(
             db.finite_recursive_cycles()
@@ -525,5 +535,51 @@ mod test {
             "#,
             &[&["RecMap"]],
         )
+    }
+
+    #[test]
+    fn resolve_simple_alias() -> Result<(), Diagnostics> {
+        let db = parse("type Number = int")?;
+
+        assert!(matches!(
+            db.resolved_type_alias_by_name("Number").unwrap(),
+            FieldType::Primitive(FieldArity::Required, TypeValue::Int, _, _)
+        ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn resolve_multiple_levels_of_aliases() -> Result<(), Diagnostics> {
+        #[rustfmt::skip]
+        let db = parse(r#"
+            type One = string
+            type Two = One
+            type Three = Two
+            type Four = Three
+        "#)?;
+
+        assert!(matches!(
+            db.resolved_type_alias_by_name("Four").unwrap(),
+            FieldType::Primitive(FieldArity::Required, TypeValue::String, _, _)
+        ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn sync_alias_arity() -> Result<(), Diagnostics> {
+        #[rustfmt::skip]
+        let db = parse(r#"
+            type Required = float
+            type Optional = Required?
+        "#)?;
+
+        assert!(matches!(
+            db.resolved_type_alias_by_name("Optional").unwrap(),
+            FieldType::Primitive(FieldArity::Optional, TypeValue::Float, _, _)
+        ));
+
+        Ok(())
     }
 }
