@@ -191,7 +191,9 @@ impl BamlRuntime {
         ctx: &RuntimeContext,
         strict: bool,
     ) -> Result<(BamlMap<String, BamlValue>, Vec<Constraint>)> {
-        let params = self.inner.get_test_params(function_name, test_name, ctx, strict)?;
+        let params = self
+            .inner
+            .get_test_params(function_name, test_name, ctx, strict)?;
         let constraints = self
             .inner
             .get_test_constraints(function_name, test_name, &ctx)?;
@@ -205,7 +207,8 @@ impl BamlRuntime {
         ctx: &RuntimeContext,
         strict: bool,
     ) -> Result<BamlMap<String, BamlValue>> {
-        let (params, _) = self.get_test_params_and_constraints(function_name, test_name, ctx, strict)?;
+        let (params, _) =
+            self.get_test_params_and_constraints(function_name, test_name, ctx, strict)?;
         Ok(params)
     }
 
@@ -243,7 +246,14 @@ impl BamlRuntime {
                 .context("Expected non-empty event chain")?;
             let complete_resp = match llm_resp {
                 LLMResponse::Success(complete_llm_response) => Ok(complete_llm_response),
-                _ => Err(anyhow::anyhow!("LLM Response was not successful")),
+                LLMResponse::InternalFailure(e) => Err(anyhow::anyhow!("{}", e)),
+                LLMResponse::UserFailure(e) => Err(anyhow::anyhow!("{}", e)),
+                LLMResponse::LLMFailure(e) => Err(anyhow::anyhow!(
+                    "{} {}\n\nRequest options: {}",
+                    e.code.to_string(),
+                    e.message,
+                    serde_json::to_string(&e.request_options).unwrap_or_default()
+                )),
             }?;
             let test_constraints_result = if constraints.is_empty() {
                 TestConstraintsResult::empty()
