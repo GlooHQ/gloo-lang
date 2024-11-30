@@ -406,13 +406,12 @@ pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldT
 
             match top_id {
                 ast::TopId::TypeAlias(alias_id) => {
-                    // Check if we can avoid deeper recursion.
-                    if let Some(resolved) = db.types.resolved_type_aliases.get(alias_id) {
-                        return resolved.to_owned();
-                    }
-
-                    // Recurse...
-                    let resolved = resolve_type_alias(&db.ast[*alias_id].value, db);
+                    let resolved = match db.types.resolved_type_aliases.get(alias_id) {
+                        // Check if we can avoid deeper recursion.
+                        Some(already_resolved) => already_resolved.to_owned(),
+                        // No luck, recurse.
+                        None => resolve_type_alias(&db.ast[*alias_id].value, db),
+                    };
 
                     // Sync arity. Basically stuff like:
                     //
