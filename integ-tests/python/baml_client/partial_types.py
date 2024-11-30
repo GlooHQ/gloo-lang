@@ -173,6 +173,10 @@ class LinkedList(BaseModel):
     head: Optional["Node"] = None
     len: Optional[int] = None
 
+class LinkedListAliasNode(BaseModel):
+    value: Optional[int] = None
+    next: Optional["LinkedListAliasNode"] = None
+
 class LiteralClassHello(BaseModel):
     prop: Literal["hello"]
 

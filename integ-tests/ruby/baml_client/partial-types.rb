@@ -52,6 +52,7 @@ module Baml
     class InputClass < T::Struct; end
     class InputClassNested < T::Struct; end
     class LinkedList < T::Struct; end
+    class LinkedListAliasNode < T::Struct; end
     class LiteralClassHello < T::Struct; end
     class LiteralClassOne < T::Struct; end
     class LiteralClassTwo < T::Struct; end
@@ -554,6 +555,20 @@ module Baml
         super(
           head: props[:head],
           len: props[:len],
+        )
+
+        @props = props
+      end
+    end
+    class LinkedListAliasNode < T::Struct
+      include Baml::Sorbet::Struct
+      const :value, T.nilable(Integer)
+      const :next, Baml::PartialTypes::LinkedListAliasNode
+
+      def initialize(props)
+        super(
+          value: props[:value],
+          next: props[:next],
         )
 
         @props = props

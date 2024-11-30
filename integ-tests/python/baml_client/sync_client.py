@@ -70,6 +70,29 @@ class BamlSyncClient:
       )
       return cast(types.Recipe, raw.cast_to(types, types))
     
+    def AliasThatPointsToRecursiveType(
+        self,
+        list: types.LinkedListAliasNode,
+        baml_options: BamlCallOptions = {},
+    ) -> types.LinkedListAliasNode:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "AliasThatPointsToRecursiveType",
+        {
+          "list": list,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.LinkedListAliasNode, raw.cast_to(types, types))
+    
     def AliasedInputClass(
         self,
         input: types.InputClass,
@@ -2869,6 +2892,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.Recipe, x.cast_to(types, partial_types)),
         lambda x: cast(types.Recipe, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def AliasThatPointsToRecursiveType(
+        self,
+        list: types.LinkedListAliasNode,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.LinkedListAliasNode, types.LinkedListAliasNode]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "AliasThatPointsToRecursiveType",
+        {
+          "list": list,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[partial_types.LinkedListAliasNode, types.LinkedListAliasNode](
+        raw,
+        lambda x: cast(partial_types.LinkedListAliasNode, x.cast_to(types, partial_types)),
+        lambda x: cast(types.LinkedListAliasNode, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

@@ -166,6 +166,11 @@ describe('Integ tests', () => {
       res = await b.NestedAlias({ A: ['B', 'C'], B: [], C: [] })
       expect(res).toEqual({ A: ['B', 'C'], B: [], C: [] })
     })
+
+    it('alias pointing to recursive class', async () => {
+      const res = await b.AliasThatPointsToRecursiveType({ value: 1, next: null })
+      expect(res).toEqual({ value: 1, next: null })
+    })
   })
 
   it('should work for all outputs', async () => {

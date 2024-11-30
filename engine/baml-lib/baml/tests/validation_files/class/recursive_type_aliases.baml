@@ -52,6 +52,9 @@ type EnterCycle = NoStop
 
 type NoStop = EnterCycle
 
+// RecursiveMap
+type Map = map<string, Map>
+
 // error: Error validating: These aliases form a dependency cycle: One -> Two
 //   -->  class/recursive_type_aliases.baml:10
 //    | 
@@ -69,6 +72,12 @@ type NoStop = EnterCycle
 //    | 
 // 50 | 
 // 51 | type EnterCycle = NoStop
+//    | 
+// error: Error validating: These aliases form a dependency cycle: Map
+//   -->  class/recursive_type_aliases.baml:56
+//    | 
+// 55 | // RecursiveMap
+// 56 | type Map = map<string, Map>
 //    | 
 // error: Error validating: These classes form a dependency cycle: Recursive
 //   -->  class/recursive_type_aliases.baml:22

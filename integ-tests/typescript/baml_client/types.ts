@@ -364,6 +364,12 @@ export interface LinkedList {
   
 }
 
+export interface LinkedListAliasNode {
+  value: number
+  next?: LinkedListAliasNode | null
+  
+}
+
 export interface LiteralClassHello {
   prop: "hello"
   

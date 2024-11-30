@@ -40,6 +40,7 @@ from ..baml_client.types import (
     BlockConstraintForParam,
     NestedBlockConstraintForParam,
     MapKey,
+    LinkedListAliasNode,
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -266,6 +267,13 @@ class TestAllInputs:
 
         res = await b.NestedAlias({"A": ["B", "C"], "B": [], "C": []})
         assert res == {"A": ["B", "C"], "B": [], "C": []}
+
+    @pytest.mark.asyncio
+    async def test_alias_pointing_to_recursive_class(self):
+        res = await b.AliasThatPointsToRecursiveType(
+            LinkedListAliasNode(value=1, next=None)
+        )
+        assert res == LinkedListAliasNode(value=1, next=None)
 
 
 class MyCustomClass(NamedArgsSingleClass):
