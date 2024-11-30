@@ -91,8 +91,8 @@ describe "ruby<->baml integration tests" do
     res = b.NestedAlias(c: {"A" => ["B", "C"], "B" => [], "C" => []})
     assert_equal res, {"A" => ["B", "C"], "B" => [], "C" => []}
 
-    res = b.AliasThatPointsToRecursiveType(list: { "value" => 1, "next" => null })
-    assert_equal res, { "value" => 1, "next" => null }
+    res = b.AliasThatPointsToRecursiveType(list: { "value" => 1, "next" => nil })
+    assert_equal res, { "value" => 1, "next" => nil }
   end
 
   it "accepts subclass of baml type" do
