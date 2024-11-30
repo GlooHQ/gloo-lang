@@ -27,12 +27,13 @@ use crate::Configuration;
 pub struct IntermediateRepr {
     enums: Vec<Node<Enum>>,
     classes: Vec<Node<Class>>,
-    /// Strongly connected components of the dependency graph (finite cycles).
-    finite_recursive_cycles: Vec<IndexSet<String>>,
     functions: Vec<Node<Function>>,
     clients: Vec<Node<Client>>,
     retry_policies: Vec<Node<RetryPolicy>>,
     template_strings: Vec<Node<TemplateString>>,
+
+    /// Strongly connected components of the dependency graph (finite cycles).
+    finite_recursive_cycles: Vec<IndexSet<String>>,
 
     configuration: Configuration,
 }

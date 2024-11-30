@@ -23,20 +23,4 @@ impl<'db> TypeAliasWalker<'db> {
     pub fn resolved(&self) -> &'db FieldType {
         &self.db.types.resolved_type_aliases[&self.id]
     }
-
-    /// Returns a [`TypeWalker`] over the resolved type if it's a symbol.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the resolved type is a symbol but the symbol is not found.
-    pub fn resolved_as_walker(&self) -> Option<TypeWalker<'db>> {
-        match self.resolved() {
-            FieldType::Symbol(_, ident, _) => match self.db.find_type_by_str(ident.name()) {
-                Some(walker) => Some(walker),
-                _ => panic!("Unknown class or enum `{ident}`"),
-            },
-
-            _ => None,
-        }
-    }
 }
