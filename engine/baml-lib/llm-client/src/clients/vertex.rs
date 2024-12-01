@@ -56,8 +56,7 @@ impl<Meta> UnresolvedServiceAccountDetails<Meta> {
             UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s) => s.required_env_vars(),
             UnresolvedServiceAccountDetails::Object(s) => s
                 .values()
-                .map(|(_, v)| v.required_env_vars())
-                .flatten()
+                .flat_map(|(_, v)| v.required_env_vars())
                 .collect(),
             UnresolvedServiceAccountDetails::Json(s) => s.required_env_vars(),
         }
@@ -82,7 +81,7 @@ impl<Meta> UnresolvedServiceAccountDetails<Meta> {
                                 value
                             ))?;
                             let json = serde_json::from_str(&file)
-                                .context(format!("Failed to parse service account file as JSON"))?;
+                                .context("Failed to parse service account file as JSON")?;
                             Ok(ResolvedServiceAccountDetails::Json(json))
                         }
                         #[cfg(target_arch = "wasm32")]
@@ -101,14 +100,13 @@ impl<Meta> UnresolvedServiceAccountDetails<Meta> {
                     .collect::<Result<IndexMap<_, _>>>()?;
                 Ok(ResolvedServiceAccountDetails::Json(
                     serde_json::from_value(serde_json::json!(raw))
-                        .context(format!("Failed to parse service account JSON"))?,
+                        .context("Failed to parse service account JSON")?,
                 ))
             }
             UnresolvedServiceAccountDetails::Json(s) => {
                 let raw = s.resolve(ctx)?;
                 Ok(ResolvedServiceAccountDetails::Json(
-                    serde_json::from_str(&raw)
-                        .context(format!("Failed to parse service account JSON"))?,
+                    serde_json::from_str(&raw).context("Failed to parse service account JSON")?,
                 ))
             }
         }
@@ -155,28 +153,21 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
         }
         env_vars.extend(self.authorization.required_env_vars());
         env_vars.extend(self.model.required_env_vars());
-        env_vars.extend(
-            self.headers
-                .values()
-                .map(|v| v.required_env_vars())
-                .flatten(),
-        );
+        env_vars.extend(self.headers.values().flat_map(|v| v.required_env_vars()));
         env_vars.extend(
             self.allowed_roles
                 .iter()
-                .map(|r| r.required_env_vars())
-                .flatten(),
+                .flat_map(|r| r.required_env_vars()),
         );
-        self.default_role
-            .as_ref()
-            .map(|r| env_vars.extend(r.required_env_vars()));
+        if let Some(r) = self.default_role.as_ref() {
+            env_vars.extend(r.required_env_vars())
+        }
         env_vars.extend(self.allowed_role_metadata.required_env_vars());
         env_vars.extend(self.supported_request_modes.required_env_vars());
         env_vars.extend(
             self.properties
                 .values()
-                .map(|(_, v)| v.required_env_vars())
-                .flatten(),
+                .flat_map(|(_, v)| v.required_env_vars()),
         );
 
         env_vars

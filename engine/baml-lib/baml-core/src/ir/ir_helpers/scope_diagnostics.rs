@@ -94,6 +94,12 @@ impl std::fmt::Display for ScopeStack {
     }
 }
 
+impl Default for ScopeStack {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ScopeStack {
     pub fn new() -> Self {
         Self {

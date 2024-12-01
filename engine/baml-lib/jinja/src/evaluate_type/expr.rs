@@ -10,7 +10,7 @@ use super::{
     ScopeTracker, TypeError,
 };
 
-fn parse_as_function_call<'a>(
+fn parse_as_function_call(
     expr: &ast::Spanned<ast::Call>,
     state: &mut ScopeTracker,
     types: &PredefinedTypes,
@@ -35,7 +35,7 @@ fn parse_as_function_call<'a>(
                 }
             }
 
-            types.check_function_args((&name, expr), &positional_args, &kwargs)
+            types.check_function_args((name, expr), &positional_args, &kwargs)
         }
         Type::Both(x, y) => {
             match (x.as_ref(), y.as_ref()) {
@@ -51,10 +51,7 @@ fn parse_as_function_call<'a>(
                 (true, true) => (Type::merge([t1, t2]), vec![]),
                 (true, false) => (t1, e1),
                 (false, true) => (t2, e2),
-                (false, false) => (
-                    Type::merge([t1, t2]),
-                    e1.into_iter().chain(e2.into_iter()).collect(),
-                ),
+                (false, false) => (Type::merge([t1, t2]), e1.into_iter().chain(e2).collect()),
             }
         }
         Type::Union(items) => {
@@ -64,10 +61,7 @@ fn parse_as_function_call<'a>(
                 .reduce(|acc, x| {
                     let (t1, e1) = acc;
                     let (t2, e2) = x;
-                    (
-                        Type::merge([t1, t2]),
-                        e1.into_iter().chain(e2.into_iter()).collect(),
-                    )
+                    (Type::merge([t1, t2]), e1.into_iter().chain(e2).collect())
                 });
             match items {
                 Some(x) => x,
@@ -94,8 +88,8 @@ fn parse_as_function_call<'a>(
     }
 }
 
-fn tracker_visit_expr<'a>(
-    expr: &ast::Expr<'a>,
+fn tracker_visit_expr(
+    expr: &ast::Expr<'_>,
     state: &mut ScopeTracker,
     types: &PredefinedTypes,
 ) -> Type {
@@ -293,7 +287,7 @@ fn tracker_visit_expr<'a>(
                 "sort" => Type::Unknown,
                 "split" => Type::List(Box::new(Type::String)),
                 "sum" => match inner.clone() {
-                    Type::List(elem_type) =>
+                    Type::List(elem_type) => {
                         if elem_type.is_subtype_of(&Type::Float) {
                             Type::Float
                         } else if elem_type.is_subtype_of(&Type::Int) {
@@ -302,11 +296,12 @@ fn tracker_visit_expr<'a>(
                             ensure_type("(int|float)[]");
                             Type::String
                         }
+                    }
                     _ => {
                         ensure_type("(int|float)[]");
                         Type::Bool
-                    },
-                }
+                    }
+                },
                 "title" => Type::String,
                 "tojson" | "json" => Type::String,
                 "trim" => Type::String,
@@ -333,7 +328,7 @@ fn tracker_visit_expr<'a>(
             match &parent {
                 Type::ClassRef(c) => {
                     let (t, err) =
-                        types.check_property(&pretty_print(&expr.expr), &c, expr.name, expr.span());
+                        types.check_property(&pretty_print(&expr.expr), c, expr.name, expr.span());
                     if let Some(e) = err {
                         state.errors.push(e);
                     }
@@ -388,11 +383,9 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
     match v.kind() {
         minijinja::value::ValueKind::Undefined => Type::Undefined,
         minijinja::value::ValueKind::None => Type::None,
-        minijinja::value::ValueKind::Bool => {
-            match bool::from_str(&v.to_string()) {
-                Ok(b) => Type::Literal(LiteralValue::Bool(b)),
-                Err(_) => Type::Bool,
-            }
+        minijinja::value::ValueKind::Bool => match bool::from_str(&v.to_string()) {
+            Ok(b) => Type::Literal(LiteralValue::Bool(b)),
+            Err(_) => Type::Bool,
         },
         minijinja::value::ValueKind::String => Type::Literal(LiteralValue::String(v.to_string())),
         minijinja::value::ValueKind::Seq => {
@@ -409,13 +402,11 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
                                 let t = Type::Union(acc);
                                 if x.is_subtype_of(&t) {
                                     Some(t)
+                                } else if let Type::Union(mut acc) = t {
+                                    acc.push(x);
+                                    Some(Type::Union(acc))
                                 } else {
-                                    if let Type::Union(mut acc) = t {
-                                        acc.push(x);
-                                        Some(Type::Union(acc))
-                                    } else {
-                                        unreachable!()
-                                    }
+                                    unreachable!()
                                 }
                             }
                             Some(acc) => {
@@ -433,11 +424,9 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
         }
         minijinja::value::ValueKind::Map => Type::Unknown,
         // We don't handle these types
-        minijinja::value::ValueKind::Number => {
-            match i64::from_str(&v.to_string()) {
-                Ok(i) => Type::Literal(LiteralValue::Int(i)),
-                Err(_) => Type::Number,
-            }
+        minijinja::value::ValueKind::Number => match i64::from_str(&v.to_string()) {
+            Ok(i) => Type::Literal(LiteralValue::Int(i)),
+            Err(_) => Type::Number,
         },
         minijinja::value::ValueKind::Bytes => Type::Undefined,
     }

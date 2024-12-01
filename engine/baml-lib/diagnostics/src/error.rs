@@ -499,16 +499,30 @@ impl DatamodelError {
         Self::new(format!("{}{}", prefix, suggestions), span)
     }
 
-    pub fn new_client_not_found_error(client_name: &str, span: Span, valid_clients: &[String]) -> DatamodelError {
-        let names = valid_clients.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+    pub fn new_client_not_found_error(
+        client_name: &str,
+        span: Span,
+        valid_clients: &[String],
+    ) -> DatamodelError {
+        let names = valid_clients
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
         let close_names = sort_by_match(client_name, &names, Some(10));
 
         let msg = if close_names.is_empty() {
             format!("client `{}` does not exist.", client_name)
         } else if close_names.len() == 1 {
-            format!("client `{}` does not exist. Did you mean `{}`?", client_name, close_names[0])
+            format!(
+                "client `{}` does not exist. Did you mean `{}`?",
+                client_name, close_names[0]
+            )
         } else {
-            format!("client `{}` does not exist. Did you mean one of these: `{}`?", client_name, close_names.join("`, `"))
+            format!(
+                "client `{}` does not exist. Did you mean one of these: `{}`?",
+                client_name,
+                close_names.join("`, `")
+            )
         };
 
         Self::new(msg, span)

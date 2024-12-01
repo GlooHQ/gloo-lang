@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use super::{helpers::Pair, parse_attribute::parse_attribute, Rule};
 use crate::{
     assert_correct_parser,
@@ -311,9 +313,10 @@ fn parse_group(pair: Pair<'_>, diagnostics: &mut Diagnostics) -> Option<FieldTyp
         }
     }
 
-    field_type
-        .as_mut()
-        .map(|ft| ft.extend_attributes(attributes));
+    if let Some(ft) = field_type.as_mut() {
+        ft.extend_attributes(attributes)
+    };
+
     field_type
 }
 

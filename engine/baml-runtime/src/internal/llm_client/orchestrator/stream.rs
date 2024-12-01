@@ -8,7 +8,9 @@ use web_time::Duration;
 use crate::{
     internal::{
         llm_client::{
-            parsed_value_to_response, traits::{WithPrompt, WithStreamable}, LLMErrorResponse, LLMResponse, ResponseBamlValue
+            parsed_value_to_response,
+            traits::{WithPrompt, WithStreamable},
+            LLMErrorResponse, LLMResponse, ResponseBamlValue,
         },
         prompt_renderer::PromptRenderer,
     },
@@ -36,7 +38,7 @@ pub async fn orchestrate_stream<F>(
     Duration,
 )
 where
-    F: Fn(FunctionResult) -> (),
+    F: Fn(FunctionResult),
 {
     let mut results = Vec::new();
     let mut total_sleep_duration = std::time::Duration::from_secs(0);
@@ -62,21 +64,20 @@ where
             Ok(response) => response
                 .map(|stream_part| {
                     if let Some(on_event) = on_event.as_ref() {
-                        match &stream_part {
-                            LLMResponse::Success(s) => {
-                                let parsed = partial_parse_fn(&s.content);
-                                let (parsed, response_value) = match parsed {
-                                    Ok(v) => (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v)))),
-                                    Err(e) => (None, Some(Err(e))),
-                                };
-                                on_event(FunctionResult::new(
-                                    node.scope.clone(),
-                                    LLMResponse::Success(s.clone()),
-                                    parsed,
-                                    response_value,
-                                ));
-                            }
-                            _ => {}
+                        if let LLMResponse::Success(s) = &stream_part {
+                            let parsed = partial_parse_fn(&s.content);
+                            let (parsed, response_value) = match parsed {
+                                Ok(v) => {
+                                    (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v))))
+                                }
+                                Err(e) => (None, Some(Err(e))),
+                            };
+                            on_event(FunctionResult::new(
+                                node.scope.clone(),
+                                LLMResponse::Success(s.clone()),
+                                parsed,
+                                response_value,
+                            ));
                         }
                     }
                     stream_part
@@ -107,7 +108,7 @@ where
             Some(Err(e)) => (None, Some(Err(e))),
             None => (None, None),
         };
-            // parsed_response.map(|r| r.and_then(|v| parsed_value_to_response(v)));
+        // parsed_response.map(|r| r.and_then(|v| parsed_value_to_response(v)));
         let sleep_duration = node.error_sleep_duration().cloned();
         results.push((node.scope, final_response, parsed_response, response_value));
 
@@ -117,11 +118,9 @@ where
             .map_or(false, |(_, r, _, _)| matches!(r, LLMResponse::Success(_)))
         {
             break;
-        } else {
-            if let Some(duration) = sleep_duration {
-                total_sleep_duration += duration;
-                async_std::task::sleep(duration).await;
-            }
+        } else if let Some(duration) = sleep_duration {
+            total_sleep_duration += duration;
+            async_std::task::sleep(duration).await;
         }
     }
 

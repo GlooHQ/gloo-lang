@@ -1,8 +1,8 @@
+use super::argument::ArgumentId;
 use super::{
     traits::WithAttributes, Attribute, Comment, Expression, Field, FieldType, Identifier, Span,
     WithDocumentation, WithIdentifier, WithSpan,
 };
-use super::argument::ArgumentId;
 use std::fmt::Display;
 use std::fmt::Formatter;
 
@@ -90,10 +90,7 @@ impl BlockArgs {
         self.args
             .iter()
             .flat_map(|(_, arg)| arg.field_type.flat_idns())
-            .filter_map(|f| match f {
-                Identifier::String(..) => None,
-                _ => Some(f),
-            })
+            .filter(|ident| !matches!(ident, Identifier::String(..)))
             .collect()
     }
     pub fn iter_args(

@@ -44,8 +44,8 @@ pub use internal_baml_schema_ast::ast;
 use internal_baml_schema_ast::ast::SchemaAst;
 pub use tarjan::Tarjan;
 pub use types::{
-    Attributes, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType, PromptAst,
-    PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType, ClientProperties
+    Attributes, ClientProperties, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType,
+    PromptAst, PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType,
 };
 
 use self::{context::Context, interner::StringId, types::Types};
@@ -247,7 +247,7 @@ mod test {
     fn assert_finite_cycles(baml: &'static str, expected: &[&[&str]]) -> Result<(), Diagnostics> {
         let mut db = ParserDatabase::new();
         let source = SourceFile::new_static(PathBuf::from("test.baml"), baml);
-        let (ast, mut diag) = parse_schema(&source.path_buf(), &source)?;
+        let (ast, mut diag) = parse_schema(source.path_buf(), &source)?;
 
         db.add_ast(ast);
         db.validate(&mut diag)?;

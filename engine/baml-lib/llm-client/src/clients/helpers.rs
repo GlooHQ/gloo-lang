@@ -78,10 +78,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             }
         };
 
-        let final_result =
-            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
-
-        final_result
+        result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()))
     }
 
     pub fn ensure_map(
@@ -102,10 +99,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             }
         };
 
-        let final_result =
-            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
-
-        final_result
+        result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()))
     }
 
     pub fn ensure_array(
@@ -126,10 +120,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             }
         };
 
-        let final_result =
-            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
-
-        final_result
+        result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()))
     }
 
     pub fn ensure_bool(&mut self, key: &str, required: bool) -> Option<(Meta, bool, Meta)> {
@@ -146,10 +137,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             }
         };
 
-        let final_result =
-            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
-
-        final_result
+        result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()))
     }
 
     pub fn ensure_int(&mut self, key: &str, required: bool) -> Option<(Meta, i32, Meta)> {
@@ -166,10 +154,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             }
         };
 
-        let final_result =
-            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
-
-        final_result
+        result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()))
     }
 
     pub fn ensure_allowed_roles(&mut self) -> Option<Vec<StringOr>> {
@@ -367,7 +352,7 @@ fn ensure_string<Meta: Clone>(
     key: &str,
 ) -> Result<Option<(Meta, StringOr, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
-        match value.to_str() {
+        match value.into_str() {
             Ok((s, meta)) => Ok(Some((key_span, s, meta))),
             Err(other) => Err(Error {
                 message: format!("{} must be a string. Got: {}", key, other.r#type()),
@@ -384,7 +369,7 @@ fn ensure_array<Meta: Clone>(
     key: &str,
 ) -> Result<Option<(Meta, Vec<UnresolvedValue<Meta>>, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
-        match value.to_array() {
+        match value.into_array() {
             Ok((a, meta)) => Ok(Some((key_span, a, meta))),
             Err(other) => Err(Error {
                 message: format!("{} must be an array. Got: {}", key, other.r#type()),
@@ -401,7 +386,7 @@ fn ensure_map<Meta: Clone>(
     key: &str,
 ) -> Result<Option<(Meta, IndexMap<String, (Meta, UnresolvedValue<Meta>)>, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
-        match value.to_map() {
+        match value.into_map() {
             Ok((m, meta)) => Ok(Some((key_span, m, meta))),
             Err(other) => Err(Error {
                 message: format!("{} must be a map. Got: {}", key, other.r#type()),
@@ -418,7 +403,7 @@ fn ensure_bool<Meta: Clone>(
     key: &str,
 ) -> Result<Option<(Meta, bool, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
-        match value.to_bool() {
+        match value.into_bool() {
             Ok((b, meta)) => Ok(Some((key_span, b, meta))),
             Err(other) => Err(Error {
                 message: format!("{} must be a bool. Got: {}", key, other.r#type()),
@@ -435,7 +420,7 @@ fn ensure_int<Meta: Clone>(
     key: &str,
 ) -> Result<Option<(Meta, i32, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
-        match value.to_numeric() {
+        match value.into_numeric() {
             Ok((i, meta)) => {
                 if let Ok(i) = i.parse::<i32>() {
                     Ok(Some((key_span, i, meta)))

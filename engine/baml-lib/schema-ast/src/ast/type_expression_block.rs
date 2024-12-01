@@ -53,7 +53,7 @@ pub struct TypeExpressionBlock {
     /// }
     /// ```
     pub(crate) input: Option<BlockArgs>,
-    ///
+
     pub fields: Vec<Field<FieldType>>, // needs to support field as well
 
     /// The attributes of this enum.

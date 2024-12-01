@@ -140,7 +140,6 @@ test_failing_deserializer!(
     FieldType::Class("Foo".to_string())
 );
 
-
 test_deserializer!(
     test_block_level_check_failure,
     BLOCK_LEVEL,
@@ -148,7 +147,6 @@ test_deserializer!(
     FieldType::Class("Foo".to_string()),
     {"foo": 1}
 );
-
 
 test_failing_deserializer!(
     test_block_level_enum_assert_failure,

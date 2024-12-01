@@ -1,5 +1,8 @@
 use anyhow::Result;
-use std::{collections::{HashMap, HashSet}, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+};
 
 use crate::JinjaExpression;
 use indexmap::{IndexMap, IndexSet};
@@ -18,80 +21,82 @@ pub enum Resolvable<Id, Meta> {
 }
 
 impl<Id, Meta> Resolvable<Id, Meta> {
-    pub fn to_str(self) -> Result<(Id, Meta), Resolvable<Id, Meta>> {
+    pub fn into_str(self) -> Result<(Id, Meta), Resolvable<Id, Meta>> {
         match self {
             Self::String(s, meta) => Ok((s, meta)),
-            other => Err(other)
+            other => Err(other),
         }
     }
 
-    pub fn to_array(self) -> Result<(Vec<Resolvable<Id, Meta>>, Meta), Resolvable<Id, Meta>> {
+    pub fn into_array(self) -> Result<(Vec<Resolvable<Id, Meta>>, Meta), Resolvable<Id, Meta>> {
         match self {
             Self::Array(a, meta) => Ok((a, meta)),
-            other => Err(other)
+            other => Err(other),
         }
     }
 
-    pub fn to_map(self) -> Result<(IndexMap<String, (Meta, Resolvable<Id, Meta>)>, Meta), Resolvable<Id, Meta>> {
+    pub fn into_map(
+        self,
+    ) -> Result<(IndexMap<String, (Meta, Resolvable<Id, Meta>)>, Meta), Resolvable<Id, Meta>> {
         match self {
             Self::Map(m, meta) => Ok((m, meta)),
-            other => Err(other)
+            other => Err(other),
         }
     }
 
-    pub fn to_bool(self) -> Result<(bool, Meta), Resolvable<Id, Meta>> {
+    pub fn into_bool(self) -> Result<(bool, Meta), Resolvable<Id, Meta>> {
         match self {
             Self::Bool(b, meta) => Ok((b, meta)),
-            other => Err(other)
+            other => Err(other),
         }
     }
 
-    pub fn to_numeric(self) -> Result<(String, Meta), Resolvable<Id, Meta>> {
+    pub fn into_numeric(self) -> Result<(String, Meta), Resolvable<Id, Meta>> {
         match self {
             Self::Numeric(n, meta) => Ok((n, meta)),
-            other => Err(other)
+            other => Err(other),
         }
     }
 
     pub fn as_str(&self) -> Option<&Id> {
         match self {
             Self::String(s, ..) => Some(s),
-            _ => None
+            _ => None,
         }
     }
 
     pub fn as_null(&self) -> Option<()> {
         match self {
             Self::Null(..) => Some(()),
-            _ => None
+            _ => None,
         }
     }
 
     pub fn as_array(&self) -> Option<&Vec<Resolvable<Id, Meta>>> {
         match self {
             Self::Array(a, ..) => Some(a),
-            _ => None
+            _ => None,
         }
     }
 
     pub fn as_map(&self) -> Option<&IndexMap<String, (Meta, Resolvable<Id, Meta>)>> {
         match self {
             Self::Map(m, ..) => Some(m),
-            _ => None
+            _ => None,
         }
     }
 
     pub fn as_bool(&self) -> Option<bool> {
         match self {
             Self::Bool(b, ..) => Some(*b),
-            _ => None
+            _ => None,
         }
     }
 
     pub fn as_numeric(&self) -> Option<&String> {
         match self {
             Self::Numeric(n, ..) => Some(n),
-            _ => None
+            _ => None,
         }
     }
 
@@ -108,28 +113,31 @@ impl<Id, Meta> Resolvable<Id, Meta> {
 
     pub fn r#type(&self) -> String {
         match self {
-            Resolvable::String(..) => format!("string"),
-            Resolvable::Numeric(..) => format!("number"),
-            Resolvable::Bool(..) => format!("bool"),
+            Resolvable::String(..) => String::from("string"),
+            Resolvable::Numeric(..) => String::from("number"),
+            Resolvable::Bool(..) => String::from("bool"),
             Resolvable::Array(vec, ..) => {
-                let parts = vec.iter()
-                .map(|v| v.r#type())
-                .collect::<IndexSet<_>>()
-                .into_iter()
-                .collect::<Vec<_>>();
+                let parts = vec
+                    .iter()
+                    .map(|v| v.r#type())
+                    .collect::<IndexSet<_>>()
+                    .into_iter()
+                    .collect::<Vec<_>>();
                 match parts.len() {
                     0 => "<empty>[]".to_string(),
                     1 => format!("{}[]", parts[0]),
-                    _ => format!("({})[]", parts.join(" | "))
+                    _ => format!("({})[]", parts.join(" | ")),
                 }
-        },
+            }
             Resolvable::Map(index_map, ..) => {
-                let content = index_map.iter().map(|(k, (_, v))| {
-                    format!("{k}: {}", v.r#type())
-                }).collect::<Vec<_>>().join(",\n");
+                let content = index_map
+                    .iter()
+                    .map(|(k, (_, v))| format!("{k}: {}", v.r#type()))
+                    .collect::<Vec<_>>()
+                    .join(",\n");
                 format!("{{\n{content}\n}}")
             }
-            Resolvable::Null(..) => format!("null")
+            Resolvable::Null(..) => String::from("null"),
         }
     }
 }
@@ -154,7 +162,8 @@ impl StringOr {
         match (self, other) {
             (Self::Value(s), Self::Value(o)) => s == o,
             (Self::Value(_), _) | (_, Self::Value(_)) => true,
-            (Self::EnvVar(_), Self::JinjaExpression(_)) | (Self::JinjaExpression(_), Self::EnvVar(_)) => true,
+            (Self::EnvVar(_), Self::JinjaExpression(_))
+            | (Self::JinjaExpression(_), Self::EnvVar(_)) => true,
             (Self::JinjaExpression(_), Self::JinjaExpression(_)) => true,
             (Self::EnvVar(s), Self::EnvVar(o)) => s == o,
         }
@@ -176,12 +185,19 @@ pub type ResolvedValue = Resolvable<String, ()>;
 
 impl<Meta> UnresolvedValue<Meta> {
     pub fn without_meta(&self) -> UnresolvedValue<()> {
-            match self {
+        match self {
             Self::String(s, ..) => Resolvable::String(s.clone(), ()),
             Self::Numeric(n, ..) => Resolvable::Numeric(n.clone(), ()),
             Self::Bool(b, ..) => Resolvable::Bool(*b, ()),
-            Self::Array(a, ..) => Resolvable::Array(a.iter().map(|v| v.without_meta()).collect(), ()),
-            Self::Map(m, ..) => Resolvable::Map(m.iter().map(|(k, (_, v))| (k.clone(), ((), v.without_meta()))).collect(), ()),
+            Self::Array(a, ..) => {
+                Resolvable::Array(a.iter().map(|v| v.without_meta()).collect(), ())
+            }
+            Self::Map(m, ..) => Resolvable::Map(
+                m.iter()
+                    .map(|(k, (_, v))| (k.clone(), ((), v.without_meta())))
+                    .collect(),
+                (),
+            ),
             Self::Null(..) => Resolvable::Null(()),
         }
     }
@@ -241,7 +257,7 @@ impl<'db> Default for EvaluationContext<'db> {
     }
 }
 
-impl<'db> StringOr {
+impl StringOr {
     pub fn resolve(&self, ctx: &impl GetEnvVar) -> Result<String> {
         match self {
             Self::EnvVar(name) => ctx.get_env_var(name),
@@ -255,8 +271,12 @@ impl<Meta> UnresolvedValue<Meta> {
     pub fn as_static_str(&self) -> Result<&str> {
         match self {
             Self::String(StringOr::Value(v), ..) => Ok(v.as_str()),
-            Self::String(StringOr::EnvVar(..), ..) => anyhow::bail!("Expected a statically defined string, not env variable"),
-            Self::String(StringOr::JinjaExpression(..), ..) => anyhow::bail!("Expected a statically defined string, not expression"),
+            Self::String(StringOr::EnvVar(..), ..) => {
+                anyhow::bail!("Expected a statically defined string, not env variable")
+            }
+            Self::String(StringOr::JinjaExpression(..), ..) => {
+                anyhow::bail!("Expected a statically defined string, not expression")
+            }
             Self::Numeric(num, ..) => Ok(num.as_str()),
             Self::Array(..) => anyhow::bail!("Expected a string, not an array"),
             Self::Bool(..) => anyhow::bail!("Expected a string, not a bool"),
@@ -286,10 +306,7 @@ impl<Meta> UnresolvedValue<Meta> {
         }
     }
 
-    pub fn resolve_map(
-        &self,
-        ctx: &impl GetEnvVar,
-    ) -> Result<IndexMap<String, ResolvedValue>> {
+    pub fn resolve_map(&self, ctx: &impl GetEnvVar) -> Result<IndexMap<String, ResolvedValue>> {
         match self.resolve(ctx) {
             Ok(ResolvedValue::Map(m, ..)) => Ok(m.into_iter().map(|(k, (_, v))| (k, v)).collect()),
             _ => Err(anyhow::anyhow!("Expected a map")),
@@ -310,10 +327,7 @@ impl<Meta> UnresolvedValue<Meta> {
         }
     }
 
-    pub fn resolve_serde<T: serde::de::DeserializeOwned>(
-        &self,
-        ctx: &impl GetEnvVar,
-    ) -> Result<T> {
+    pub fn resolve_serde<T: serde::de::DeserializeOwned>(&self, ctx: &impl GetEnvVar) -> Result<T> {
         let value = self.resolve(ctx)?;
         let value: serde_json::Value = value.try_into()?;
         match serde_json::from_value(value) {
@@ -325,7 +339,9 @@ impl<Meta> UnresolvedValue<Meta> {
     /// Resolve the value to a [`ResolvedValue`].
     fn resolve(&self, ctx: &impl GetEnvVar) -> Result<ResolvedValue> {
         match self {
-            Self::String(string_or, ..) => string_or.resolve(ctx).map(|v| ResolvedValue::String(v, ())),
+            Self::String(string_or, ..) => {
+                string_or.resolve(ctx).map(|v| ResolvedValue::String(v, ()))
+            }
             Self::Numeric(numeric, ..) => Ok(ResolvedValue::Numeric(numeric.clone(), ())),
             Self::Bool(bool, ..) => Ok(ResolvedValue::Bool(*bool, ())),
             Self::Array(array, ..) => {
@@ -376,10 +392,14 @@ impl TryFrom<ResolvedValue> for serde_json::Value {
     fn try_from(value: ResolvedValue) -> Result<Self> {
         Ok(match value {
             ResolvedValue::String(s, ..) => serde_json::Value::String(s),
-            ResolvedValue::Numeric(n, ..) => serde_json::Value::Number(serde_json::Number::from_str(n.as_str())?),
+            ResolvedValue::Numeric(n, ..) => {
+                serde_json::Value::Number(serde_json::Number::from_str(n.as_str())?)
+            }
             ResolvedValue::Bool(b, ..) => serde_json::Value::Bool(b),
             ResolvedValue::Array(a, ..) => serde_json::Value::Array(
-                a.into_iter().map(|v| serde_json::Value::try_from(v)).collect::<Result<_>>()?,
+                a.into_iter()
+                    .map(serde_json::Value::try_from)
+                    .collect::<Result<_>>()?,
             ),
             ResolvedValue::Map(m, ..) => serde_json::Value::Object(
                 m.into_iter()
@@ -394,7 +414,9 @@ impl TryFrom<ResolvedValue> for serde_json::Value {
 impl crate::BamlValue {
     pub fn to_resolvable(&self) -> Result<Resolvable<StringOr, ()>> {
         Ok(match self {
-            crate::BamlValue::Enum(_, s) | crate::BamlValue::String(s) => Resolvable::String(StringOr::Value(s.clone()), ()),
+            crate::BamlValue::Enum(_, s) | crate::BamlValue::String(s) => {
+                Resolvable::String(StringOr::Value(s.clone()), ())
+            }
             crate::BamlValue::Int(i) => Resolvable::Numeric(i.to_string(), ()),
             crate::BamlValue::Float(f) => Resolvable::Numeric(f.to_string(), ()),
             crate::BamlValue::Bool(b) => Resolvable::Bool(*b, ()),
@@ -422,14 +444,23 @@ impl crate::BamlMedia {
     pub fn to_resolvable(&self) -> Result<Resolvable<StringOr, ()>> {
         let mut index_map = IndexMap::default();
         if let Some(mime_type) = &self.mime_type {
-            index_map.insert("mime_type".to_string(), ((), Resolvable::String(StringOr::Value(mime_type.clone()), ())));
+            index_map.insert(
+                "mime_type".to_string(),
+                (
+                    (),
+                    Resolvable::String(StringOr::Value(mime_type.clone()), ()),
+                ),
+            );
         }
         let (key, value) = match &self.content {
             crate::BamlMediaContent::File(f) => ("file", f.path()?.to_string_lossy().to_string()),
             crate::BamlMediaContent::Url(u) => ("url", u.url.clone()),
             crate::BamlMediaContent::Base64(b) => ("base64", b.base64.clone()),
         };
-        index_map.insert(key.to_string(), ((), Resolvable::String(StringOr::Value(value), ())));
+        index_map.insert(
+            key.to_string(),
+            ((), Resolvable::String(StringOr::Value(value), ())),
+        );
         Ok(Resolvable::Map(index_map, ()))
     }
 }

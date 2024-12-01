@@ -10,7 +10,10 @@ use internal_baml_core::ir::{
 use serde::Serialize;
 use serde_json::json;
 
-use crate::{dir_writer::{FileCollector, LanguageFeatures, RemoveDirBehavior}, field_type_attributes, TypeCheckAttributes};
+use crate::{
+    dir_writer::{FileCollector, LanguageFeatures, RemoveDirBehavior},
+    field_type_attributes, TypeCheckAttributes,
+};
 
 #[derive(Default)]
 pub(super) struct OpenApiLanguageFeatures {}
@@ -316,9 +319,7 @@ pub(crate) fn generate(
 "#,
     );
 
-    let stats = collector.commit(&generator.output_dir());
-
-    stats
+    collector.commit(&generator.output_dir())
 }
 
 impl<'ir> TryFrom<(&'ir IntermediateRepr, &'_ crate::GeneratorArgs)> for OpenApiSchema<'ir> {
@@ -347,7 +348,9 @@ impl<'ir> TryFrom<(&'ir IntermediateRepr, &'_ crate::GeneratorArgs)> for OpenApi
 fn check() -> TypeSpecWithMeta {
     TypeSpecWithMeta {
         meta: TypeMetadata::default(),
-        type_spec: TypeSpec::Ref{ r#ref: "#components/schemas/Check".to_string() },
+        type_spec: TypeSpec::Ref {
+            r#ref: "#components/schemas/Check".to_string(),
+        },
     }
 }
 
@@ -357,13 +360,15 @@ fn check() -> TypeSpecWithMeta {
 fn type_def_for_checks(checks: TypeCheckAttributes) -> TypeSpecWithMeta {
     TypeSpecWithMeta {
         meta: TypeMetadata::default(),
-        type_spec: TypeSpec::Inline(
-            TypeDef::Class {
-                properties: checks.0.iter().map(|check_name| (check_name.clone(), check())).collect(),
-                required: checks.0.into_iter().collect(),
-                additional_properties: false,
-            }
-        )
+        type_spec: TypeSpec::Inline(TypeDef::Class {
+            properties: checks
+                .0
+                .iter()
+                .map(|check_name| (check_name.clone(), check()))
+                .collect(),
+            required: checks.0.into_iter().collect(),
+            additional_properties: false,
+        }),
     }
 }
 
@@ -489,7 +494,7 @@ impl<'ir> TryFrom<ClassWalker<'ir>> for TypeSpecWithMeta {
                     .map(|f| {
                         Ok((
                             f.elem.name.to_string(),
-                            f.elem.r#type.elem.to_type_spec(&c.db).context(format!(
+                            f.elem.r#type.elem.to_type_spec(c.db).context(format!(
                                 "Failed to convert {}.{} to OpenAPI type",
                                 c.name(),
                                 f.elem.name
@@ -521,7 +526,7 @@ trait ToTypeReferenceInTypeDefinition<'ir> {
 }
 
 impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
-    fn to_type_spec(&self, ir: &'ir IntermediateRepr) -> Result<TypeSpecWithMeta> {
+    fn to_type_spec(&self, _ir: &'ir IntermediateRepr) -> Result<TypeSpecWithMeta> {
         Ok(match self {
             FieldType::Enum(name) | FieldType::Class(name) => TypeSpecWithMeta {
                 meta: TypeMetadata {
@@ -555,7 +560,7 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                     nullable: false,
                 },
                 type_spec: TypeSpec::Inline(TypeDef::Array {
-                    items: inner.to_type_spec(ir)?.into(),
+                    items: inner.to_type_spec(_ir)?.into(),
                 }),
             },
             FieldType::Map(key, value) => {
@@ -570,7 +575,7 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                         nullable: false,
                     },
                     type_spec: TypeSpec::Inline(TypeDef::Map {
-                        additional_properties: Box::new(value.to_type_spec(ir)?),
+                        additional_properties: Box::new(value.to_type_spec(_ir)?),
                     }),
                 }
             }
@@ -592,20 +597,20 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                     ),
                     TypeValue::String => TypeSpec::Inline(TypeDef::String),
                     TypeValue::Media(BamlMediaType::Audio) => TypeSpec::Ref {
-                        r#ref: format!("#/components/schemas/BamlAudio"),
+                        r#ref: "#/components/schemas/BamlAudio".to_string(),
                     },
                     TypeValue::Media(BamlMediaType::Image) => TypeSpec::Ref {
-                        r#ref: format!("#/components/schemas/BamlImage"),
+                        r#ref: "#/components/schemas/BamlImage".to_string(),
                     },
                 },
             },
             FieldType::Union(union) => {
                 let (_nulls, nonnull_types): (Vec<_>, Vec<_>) =
-                    union.into_iter().partition(|t| t.is_null());
+                    union.iter().partition(|t| t.is_null());
 
                 let one_of = nonnull_types
                     .iter()
-                    .map(|t| t.to_type_spec(ir))
+                    .map(|t| t.to_type_spec(_ir))
                     .collect::<Result<Vec<_>>>()?;
 
                 if one_of.is_empty() {
@@ -626,31 +631,29 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                 anyhow::bail!("BAML<->OpenAPI tuple support is not implemented")
             }
             FieldType::Optional(inner) => {
-                let type_spec = inner.to_type_spec(ir)?;
                 // TODO: if type_spec is of an enum, consider adding "null" to the list of values
                 // something i saw suggested doing this
-                type_spec
+                inner.to_type_spec(_ir)?
             }
-            FieldType::Constrained{base,..} => {
-                match field_type_attributes(self) {
-                    Some(checks) => {
-                        let base_type_ref = base.to_type_spec(ir)?;
-                        let checks_type_spec = type_def_for_checks(checks);
-                        TypeSpecWithMeta {
-                            meta: TypeMetadata::default(),
-                            type_spec: TypeSpec::Inline(
-                                TypeDef::Class {
-                                    properties: vec![("value".to_string(), base_type_ref),("checks".to_string(), checks_type_spec)].into_iter().collect(),
-                                    required: vec!["value".to_string(), "checks".to_string()],
-                                    additional_properties: false,
-                                }
-                            )
-                        }
-                    }
-                    None => {
-                        base.to_type_spec(ir)?
+            FieldType::Constrained { base, .. } => match field_type_attributes(self) {
+                Some(checks) => {
+                    let base_type_ref = base.to_type_spec(_ir)?;
+                    let checks_type_spec = type_def_for_checks(checks);
+                    TypeSpecWithMeta {
+                        meta: TypeMetadata::default(),
+                        type_spec: TypeSpec::Inline(TypeDef::Class {
+                            properties: vec![
+                                ("value".to_string(), base_type_ref),
+                                ("checks".to_string(), checks_type_spec),
+                            ]
+                            .into_iter()
+                            .collect(),
+                            required: vec!["value".to_string(), "checks".to_string()],
+                            additional_properties: false,
+                        }),
                     }
                 }
+                None => base.to_type_spec(_ir)?,
             },
         })
     }
@@ -665,7 +668,7 @@ struct TypeSpecWithMeta {
     type_spec: TypeSpec,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Default)]
 struct TypeMetadata {
     /// Pydantic includes this by default.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -684,17 +687,6 @@ struct TypeMetadata {
     /// Nulls in OpenAPI are weird: https://swagger.io/docs/specification/data-models/data-types/
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     nullable: bool,
-}
-
-impl Default for TypeMetadata {
-    fn default() -> Self {
-        TypeMetadata {
-            title: None,
-            r#enum: None,
-            r#const: None,
-            nullable: false,
-        }
-    }
 }
 
 #[derive(Clone, Debug, Serialize)]

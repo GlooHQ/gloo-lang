@@ -1,7 +1,7 @@
 use baml_runtime::{
     errors::ExposedError, internal::llm_client::LLMResponse, scope_diagnostics::ScopeStack,
 };
-use pyo3::types::PyModule;
+use pyo3::types::{PyAnyMethods, PyModule};
 use pyo3::{create_exception, pymodule, Bound, PyErr, PyResult, Python};
 
 create_exception!(baml_py, BamlError, pyo3::exceptions::PyException);
@@ -17,11 +17,11 @@ create_exception!(baml_py, BamlClientHttpError, BamlClientError);
 #[allow(non_snake_case)]
 fn raise_baml_validation_error(prompt: String, message: String, raw_output: String) -> PyErr {
     Python::with_gil(|py| {
-        let internal_monkeypatch = py.import("baml_py.internal_monkeypatch").unwrap();
+        let internal_monkeypatch = py.import_bound("baml_py.internal_monkeypatch").unwrap();
         let exception = internal_monkeypatch.getattr("BamlValidationError").unwrap();
         let args = (prompt, message, raw_output);
         let inst = exception.call1(args).unwrap();
-        PyErr::from_value(inst)
+        PyErr::from_value_bound(inst)
     })
 }
 
@@ -76,8 +76,7 @@ impl BamlError {
                     baml_runtime::internal::llm_client::ErrorCode::Other(2) => {
                         PyErr::new::<BamlClientError, _>(format!(
                             "Something went wrong with the LLM client {}: {}",
-                            failed.client,
-                            failed.message
+                            failed.client, failed.message
                         ))
                     }
                     baml_runtime::internal::llm_client::ErrorCode::Other(_)

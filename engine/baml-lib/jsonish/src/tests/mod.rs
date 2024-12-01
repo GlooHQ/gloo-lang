@@ -64,10 +64,10 @@ fn render_output_format(
         .build())
 }
 
-fn find_existing_class_field<'a>(
+fn find_existing_class_field(
     class_name: &str,
     field_name: &str,
-    class_walker: &Result<ClassWalker<'a>>,
+    class_walker: &Result<ClassWalker<'_>>,
     env_values: &EvaluationContext<'_>,
 ) -> Result<(Name, FieldType, Option<String>)> {
     let Ok(class_walker) = class_walker else {
@@ -132,12 +132,11 @@ fn relevant_data_models<'a>(
     let mut recursive_classes = IndexSet::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
-    while !start.is_empty() {
-        let output = start.pop().unwrap();
+    while let Some(output) = start.pop() {
         match ir.distribute_constraints(&output) {
             (FieldType::Enum(enm), constraints) => {
                 if checked_types.insert(output.to_string()) {
-                    let walker = ir.find_enum(&enm);
+                    let walker = ir.find_enum(enm);
 
                     let real_values = walker
                         .as_ref()
@@ -146,10 +145,9 @@ fn relevant_data_models<'a>(
                     let values = real_values
                         .into_iter()
                         .flatten()
-                        .into_iter()
                         .map(|value| {
                             let meta = find_enum_value(enm.as_str(), &value, &walker, env_values)?;
-                            Ok(meta.map(|m| m))
+                            Ok(meta)
                         })
                         .filter_map(|v| v.transpose())
                         .collect::<Result<Vec<_>>>()?;
@@ -178,7 +176,7 @@ fn relevant_data_models<'a>(
             }
             (FieldType::Tuple(options), _constraints)
             | (FieldType::Union(options), _constraints) => {
-                if checked_types.insert((&output).to_string()) {
+                if checked_types.insert(output.to_string()) {
                     for inner in options {
                         if !checked_types.contains(&inner.to_string()) {
                             start.push(inner.clone());
@@ -188,15 +186,15 @@ fn relevant_data_models<'a>(
             }
             (FieldType::Class(cls), constraints) => {
                 if checked_types.insert(output.to_string()) {
-                    let walker = ir.find_class(&cls);
+                    let walker = ir.find_class(cls);
 
                     let real_fields = walker
                         .as_ref()
                         .map(|e| e.walk_fields().map(|v| v.name().to_string()))
                         .ok();
 
-                    let fields = real_fields.into_iter().flatten().into_iter().map(|field| {
-                        let meta = find_existing_class_field(&cls, &field, &walker, env_values)?;
+                    let fields = real_fields.into_iter().flatten().map(|field| {
+                        let meta = find_existing_class_field(cls, &field, &walker, env_values)?;
                         Ok(meta)
                     });
 

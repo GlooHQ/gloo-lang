@@ -15,7 +15,7 @@ impl ProjectFqn {
     pub fn is_valid_project_shortname(project_shortname: &str) -> Result<(), String> {
         let project_shortname_regex = Regex::new(r"^[a-z0-9_-]+$").map_err(|e| e.to_string())?;
 
-        if !project_shortname_regex.is_match(&project_shortname) {
+        if !project_shortname_regex.is_match(project_shortname) {
             return Err(format!(
                 "invalid project name ('{}') - allowed characters: a-z, 0-9, -, and _",
                 project_shortname
@@ -121,7 +121,7 @@ mod tests {
             .iter()
             .map(|(fqid_str, expected_outcome)| {
                 let expected_outcome = expected_outcome.map_err(|e| e.to_string());
-                let fqid = ProjectFqn::parse(fqid_str.to_string());
+                let fqid = ProjectFqn::parse(fqid_str);
                 match fqid {
                     Ok(_) => (fqid_str, expected_outcome, Ok(())),
                     Err(e) => (fqid_str, expected_outcome, Err(format!("{e:?}"))),

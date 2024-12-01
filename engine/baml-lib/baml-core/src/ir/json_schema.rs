@@ -78,11 +78,8 @@ impl WithJsonSchema for FunctionArgs {
                 let mut required_props = vec![];
                 for (name, t) in args.iter() {
                     properties[name] = t.json_schema();
-                    match t {
-                        FieldType::Optional(_) => {
-                            required_props.push(name.clone());
-                        }
-                        _ => {}
+                    if let FieldType::Optional(_) = t {
+                        required_props.push(name.clone());
                     }
                 }
                 json!({
@@ -153,7 +150,7 @@ impl WithJsonSchema for Walker<'_, &Class> {
     }
 }
 
-impl<'db> WithJsonSchema for FieldType {
+impl WithJsonSchema for FieldType {
     fn json_schema(&self) -> serde_json::Value {
         match self {
             FieldType::Class(name) | FieldType::Enum(name) => json!({

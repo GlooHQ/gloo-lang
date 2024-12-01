@@ -36,7 +36,6 @@ impl ClientRegistry {
             }
         };
 
-
         let provider = match client_registry::ClientProvider::from_str(&provider) {
             Ok(provider) => provider,
             Err(e) => {
@@ -47,7 +46,8 @@ impl ClientRegistry {
             }
         };
 
-        let client_property = client_registry::ClientProperty::new(name, provider, retry_policy, options);
+        let client_property =
+            client_registry::ClientProperty::new(name, provider, retry_policy, options);
 
         rb_self.inner.borrow_mut().add_client(client_property);
         Ok(())

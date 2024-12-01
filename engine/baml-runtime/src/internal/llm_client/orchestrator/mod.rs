@@ -124,10 +124,7 @@ impl OrchestrationScope {
 
     pub fn prefix_scopes(&self, scopes: Vec<ExecutionScope>) -> OrchestrationScope {
         OrchestrationScope {
-            scope: scopes
-                .into_iter()
-                .chain(self.scope.clone().into_iter())
-                .collect(),
+            scope: scopes.into_iter().chain(self.scope.clone()).collect(),
         }
     }
 
@@ -184,7 +181,7 @@ impl WithRenderRawCurl for OrchestratorNode {
     async fn render_raw_curl(
         &self,
         ctx: &RuntimeContext,
-        prompt: &Vec<RenderedChatMessage>,
+        prompt: &[RenderedChatMessage],
         render_settings: RenderCurlSettings,
     ) -> Result<String> {
         self.provider

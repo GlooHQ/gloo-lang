@@ -20,7 +20,7 @@ impl FunctionResult {
         let parsed = self
             .inner
             .result_with_constraints_content()
-            .map_err(|e| from_anyhow_error(e))?;
+            .map_err(from_anyhow_error)?;
 
         Ok(serde_json::to_value(parsed)?)
     }

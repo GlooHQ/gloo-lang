@@ -85,9 +85,8 @@ fn process_prompt_ast(ctx: &mut Context<'_>, ast: PromptAst) -> (String, Vec<Pro
         match (top_id, top) {
             (_, Top::PromptText(prompt)) => {
                 is_comment = false;
-                match handle_comment(&mut prev_white_space, &mut post_white_space) {
-                    Some(ws) => full_prompt_text.push_str(&ws),
-                    None => (),
+                if let Some(ws) = handle_comment(&mut prev_white_space, &mut post_white_space) {
+                    full_prompt_text.push_str(&ws)
                 }
                 full_prompt_text.push_str(&prompt.text);
             }
@@ -109,9 +108,8 @@ fn process_prompt_ast(ctx: &mut Context<'_>, ast: PromptAst) -> (String, Vec<Pro
                     // Already in a comment and finding another comment block
                     // subsequently.
                     // This resets the after comment white space.
-                    match handle_comment(&mut prev_white_space, &mut post_white_space) {
-                        Some(ws) => prev_white_space = Some(ws),
-                        None => (),
+                    if let Some(ws) = handle_comment(&mut prev_white_space, &mut post_white_space) {
+                        prev_white_space = Some(ws)
                     }
                 } else {
                     is_comment = true;
@@ -119,9 +117,8 @@ fn process_prompt_ast(ctx: &mut Context<'_>, ast: PromptAst) -> (String, Vec<Pro
             }
             (_, Top::CodeBlock(code_block)) => {
                 is_comment = false;
-                match handle_comment(&mut prev_white_space, &mut post_white_space) {
-                    Some(ws) => full_prompt_text.push_str(&ws),
-                    None => (),
+                if let Some(ws) = handle_comment(&mut prev_white_space, &mut post_white_space) {
+                    full_prompt_text.push_str(&ws)
                 }
 
                 let raw_string = code_block.as_str();

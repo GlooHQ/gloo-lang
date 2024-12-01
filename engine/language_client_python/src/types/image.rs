@@ -61,7 +61,7 @@ impl BamlImagePy {
                     self.inner.mime_type.clone().unwrap_or("".to_string())
                 )
             }
-            _ => format!("Unknown BamlImagePy variant"),
+            _ => "Unknown BamlImagePy variant".to_string(),
         }
     }
 
@@ -78,7 +78,7 @@ impl BamlImagePy {
     fn baml_deserialize(data: PyObject, py: Python<'_>) -> PyResult<Self> {
         let data: UserFacingBamlMedia = depythonize_bound(data.into_bound(py))?;
         Ok(BamlImagePy {
-            inner: data.to_baml_media(baml_types::BamlMediaType::Image),
+            inner: data.into_baml_media(baml_types::BamlMediaType::Image),
         })
     }
 

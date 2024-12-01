@@ -15,7 +15,9 @@ use futures::stream;
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{ChatMessagePart, RenderContext_Client, RenderedChatMessage};
 use internal_llm_client::aws_bedrock::ResolvedAwsBedrock;
-use internal_llm_client::{AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty};
+use internal_llm_client::{
+    AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty,
+};
 use serde::Deserialize;
 use serde_json::Map;
 use web_time::Instant;
@@ -49,17 +51,18 @@ fn resolve_properties(
     properties: &UnresolvedClientProperty<()>,
     ctx: &RuntimeContext,
 ) -> Result<ResolvedAwsBedrock> {
-
     let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
     let ResolvedClientProperty::AWSBedrock(props) = properties else {
-        anyhow::bail!("Invalid client property. Should have been a aws-bedrock property but got: {}", properties.name());
+        anyhow::bail!(
+            "Invalid client property. Should have been a aws-bedrock property but got: {}",
+            properties.name()
+        );
     };
 
     Ok(props)
 }
 
 impl AwsClient {
-
     pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<AwsClient> {
         let properties = resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
         let default_role = properties.default_role.clone();
@@ -78,16 +81,13 @@ impl AwsClient {
                 resolve_media_urls: ResolveMediaUrls::Always,
                 allowed_metadata: properties.allowed_role_metadata.clone(),
             },
-            retry_policy: client
-                .retry_policy
-                .as_ref()
-                .map(|s| s.to_string()),
+            retry_policy: client.retry_policy.as_ref().map(|s| s.to_string()),
             properties,
         })
     }
 
     pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<AwsClient> {
-        let properties = resolve_properties(&client.elem().provider, &client.options(), ctx)?;
+        let properties = resolve_properties(&client.elem().provider, client.options(), ctx)?;
         let default_role = properties.default_role.clone(); // clone before moving
 
         Ok(Self {
@@ -115,14 +115,14 @@ impl AwsClient {
 
     pub fn request_options(&self) -> &BamlMap<String, serde_json::Value> {
         // TODO:(vbv) - use inference config for this.
-        static DEFAULT_REQUEST_OPTIONS: std::sync::OnceLock<BamlMap<String, serde_json::Value>> = std::sync::OnceLock::new();
-        DEFAULT_REQUEST_OPTIONS.get_or_init(|| Default::default())
+        static DEFAULT_REQUEST_OPTIONS: std::sync::OnceLock<BamlMap<String, serde_json::Value>> =
+            std::sync::OnceLock::new();
+        DEFAULT_REQUEST_OPTIONS.get_or_init(Default::default)
     }
 
     // TODO: this should be memoized on client construction, but because config loading is async,
     // we can't do this in AwsClient::new (which is called from LLMPRimitiveProvider::try_from)
     async fn client_anyhow(&self) -> Result<bedrock::Client> {
-
         #[cfg(target_arch = "wasm32")]
         let mut loader = super::wasm::load_aws_config();
         #[cfg(not(target_arch = "wasm32"))]
@@ -132,7 +132,10 @@ impl AwsClient {
             loader = loader.region(Region::new(aws_region.clone()));
         }
 
-        if let (Some(aws_access_key_id), Some(aws_secret_access_key)) = (self.properties.access_key_id.as_ref(), self.properties.secret_access_key.as_ref()) {
+        if let (Some(aws_access_key_id), Some(aws_secret_access_key)) = (
+            self.properties.access_key_id.as_ref(),
+            self.properties.secret_access_key.as_ref(),
+        ) {
             loader = loader.credentials_provider(Credentials::new(
                 aws_access_key_id.clone(),
                 aws_secret_access_key.clone(),
@@ -160,7 +163,7 @@ impl AwsClient {
         };
         let content = message
             .content
-            .get(0)
+            .first()
             .context("Expected message output to have content")?;
         let bedrock::types::ContentBlock::Text(ref content) = content else {
             anyhow::bail!(
@@ -182,10 +185,10 @@ impl AwsClient {
     fn build_request(
         &self,
         ctx: &RuntimeContext,
-        chat_messages: &Vec<RenderedChatMessage>,
+        chat_messages: &[RenderedChatMessage],
     ) -> Result<bedrock::operation::converse::ConverseInput> {
         let mut system_message = None;
-        let mut chat_slice = chat_messages.as_slice();
+        let mut chat_slice = chat_messages;
 
         if let Some((first, remainder_slice)) = chat_slice.split_first() {
             if first.role == "system" {
@@ -205,10 +208,14 @@ impl AwsClient {
             .map(|m| self.role_to_message(m))
             .collect::<Result<Vec<_>>>()?;
 
-        let inference_config = match self.properties.inference_config.as_ref() {
-            Some(curr) => Some(aws_sdk_bedrockruntime::types::InferenceConfiguration::builder().set_max_tokens(curr.max_tokens).set_temperature(curr.temperature).set_top_p(curr.top_p).set_stop_sequences(curr.stop_sequences.clone()).build()),
-            None => None,
-        };
+        let inference_config = self.properties.inference_config.as_ref().map(|curr| {
+            aws_sdk_bedrockruntime::types::InferenceConfiguration::builder()
+                .set_max_tokens(curr.max_tokens)
+                .set_temperature(curr.temperature)
+                .set_top_p(curr.top_p)
+                .set_stop_sequences(curr.stop_sequences.clone())
+                .build()
+        });
 
         bedrock::operation::converse::ConverseInput::builder()
             .set_inference_config(inference_config)
@@ -242,7 +249,7 @@ impl WithRenderRawCurl for AwsClient {
     async fn render_raw_curl(
         &self,
         ctx: &RuntimeContext,
-        prompt: &Vec<internal_baml_jinja::RenderedChatMessage>,
+        prompt: &[internal_baml_jinja::RenderedChatMessage],
         _render_settings: RenderCurlSettings,
     ) -> Result<String> {
         let converse_input = self.build_request(ctx, prompt)?;
@@ -270,7 +277,10 @@ impl WithClientProperties for AwsClient {
         &self.properties.allowed_role_metadata
     }
     fn supports_streaming(&self) -> bool {
-        self.properties.supported_request_modes.stream.unwrap_or(true)
+        self.properties
+            .supported_request_modes
+            .stream
+            .unwrap_or(true)
     }
 }
 
@@ -290,13 +300,13 @@ impl WithStreamChat for AwsClient {
     async fn stream_chat(
         &self,
         ctx: &RuntimeContext,
-        chat_messages: &Vec<RenderedChatMessage>,
+        chat_messages: &[RenderedChatMessage],
     ) -> StreamResponse {
         let client = self.context.name.to_string();
         let model = Some(self.properties.model.clone());
         // TODO:(vbv) - use inference config for this.
         let request_options = Default::default();
-        let prompt = internal_baml_jinja::RenderedPrompt::Chat(chat_messages.clone());
+        let prompt = internal_baml_jinja::RenderedPrompt::Chat(chat_messages.to_vec());
 
         let aws_client = match self.client_anyhow().await {
             Ok(c) => c,
@@ -403,9 +413,7 @@ impl WithStreamChat for AwsClient {
             ),
             move |(initial_state, mut response)| {
                 async move {
-                    let Some(mut new_state) = initial_state else {
-                        return None;
-                    };
+                    let mut new_state = initial_state?;
                     match response.stream.recv().await {
                         Ok(Some(message)) => {
                             log::trace!("Received message: {:#?}", message);
@@ -432,11 +440,11 @@ impl WithStreamChat for AwsClient {
                                     // TODO- handle
                                 }
                                 bedrock::types::ConverseStreamOutput::MessageStop(stop) => {
-                                    new_state.metadata.baml_is_complete = match stop.stop_reason {
+                                    new_state.metadata.baml_is_complete = matches!(
+                                        stop.stop_reason,
                                         bedrock::types::StopReason::StopSequence
-                                        | bedrock::types::StopReason::EndTurn => true,
-                                        _ => false,
-                                    };
+                                            | bedrock::types::StopReason::EndTurn
+                                    );
                                     // TODO- handle
                                 }
                                 bedrock::types::ConverseStreamOutput::Metadata(metadata) => {
@@ -564,19 +572,19 @@ impl AwsClient {
             ChatMessagePart::WithMeta(p, _) => {
                 // All metadata is dropped as AWS does not support it
                 // this means caching, etc.
-                self.part_to_message(&p)
+                self.part_to_message(p)
             }
         }
     }
 
     fn parts_to_message(
         &self,
-        parts: &Vec<ChatMessagePart>,
+        parts: &[ChatMessagePart],
     ) -> Result<Vec<bedrock::types::ContentBlock>> {
-        Ok(parts
+        parts
             .iter()
             .map(|p| self.part_to_message(p))
-            .collect::<Result<Vec<_>>>()?)
+            .collect::<Result<Vec<_>>>()
     }
 }
 
@@ -591,13 +599,13 @@ impl WithChat for AwsClient {
     async fn chat(
         &self,
         _ctx: &RuntimeContext,
-        chat_messages: &Vec<RenderedChatMessage>,
+        chat_messages: &[RenderedChatMessage],
     ) -> LLMResponse {
         let client = self.context.name.to_string();
         let model = Some(self.properties.model.clone());
         // TODO:(vbv) - use inference config for this.
         let request_options = Default::default();
-        let prompt = internal_baml_jinja::RenderedPrompt::Chat(chat_messages.clone());
+        let prompt = internal_baml_jinja::RenderedPrompt::Chat(chat_messages.to_vec());
 
         let aws_client = match self.client_anyhow().await {
             Ok(c) => c,
@@ -662,32 +670,29 @@ impl WithChat for AwsClient {
                 client,
                 prompt,
                 content: content.clone(),
-                start_time: system_start.clone(),
+                start_time: system_start,
                 latency: instant_start.elapsed(),
                 request_options,
                 model: self.properties.model.clone(),
                 metadata: LLMCompleteResponseMetadata {
-                    baml_is_complete: match response.stop_reason {
+                    baml_is_complete: matches!(
+                        response.stop_reason,
                         bedrock::types::StopReason::StopSequence
-                        | bedrock::types::StopReason::EndTurn => true,
-                        _ => false,
-                    },
+                            | bedrock::types::StopReason::EndTurn
+                    ),
                     finish_reason: Some(response.stop_reason().as_str().into()),
                     prompt_tokens: response
                         .usage
                         .as_ref()
-                        .map(|i| i.input_tokens.try_into().ok())
-                        .flatten(),
+                        .and_then(|i| i.input_tokens.try_into().ok()),
                     output_tokens: response
                         .usage
                         .as_ref()
-                        .map(|i| i.output_tokens.try_into().ok())
-                        .flatten(),
+                        .and_then(|i| i.output_tokens.try_into().ok()),
                     total_tokens: response
                         .usage
                         .as_ref()
-                        .map(|i| i.total_tokens.try_into().ok())
-                        .flatten(),
+                        .and_then(|i| i.total_tokens.try_into().ok()),
                 },
             }),
             Err(e) => LLMResponse::LLMFailure(LLMErrorResponse {

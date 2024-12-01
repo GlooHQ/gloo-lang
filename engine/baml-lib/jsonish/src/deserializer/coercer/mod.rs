@@ -37,7 +37,7 @@ impl ParsingContext<'_> {
         self.scope.join(".")
     }
 
-    pub(crate) fn new<'a>(of: &'a OutputFormatContent, allow_partials: bool) -> ParsingContext<'a> {
+    pub(crate) fn new(of: &OutputFormatContent, allow_partials: bool) -> ParsingContext<'_> {
         ParsingContext {
             scope: Vec::new(),
             visited: HashSet::new(),
@@ -87,7 +87,7 @@ impl ParsingContext<'_> {
                     if acc.is_empty() {
                         return f.to_string();
                     }
-                    return format!("{}, {}", acc, f);
+                    format!("{}, {}", acc, f)
                 })
             ),
             scope: self.scope.clone(),
@@ -101,15 +101,15 @@ impl ParsingContext<'_> {
         error: impl IntoIterator<Item = &'a ParsingError>,
     ) -> ParsingError {
         ParsingError {
-            reason: format!("{}", summary),
+            reason: summary.to_string(),
             scope: self.scope.clone(),
-            causes: error.into_iter().map(|e| e.clone()).collect(),
+            causes: error.into_iter().cloned().collect(),
         }
     }
 
     pub(crate) fn error_unexpected_empty_array(&self, target: &FieldType) -> ParsingError {
         ParsingError {
-            reason: format!("Expected {}, got empty array", target.to_string()),
+            reason: format!("Expected {}, got empty array", target),
             scope: self.scope.clone(),
             causes: vec![],
         }

@@ -7,18 +7,9 @@ pub(super) fn pretty_print(expr: &Expr) -> String {
         Expr::Slice(c) => format!(
             "({})[{}:{}:{}]",
             pretty_print(&c.expr),
-            c.start
-                .as_ref()
-                .map(|x| pretty_print(&x))
-                .unwrap_or("".into()),
-            c.stop
-                .as_ref()
-                .map(|x| pretty_print(&x))
-                .unwrap_or("".into()),
-            c.step
-                .as_ref()
-                .map(|x| pretty_print(&x))
-                .unwrap_or("".into())
+            c.start.as_ref().map(pretty_print).unwrap_or("".into()),
+            c.stop.as_ref().map(pretty_print).unwrap_or("".into()),
+            c.step.as_ref().map(pretty_print).unwrap_or("".into())
         ),
         Expr::UnaryOp(op) => {
             format!(
@@ -64,7 +55,7 @@ pub(super) fn pretty_print(expr: &Expr) -> String {
                 false_expr = expr
                     .false_expr
                     .as_ref()
-                    .map(|x| format!(" else {}", pretty_print(&x)))
+                    .map(|x| format!(" else {}", pretty_print(x)))
                     .unwrap_or("".into())
             )
         }
@@ -82,7 +73,7 @@ pub(super) fn pretty_print(expr: &Expr) -> String {
                         "({})",
                         expr.args
                             .iter()
-                            .map(|x| pretty_print(&x))
+                            .map(pretty_print)
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
@@ -100,7 +91,7 @@ pub(super) fn pretty_print(expr: &Expr) -> String {
                         "({})",
                         expr.args
                             .iter()
-                            .map(|x| pretty_print(&x))
+                            .map(pretty_print)
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
@@ -123,7 +114,7 @@ pub(super) fn pretty_print(expr: &Expr) -> String {
                 pretty_print(&expr.expr),
                 expr.args
                     .iter()
-                    .map(|x| pretty_print(&x))
+                    .map(pretty_print)
                     .collect::<Vec<_>>()
                     .join(",")
             )
@@ -133,7 +124,7 @@ pub(super) fn pretty_print(expr: &Expr) -> String {
                 "[{}]",
                 expr.items
                     .iter()
-                    .map(|x| pretty_print(&x))
+                    .map(pretty_print)
                     .collect::<Vec<_>>()
                     .join(",")
             )
@@ -144,7 +135,7 @@ pub(super) fn pretty_print(expr: &Expr) -> String {
                 expr.keys
                     .iter()
                     .zip(expr.values.iter())
-                    .map(|(k, v)| format!("{}:{}", pretty_print(&k), pretty_print(&v)))
+                    .map(|(k, v)| format!("{}:{}", pretty_print(k), pretty_print(v)))
                     .collect::<Vec<_>>()
                     .join(",")
             )
@@ -154,7 +145,7 @@ pub(super) fn pretty_print(expr: &Expr) -> String {
                 "{{{}}}",
                 expr.pairs
                     .iter()
-                    .map(|(k, v)| format!("{}={}", k, pretty_print(&v)))
+                    .map(|(k, v)| format!("{}={}", k, pretty_print(v)))
                     .collect::<Vec<_>>()
                     .join(",")
             )

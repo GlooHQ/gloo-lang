@@ -66,24 +66,26 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
     pub fn required_env_vars(&self) -> HashSet<String> {
         let mut env_vars = HashSet::new();
 
-        self.base_url.as_ref().map(|url| match url {
-            either::Either::Left(url) => {
-                env_vars.extend(url.required_env_vars());
+        if let Some(url) = self.base_url.as_ref() {
+            match url {
+                either::Either::Left(url) => {
+                    env_vars.extend(url.required_env_vars());
+                }
+                either::Either::Right((resource_name, deployment_id)) => {
+                    env_vars.extend(resource_name.required_env_vars());
+                    env_vars.extend(deployment_id.required_env_vars());
+                }
             }
-            either::Either::Right((resource_name, deployment_id)) => {
-                env_vars.extend(resource_name.required_env_vars());
-                env_vars.extend(deployment_id.required_env_vars());
-            }
-        });
-        self.api_key
-            .as_ref()
-            .map(|key| env_vars.extend(key.required_env_vars()));
+        };
+        if let Some(key) = self.api_key.as_ref() {
+            env_vars.extend(key.required_env_vars())
+        }
         self.allowed_roles
             .iter()
             .for_each(|role| env_vars.extend(role.required_env_vars()));
-        self.default_role
-            .as_ref()
-            .map(|role| env_vars.extend(role.required_env_vars()));
+        if let Some(role) = self.default_role.as_ref() {
+            env_vars.extend(role.required_env_vars())
+        }
         env_vars.extend(self.allowed_role_metadata.required_env_vars());
         env_vars.extend(self.supported_request_modes.required_env_vars());
         self.headers
@@ -99,7 +101,11 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         env_vars
     }
 
-    pub fn resolve(&self, provider: &crate::ClientProvider, ctx: &impl GetEnvVar) -> Result<ResolvedOpenAI> {
+    pub fn resolve(
+        &self,
+        provider: &crate::ClientProvider,
+        ctx: &impl GetEnvVar,
+    ) -> Result<ResolvedOpenAI> {
         let base_url = self
             .base_url
             .as_ref()
@@ -157,9 +163,12 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
                 .iter()
                 .map(|(k, (_, v))| Ok((k.clone(), v.resolve_serde::<serde_json::Value>(ctx)?)))
                 .collect::<Result<IndexMap<_, _>>>()?;
-            
+
             // TODO(vbv): Only do this for azure
-            if matches!(provider, crate::ClientProvider::OpenAI(crate::OpenAIClientProviderVariant::Azure)) {
+            if matches!(
+                provider,
+                crate::ClientProvider::OpenAI(crate::OpenAIClientProviderVariant::Azure)
+            ) {
                 properties
                     .entry("max_tokens".into())
                     .or_insert(serde_json::json!(4096));
@@ -190,12 +199,12 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
     pub fn create_standard(
         mut properties: PropertyHandler<Meta>,
     ) -> Result<Self, Vec<Error<Meta>>> {
-        let base_url = properties.ensure_base_url_with_default(UnresolvedUrl::new_static("https://api.openai.com/v1"));
+        let base_url = properties
+            .ensure_base_url_with_default(UnresolvedUrl::new_static("https://api.openai.com/v1"));
 
         let api_key = Some(
             properties
                 .ensure_api_key()
-                .map(|v| v.clone())
                 .unwrap_or_else(|| StringOr::EnvVar("OPENAI_API_KEY".to_string())),
         );
 
@@ -250,7 +259,6 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         let api_key = Some(
             properties
                 .ensure_api_key()
-                .map(|v| v.clone())
                 .unwrap_or_else(|| StringOr::EnvVar("AZURE_OPENAI_API_KEY".to_string())),
         );
 
@@ -268,7 +276,7 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
     pub fn create_generic(mut properties: PropertyHandler<Meta>) -> Result<Self, Vec<Error<Meta>>> {
         let base_url = properties.ensure_base_url(true);
 
-        let api_key = properties.ensure_api_key().map(|v| v.clone());
+        let api_key = properties.ensure_api_key();
 
         Self::create_common(
             properties,
@@ -278,9 +286,10 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
     }
 
     pub fn create_ollama(mut properties: PropertyHandler<Meta>) -> Result<Self, Vec<Error<Meta>>> {
-        let base_url = properties.ensure_base_url_with_default(UnresolvedUrl::new_static("http://localhost:11434/v1"));
+        let base_url = properties
+            .ensure_base_url_with_default(UnresolvedUrl::new_static("http://localhost:11434/v1"));
 
-        let api_key = properties.ensure_api_key().map(|v| v.clone());
+        let api_key = properties.ensure_api_key();
 
         Self::create_common(properties, Some(either::Either::Left(base_url)), api_key)
     }

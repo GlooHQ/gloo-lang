@@ -2,7 +2,10 @@ mod ir_features;
 pub(crate) mod runtime_interface;
 
 use anyhow::Result;
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 cfg_if::cfg_if!(
     if #[cfg(target_arch = "wasm32")] {
@@ -54,7 +57,7 @@ impl InternalBamlRuntime {
         })
     }
 
-    pub(super) fn from_files(directory: &PathBuf, files: Vec<PathBuf>) -> Result<Self> {
+    pub(super) fn from_files(directory: &Path, files: Vec<PathBuf>) -> Result<Self> {
         let contents = files
             .iter()
             .map(|path| match std::fs::read_to_string(path) {

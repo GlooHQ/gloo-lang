@@ -77,7 +77,7 @@ impl RuntimeContextManager {
         self.context
             .lock()
             .unwrap()
-            .push((span.clone(), name.to_string(), last_tags));
+            .push((span, name.to_string(), last_tags));
         log::trace!("Entering with: {:#?}", self.context.lock().unwrap());
         span
     }
@@ -89,13 +89,12 @@ impl RuntimeContextManager {
         let prev = ctx
             .iter()
             .map(|(span, name, _)| SpanCtx {
-                span_id: span.clone(),
+                span_id: *span,
                 name: name.clone(),
             })
             .collect();
-        let Some((id, _, mut tags)) = ctx.pop() else {
-            return None;
-        };
+
+        let (id, _, mut tags) = ctx.pop()?;
 
         for (k, v) in self.global_tags.lock().unwrap().iter() {
             tags.entry(k.clone()).or_insert_with(|| v.clone());

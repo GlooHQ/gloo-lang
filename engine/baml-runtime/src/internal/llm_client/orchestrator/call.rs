@@ -7,7 +7,9 @@ use web_time::Duration;
 use crate::{
     internal::{
         llm_client::{
-            parsed_value_to_response, traits::{WithPrompt, WithSingleCallable}, LLMResponse, ResponseBamlValue
+            parsed_value_to_response,
+            traits::{WithPrompt, WithSingleCallable},
+            LLMResponse, ResponseBamlValue,
         },
         prompt_renderer::PromptRenderer,
     },
@@ -48,7 +50,7 @@ pub async fn orchestrate(
                 continue;
             }
         };
-        let response = node.single_call(&ctx, &prompt).await;
+        let response = node.single_call(ctx, &prompt).await;
         let parsed_response = match &response {
             LLMResponse::Success(s) => Some(parse_fn(&s.content)),
             _ => None,
@@ -56,11 +58,16 @@ pub async fn orchestrate(
 
         let sleep_duration = node.error_sleep_duration().cloned();
         let (parsed_response, response_with_constraints) = match parsed_response {
-                Some(Ok(v)) => (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v)))),
-                Some(Err(e)) => (None, Some(Err(e))),
-                None => (None, None),
-            };
-        results.push((node.scope, response, parsed_response, response_with_constraints));
+            Some(Ok(v)) => (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v)))),
+            Some(Err(e)) => (None, Some(Err(e))),
+            None => (None, None),
+        };
+        results.push((
+            node.scope,
+            response,
+            parsed_response,
+            response_with_constraints,
+        ));
 
         // Currently, we break out of the loop if an LLM responded, even if we couldn't parse the result.
         if results
@@ -68,11 +75,9 @@ pub async fn orchestrate(
             .map_or(false, |(_, r, _, _)| matches!(r, LLMResponse::Success(_)))
         {
             break;
-        } else {
-            if let Some(duration) = sleep_duration {
-                total_sleep_duration += duration;
-                async_std::task::sleep(duration).await;
-            }
+        } else if let Some(duration) = sleep_duration {
+            total_sleep_duration += duration;
+            async_std::task::sleep(duration).await;
         }
     }
 

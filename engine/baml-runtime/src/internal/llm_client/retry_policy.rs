@@ -14,7 +14,7 @@ impl From<RetryPolicyWalker<'_>> for CallablePolicy {
     fn from(policy: RetryPolicyWalker<'_>) -> Self {
         CallablePolicy {
             max_retries: policy.max_retries(),
-            strategy: policy.strategy().clone(),
+            strategy: *policy.strategy(),
             current: match policy.strategy() {
                 RetryPolicyStrategy::ExponentialBackoff(strategy) => {
                     std::time::Duration::from_millis(strategy.delay_ms as u64)

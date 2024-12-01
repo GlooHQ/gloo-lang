@@ -376,7 +376,7 @@ impl<T> BamlValueWithMeta<T> {
 
     /// Iterating over a `BamlValueWithMeta` produces a depth-first traversal
     /// of the value and all its children.
-    pub fn iter<'a>(&'a self) -> BamlValueWithMetaIterator<'a, T> {
+    pub fn iter(&self) -> BamlValueWithMetaIterator<T> {
         BamlValueWithMetaIterator::new(self)
     }
 
@@ -479,7 +479,7 @@ impl<T> BamlValueWithMeta<T> {
                 f(m),
             ),
             BamlValueWithMeta::List(v, m) => {
-                BamlValueWithMeta::List(v.into_iter().map(|v| v.map_meta(f)).collect(), f(m))
+                BamlValueWithMeta::List(v.iter().map(|v| v.map_meta(f)).collect(), f(m))
             }
             BamlValueWithMeta::Media(v, m) => BamlValueWithMeta::Media(v.clone(), f(m)),
             BamlValueWithMeta::Enum(v, e, m) => BamlValueWithMeta::Enum(v.clone(), e.clone(), f(m)),
@@ -540,7 +540,7 @@ impl<'a, T: 'a> Iterator for BamlValueWithMetaIterator<'a, T> {
                 | BamlValueWithMeta::Enum(..)
                 | BamlValueWithMeta::Null(..) => {}
             }
-            Some(&value)
+            Some(value)
         } else {
             None
         }
@@ -561,13 +561,13 @@ impl<T> From<&BamlValueWithMeta<T>> for BamlValue {
         use BamlValueWithMeta::*;
         match baml_value {
             String(v, _) => BamlValue::String(v.clone()),
-            Int(v, _) => BamlValue::Int(v.clone()),
-            Float(v, _) => BamlValue::Float(v.clone()),
-            Bool(v, _) => BamlValue::Bool(v.clone()),
+            Int(v, _) => BamlValue::Int(*v),
+            Float(v, _) => BamlValue::Float(*v),
+            Bool(v, _) => BamlValue::Bool(*v),
             Map(v, _) => {
                 BamlValue::Map(v.into_iter().map(|(k, v)| (k.clone(), v.into())).collect())
             }
-            List(v, _) => BamlValue::List(v.into_iter().map(|v| v.into()).collect()),
+            List(v, _) => BamlValue::List(v.iter().map(|v| v.into()).collect()),
             Media(v, _) => BamlValue::Media(v.clone()),
             Enum(enum_name, v, _) => BamlValue::Enum(enum_name.clone(), v.clone()),
             Class(class_name, v, _) => BamlValue::Class(
@@ -638,7 +638,7 @@ impl Serialize for BamlValueWithMeta<Vec<ResponseCheck>> {
                     add_checks(&mut checked_value, cr)?;
                     checked_value.end()
                 }
-            },
+            }
             BamlValueWithMeta::Null(cr) => serialize_with_checks(&(), cr, serializer),
         }
     }
@@ -646,7 +646,7 @@ impl Serialize for BamlValueWithMeta<Vec<ResponseCheck>> {
 
 fn serialize_with_checks<S, T: Serialize>(
     value: &T,
-    checks: &Vec<ResponseCheck>,
+    checks: &[ResponseCheck],
     serializer: S,
 ) -> Result<S::Ok, S::Error>
 where
@@ -664,7 +664,7 @@ where
 
 fn add_checks<'a, S: SerializeMap>(
     map: &'a mut S,
-    checks: &'a Vec<ResponseCheck>,
+    checks: &'a [ResponseCheck],
 ) -> Result<(), S::Error> {
     if !checks.is_empty() {
         let checks_map: HashMap<_, _> = checks
@@ -679,7 +679,6 @@ fn add_checks<'a, S: SerializeMap>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json;
 
     #[test]
     fn test_baml_value_with_meta_serialization() {
@@ -717,21 +716,23 @@ mod tests {
 
     #[test]
     fn test_serialize_class_checks() {
-        let baml_value: BamlValueWithMeta<Vec<ResponseCheck>> =
-            BamlValueWithMeta::Class(
-                "Foo".to_string(),
-                vec![
-                    ("foo".to_string(), BamlValueWithMeta::Int(1, vec![])),
-                    ("bar".to_string(), BamlValueWithMeta::String("hi".to_string(), vec![])),
-                ].into_iter().collect(),
-                vec![
-                    ResponseCheck {
-                        name: "bar_len_lt_foo".to_string(),
-                        expression: "this.bar|length < this.foo".to_string(),
-                        status: "failed".to_string()
-                    }
-                ]
-            );
+        let baml_value: BamlValueWithMeta<Vec<ResponseCheck>> = BamlValueWithMeta::Class(
+            "Foo".to_string(),
+            vec![
+                ("foo".to_string(), BamlValueWithMeta::Int(1, vec![])),
+                (
+                    "bar".to_string(),
+                    BamlValueWithMeta::String("hi".to_string(), vec![]),
+                ),
+            ]
+            .into_iter()
+            .collect(),
+            vec![ResponseCheck {
+                name: "bar_len_lt_foo".to_string(),
+                expression: "this.bar|length < this.foo".to_string(),
+                status: "failed".to_string(),
+            }],
+        );
         let expected = serde_json::json!({
             "value": {"foo": 1, "bar": "hi"},
             "checks": {
@@ -748,29 +749,30 @@ mod tests {
 
     #[test]
     fn test_serialize_nested_class_checks() {
-
         // Prepare an object for wrapping.
-        let foo: BamlValueWithMeta<Vec<ResponseCheck>> =
-            BamlValueWithMeta::Class(
-                "Foo".to_string(),
-                vec![
-                    ("foo".to_string(), BamlValueWithMeta::Int(1, vec![])),
-                    ("bar".to_string(), BamlValueWithMeta::String("hi".to_string(), vec![])),
-                ].into_iter().collect(),
-                vec![
-                    ResponseCheck {
-                        name: "bar_len_lt_foo".to_string(),
-                        expression: "this.bar|length < this.foo".to_string(),
-                        status: "failed".to_string()
-                    }
-                ]
-            );
+        let foo: BamlValueWithMeta<Vec<ResponseCheck>> = BamlValueWithMeta::Class(
+            "Foo".to_string(),
+            vec![
+                ("foo".to_string(), BamlValueWithMeta::Int(1, vec![])),
+                (
+                    "bar".to_string(),
+                    BamlValueWithMeta::String("hi".to_string(), vec![]),
+                ),
+            ]
+            .into_iter()
+            .collect(),
+            vec![ResponseCheck {
+                name: "bar_len_lt_foo".to_string(),
+                expression: "this.bar|length < this.foo".to_string(),
+                status: "failed".to_string(),
+            }],
+        );
 
         // Prepare the top-level value.
         let baml_value = BamlValueWithMeta::Class(
             "FooWrapper".to_string(),
             vec![("foo".to_string(), foo)].into_iter().collect(),
-            vec![]
+            vec![],
         );
         let expected = serde_json::json!({
             "foo": {
@@ -787,5 +789,4 @@ mod tests {
         let json = serde_json::to_value(baml_value).unwrap();
         assert_eq!(json, expected);
     }
-
 }

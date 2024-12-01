@@ -67,7 +67,7 @@ impl<'a> InternalClientLookup<'a> for InternalBamlRuntime {
                 let clients = &self.clients;
 
                 if let Some(client) = clients.get(client_name) {
-                    return Ok(client.clone());
+                    Ok(client.clone())
                 } else {
                     let walker = self
                         .ir()
@@ -152,7 +152,7 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
             },
         )?;
 
-        let renderer = PromptRenderer::from_function(&func, &self.ir(), ctx)?;
+        let renderer = PromptRenderer::from_function(&func, self.ir(), ctx)?;
 
         let client_spec = renderer.client_spec();
         let client = self.get_llm_provider(client_spec, ctx)?;
@@ -181,13 +181,13 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
         &self,
         function_name: &str,
         ctx: &RuntimeContext,
-        prompt: &Vec<internal_baml_jinja::RenderedChatMessage>,
+        prompt: &[internal_baml_jinja::RenderedChatMessage],
         render_settings: RenderCurlSettings,
         node_index: Option<usize>,
     ) -> Result<String> {
         let func = self.get_function(function_name, ctx)?;
 
-        let renderer = PromptRenderer::from_function(&func, &self.ir(), ctx)?;
+        let renderer = PromptRenderer::from_function(&func, self.ir(), ctx)?;
 
         let client_spec = renderer.client_spec();
         let client = self.get_llm_provider(client_spec, ctx)?;
@@ -206,10 +206,9 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
         }
 
         let node = selected.swap_remove(node_index);
-        return node
-            .provider
+        node.provider
             .render_raw_curl(ctx, prompt, render_settings)
-            .await;
+            .await
     }
 
     fn get_function<'ir>(
@@ -223,7 +222,7 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
 
     fn ir(&self) -> &IntermediateRepr {
         use std::ops::Deref;
-        &self.ir.deref()
+        self.ir.deref()
     }
 
     fn get_test_params(
@@ -272,7 +271,7 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
                     .as_map_owned()
                     .context("Test params must be a map")
             }
-            Err(e) => return Err(anyhow::anyhow!("Unable to resolve test params: {:?}", e)),
+            Err(e) => Err(anyhow::anyhow!("Unable to resolve test params: {:?}", e)),
         }
     }
 
@@ -303,7 +302,7 @@ impl RuntimeConstructor for InternalBamlRuntime {
             })
             .collect::<Result<Vec<_>>>()?;
         let directory = PathBuf::from(root_path);
-        let mut schema = validate(&PathBuf::from(directory), contents);
+        let mut schema = validate(&directory, contents);
         schema.diagnostics.to_result()?;
 
         let ir = IntermediateRepr::from_parser_database(&schema.db, schema.configuration)?;
@@ -319,8 +318,8 @@ impl RuntimeConstructor for InternalBamlRuntime {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn from_directory(dir: &std::path::PathBuf) -> Result<InternalBamlRuntime> {
-        InternalBamlRuntime::from_files(dir, crate::baml_src_files(dir)?)
+    fn from_directory(dir: &std::path::Path) -> Result<InternalBamlRuntime> {
+        InternalBamlRuntime::from_files(dir, crate::baml_src_files(&dir.to_path_buf())?)
     }
 }
 
@@ -347,7 +346,7 @@ impl RuntimeInterface for InternalBamlRuntime {
         };
         let baml_args = self.ir().check_function_params(
             &func,
-            &params,
+            params,
             ArgCoercer {
                 span_path: None,
                 allow_implicit_cast_to_string: false,
@@ -402,7 +401,7 @@ impl RuntimeInterface for InternalBamlRuntime {
             .ir
             .check_function_params(
                 &func,
-                &params,
+                params,
                 ArgCoercer {
                     span_path: None,
                     allow_implicit_cast_to_string: false,

@@ -190,19 +190,17 @@ fn step_constraints(
                 checks: new_checks,
                 failed_assert: None,
             };
-            return Accumulator {
+            Accumulator {
                 result,
                 check_results,
-            };
+            }
         }
 
         // Internal error always produces a hard error.
-        (_, _, Err(e)) => {
-            return Accumulator {
-                result: TestConstraintsResult::InternalError { details: e },
-                check_results: acc.check_results,
-            };
-        }
+        (_, _, Err(e)) => Accumulator {
+            result: TestConstraintsResult::InternalError { details: e },
+            check_results: acc.check_results,
+        },
 
         // A check without a name has no effect, and should never be observed, because
         // the parser enforces that all checks are named.
@@ -211,23 +209,21 @@ fn step_constraints(
                 "Encountered a check without a name: {:?}",
                 constraint.expression
             );
-            return acc;
+            acc
         }
 
         // A passing assert has no effect.
-        (Assert, _, Ok(true)) => {
-            return acc;
-        }
+        (Assert, _, Ok(true)) => acc,
 
         // A failing assert is a hard error.
         (Assert, maybe_name, Ok(false)) => {
             let result = acc.result.fail_assert(maybe_name);
-            return Accumulator {
+            Accumulator {
                 result,
                 check_results,
-            };
+            }
         }
-    };
+    }
 }
 
 #[cfg(test)]

@@ -78,7 +78,6 @@ pub struct ModelFeatures {
     pub allowed_metadata: AllowedRoleMetadata,
 }
 
-
 #[derive(Debug)]
 pub struct RetryLLMResponse {
     pub client: Option<String>,
@@ -180,19 +179,21 @@ pub enum ErrorCode {
     Other(u16),
 }
 
-impl ErrorCode {
-    pub fn to_string(&self) -> String {
+impl std::fmt::Display for ErrorCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ErrorCode::InvalidAuthentication => "InvalidAuthentication (401)".into(),
-            ErrorCode::NotSupported => "NotSupported (403)".into(),
-            ErrorCode::RateLimited => "RateLimited (429)".into(),
-            ErrorCode::ServerError => "ServerError (500)".into(),
-            ErrorCode::ServiceUnavailable => "ServiceUnavailable (503)".into(),
-            ErrorCode::UnsupportedResponse(code) => format!("BadResponse {}", code),
-            ErrorCode::Other(code) => format!("Unspecified error code: {}", code),
+            ErrorCode::InvalidAuthentication => f.write_str("InvalidAuthentication (401)"),
+            ErrorCode::NotSupported => f.write_str("NotSupported (403)"),
+            ErrorCode::RateLimited => f.write_str("RateLimited (429)"),
+            ErrorCode::ServerError => f.write_str("ServerError (500)"),
+            ErrorCode::ServiceUnavailable => f.write_str("ServiceUnavailable (503)"),
+            ErrorCode::UnsupportedResponse(code) => write!(f, "BadResponse {code}"),
+            ErrorCode::Other(code) => write!(f, "Unspecified error code: {code}"),
         }
     }
+}
 
+impl ErrorCode {
     pub fn from_status(status: StatusCode) -> Self {
         match status.as_u16() {
             401 => ErrorCode::InvalidAuthentication,
@@ -275,7 +276,7 @@ impl std::fmt::Display for LLMCompleteResponse {
 // This is the one that gets logged by BAML_LOG, for baml_events log.
 impl crate::tracing::Visualize for LLMCompleteResponse {
     fn visualize(&self, max_chunk_size: usize) -> String {
-        let s = vec![
+        let s = [
             format!(
                 "{}",
                 format!(
@@ -337,10 +338,7 @@ impl crate::tracing::Visualize for LLMErrorResponse {
                 crate::tracing::truncate_string(&v.to_string(), max_chunk_size)
             ));
         }
-        s.push(format!(
-            "{}",
-            format!("---ERROR ({})---", self.code.to_string()).red()
-        ));
+        s.push(format!("{}", format!("---ERROR ({})---", self.code).red()));
         s.push(format!(
             "{}",
             crate::tracing::truncate_string(&self.message, max_chunk_size).red()

@@ -28,11 +28,11 @@ pub struct Project {
 // }
 
 trait ApiResponse {
-    async fn as_result(self) -> Result<serde_json::Value>;
+    async fn into_result(self) -> Result<serde_json::Value>;
 }
 
 impl ApiResponse for reqwest::Response {
-    async fn as_result(self) -> Result<serde_json::Value> {
+    async fn into_result(self) -> Result<serde_json::Value> {
         let status = self.status();
         if status.is_success() {
             Ok(self.json().await?)
@@ -63,7 +63,7 @@ impl ApiClient {
             .send()
             .await?;
 
-        let resp_body = resp.as_result().await?;
+        let resp_body = resp.into_result().await?;
         log::debug!("resp_body: {:#}", resp_body);
 
         Ok(serde_json::from_value(resp_body)?)
@@ -91,7 +91,7 @@ impl ApiClient {
             .send()
             .await?;
 
-        let resp_body = resp.as_result().await?;
+        let resp_body = resp.into_result().await?;
 
         log::debug!("resp_body: {:#}", resp_body);
 
@@ -128,7 +128,7 @@ impl ApiClient {
             .send()
             .await?;
 
-        let resp_body = resp.as_result().await?;
+        let resp_body = resp.into_result().await?;
 
         Ok(serde_json::from_value(resp_body)?)
     }

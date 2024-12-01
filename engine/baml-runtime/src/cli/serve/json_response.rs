@@ -19,11 +19,9 @@ impl<T: Serialize> IntoResponse for Json<T> {
         // Use a small initial capacity of 128 bytes like serde_json::to_vec
         // https://docs.rs/serde_json/1.0.82/src/serde_json/ser.rs.html#2189
         let mut buf = BytesMut::with_capacity(128).writer();
-        match {
-            match serde_json::to_writer_pretty(&mut buf, &self.0) {
-                Ok(()) => write!(buf, "\n"),
-                Err(e) => Err(e.into()),
-            }
+        match match serde_json::to_writer_pretty(&mut buf, &self.0) {
+            Ok(()) => writeln!(buf),
+            Err(e) => Err(e.into()),
         } {
             Ok(()) => (
                 [(

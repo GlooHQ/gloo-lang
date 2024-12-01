@@ -227,7 +227,7 @@ impl ThreadedTracer {
             let llm_output_model = event.metadata.as_ref().and_then(|m| match m {
                 MetadataType::Single(llm_event) => Some(llm_event),
                 // take the last element in the vector
-                MetadataType::Multi(llm_events) => llm_events.last().clone(),
+                MetadataType::Multi(llm_events) => llm_events.last(),
             });
 
             let log_event_result = callback(LogEvent {
@@ -250,12 +250,8 @@ impl ThreadedTracer {
                         }
                     }
                 }),
-                raw_output: llm_output_model.and_then(|llm_event| {
-                    llm_event
-                        .clone()
-                        .output
-                        .and_then(|output| Some(output.raw_text))
-                }),
+                raw_output: llm_output_model
+                    .and_then(|llm_event| llm_event.clone().output.map(|output| output.raw_text)),
                 parsed_output: event.io.output.and_then(|output| match output.value {
                     // so the string value looks something like:
                     // '"[\"d\", \"e\", \"f\"]"'
@@ -265,7 +261,7 @@ impl ThreadedTracer {
                     ValueType::String(value) => serde_json::from_str::<serde_json::Value>(&value)
                         .ok()
                         .and_then(|json_value| json_value.as_str().map(|s| s.to_string()))
-                        .or_else(|| Some(value)),
+                        .or(Some(value)),
                     _ => serde_json::to_string_pretty(&output.value)
                         .ok()
                         .or_else(|| {

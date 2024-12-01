@@ -8,7 +8,6 @@ use etcetera::AppStrategy;
 use indexmap::IndexMap;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use reqwest;
 use reqwest::RequestBuilder;
 use serde::Deserialize;
 use serde::Serialize;
@@ -178,8 +177,8 @@ impl PropelAuthClient {
             .header("Content-Type", "application/x-www-form-urlencoded")
             .form(&[
                 ("client_id", self.client_id.as_str()),
-                ("code", &code),
-                ("redirect_uri", &redirect_uri),
+                ("code", code),
+                ("redirect_uri", redirect_uri),
                 ("grant_type", "authorization_code"),
                 ("code_verifier", code_verifier),
             ])
@@ -384,15 +383,15 @@ impl PersistedTokenData {
 ///
 /// Implementation notes:
 ///
-///   - [RFC 7636, Section 4.1] allows the code verifier to be 43 to 128
-///   characters long, consisting of ALPHA / DIGIT / "-" / "." / "_" / "~"; for
-///   simplicity, we use the [`Alphanumeric`] distribution (i.e. 62 possible
-///   chars) instead of all 66 possible chars.
+///    - [RFC 7636, Section 4.1] allows the code verifier to be 43 to 128
+///      characters long, consisting of ALPHA / DIGIT / "-" / "." / "_" / "~"; for
+///      simplicity, we use the [`Alphanumeric`] distribution (i.e. 62 possible
+///      chars) instead of all 66 possible chars.
 ///
-///   - [RFC 7636, Section 7.1] requires that the code challenge contain at
-///   least 256 bits of entropy (this is where the 43 char minimum comes from:
-///   `log2(66 ** 43) == 259`); our implementation has `log2(62 ** 128) == 762`
-///   bits of entropy.
+///    - [RFC 7636, Section 7.1] requires that the code challenge contain at
+///      least 256 bits of entropy (this is where the 43 char minimum comes from:
+///      `log2(66 ** 43) == 259`); our implementation has `log2(62 ** 128) == 762`
+///      bits of entropy.
 ///
 /// [RFC 7636, Section 4.1]: https://www.rfc-editor.org/rfc/rfc7636#section-4.1
 /// [RFC 7636, Section 7.1]: https://www.rfc-editor.org/rfc/rfc7636#section-7.1

@@ -127,10 +127,10 @@ impl BamlRuntime {
     /// Load a runtime from a directory
     #[cfg(not(target_arch = "wasm32"))]
     pub fn from_directory<T: AsRef<str>>(
-        path: &std::path::PathBuf,
+        path: &std::path::Path,
         env_vars: HashMap<T, T>,
     ) -> Result<Self> {
-        let path = Self::parse_baml_src_path(path.clone())?;
+        let path = Self::parse_baml_src_path(path)?;
 
         let copy = env_vars
             .iter()
@@ -196,7 +196,7 @@ impl BamlRuntime {
             .get_test_params(function_name, test_name, ctx, strict)?;
         let constraints = self
             .inner
-            .get_test_constraints(function_name, test_name, &ctx)?;
+            .get_test_constraints(function_name, test_name, ctx)?;
         Ok((params, constraints))
     }
 
@@ -220,7 +220,7 @@ impl BamlRuntime {
         on_event: Option<F>,
     ) -> (Result<TestResponse>, Option<uuid::Uuid>)
     where
-        F: Fn(FunctionResult) -> (),
+        F: Fn(FunctionResult),
     {
         let span = self.tracer.start_span(test_name, ctx, &Default::default());
 
@@ -260,17 +260,17 @@ impl BamlRuntime {
             } else {
                 match val {
                     Some(Ok(value)) => {
-                        evaluate_test_constraints(&params, &value, &complete_resp, constraints)
+                        evaluate_test_constraints(&params, value, complete_resp, constraints)
                     }
                     _ => TestConstraintsResult::empty(),
                 }
             };
-            let test_response = Ok(TestResponse {
+
+            Ok(TestResponse {
                 function_response: res,
                 function_span: span_uuid,
                 constraints_result: test_constraints_result,
-            });
-            test_response
+            })
         };
 
         let response = run_to_response().await;
@@ -314,7 +314,7 @@ impl BamlRuntime {
         cb: Option<&ClientRegistry>,
     ) -> (Result<FunctionResult>, Option<uuid::Uuid>) {
         log::trace!("Calling function: {}", function_name);
-        let span = self.tracer.start_span(&function_name, ctx, &params);
+        let span = self.tracer.start_span(&function_name, ctx, params);
         let response = match ctx.create_ctx(tb, cb) {
             Ok(rctx) => {
                 self.inner
@@ -384,9 +384,9 @@ impl BamlRuntime {
             .configuration()
             .generators
             .iter()
-            .filter_map(|generator| match generator {
-                Generator::BoundaryCloud(generator) => Some(generator.span.file.path_buf()),
-                Generator::Codegen(generator) => Some(generator.span.file.path_buf()),
+            .map(|generator| match generator {
+                Generator::BoundaryCloud(generator) => generator.span.file.path_buf(),
+                Generator::Codegen(generator) => generator.span.file.path_buf(),
             })
             .fold(HashMap::new(), |mut acc, path| {
                 *acc.entry(path).or_default() += 1;

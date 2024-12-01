@@ -103,45 +103,53 @@ impl TryFrom<(&ClientProperty, &RuntimeContext)> for LLMPrimitiveProvider {
         match &value.provider {
             ClientProvider::OpenAI(open_aiclient_provider_variant) => {
                 match open_aiclient_provider_variant {
-                    OpenAIClientProviderVariant::Base => OpenAIClient::dynamic_new(value, ctx).map(Into::into),
-                    OpenAIClientProviderVariant::Ollama => OpenAIClient::dynamic_new_ollama(value, ctx).map(Into::into),
-                    OpenAIClientProviderVariant::Azure => OpenAIClient::dynamic_new_azure(value, ctx).map(Into::into),
-                    OpenAIClientProviderVariant::Generic => OpenAIClient::dynamic_new_generic(value, ctx).map(Into::into),
+                    OpenAIClientProviderVariant::Base => {
+                        OpenAIClient::dynamic_new(value, ctx).map(Into::into)
+                    }
+                    OpenAIClientProviderVariant::Ollama => {
+                        OpenAIClient::dynamic_new_ollama(value, ctx).map(Into::into)
+                    }
+                    OpenAIClientProviderVariant::Azure => {
+                        OpenAIClient::dynamic_new_azure(value, ctx).map(Into::into)
+                    }
+                    OpenAIClientProviderVariant::Generic => {
+                        OpenAIClient::dynamic_new_generic(value, ctx).map(Into::into)
+                    }
                 }
-            },
+            }
             ClientProvider::Anthropic => AnthropicClient::dynamic_new(value, ctx).map(Into::into),
             ClientProvider::AwsBedrock => AwsClient::dynamic_new(value, ctx).map(Into::into),
             ClientProvider::GoogleAi => GoogleAIClient::dynamic_new(value, ctx).map(Into::into),
             ClientProvider::Vertex => VertexClient::dynamic_new(value, ctx).map(Into::into),
             ClientProvider::Strategy(strategy_client_provider) => {
-                unimplemented!("Strategy client providers are not supported yet in LLMPrimitiveProvider")
-            }
-            
-            // "openai" => OpenAIClient::dynamic_new(value, ctx).map(Into::into),
-            // "openai-generic" => OpenAIClient::dynamic_new_generic(value, ctx).map(Into::into),
-            // "azure-openai" => OpenAIClient::dynamic_new_azure(value, ctx).map(Into::into),
-            // "ollama" => OpenAIClient::dynamic_new_ollama(value, ctx).map(Into::into),
-            // "anthropic" => AnthropicClient::dynamic_new(value, ctx).map(Into::into),
-            // "google-ai" => GoogleAIClient::dynamic_new(value, ctx).map(Into::into),
-            // "vertex-ai" => VertexClient::dynamic_new(value, ctx).map(Into::into),
-            // // dynamic_new is not implemented for aws::AwsClient
-            // other => {
-            //     let options = [
-            //         "anthropic",
-            //         "azure-openai",
-            //         "google-ai",
-            //         "openai",
-            //         "openai-generic",
-            //         "vertex-ai",
-            //         "fallback",
-            //         "round-robin",
-            //     ];
-            //     anyhow::bail!(
-            //         "Unsupported provider: {}. Available ones are: {}",
-            //         other,
-            //         options.join(", ")
-            //     )
-            // }
+                unimplemented!(
+                    "Strategy client providers are not supported yet in LLMPrimitiveProvider"
+                )
+            } // "openai" => OpenAIClient::dynamic_new(value, ctx).map(Into::into),
+              // "openai-generic" => OpenAIClient::dynamic_new_generic(value, ctx).map(Into::into),
+              // "azure-openai" => OpenAIClient::dynamic_new_azure(value, ctx).map(Into::into),
+              // "ollama" => OpenAIClient::dynamic_new_ollama(value, ctx).map(Into::into),
+              // "anthropic" => AnthropicClient::dynamic_new(value, ctx).map(Into::into),
+              // "google-ai" => GoogleAIClient::dynamic_new(value, ctx).map(Into::into),
+              // "vertex-ai" => VertexClient::dynamic_new(value, ctx).map(Into::into),
+              // // dynamic_new is not implemented for aws::AwsClient
+              // other => {
+              //     let options = [
+              //         "anthropic",
+              //         "azure-openai",
+              //         "google-ai",
+              //         "openai",
+              //         "openai-generic",
+              //         "vertex-ai",
+              //         "fallback",
+              //         "round-robin",
+              //     ];
+              //     anyhow::bail!(
+              //         "Unsupported provider: {}. Available ones are: {}",
+              //         other,
+              //         options.join(", ")
+              //     )
+              // }
         }
     }
 }
@@ -153,10 +161,18 @@ impl TryFrom<(&ClientWalker<'_>, &RuntimeContext)> for LLMPrimitiveProvider {
         match &client.elem().provider {
             ClientProvider::OpenAI(open_aiclient_provider_variant) => {
                 match open_aiclient_provider_variant {
-                    OpenAIClientProviderVariant::Base => OpenAIClient::new(client, ctx).map(Into::into),
-                    OpenAIClientProviderVariant::Ollama => OpenAIClient::new_ollama(client, ctx).map(Into::into),
-                    OpenAIClientProviderVariant::Azure => OpenAIClient::new_azure(client, ctx).map(Into::into),
-                    OpenAIClientProviderVariant::Generic => OpenAIClient::new_generic(client, ctx).map(Into::into),
+                    OpenAIClientProviderVariant::Base => {
+                        OpenAIClient::new(client, ctx).map(Into::into)
+                    }
+                    OpenAIClientProviderVariant::Ollama => {
+                        OpenAIClient::new_ollama(client, ctx).map(Into::into)
+                    }
+                    OpenAIClientProviderVariant::Azure => {
+                        OpenAIClient::new_azure(client, ctx).map(Into::into)
+                    }
+                    OpenAIClientProviderVariant::Generic => {
+                        OpenAIClient::new_generic(client, ctx).map(Into::into)
+                    }
                 }
             }
             ClientProvider::Anthropic => AnthropicClient::new(client, ctx).map(Into::into),
@@ -164,10 +180,11 @@ impl TryFrom<(&ClientWalker<'_>, &RuntimeContext)> for LLMPrimitiveProvider {
             ClientProvider::GoogleAi => GoogleAIClient::new(client, ctx).map(Into::into),
             ClientProvider::Vertex => VertexClient::new(client, ctx).map(Into::into),
             ClientProvider::Strategy(strategy_client_provider) => {
-                unimplemented!("Strategy client providers are not supported yet in LLMPrimitiveProvider")
+                unimplemented!(
+                    "Strategy client providers are not supported yet in LLMPrimitiveProvider"
+                )
             }
         }
-        .into()
     }
 }
 
@@ -187,7 +204,7 @@ impl WithRenderRawCurl for LLMPrimitiveProvider {
     async fn render_raw_curl(
         &self,
         ctx: &RuntimeContext,
-        prompt: &Vec<internal_baml_jinja::RenderedChatMessage>,
+        prompt: &[internal_baml_jinja::RenderedChatMessage],
         render_settings: RenderCurlSettings,
     ) -> Result<String> {
         match_llm_provider!(self, render_raw_curl, async, ctx, prompt, render_settings)
@@ -215,12 +232,12 @@ impl WithStreamable for LLMPrimitiveProvider {
 }
 
 impl IterOrchestrator for Arc<LLMPrimitiveProvider> {
-    fn iter_orchestrator<'a>(
+    fn iter_orchestrator(
         &self,
         _state: &mut OrchestrationState,
         _previous: OrchestrationScope,
         _ctx: &RuntimeContext,
-        _client_lookup: &'a dyn InternalClientLookup,
+        _client_lookup: &dyn InternalClientLookup,
     ) -> Result<OrchestratorNodeIterator> {
         Ok(vec![OrchestratorNode::new(
             ExecutionScope::Direct(self.name().to_string()),

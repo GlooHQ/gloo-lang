@@ -22,26 +22,29 @@ impl<Meta: Clone> UnresolvedFallback<Meta> {
             strategy: self.strategy.iter().map(|(s, _)| (s.clone(), ())).collect(),
         }
     }
-    
+
     pub fn required_env_vars(&self) -> HashSet<String> {
-        self.strategy.iter().map(|(s, _)| {
-            match s {
+        self.strategy
+            .iter()
+            .flat_map(|(s, _)| match s {
                 either::Either::Left(s) => s.required_env_vars(),
                 either::Either::Right(_) => Default::default(),
-            }
-        }).flatten().collect()
+            })
+            .collect()
     }
 
     pub fn resolve(&self, ctx: &EvaluationContext<'_>) -> Result<ResolvedFallback> {
-        let strategy = self.strategy.iter().map(|(s, _)| match s {
-            either::Either::Left(s) => ClientSpec::new_from_id(s.resolve(ctx)?.as_str()),
-            either::Either::Right(s) => Ok(s.clone()),
-        }).collect::<Result<Vec<_>>>()?;
-        Ok(ResolvedFallback {
-            strategy
-        })
+        let strategy = self
+            .strategy
+            .iter()
+            .map(|(s, _)| match s {
+                either::Either::Left(s) => ClientSpec::new_from_id(s.resolve(ctx)?.as_str()),
+                either::Either::Right(s) => Ok(s.clone()),
+            })
+            .collect::<Result<Vec<_>>>()?;
+        Ok(ResolvedFallback { strategy })
     }
-    
+
     pub fn create_from(mut properties: PropertyHandler<Meta>) -> Result<Self, Vec<Error<Meta>>> {
         let strategy = properties.ensure_strategy();
         let errors = properties.finalize_empty();
@@ -51,11 +54,10 @@ impl<Meta: Clone> UnresolvedFallback<Meta> {
         }
 
         let strategy = strategy.expect("strategy is required");
-        
+
         Ok(Self { strategy })
     }
 }
-
 
 impl<Meta> super::StrategyClientProperty<Meta> for UnresolvedFallback<Meta> {
     fn strategy(&self) -> &Vec<(either::Either<StringOr, ClientSpec>, Meta)> {

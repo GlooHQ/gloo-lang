@@ -27,19 +27,24 @@ impl<Meta: Clone> UnresolvedRoundRobin<Meta> {
     }
 
     pub fn required_env_vars(&self) -> HashSet<String> {
-        self.strategy.iter().map(|(s, _)| {
-            match s {
+        self.strategy
+            .iter()
+            .flat_map(|(s, _)| match s {
                 either::Either::Left(s) => s.required_env_vars(),
                 either::Either::Right(_) => Default::default(),
-            }
-        }).flatten().collect()
+            })
+            .collect()
     }
 
     pub fn resolve(&self, ctx: &EvaluationContext<'_>) -> Result<ResolvedRoundRobin> {
-        let strategy = self.strategy.iter().map(|(s, _)| match s {
-            either::Either::Left(s) => ClientSpec::new_from_id(s.resolve(ctx)?.as_str()),
-            either::Either::Right(s) => Ok(s.clone()),
-        }).collect::<Result<Vec<_>>>()?;
+        let strategy = self
+            .strategy
+            .iter()
+            .map(|(s, _)| match s {
+                either::Either::Left(s) => ClientSpec::new_from_id(s.resolve(ctx)?.as_str()),
+                either::Either::Right(s) => Ok(s.clone()),
+            })
+            .collect::<Result<Vec<_>>>()?;
 
         Ok(ResolvedRoundRobin {
             strategy,
@@ -57,8 +62,11 @@ impl<Meta: Clone> UnresolvedRoundRobin<Meta> {
         }
 
         let strategy = strategy.expect("strategy is required");
-        
-        Ok(Self { strategy, start_index })
+
+        Ok(Self {
+            strategy,
+            start_index,
+        })
     }
 }
 

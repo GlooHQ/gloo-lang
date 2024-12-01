@@ -45,7 +45,7 @@ impl UnresolvedInferenceConfiguration {
     pub fn required_env_vars(&self) -> HashSet<String> {
         self.stop_sequences
             .as_ref()
-            .map(|s| s.iter().map(|s| s.required_env_vars()).flatten().collect())
+            .map(|s| s.iter().flat_map(|s| s.required_env_vars()).collect())
             .unwrap_or_default()
     }
 }
@@ -73,26 +73,25 @@ pub struct ResolvedAwsBedrock {
 impl UnresolvedAwsBedrock {
     pub fn required_env_vars(&self) -> HashSet<String> {
         let mut env_vars = HashSet::new();
-        self.model
-            .as_ref()
-            .map(|m| env_vars.extend(m.required_env_vars()));
+        if let Some(m) = self.model.as_ref() {
+            env_vars.extend(m.required_env_vars())
+        }
         env_vars.extend(self.region.required_env_vars());
         env_vars.extend(self.access_key_id.required_env_vars());
         env_vars.extend(self.secret_access_key.required_env_vars());
         env_vars.extend(
             self.allowed_roles
                 .iter()
-                .map(|r| r.required_env_vars())
-                .flatten(),
+                .flat_map(|r| r.required_env_vars()),
         );
-        self.default_role
-            .as_ref()
-            .map(|r| env_vars.extend(r.required_env_vars()));
+        if let Some(r) = self.default_role.as_ref() {
+            env_vars.extend(r.required_env_vars())
+        }
         env_vars.extend(self.allowed_role_metadata.required_env_vars());
         env_vars.extend(self.supported_request_modes.required_env_vars());
-        self.inference_config
-            .as_ref()
-            .map(|c| env_vars.extend(c.required_env_vars()));
+        if let Some(c) = self.inference_config.as_ref() {
+            env_vars.extend(c.required_env_vars())
+        }
         env_vars
     }
 
@@ -217,8 +216,8 @@ impl UnresolvedAwsBedrock {
                                 None
                             }
                         }),
-                        "stop_sequences" => inference_config.stop_sequences = match v.to_array() {
-                            Ok((stop_sequences, _)) => Some(stop_sequences.into_iter().filter_map(|s| match s.to_str() {
+                        "stop_sequences" => inference_config.stop_sequences = match v.into_array() {
+                            Ok((stop_sequences, _)) => Some(stop_sequences.into_iter().filter_map(|s| match s.into_str() {
                                 Ok((s, _)) => Some(s),
                                 Err(e) => {
                                     properties.push_error(format!("stop_sequences values must be a string: got {}", e.r#type()), e.meta().clone());

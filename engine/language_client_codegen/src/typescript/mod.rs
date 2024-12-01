@@ -263,10 +263,10 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 {
                     format!("(string | {name})")
                 } else {
-                    format!("{name}")
+                    name.to_string()
                 }
             }
-            FieldType::Class(name) => format!("{name}"),
+            FieldType::Class(name) => name.to_string(),
             FieldType::List(inner) => match inner.as_ref() {
                 FieldType::Union(_) | FieldType::Optional(_) => {
                     format!("({})[]", inner.to_type_ref(ir))
@@ -289,14 +289,12 @@ impl ToTypeReferenceInClientDefinition for FieldType {
             FieldType::Primitive(r#type) => r#type.to_typescript(),
             // In typescript we can just use literal values as type defs.
             FieldType::Literal(value) => value.to_string(),
-            FieldType::Union(inner) => format!(
-                "{}",
-                inner
-                    .iter()
-                    .map(|t| t.to_type_ref(ir))
-                    .collect::<Vec<_>>()
-                    .join(" | ")
-            ),
+            FieldType::Union(inner) => inner
+                .iter()
+                .map(|t| t.to_type_ref(ir))
+                .collect::<Vec<_>>()
+                .join(" | ")
+                .to_string(),
             FieldType::Tuple(inner) => format!(
                 "[{}]",
                 inner

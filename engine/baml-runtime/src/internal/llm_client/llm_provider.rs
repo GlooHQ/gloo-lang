@@ -45,10 +45,12 @@ impl TryFrom<(&ClientWalker<'_>, &RuntimeContext)> for LLMProvider {
 
     fn try_from((client, ctx): (&ClientWalker, &RuntimeContext)) -> Result<Self> {
         match &client.elem().provider {
-            internal_llm_client::ClientProvider::Strategy(_) => LLMStrategyProvider::try_from((client, ctx)).map(LLMProvider::Strategy),
+            internal_llm_client::ClientProvider::Strategy(_) => {
+                LLMStrategyProvider::try_from((client, ctx)).map(LLMProvider::Strategy)
+            }
             _ => LLMPrimitiveProvider::try_from((client, ctx))
                 .map(Arc::new)
-                .map(LLMProvider::Primitive)
+                .map(LLMProvider::Primitive),
         }
     }
 }
@@ -58,7 +60,9 @@ impl TryFrom<(&ClientProperty, &RuntimeContext)> for LLMProvider {
 
     fn try_from(value: (&ClientProperty, &RuntimeContext)) -> Result<Self> {
         match &value.0.provider {
-            internal_llm_client::ClientProvider::Strategy(_) => LLMStrategyProvider::try_from(value).map(LLMProvider::Strategy),
+            internal_llm_client::ClientProvider::Strategy(_) => {
+                LLMStrategyProvider::try_from(value).map(LLMProvider::Strategy)
+            }
             _ => LLMPrimitiveProvider::try_from(value)
                 .map(Arc::new)
                 .map(LLMProvider::Primitive),

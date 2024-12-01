@@ -310,7 +310,7 @@ impl BamlRuntime {
                             Ok(_) => Ok(()),
                             Err(e) => {
                                 log::error!("Error calling log_event_callback: {:?}", e);
-                                Err(anyhow::Error::new(e).into()) // Proper error handling
+                                Err(anyhow::Error::new(e)) // Proper error handling
                             }
                         }
                     })

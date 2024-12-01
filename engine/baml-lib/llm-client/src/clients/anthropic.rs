@@ -29,8 +29,16 @@ impl<Meta> UnresolvedAnthropic<Meta> {
             default_role: self.default_role.clone(),
             allowed_metadata: self.allowed_metadata.clone(),
             supported_request_modes: self.supported_request_modes.clone(),
-            headers: self.headers.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
-            properties: self.properties.iter().map(|(k, (_, v))| (k.clone(), ((), v.without_meta()))).collect(),
+            headers: self
+                .headers
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect(),
+            properties: self
+                .properties
+                .iter()
+                .map(|(k, (_, v))| (k.clone(), ((), v.without_meta())))
+                .collect(),
         }
     }
 }
@@ -52,12 +60,22 @@ impl<Meta: Clone> UnresolvedAnthropic<Meta> {
         let mut env_vars = HashSet::new();
         env_vars.extend(self.base_url.required_env_vars());
         env_vars.extend(self.api_key.required_env_vars());
-        env_vars.extend(self.allowed_roles.iter().map(|r| r.required_env_vars()).flatten());
-        self.default_role.as_ref().map(|r| env_vars.extend(r.required_env_vars()));
+        env_vars.extend(
+            self.allowed_roles
+                .iter()
+                .flat_map(|r| r.required_env_vars()),
+        );
+        if let Some(r) = self.default_role.as_ref() {
+            env_vars.extend(r.required_env_vars())
+        }
         env_vars.extend(self.allowed_metadata.required_env_vars());
         env_vars.extend(self.supported_request_modes.required_env_vars());
-        env_vars.extend(self.headers.values().map(|v| v.required_env_vars()).flatten());
-        env_vars.extend(self.properties.values().map(|(_, v)| v.required_env_vars()).flatten());
+        env_vars.extend(self.headers.values().flat_map(|v| v.required_env_vars()));
+        env_vars.extend(
+            self.properties
+                .values()
+                .flat_map(|(_, v)| v.required_env_vars()),
+        );
 
         env_vars
     }
@@ -122,10 +140,9 @@ impl<Meta: Clone> UnresolvedAnthropic<Meta> {
         })
     }
 
-    pub fn create_from(
-        mut properties: PropertyHandler<Meta>,
-    ) -> Result<Self, Vec<Error<Meta>>> {
-        let base_url = properties.ensure_base_url_with_default(UnresolvedUrl::new_static("https://api.anthropic.com"));
+    pub fn create_from(mut properties: PropertyHandler<Meta>) -> Result<Self, Vec<Error<Meta>>> {
+        let base_url = properties
+            .ensure_base_url_with_default(UnresolvedUrl::new_static("https://api.anthropic.com"));
         let api_key = properties
             .ensure_string("api_key", false)
             .map(|(_, v, _)| v.clone())

@@ -259,7 +259,7 @@ impl<'c> NestedChecks<'c> {
                             .ast_field()
                             .expr
                             .as_ref()
-                            .map_or(false, |ft| self.has_checks_nested(&ft))
+                            .map_or(false, |ft| self.has_checks_nested(ft))
                     })
                 }
                 _ => false,
