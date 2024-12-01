@@ -348,7 +348,7 @@ mod tests {
         let expr = parse_jinja_expression(pair, &mut diagnostics);
         match expr {
             Expression::JinjaExpressionValue(JinjaExpression(s), _) => assert_eq!(s, "1 + 1"),
-            _ => panic!("Expected JinjaExpression, got {:?}", expr),
+            _ => panic!("Expected JinjaExpression, got {expr:?}"),
         }
     }
 }
