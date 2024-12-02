@@ -276,6 +276,13 @@ pub(super) struct Types {
     /// Merge-Find Set or something like that.
     pub(super) finite_recursive_cycles: Vec<Vec<ast::TypeExpId>>,
 
+    /// Contains recursive type aliases.
+    ///
+    /// Recursive type aliases are a little bit trickier than recursive classes
+    /// because the termination condition is tied to lists and maps only. Nulls
+    /// and unions won't allow type alias cycles to be resolved.
+    pub(super) structural_recursive_type_aliases: Vec<Vec<ast::TypeAliasId>>,
+
     pub(super) function: HashMap<ast::ValExpId, FunctionType>,
 
     pub(super) client_properties: HashMap<ast::ValExpId, ClientProperties>,

@@ -209,6 +209,17 @@ impl<'db> crate::ParserDatabase {
             })
     }
 
+    /// Walk all the type aliases in the AST.
+    pub fn walk_type_aliases(&self) -> impl Iterator<Item = TypeAliasWalker<'_>> {
+        self.ast()
+            .iter_tops()
+            .filter_map(|(top_id, _)| top_id.as_type_alias_id())
+            .map(move |top_id| Walker {
+                db: self,
+                id: top_id,
+            })
+    }
+
     /// Walk all template strings in the schema.
     pub fn walk_templates(&self) -> impl Iterator<Item = TemplateStringWalker<'_>> {
         self.ast()
