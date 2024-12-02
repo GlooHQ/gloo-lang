@@ -281,7 +281,7 @@ pub(super) struct Types {
     /// Recursive type aliases are a little bit trickier than recursive classes
     /// because the termination condition is tied to lists and maps only. Nulls
     /// and unions won't allow type alias cycles to be resolved.
-    pub(super) structural_recursive_type_aliases: Vec<Vec<ast::TypeAliasId>>,
+    pub(super) structural_recursive_alias_cycles: Vec<Vec<ast::TypeAliasId>>,
 
     pub(super) function: HashMap<ast::ValExpId, FunctionType>,
 

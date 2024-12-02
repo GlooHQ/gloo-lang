@@ -22,7 +22,9 @@ pub use configuration::*;
 use either::Either;
 pub use field::*;
 pub use function::FunctionWalker;
-use internal_baml_schema_ast::ast::{FieldType, Identifier, TopId, TypeExpId, WithName};
+use internal_baml_schema_ast::ast::{
+    FieldType, Identifier, TopId, TypeAliasId, TypeExpId, WithName,
+};
 pub use r#class::*;
 pub use r#enum::*;
 pub use template_string::TemplateStringWalker;
@@ -140,6 +142,14 @@ impl<'db> crate::ParserDatabase {
     /// Returns a set of all classes that are part of some recursive definition.
     pub fn finite_recursive_cycles(&self) -> &[Vec<TypeExpId>] {
         &self.types.finite_recursive_cycles
+    }
+
+    /// Set of all aliases that are part of a structural cycle.
+    ///
+    /// A structural cycle is created through a map or list, which introduce one
+    /// level of indirection.
+    pub fn structural_recursive_alias_cycles(&self) -> &[Vec<TypeAliasId>] {
+        &self.types.structural_recursive_alias_cycles
     }
 
     /// Returns the resolved aliases map.

@@ -35,6 +35,9 @@ pub struct IntermediateRepr {
     /// Strongly connected components of the dependency graph (finite cycles).
     finite_recursive_cycles: Vec<IndexSet<String>>,
 
+    /// Type alias cycles introduced by lists and maps.
+    structural_recursive_alias_cycles: Vec<IndexSet<String>>,
+
     configuration: Configuration,
 }
 
@@ -53,6 +56,7 @@ impl IntermediateRepr {
             enums: vec![],
             classes: vec![],
             finite_recursive_cycles: vec![],
+            structural_recursive_alias_cycles: vec![],
             functions: vec![],
             clients: vec![],
             retry_policies: vec![],
@@ -167,6 +171,15 @@ impl IntermediateRepr {
                 .collect::<Result<Vec<_>>>()?,
             finite_recursive_cycles: db
                 .finite_recursive_cycles()
+                .iter()
+                .map(|ids| {
+                    ids.iter()
+                        .map(|id| db.ast()[*id].name().to_string())
+                        .collect()
+                })
+                .collect(),
+            structural_recursive_alias_cycles: db
+                .structural_recursive_alias_cycles()
                 .iter()
                 .map(|ids| {
                     ids.iter()

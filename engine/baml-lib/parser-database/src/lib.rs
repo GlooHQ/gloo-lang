@@ -138,6 +138,11 @@ impl ParserDatabase {
             self.types.resolved_type_aliases.insert(*alias_id, resolved);
         }
 
+        // Cycles left here after cycle validation are allowed. Basically lists
+        // and maps can introduce cycles.
+        self.types.structural_recursive_alias_cycles =
+            Tarjan::components(&self.types.type_alias_dependencies);
+
         // NOTE: Class dependency cycles are already checked at
         // baml-lib/baml-core/src/validate/validation_pipeline/validations/cycle.rs
         //
