@@ -6,6 +6,7 @@
 use std::{
     cmp,
     collections::{HashMap, HashSet},
+    fmt::Debug,
     hash::Hash,
 };
 
@@ -126,8 +127,14 @@ impl<'g, V: Eq + Ord + Hash + Copy> Tarjan<'g, V> {
         self.index += 1;
         self.stack.push(node_id);
 
+        // TODO: @antoniosarosi: HashSet is random, won't always iterate in the
+        // same order. Fix this with IndexSet or something, we really don't want
+        // to sort this every single time.
+        let mut successors = Vec::from_iter(&self.graph[&node_id]);
+        successors.sort();
+
         // Visit neighbors to find strongly connected components.
-        for successor_id in &self.graph[&node_id] {
+        for successor_id in successors {
             // Grab owned state to circumvent borrow checker.
             let mut successor = *&self.state[successor_id];
             if successor.index == Self::UNVISITED {

@@ -344,6 +344,26 @@ mod test {
         Ok(())
     }
 
+    fn assert_structural_alias_cycles(
+        baml: &'static str,
+        expected: &[&[&str]],
+    ) -> Result<(), Diagnostics> {
+        let db = parse(baml)?;
+
+        assert_eq!(
+            db.structural_recursive_alias_cycles()
+                .iter()
+                .map(|ids| Vec::from_iter(ids.iter().map(|id| db.ast()[*id].name().to_string())))
+                .collect::<Vec<_>>(),
+            expected
+                .iter()
+                .map(|cycle| Vec::from_iter(cycle.iter().map(ToString::to_string)))
+                .collect::<Vec<_>>()
+        );
+
+        Ok(())
+    }
+
     #[test]
     fn find_simple_recursive_class() -> Result<(), Diagnostics> {
         assert_finite_cycles(
@@ -601,5 +621,42 @@ mod test {
         ));
 
         Ok(())
+    }
+
+    #[test]
+    fn find_basic_map_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles(
+            "type RecursiveMap = map<string, RecursiveMap>",
+            &[&["RecursiveMap"]],
+        )
+    }
+
+    #[test]
+    fn find_basic_list_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles("type A = A[]", &[&["A"]])
+    }
+
+    #[test]
+    fn find_long_list_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles(
+            r#"
+                type A = B
+                type B = C
+                type C = A[]
+            "#,
+            &[&["A", "B", "C"]],
+        )
+    }
+
+    #[test]
+    fn find_intricate_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles(
+            r#"
+                type JsonValue = string | int | float | bool | null | JsonArray | JsonObject
+                type JsonArray = JsonValue[]
+                type JsonObject = map<string, JsonValue>
+            "#,
+            &[&["JsonValue", "JsonArray", "JsonObject"]],
+        )
     }
 }
