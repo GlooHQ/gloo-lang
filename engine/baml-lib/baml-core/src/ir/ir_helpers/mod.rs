@@ -108,10 +108,8 @@ impl IRHelper for IntermediateRepr {
 
     fn find_function<'a>(&'a self, function_name: &str) -> Result<FunctionWalker<'a>> {
         match self.walk_functions().find(|f| f.name() == function_name) {
-            Some(f) => {
-                let repr::Function { .. } = f.item.elem;
-                Ok(f)
-            }
+            Some(f) => Ok(f),
+
             None => {
                 // Get best match.
                 let functions = self.walk_functions().map(|f| f.name()).collect::<Vec<_>>();
