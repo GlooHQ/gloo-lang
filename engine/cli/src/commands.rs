@@ -35,6 +35,9 @@ pub(crate) enum Commands {
 
     #[command(about = "Deploy a BAML project to Boundary Cloud")]
     Deploy(crate::deploy::DeployArgs),
+
+    #[command(about = "Format BAML source files", name = "fmt", hide = true)]
+    Format(crate::format::FormatArgs),
 }
 
 impl RuntimeCli {
@@ -64,6 +67,7 @@ impl RuntimeCli {
                 args.from = BamlRuntime::parse_baml_src_path(&args.from)?;
                 t.block_on(async { args.run_async().await })
             }
+            Commands::Format(args) => args.run(),
         }
     }
 }
