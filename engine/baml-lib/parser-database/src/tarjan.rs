@@ -124,13 +124,13 @@ impl<'g> Tarjan<'g> {
         // Visit neighbors to find strongly connected components.
         for successor_id in &self.graph[&node_id] {
             // Grab owned state to circumvent borrow checker.
-            let mut successor = *&self.state[successor_id];
+            let mut successor = self.state[successor_id];
             if successor.index == Self::UNVISITED {
                 // Make sure state is updated before the recursive call.
                 self.state.insert(node_id, node);
                 self.strong_connect(*successor_id);
                 // Grab updated state after recursive call.
-                successor = *&self.state[successor_id];
+                successor = self.state[successor_id];
                 node.low_link = cmp::min(node.low_link, successor.low_link);
             } else if successor.on_stack {
                 node.low_link = cmp::min(node.low_link, successor.index);
@@ -209,9 +209,11 @@ mod tests {
     }
 
     fn graph(from: &[(u32, &[u32])]) -> HashMap<TypeExpId, HashSet<TypeExpId>> {
-        HashMap::from_iter(from.iter().map(|(node, successors)| {
-            (TypeExpId::from(*node), type_exp_ids(&successors).collect())
-        }))
+        HashMap::from_iter(
+            from.iter().map(|(node, successors)| {
+                (TypeExpId::from(*node), type_exp_ids(successors).collect())
+            }),
+        )
     }
 
     fn expected_components(components: &[&[u32]]) -> Vec<Vec<TypeExpId>> {

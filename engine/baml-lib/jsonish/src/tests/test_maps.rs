@@ -6,7 +6,7 @@ test_deserializer!(
     test_map,
     "",
     r#"{"a": "b"}"#,
-    FieldType::map(FieldType::string(), FieldType::string()).into(),
+    FieldType::map(FieldType::string(), FieldType::string()),
     {"a": "b"}
 );
 
@@ -14,7 +14,7 @@ test_deserializer!(
     test_map_with_quotes,
     "",
     r#"{"\"a\"": "\"b\""}"#,
-    FieldType::map(FieldType::string(), FieldType::string()).into(),
+    FieldType::map(FieldType::string(), FieldType::string()),
     {"\"a\"": "\"b\""}
 );
 
@@ -22,7 +22,7 @@ test_deserializer!(
     test_map_with_extra_text,
     "",
     r#"{"a": "b"} is the output."#,
-    FieldType::map(FieldType::string(), FieldType::string()).into(),
+    FieldType::map(FieldType::string(), FieldType::string()),
     {"a": "b"}
 );
 
@@ -30,7 +30,7 @@ test_deserializer!(
     test_map_with_invalid_extra_text,
     "",
     r#"{a: b} is the output."#,
-    FieldType::map(FieldType::string(), FieldType::string()).into(),
+    FieldType::map(FieldType::string(), FieldType::string()),
     {"a": "b"}
 );
 
@@ -42,7 +42,7 @@ test_deserializer!(
         b string
     }"#,
     r#"{first: {"a": 1, "b": "hello"}, 'second': {"a": 2, "b": "world"}}"#,
-    FieldType::map(FieldType::string(), FieldType::class("Foo")).into(),
+    FieldType::map(FieldType::string(), FieldType::class("Foo")),
     {"first":{"a": 1, "b": "hello"}, "second":{"a": 2, "b": "world"}}
 );
 
@@ -53,7 +53,7 @@ test_deserializer!(
 {
     "a": "b
 "#,
-    FieldType::map(FieldType::string(), FieldType::string()).into(),
+    FieldType::map(FieldType::string(), FieldType::string()),
     {"a": "b\n"}
 );
 
@@ -66,7 +66,7 @@ test_deserializer!(
         "b": "c",
         "d":
 "#,
-    FieldType::map(FieldType::string(), FieldType::map(FieldType::string(), FieldType::optional(FieldType::string()))).into(),
+    FieldType::map(FieldType::string(), FieldType::map(FieldType::string(), FieldType::optional(FieldType::string()))),
     // NB: we explicitly drop "d" in this scenario, even though the : gives us a signal that it's a key,
     // and we could default to 'null' for the value, because this is reasonable behavior
     {"a": {"b": "c"}}
@@ -80,7 +80,7 @@ test_deserializer!(
     "a
     ": "b"}
 "#,
-    FieldType::map(FieldType::string(), FieldType::string()).into(),
+    FieldType::map(FieldType::string(), FieldType::string()),
     {"a\n    ": "b"}
 );
 
@@ -94,7 +94,7 @@ test_deserializer!(
     null: "n"
 }
 "#,
-    FieldType::map(FieldType::string(), FieldType::string()).into(),
+    FieldType::map(FieldType::string(), FieldType::string()),
     {"5": "b", "2.17": "e", "null": "n"}
 );
 
@@ -122,8 +122,7 @@ fn test_union_of_class_and_map() {
     let target_type = FieldType::union(vec![
         FieldType::class("Foo"),
         FieldType::map(FieldType::string(), FieldType::string()),
-    ])
-    .into();
+    ]);
     let llm_output = r#"{"a": 1, "b": "hello"}"#;
     let expected = json!({"a": "1", "b": "hello"});
 
@@ -155,8 +154,7 @@ fn test_union_of_map_and_class() {
     let target_type = FieldType::union(vec![
         FieldType::map(FieldType::string(), FieldType::string()),
         FieldType::class("Foo"),
-    ])
-    .into();
+    ]);
     let llm_output = r#"{"a": 1, "b": "hello"}"#;
     let expected = json!({"a": "1", "b": "hello"});
 

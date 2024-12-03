@@ -40,8 +40,8 @@ pub struct TemplateStringMacro {
     pub template: String,
 }
 
-const MAGIC_CHAT_ROLE_DELIMITER: &'static str = "BAML_CHAT_ROLE_MAGIC_STRING_DELIMITER";
-const MAGIC_MEDIA_DELIMITER: &'static str = "BAML_MEDIA_MAGIC_STRING_DELIMITER";
+const MAGIC_CHAT_ROLE_DELIMITER: &str = "BAML_CHAT_ROLE_MAGIC_STRING_DELIMITER";
+const MAGIC_MEDIA_DELIMITER: &str = "BAML_MEDIA_MAGIC_STRING_DELIMITER";
 
 fn render_minijinja(
     template: &str,
@@ -72,7 +72,7 @@ fn render_minijinja(
 
     // inject macros
     let template = template_string_macros
-        .into_iter()
+        .iter()
         .map(|tsm| {
             format!(
                 "{{% macro {name}({template_args}) %}}{template}{{% endmacro %}}",
@@ -135,7 +135,6 @@ fn render_minijinja(
             let additional_properties = {
                 let mut props = kwargs
                     .args()
-                    .into_iter()
                     .filter(|&k| k != "role")
                     .map(|k| {
                         Ok((
@@ -409,7 +408,7 @@ pub fn render_prompt(
         anyhow::bail!("args must be a map");
     }
     let eval_ctx = EvaluationContext::new(env_vars, false);
-    let minijinja_args: minijinja::Value = args.clone().into_minijinja_value(&ir, &eval_ctx);
+    let minijinja_args: minijinja::Value = args.clone().to_minijinja_value(ir, &eval_ctx);
     let default_role = ctx.client.default_role.clone();
     let rendered = render_minijinja(
         template,
@@ -442,7 +441,7 @@ mod render_tests {
     use super::*;
 
     use baml_types::{BamlMap, BamlMediaType};
-    use env_logger;
+
     use indexmap::IndexMap;
     use std::sync::Once;
 
@@ -510,7 +509,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -521,7 +520,7 @@ mod render_tests {
                 role: "system".to_string(),
                 allow_duplicate_role: false,
                 parts: vec![
-                    ChatMessagePart::Text(vec!["Here is an image:",].join("\n")),
+                    ChatMessagePart::Text(["Here is an image:"].join("\n")),
                     ChatMessagePart::Media(BamlMedia::url(
                         BamlMediaType::Image,
                         "https://example.com/image.jpg".to_string(),
@@ -570,7 +569,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -581,7 +580,7 @@ mod render_tests {
                 role: "system".to_string(),
                 allow_duplicate_role: false,
                 parts: vec![
-                    ChatMessagePart::Text(vec!["Here is an image:",].join("\n")),
+                    ChatMessagePart::Text(["Here is an image:"].join("\n")),
                     ChatMessagePart::Media(BamlMedia::url(
                         BamlMediaType::Image,
                         "https://example.com/image.jpg".to_string(),
@@ -628,7 +627,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -639,13 +638,13 @@ mod render_tests {
                 role: "system".to_string(),
                 allow_duplicate_role: false,
                 parts: vec![
-                    ChatMessagePart::Text(vec!["Here is an image:",].join("\n")),
+                    ChatMessagePart::Text(["Here is an image:"].join("\n")),
                     ChatMessagePart::Media(BamlMedia::url(
                         BamlMediaType::Image,
                         "https://example.com/image.jpg".to_string(),
                         None
                     )),
-                    ChatMessagePart::Text(vec![". Please help me.",].join("\n")),
+                    ChatMessagePart::Text([". Please help me."].join("\n")),
                 ]
             },])
         );
@@ -695,7 +694,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -707,11 +706,11 @@ mod render_tests {
                     role: "system".to_string(),
                     allow_duplicate_role: false,
                     parts: vec![ChatMessagePart::Text(
-                        vec![
+                        [
                             "You are an assistant that always responds",
                             "in a very excited way with emojis",
                             "and also outputs this word 4 times",
-                            "after giving a response: sakura",
+                            "after giving a response: sakura"
                         ]
                         .join("\n")
                     )]
@@ -720,10 +719,10 @@ mod render_tests {
                     role: "john doe".to_string(),
                     allow_duplicate_role: false,
                     parts: vec![ChatMessagePart::Text(
-                        vec![
+                        [
                             "Tell me a haiku about sakura. ",
                             "",
-                            "End the haiku with a line about your maker, openai.",
+                            "End the haiku with a line about your maker, openai."
                         ]
                         .join("\n")
                     )]
@@ -772,7 +771,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -780,11 +779,11 @@ mod render_tests {
         assert_eq!(
             rendered,
             RenderedPrompt::Completion(
-                vec![
+                [
                     "You are an assistant that always responds",
                     "in a very excited way with emojis",
                     "and also outputs this word 4 times",
-                    "after giving a response: sakura",
+                    "after giving a response: sakura"
                 ]
                 .join("\n")
             )
@@ -822,7 +821,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -861,7 +860,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -900,7 +899,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -939,7 +938,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1000,7 +999,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         );
@@ -1059,7 +1058,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1071,11 +1070,11 @@ mod render_tests {
                     role: "system".to_string(),
                     allow_duplicate_role: false,
                     parts: vec![ChatMessagePart::Text(
-                        vec![
+                        [
                             "You are an assistant that always responds",
                             "in a very excited way with emojis",
                             "and also outputs this word 4 times",
-                            "after giving a response: sakura",
+                            "after giving a response: sakura"
                         ]
                         .join("\n")
                     )]
@@ -1136,7 +1135,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1147,11 +1146,11 @@ mod render_tests {
                 role: "system".to_string(),
                 allow_duplicate_role: false,
                 parts: vec![ChatMessagePart::Text(
-                    vec![
+                    [
                         "You are an assistant that always responds",
                         "in a very excited way with emojis",
                         "and also outputs this word 4 times",
-                        "after giving a response: sakura",
+                        "after giving a response: sakura"
                     ]
                     .join("\n")
                 )]
@@ -1190,7 +1189,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         );
@@ -1240,7 +1239,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1286,7 +1285,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1305,7 +1304,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1347,7 +1346,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1366,7 +1365,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1408,7 +1407,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1481,7 +1480,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1574,7 +1573,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1679,7 +1678,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1755,7 +1754,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1814,7 +1813,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;
@@ -1918,7 +1917,7 @@ mod render_tests {
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::new(),
             },
-            &vec![],
+            &[],
             &ir,
             &HashMap::new(),
         )?;

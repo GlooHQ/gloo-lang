@@ -69,7 +69,16 @@ impl<'a> Walker<'a, &'a FunctionNode> {
                     Ok(client.required_env_vars())
                 }
                 ClientSpec::Shorthand(provider, model) => {
-                    let options = IndexMap::from_iter([("model".to_string(), ((), baml_types::UnresolvedValue::String(baml_types::StringOr::Value(model.clone()), ())))]);
+                    let options = IndexMap::from_iter([(
+                        "model".to_string(),
+                        (
+                            (),
+                            baml_types::UnresolvedValue::String(
+                                baml_types::StringOr::Value(model.clone()),
+                                (),
+                            ),
+                        ),
+                    )]);
                     let properties = internal_llm_client::PropertyHandler::<()>::new(options, ());
                     if let Ok(client) = provider.parse_client_property(properties) {
                         Ok(client.required_env_vars())

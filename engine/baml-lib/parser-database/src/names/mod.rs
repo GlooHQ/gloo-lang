@@ -177,7 +177,7 @@ pub(super) fn resolve_names(ctx: &mut Context<'_>) {
                     let func_id = ctx.interner.intern(func_name);
                     let namespace = names.tests.entry(func_id).or_insert_with(HashMap::default);
                     let name = ctx.interner.intern(top.name());
-                    if let Some(_) = namespace.insert(name, top_id) {
+                    if namespace.insert(name, top_id).is_some() {
                         ctx.push_error(DatamodelError::new_duplicate_test_error(
                             top.name(),
                             func_name,

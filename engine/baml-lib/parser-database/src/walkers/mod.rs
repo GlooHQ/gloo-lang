@@ -20,10 +20,10 @@ pub use configuration::*;
 use either::Either;
 pub use field::*;
 pub use function::FunctionWalker;
-pub use template_string::TemplateStringWalker;
 use internal_baml_schema_ast::ast::{FieldType, Identifier, TopId, TypeExpId, WithName};
 pub use r#class::*;
 pub use r#enum::*;
+pub use template_string::TemplateStringWalker;
 
 /// A generic walker. Only walkers intantiated with a concrete ID type (`I`) are useful.
 #[derive(Clone, Copy)]

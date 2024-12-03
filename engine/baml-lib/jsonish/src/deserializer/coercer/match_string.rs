@@ -53,7 +53,7 @@ pub(super) fn match_string(
     let match_context = jsonish_string.trim();
 
     // First attempt, case sensitive match ignoring possible pucntuation.
-    if let Some(string_match) = string_match_strategy(&match_context, &candidates, &mut flags) {
+    if let Some(string_match) = string_match_strategy(match_context, candidates, &mut flags) {
         return try_match_only_once(parsing_context, target, string_match, flags);
     }
 

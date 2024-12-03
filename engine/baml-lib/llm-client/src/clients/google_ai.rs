@@ -1,9 +1,7 @@
 use std::collections::HashSet;
 
+use crate::{AllowedRoleMetadata, SupportedRequestModes, UnresolvedAllowedRoleMetadata};
 use anyhow::Result;
-use crate::{
-    AllowedRoleMetadata, SupportedRequestModes, UnresolvedAllowedRoleMetadata,
-};
 
 use baml_types::{EvaluationContext, StringOr, UnresolvedValue};
 use indexmap::IndexMap;
@@ -23,7 +21,6 @@ pub struct UnresolvedGoogleAI<Meta> {
     properties: IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
 }
 
-
 impl<Meta> UnresolvedGoogleAI<Meta> {
     pub fn without_meta(&self) -> UnresolvedGoogleAI<()> {
         UnresolvedGoogleAI {
@@ -32,10 +29,18 @@ impl<Meta> UnresolvedGoogleAI<Meta> {
             api_key: self.api_key.clone(),
             model: self.model.clone(),
             base_url: self.base_url.clone(),
-            headers: self.headers.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+            headers: self
+                .headers
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect(),
             allowed_metadata: self.allowed_metadata.clone(),
             supported_request_modes: self.supported_request_modes.clone(),
-            properties: self.properties.iter().map(|(k, (_, v))| (k.clone(), ((), v.without_meta()))).collect::<IndexMap<_, _>>(),
+            properties: self
+                .properties
+                .iter()
+                .map(|(k, (_, v))| (k.clone(), ((), v.without_meta())))
+                .collect::<IndexMap<_, _>>(),
         }
     }
 }
@@ -58,13 +63,25 @@ impl<Meta: Clone> UnresolvedGoogleAI<Meta> {
         let mut env_vars = HashSet::new();
         env_vars.extend(self.api_key.required_env_vars());
         env_vars.extend(self.base_url.required_env_vars());
-        env_vars.extend(self.headers.values().map(|v| v.required_env_vars()).flatten());
-        env_vars.extend(self.allowed_roles.iter().map(|r| r.required_env_vars()).flatten());
-        self.default_role.as_ref().map(|r| env_vars.extend(r.required_env_vars()));
-        self.model.as_ref().map(|m| env_vars.extend(m.required_env_vars()));
+        env_vars.extend(self.headers.values().flat_map(StringOr::required_env_vars));
+        env_vars.extend(
+            self.allowed_roles
+                .iter()
+                .flat_map(|r| r.required_env_vars()),
+        );
+        if let Some(r) = self.default_role.as_ref() {
+            env_vars.extend(r.required_env_vars())
+        }
+        if let Some(m) = self.model.as_ref() {
+            env_vars.extend(m.required_env_vars())
+        }
         env_vars.extend(self.allowed_metadata.required_env_vars());
         env_vars.extend(self.supported_request_modes.required_env_vars());
-        env_vars.extend(self.properties.values().map(|(_, v)| v.required_env_vars()).flatten());
+        env_vars.extend(
+            self.properties
+                .values()
+                .flat_map(|(_, v)| v.required_env_vars()),
+        );
         env_vars
     }
 
@@ -75,7 +92,11 @@ impl<Meta: Clone> UnresolvedGoogleAI<Meta> {
         };
         let default_role = default_role.resolve(ctx)?;
 
-        let allowed_roles = self.allowed_roles.iter().map(|r| r.resolve(ctx)).collect::<Result<Vec<_>>>()?;
+        let allowed_roles = self
+            .allowed_roles
+            .iter()
+            .map(|r| r.resolve(ctx))
+            .collect::<Result<Vec<_>>>()?;
         if !allowed_roles.contains(&default_role) {
             return Err(anyhow::anyhow!(
                 "default_role must be in allowed_roles: {} not in {:?}",
@@ -83,7 +104,6 @@ impl<Meta: Clone> UnresolvedGoogleAI<Meta> {
                 allowed_roles
             ));
         }
-
 
         let model = self
             .model
@@ -126,18 +146,24 @@ impl<Meta: Clone> UnresolvedGoogleAI<Meta> {
         ]);
         let default_role = properties.ensure_default_role(allowed_roles.as_slice(), 1);
 
-        let api_key = properties.ensure_api_key().map(|v| v.clone()).unwrap_or(StringOr::EnvVar("GOOGLE_API_KEY".to_string()));
+        let api_key = properties
+            .ensure_api_key()
+            .unwrap_or(StringOr::EnvVar("GOOGLE_API_KEY".to_string()));
 
-        let model = properties.ensure_string("model", false).map(|(_, v, _)| v.clone());
+        let model = properties
+            .ensure_string("model", false)
+            .map(|(_, v, _)| v.clone());
 
-        let base_url = properties.ensure_base_url_with_default(UnresolvedUrl::new_static("https://generativelanguage.googleapis.com/v1beta"));
+        let base_url = properties.ensure_base_url_with_default(UnresolvedUrl::new_static(
+            "https://generativelanguage.googleapis.com/v1beta",
+        ));
 
         let allowed_metadata = properties.ensure_allowed_metadata();
         let supported_request_modes = properties.ensure_supported_request_modes();
         let headers = properties.ensure_headers().unwrap_or_default();
 
         let (properties, errors) = properties.finalize();
-        
+
         if !errors.is_empty() {
             return Err(errors);
         }

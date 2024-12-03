@@ -84,7 +84,7 @@ impl ArgCoercer {
                             };
 
                             for key in kv.keys() {
-                                if !vec!["file", "media_type"].contains(&key.as_str()) {
+                                if !["file", "media_type"].contains(&key.as_str()) {
                                     scope.push_error(format!(
                                         "Invalid property `{}` on file {}: `media_type` is the only supported property",
                                         key,
@@ -95,7 +95,7 @@ impl ArgCoercer {
                             match self.span_path.as_ref() {
                                 Some(span_path) => {
                                     Ok(BamlValue::Media(baml_types::BamlMedia::file(
-                                        media_type.clone(),
+                                        *media_type,
                                         span_path.clone(),
                                         s.to_string(),
                                         mime_type,
@@ -118,7 +118,7 @@ impl ArgCoercer {
                                 None => None,
                             };
                             for key in kv.keys() {
-                                if !vec!["url", "media_type"].contains(&key.as_str()) {
+                                if !["url", "media_type"].contains(&key.as_str()) {
                                     scope.push_error(format!(
                                         "Invalid property `{}` on url {}: `media_type` is the only supported property",
                                         key,
@@ -127,7 +127,7 @@ impl ArgCoercer {
                                 }
                             }
                             Ok(BamlValue::Media(baml_types::BamlMedia::url(
-                                media_type.clone(),
+                                *media_type,
                                 s.to_string(),
                                 mime_type,
                             )))
@@ -143,7 +143,7 @@ impl ArgCoercer {
                                 None => None,
                             };
                             for key in kv.keys() {
-                                if !vec!["base64", "media_type"].contains(&key.as_str()) {
+                                if !["base64", "media_type"].contains(&key.as_str()) {
                                     scope.push_error(format!(
                                         "Invalid property `{}` on base64 {}: `media_type` is the only supported property",
                                         key,
@@ -152,7 +152,7 @@ impl ArgCoercer {
                                 }
                             }
                             Ok(BamlValue::Media(baml_types::BamlMedia::base64(
-                                media_type.clone(),
+                                *media_type,
                                 s.to_string(),
                                 mime_type,
                             )))
@@ -177,7 +177,7 @@ impl ArgCoercer {
             (FieldType::Enum(name), _) => match value {
                 BamlValue::String(s) => {
                     if let Ok(e) = ir.find_enum(name) {
-                        if e.walk_values().find(|v| v.item.elem.0 == *s).is_some() {
+                        if e.walk_values().any(|v| v.item.elem.0 == *s) {
                             Ok(BamlValue::Enum(name.to_string(), s.to_string()))
                         } else {
                             scope.push_error(format!(
@@ -279,7 +279,7 @@ impl ArgCoercer {
                 }
             },
             (FieldType::Tuple(_), _) => {
-                scope.push_error(format!("Tuples are not yet supported"));
+                scope.push_error("Tuples are not yet supported".to_string());
                 Err(())
             }
             (FieldType::Map(k, v), _) => {
@@ -310,10 +310,8 @@ impl ArgCoercer {
                     let mut scope = ScopeStack::new();
                     if first_good_result.is_err() {
                         let result = self.coerce_arg(ir, option, value, &mut scope);
-                        if !scope.has_errors() {
-                            if first_good_result.is_err() {
-                                first_good_result = result
-                            }
+                        if !scope.has_errors() && first_good_result.is_err() {
+                            first_good_result = result
                         }
                     }
                 }
@@ -346,7 +344,6 @@ impl ArgCoercer {
         let search_for_failures_result = first_failing_assert_nested(ir, &value, field_type)
             .map_err(|e| {
                 scope.push_error(format!("Failed to evaluate assert: {:?}", e));
-                ()
             })?;
         match search_for_failures_result {
             Some(Constraint {
@@ -378,7 +375,7 @@ fn first_failing_assert_nested<'a>(
                 .filter_map(|c| {
                     let constraint = c.clone();
                     let baml_value: BamlValue = value_node.into();
-                    let result = evaluate_predicate(&&baml_value, &c.expression).map_err(|e| {
+                    let result = evaluate_predicate(&baml_value, &c.expression).map_err(|e| {
                         anyhow::anyhow!(format!("Error evaluating constraint: {:?}", e))
                     });
                     match result {
@@ -395,8 +392,7 @@ fn first_failing_assert_nested<'a>(
                 })
                 .collect::<Vec<_>>()
         })
-        .map(|x| x.into_iter())
-        .flatten()
+        .flat_map(|x| x.into_iter())
         .next();
     first_failure.transpose()
 }

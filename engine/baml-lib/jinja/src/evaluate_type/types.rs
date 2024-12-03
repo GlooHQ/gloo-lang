@@ -160,7 +160,7 @@ impl Type {
         }
     }
 
-    pub fn merge<'a, I>(v: I) -> Type
+    pub fn merge<I>(v: I) -> Type
     where
         I: IntoIterator<Item = Type>,
     {
@@ -546,29 +546,25 @@ impl PredefinedTypes {
                             func,
                             span,
                             name,
-                            span.clone(),
+                            span,
                             t.clone(),
                             arg_t.clone(),
                         ));
                     }
-                } else {
-                    if let Some(arg_t) = kwargs.get(name.as_str()) {
-                        unused_args.remove(name);
-                        if !arg_t.is_subtype_of(&t) {
-                            errors.push(TypeError::new_wrong_arg_type(
-                                func,
-                                span,
-                                name,
-                                span.clone(),
-                                t.clone(),
-                                arg_t.clone(),
-                            ));
-                        }
-                    } else {
-                        if !optional_args.contains(&name) {
-                            errors.push(TypeError::new_missing_arg(func, span, name));
-                        }
+                } else if let Some(arg_t) = kwargs.get(name.as_str()) {
+                    unused_args.remove(name);
+                    if !arg_t.is_subtype_of(t) {
+                        errors.push(TypeError::new_wrong_arg_type(
+                            func,
+                            span,
+                            name,
+                            span,
+                            t.clone(),
+                            arg_t.clone(),
+                        ));
                     }
+                } else if !optional_args.contains(&name) {
+                    errors.push(TypeError::new_missing_arg(func, span, name));
                 }
             }
 

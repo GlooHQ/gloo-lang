@@ -8,11 +8,11 @@ const PROMPT_FIDDLE_EXAMPLE_DIR: &str =
 
 fn main() {
     build_folder_tests(
-        &BAML_CLI_INIT_DIR,
+        BAML_CLI_INIT_DIR,
         "tests/validation_files/baml_cli_init.baml",
     );
     build_folder_tests(
-        &PROMPT_FIDDLE_EXAMPLE_DIR,
+        PROMPT_FIDDLE_EXAMPLE_DIR,
         "tests/validation_files/prompt_fiddle_example.baml",
     );
     build_validation_tests();

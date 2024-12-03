@@ -84,16 +84,14 @@ fn parse_string_literal(token: Pair<'_>, diagnostics: &mut Diagnostics) -> Expre
 
             if content.contains(' ') {
                 Expression::StringValue(content, span)
+            } else if content.eq("true") || content.eq("false") {
+                Expression::BoolValue(content.eq("true"), span)
             } else {
-                if content.eq("true") || content.eq("false") {
-                    Expression::BoolValue(content.eq("true"), span)
-                } else {
-                    match Identifier::from((content.as_str(), span.clone())) {
-                        Identifier::Invalid(..) | Identifier::String(..) => {
-                            Expression::StringValue(content, span)
-                        }
-                        identifier => Expression::Identifier(identifier),
+                match Identifier::from((content.as_str(), span.clone())) {
+                    Identifier::Invalid(..) | Identifier::String(..) => {
+                        Expression::StringValue(content, span)
                     }
+                    identifier => Expression::Identifier(identifier),
                 }
             }
         }

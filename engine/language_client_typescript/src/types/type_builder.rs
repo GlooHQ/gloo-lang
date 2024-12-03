@@ -17,6 +17,12 @@ crate::lang_wrapper!(
 );
 crate::lang_wrapper!(FieldType, baml_types::FieldType, sync_thread_safe);
 
+impl Default for TypeBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[napi]
 impl TypeBuilder {
     #[napi(constructor)]
@@ -27,7 +33,7 @@ impl TypeBuilder {
     #[napi]
     pub fn get_enum(&self, name: String) -> EnumBuilder {
         EnumBuilder {
-            inner: self.inner.r#enum(&name).into(),
+            inner: self.inner.r#enum(&name),
             name,
         }
     }
@@ -35,7 +41,7 @@ impl TypeBuilder {
     #[napi]
     pub fn get_class(&self, name: String) -> ClassBuilder {
         ClassBuilder {
-            inner: self.inner.class(&name).into(),
+            inner: self.inner.class(&name),
             name,
         }
     }

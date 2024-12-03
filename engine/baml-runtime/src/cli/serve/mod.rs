@@ -238,7 +238,7 @@ impl Server {
             return if *baml_api_key == password {
                 AuthEnforcementMode::EnforceAndPass
             } else {
-                AuthEnforcementMode::EnforceAndFail(format!("Incorrect x-baml-api-key"))
+                AuthEnforcementMode::EnforceAndFail("Incorrect x-baml-api-key".to_string())
             };
         }
 
@@ -246,9 +246,9 @@ impl Server {
             return if basic_creds.password() == password {
                 AuthEnforcementMode::EnforceAndPass
             } else {
-                AuthEnforcementMode::EnforceAndFail(format!(
-                    "Incorrect password provided in basic auth"
-                ))
+                AuthEnforcementMode::EnforceAndFail(
+                    "Incorrect password provided in basic auth".to_string(),
+                )
             };
         }
 
@@ -366,32 +366,33 @@ Tip: test that the server is up using `curl http://localhost:{}/_debug/ping`
 
         match result {
             Ok(function_result) => match function_result.llm_response() {
-                LLMResponse::Success(_) => match function_result.result_with_constraints_content() {
-                    // Just because the LLM returned 2xx doesn't mean that it returned parse-able content!
-                    Ok(parsed) => {
-                        (StatusCode::OK, Json::<ResponseBamlValue>(parsed.clone())).into_response()
-                    }
-                    Err(e) => {
-                        if let Some(ExposedError::ValidationError {
-                            prompt,
-                            raw_output: raw_response,
-                            message,
-                        }) = e.downcast_ref::<ExposedError>()
-                        {
-                            BamlError::ValidationFailure {
-                                message: message.clone(),
-                                prompt: prompt.clone(),
-                                raw_output: raw_response.clone(),
+                LLMResponse::Success(_) => {
+                    match function_result.result_with_constraints_content() {
+                        // Just because the LLM returned 2xx doesn't mean that it returned parse-able content!
+                        Ok(parsed) => (StatusCode::OK, Json::<ResponseBamlValue>(parsed.clone()))
+                            .into_response(),
+                        Err(e) => {
+                            if let Some(ExposedError::ValidationError {
+                                prompt,
+                                raw_output: raw_response,
+                                message,
+                            }) = e.downcast_ref::<ExposedError>()
+                            {
+                                BamlError::ValidationFailure {
+                                    message: message.clone(),
+                                    prompt: prompt.clone(),
+                                    raw_output: raw_response.clone(),
+                                }
+                                .into_response()
+                            } else {
+                                BamlError::InternalError {
+                                    message: format!("Error parsing: {:?}", e),
+                                }
+                                .into_response()
                             }
-                            .into_response()
-                        } else {
-                            BamlError::InternalError {
-                                message: format!("Error parsing: {:?}", e),
-                            }
-                            .into_response()
                         }
                     }
-                },
+                }
                 LLMResponse::LLMFailure(failure) => BamlError::ClientError {
                     message: format!("{:?}", failure.message),
                 }
@@ -478,35 +479,37 @@ Tip: test that the server is up using `curl http://localhost:{}/_debug/ping`
 
                     match result {
                         Ok(function_result) => match function_result.llm_response() {
-                            LLMResponse::Success(_) => match function_result.result_with_constraints_content() {
-                                // Just because the LLM returned 2xx doesn't mean that it returned parse-able content!
-                                Ok(parsed) => {
-                                    (StatusCode::OK, Json::<ResponseBamlValue>(parsed.clone()))
-                                        .into_response()
-                                }
+                            LLMResponse::Success(_) => {
+                                match function_result.result_with_constraints_content() {
+                                    // Just because the LLM returned 2xx doesn't mean that it returned parse-able content!
+                                    Ok(parsed) => {
+                                        (StatusCode::OK, Json::<ResponseBamlValue>(parsed.clone()))
+                                            .into_response()
+                                    }
 
-                                Err(e) => {
-                                    log::debug!("Error parsing content: {:?}", e);
-                                    if let Some(ExposedError::ValidationError {
-                                        prompt,
-                                        raw_output: raw_response,
-                                        message,
-                                    }) = e.downcast_ref::<ExposedError>()
-                                    {
-                                        BamlError::ValidationFailure {
-                                            message: message.clone(),
-                                            prompt: prompt.clone(),
-                                            raw_output: raw_response.clone(),
+                                    Err(e) => {
+                                        log::debug!("Error parsing content: {:?}", e);
+                                        if let Some(ExposedError::ValidationError {
+                                            prompt,
+                                            raw_output: raw_response,
+                                            message,
+                                        }) = e.downcast_ref::<ExposedError>()
+                                        {
+                                            BamlError::ValidationFailure {
+                                                message: message.clone(),
+                                                prompt: prompt.clone(),
+                                                raw_output: raw_response.clone(),
+                                            }
+                                            .into_response()
+                                        } else {
+                                            BamlError::InternalError {
+                                                message: format!("Error parsing: {:?}", e),
+                                            }
+                                            .into_response()
                                         }
-                                        .into_response()
-                                    } else {
-                                        BamlError::InternalError {
-                                            message: format!("Error parsing: {:?}", e),
-                                        }
-                                        .into_response()
                                     }
                                 }
-                            },
+                            }
                             LLMResponse::LLMFailure(failure) => {
                                 log::debug!("LLMResponse::LLMFailure: {:?}", failure);
                                 BamlError::ClientError {
@@ -619,16 +622,23 @@ Tip: test that the server is up using `curl http://localhost:{}/_debug/ping`
             true,
             GeneratorDefaultClientMode::Sync,
             Vec::new(),
-        ).map_err(|_| BamlError::InternalError{ message: "Failed to make placeholder generator".to_string()})?;
+        )
+        .map_err(|_| BamlError::InternalError {
+            message: "Failed to make placeholder generator".to_string(),
+        })?;
         let schema: OpenApiSchema = (locked.inner.ir.as_ref(), &fake_generator)
             .try_into()
             .map_err(|e| {
                 log::warn!("Failed to generate openapi schema: {}", e);
-                BamlError::InternalError{ message: format!("Failed to generate openapi schema")}
+                BamlError::InternalError {
+                    message: "Failed to generate openapi schema".to_string(),
+                }
             })?;
         serde_json::to_string(&schema).map_err(|e| {
             log::warn!("Failed to serialize openapi schema: {}", e);
-            BamlError::InternalError{ message: format!("Failed to serialize openapi schema") }
+            BamlError::InternalError {
+                message: "Failed to serialize openapi schema".to_string(),
+            }
         })
     }
 }

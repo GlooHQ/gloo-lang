@@ -52,8 +52,8 @@ pub trait IRHelper {
         params: &BamlMap<String, BamlValue>,
         coerce_settings: ArgCoercer,
     ) -> Result<BamlValue>;
-    fn distribute_type<'a>(
-        &'a self,
+    fn distribute_type(
+        &self,
         value: BamlValue,
         field_type: FieldType,
     ) -> Result<BamlValueWithMeta<FieldType>>;
@@ -108,9 +108,8 @@ impl IRHelper for IntermediateRepr {
 
     fn find_function<'a>(&'a self, function_name: &str) -> Result<FunctionWalker<'a>> {
         match self.walk_functions().find(|f| f.name() == function_name) {
-            Some(f) => match f.item.elem {
-                repr::Function { .. } => Ok(f),
-            },
+            Some(f) => Ok(f),
+
             None => {
                 // Get best match.
                 let functions = self.walk_functions().map(|f| f.name()).collect::<Vec<_>>();
@@ -207,8 +206,8 @@ impl IRHelper for IntermediateRepr {
     /// For some `BamlValue` with type `FieldType`, walk the structure of both the value
     /// and the type simultaneously, associating each node in the `BamlValue` with its
     /// `FieldType`.
-    fn distribute_type<'a>(
-        &'a self,
+    fn distribute_type(
+        &self,
         value: BamlValue,
         field_type: FieldType,
     ) -> anyhow::Result<BamlValueWithMeta<FieldType>> {
@@ -225,7 +224,7 @@ impl IRHelper for IntermediateRepr {
                 anyhow::bail!("Could not unify String with {:?}", field_type)
             }
             BamlValue::Int(i)
-                if FieldType::Literal(LiteralValue::Int(i.clone())).is_subtype_of(&field_type) =>
+                if FieldType::Literal(LiteralValue::Int(i)).is_subtype_of(&field_type) =>
             {
                 Ok(BamlValueWithMeta::Int(i, field_type))
             }
@@ -249,9 +248,9 @@ impl IRHelper for IntermediateRepr {
                 let literal_type = FieldType::Literal(LiteralValue::Bool(b));
                 let primitive_type = FieldType::Primitive(TypeValue::Bool);
 
-                if literal_type.is_subtype_of(&field_type) {
-                    Ok(BamlValueWithMeta::Bool(b, field_type))
-                } else if primitive_type.is_subtype_of(&field_type) {
+                if literal_type.is_subtype_of(&field_type)
+                    || primitive_type.is_subtype_of(&field_type)
+                {
                     Ok(BamlValueWithMeta::Bool(b, field_type))
                 } else {
                     anyhow::bail!("Could not unify Bool with {:?}", field_type)
@@ -309,7 +308,7 @@ impl IRHelper for IntermediateRepr {
             BamlValue::List(items) => {
                 let item_types = items
                     .iter()
-                    .filter_map(|v| infer_type(v))
+                    .filter_map(infer_type)
                     .dedup()
                     .collect::<Vec<_>>();
                 let maybe_item_type = match item_types.len() {
@@ -448,7 +447,7 @@ const UNIT_TYPE: FieldType = FieldType::Tuple(vec![]);
 
 /// Derive the simplest type that can categorize a given value. This is meant to be used
 /// by `distribute_type`, for dynamic fields of classes, whose types are not known statically.
-pub fn infer_type<'a>(value: &'a BamlValue) -> Option<FieldType> {
+pub fn infer_type(value: &BamlValue) -> Option<FieldType> {
     let ret = match value {
         BamlValue::Int(_) => Some(FieldType::Primitive(TypeValue::Int)),
         BamlValue::Bool(_) => Some(FieldType::Primitive(TypeValue::Bool)),
@@ -472,7 +471,7 @@ pub fn infer_type<'a>(value: &'a BamlValue) -> Option<FieldType> {
         BamlValue::List(items) => {
             let item_tys = items
                 .iter()
-                .filter_map(|v| infer_type(v))
+                .filter_map(infer_type)
                 .dedup()
                 .collect::<Vec<_>>();
             let item_ty = match item_tys.len() {

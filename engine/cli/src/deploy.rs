@@ -8,7 +8,7 @@ use futures::join;
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -35,7 +35,7 @@ pub struct DeployArgs {
     pub(super) api_url: String,
 }
 
-fn relative_path_to_baml_src(path: &PathBuf, baml_src: &PathBuf) -> Result<PathBuf> {
+fn relative_path_to_baml_src(path: &Path, baml_src: &Path) -> Result<PathBuf> {
     pathdiff::diff_paths(path, baml_src).ok_or_else(|| {
         anyhow::anyhow!(
             "Failed to compute relative path from {} to {}",
@@ -294,7 +294,7 @@ generator cloud {{
                 async {
                     let (resp, _) = join!(
                         api_client.create_project(CreateProjectRequest {
-                            project_fqn: format!("{project_fqn}"),
+                            project_fqn: project_fqn.to_string(),
                         }),
                         sleep(Duration::from_millis(1500)),
                     );

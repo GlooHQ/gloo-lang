@@ -40,10 +40,7 @@ fn sum_filter(value: Vec<Value>) -> Value {
     if int_sum.is_none() && float_sum.is_none() {
         log::warn!("The `sum` jinja filter was run against non-numeric arguments")
     }
-    int_sum.map_or(
-        float_sum.map_or(Value::from(0), |float| Value::from(float)),
-        |int| Value::from(int),
-    )
+    int_sum.map_or(float_sum.map_or(Value::from(0), Value::from), Value::from)
 }
 
 /// Render a bare minijinaja expression with the given context.
@@ -68,7 +65,7 @@ pub fn evaluate_predicate(
 ) -> Result<bool, anyhow::Error> {
     let ctx: HashMap<String, minijinja::Value> =
         HashMap::from([("this".to_string(), minijinja::Value::from_serialize(this))]);
-    match render_expression(&predicate_expression, &ctx)?.as_ref() {
+    match render_expression(predicate_expression, &ctx)?.as_ref() {
         "true" => Ok(true),
         "false" => Ok(false),
         _ => Err(anyhow::anyhow!("Predicate did not evaluate to a boolean")),
@@ -85,9 +82,11 @@ mod tests {
         let ctx = vec![
             (
                 "a".to_string(),
-                BamlValue::List(
-                    vec![BamlValue::Int(1), BamlValue::Int(2), BamlValue::Int(3)].into(),
-                )
+                BamlValue::List(vec![
+                    BamlValue::Int(1),
+                    BamlValue::Int(2),
+                    BamlValue::Int(3),
+                ])
                 .into(),
             ),
             (
@@ -117,9 +116,11 @@ mod tests {
         let ctx = vec![
             (
                 "a".to_string(),
-                BamlValue::List(
-                    vec![BamlValue::Int(1), BamlValue::Int(2), BamlValue::Int(3)].into(),
-                )
+                BamlValue::List(vec![
+                    BamlValue::Int(1),
+                    BamlValue::Int(2),
+                    BamlValue::Int(3),
+                ])
                 .into(),
             ),
             (

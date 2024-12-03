@@ -55,9 +55,9 @@ macro_rules! unreachable_rule {
 #[macro_export]
 macro_rules! test_parse_baml_type {
     ( source: $source:expr, target: $target:expr, $(,)* ) => {
-        use crate::parser::{BAMLParser, Rule};
         use internal_baml_diagnostics::{Diagnostics, SourceFile};
         use pest::Parser;
+        use $crate::parser::{BAMLParser, Rule};
 
         let root_path = "test_file.baml";
         let source = SourceFile::new_static(root_path.into(), $source);

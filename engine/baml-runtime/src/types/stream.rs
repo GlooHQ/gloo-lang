@@ -64,7 +64,7 @@ impl FunctionResultStream {
         cb: Option<&ClientRegistry>,
     ) -> (Result<FunctionResult>, Option<uuid::Uuid>)
     where
-        F: Fn(FunctionResult) -> (),
+        F: Fn(FunctionResult),
     {
         let rt = self.tokio_runtime.clone();
         let fut = self.run(on_event, ctx, tb, cb);
@@ -79,7 +79,7 @@ impl FunctionResultStream {
         cb: Option<&ClientRegistry>,
     ) -> (Result<FunctionResult>, Option<uuid::Uuid>)
     where
-        F: Fn(FunctionResult) -> (),
+        F: Fn(FunctionResult),
     {
         let mut local_orchestrator = Vec::new();
         std::mem::swap(&mut local_orchestrator, &mut self.orchestrator);

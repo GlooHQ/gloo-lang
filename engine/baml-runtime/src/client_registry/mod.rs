@@ -27,7 +27,12 @@ pub struct ClientProperty {
 }
 
 impl ClientProperty {
-    pub fn new(name: String, provider: ClientProvider, retry_policy: Option<String>, options: BamlMap<String, BamlValue>) -> Self {
+    pub fn new(
+        name: String,
+        provider: ClientProvider,
+        retry_policy: Option<String>,
+        options: BamlMap<String, BamlValue>,
+    ) -> Self {
         Self {
             name,
             provider,
@@ -73,6 +78,12 @@ pub struct ClientRegistry {
     #[serde(deserialize_with = "deserialize_clients")]
     clients: HashMap<String, ClientProperty>,
     primary: Option<String>,
+}
+
+impl Default for ClientRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ClientRegistry {

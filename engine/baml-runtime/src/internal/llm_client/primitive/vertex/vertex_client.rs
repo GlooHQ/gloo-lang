@@ -131,11 +131,11 @@ impl SseResponseTrait for VertexClient {
     fn response_stream(
         &self,
         resp: reqwest::Response,
-        prompt: &Vec<RenderedChatMessage>,
+        prompt: &[RenderedChatMessage],
         system_start: web_time::SystemTime,
         instant_start: web_time::Instant,
     ) -> StreamResponse {
-        let prompt = prompt.clone();
+        let prompt = prompt.to_vec();
         let client_name = self.context.name.clone();
         let model_id = self.properties.model.clone();
         let params = self.properties.properties.clone();
@@ -177,13 +177,13 @@ impl SseResponseTrait for VertexClient {
                                 return std::future::ready(Some(LLMResponse::LLMFailure(
                                     LLMErrorResponse {
                                         client: client_name.clone(),
-                                        model: if inner.model == "" {
+                                        model: if inner.model.is_empty() {
                                             None
                                         } else {
                                             Some(inner.model.clone())
                                         },
                                         prompt: internal_baml_jinja::RenderedPrompt::Chat(
-                                            prompt.clone(),
+                                            prompt.to_vec(),
                                         ),
                                         start_time: system_start,
                                         request_options: params.clone(),
@@ -194,21 +194,17 @@ impl SseResponseTrait for VertexClient {
                                 )));
                             }
                         };
-                        if let Some(choice) = event.candidates.get(0) {
+                        if let Some(choice) = event.candidates.first() {
                             if let Some(content) = choice
                                 .content
                                 .as_ref()
-                                .and_then(|c| c.parts.get(0).map(|p| p.text.as_ref()))
+                                .and_then(|c| c.parts.first().map(|p| p.text.as_ref()))
                             {
                                 inner.content += content;
                             }
-                            match choice.finish_reason.as_ref() {
-                                Some(FinishReason::Stop) => {
-                                    inner.metadata.baml_is_complete = true;
-                                    inner.metadata.finish_reason =
-                                        Some(FinishReason::Stop.to_string());
-                                }
-                                _ => (),
+                            if let Some(FinishReason::Stop) = choice.finish_reason.as_ref() {
+                                inner.metadata.baml_is_complete = true;
+                                inner.metadata.finish_reason = Some(FinishReason::Stop.to_string());
                             }
                         }
 
@@ -225,7 +221,7 @@ impl WithStreamChat for VertexClient {
     async fn stream_chat(
         &self,
         ctx: &RuntimeContext,
-        prompt: &Vec<RenderedChatMessage>,
+        prompt: &[RenderedChatMessage],
     ) -> StreamResponse {
         //incomplete, streaming response object is returned
         let (response, system_now, instant_now) =
@@ -337,7 +333,7 @@ impl RequestBuilder for VertexClient {
 
     async fn build_request(
         &self,
-        prompt: either::Either<&String, &Vec<RenderedChatMessage>>,
+        prompt: either::Either<&String, &[RenderedChatMessage]>,
         allow_proxy: bool,
         stream: bool,
     ) -> Result<reqwest::RequestBuilder> {
@@ -362,7 +358,7 @@ impl RequestBuilder for VertexClient {
 
         let access_token = match &self.properties.authorization {
             ResolvedServiceAccountDetails::RawAuthorizationHeader(token) => token.to_string(),
-            ResolvedServiceAccountDetails::Json(token) => get_access_token(&token)
+            ResolvedServiceAccountDetails::Json(token) => get_access_token(token)
                 .await
                 .context("Failed to get access token")?,
         };
@@ -401,7 +397,7 @@ impl WithChat for VertexClient {
         ))
     }
 
-    async fn chat(&self, _ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse {
+    async fn chat(&self, _ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse {
         //non-streaming, complete response is returned
         let (response, system_now, instant_now) =
             match make_parsed_request::<VertexResponse>(self, either::Either::Right(prompt), false)
@@ -415,7 +411,7 @@ impl WithChat for VertexClient {
             return LLMResponse::LLMFailure(LLMErrorResponse {
                 client: self.context.name.to_string(),
                 model: None,
-                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
                 start_time: system_now,
                 request_options: self.properties.properties.clone(),
                 latency: instant_now.elapsed(),
@@ -427,17 +423,17 @@ impl WithChat for VertexClient {
             });
         }
 
-        let content = if let Some(content) = response.candidates.get(0).and_then(|c| {
+        let content = if let Some(content) = response.candidates.first().and_then(|c| {
             c.content
                 .as_ref()
-                .and_then(|c| c.parts.get(0).map(|p| p.text.clone()))
+                .and_then(|c| c.parts.first().map(|p| p.text.clone()))
         }) {
             content
         } else {
             return LLMResponse::LLMFailure(LLMErrorResponse {
                 client: self.context.name.to_string(),
                 model: None,
-                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
                 start_time: system_now,
                 request_options: self.properties.properties.clone(),
                 latency: instant_now.elapsed(),
@@ -450,7 +446,7 @@ impl WithChat for VertexClient {
 
         LLMResponse::Success(LLMCompleteResponse {
             client: self.context.name.to_string(),
-            prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+            prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
             content,
             start_time: system_now,
             latency: instant_now.elapsed(),
@@ -460,12 +456,12 @@ impl WithChat for VertexClient {
                 .properties
                 .get("model")
                 .and_then(|v| v.as_str().map(|s| s.to_string()))
-                .unwrap_or_else(|| "".to_string()),
+                .unwrap_or_default(),
             metadata: LLMCompleteResponseMetadata {
-                baml_is_complete: match response.candidates[0].finish_reason {
-                    Some(FinishReason::Stop) => true,
-                    _ => false,
-                },
+                baml_is_complete: matches!(
+                    response.candidates[0].finish_reason,
+                    Some(FinishReason::Stop)
+                ),
                 finish_reason: response.candidates[0]
                     .finish_reason
                     .as_ref()
@@ -547,7 +543,7 @@ impl ToProviderMessage for VertexClient {
 impl ToProviderMessageExt for VertexClient {
     fn chat_to_message(
         &self,
-        chat: &Vec<RenderedChatMessage>,
+        chat: &[RenderedChatMessage],
     ) -> Result<serde_json::Map<String, serde_json::Value>> {
         // merge all adjacent roles of the same type
         let mut res = serde_json::Map::new();

@@ -86,7 +86,7 @@ pub(super) fn visit_constraint_attributes(
                 other_name,
                 span,
             ));
-            return ();
+            return;
         }
     };
 
@@ -112,7 +112,7 @@ pub(super) fn visit_constraint_attributes(
                     span
                 )
             );
-            return ();
+            return;
         }
     };
 

@@ -51,7 +51,7 @@ impl TypeCoercer for FieldType {
                     scope = ctx.display_scope(),
                     current = value.map(|v| v.r#type()).unwrap_or("<null>".into())
                 );
-                self.coerce(ctx, target, Some(v)).and_then(|mut v| {
+                self.coerce(ctx, target, Some(v)).map(|mut v| {
                     v.add_flag(Flag::ObjectFromMarkdown(
                         if matches!(target, FieldType::Primitive(TypeValue::String)) {
                             1
@@ -60,7 +60,7 @@ impl TypeCoercer for FieldType {
                         },
                     ));
 
-                    Ok(v)
+                    v
                 })
             }
             Some(crate::jsonish::Value::FixedJson(v, fixes)) => {
@@ -86,12 +86,12 @@ impl TypeCoercer for FieldType {
                 FieldType::Tuple(_) => Err(ctx.error_internal("Tuple not supported")),
                 FieldType::Constrained { base, .. } => {
                     let mut coerced_value = base.coerce(ctx, base, value)?;
-                    let constraint_results = run_user_checks(&coerced_value.clone().into(), &self)
+                    let constraint_results = run_user_checks(&coerced_value.clone().into(), self)
                         .map_err(|e| ParsingError {
-                            reason: format!("Failed to evaluate constraints: {:?}", e),
-                            scope: ctx.scope.clone(),
-                            causes: Vec::new(),
-                        })?;
+                        reason: format!("Failed to evaluate constraints: {:?}", e),
+                        scope: ctx.scope.clone(),
+                        causes: Vec::new(),
+                    })?;
                     validate_asserts(&constraint_results)?;
                     let check_results = constraint_results
                         .into_iter()
@@ -109,7 +109,7 @@ impl TypeCoercer for FieldType {
     }
 }
 
-pub fn validate_asserts(constraints: &Vec<(Constraint, bool)>) -> Result<(), ParsingError> {
+pub fn validate_asserts(constraints: &[(Constraint, bool)]) -> Result<(), ParsingError> {
     let failing_asserts = constraints
         .iter()
         .filter_map(
@@ -139,8 +139,9 @@ pub fn validate_asserts(constraints: &Vec<(Constraint, bool)>) -> Result<(), Par
                 expr.0
             ),
             scope: vec![],
-        }).collect::<Vec<_>>();
-    if causes.len() > 0 {
+        })
+        .collect::<Vec<_>>();
+    if !causes.is_empty() {
         Err(ParsingError {
             causes: vec![],
             reason: "Assertions failed.".to_string(),

@@ -8,7 +8,7 @@ use internal_baml_core::ir::IRHelper;
 use crate::{BamlMedia, BamlValue};
 
 pub trait IntoMiniJinjaValue {
-    fn into_minijinja_value(
+    fn to_minijinja_value(
         &self,
         ir: &IntermediateRepr,
         eval_ctx: &EvaluationContext<'_>,
@@ -16,30 +16,30 @@ pub trait IntoMiniJinjaValue {
 }
 
 impl IntoMiniJinjaValue for BamlValue {
-    fn into_minijinja_value(
+    fn to_minijinja_value(
         &self,
         ir: &IntermediateRepr,
         eval_ctx: &EvaluationContext<'_>,
     ) -> minijinja::Value {
         match self {
             BamlValue::String(s) => minijinja::Value::from(s.clone()),
-            BamlValue::Int(n) => minijinja::Value::from(n.clone()),
-            BamlValue::Float(n) => minijinja::Value::from(n.clone()),
-            BamlValue::Bool(b) => minijinja::Value::from(b.clone()),
+            BamlValue::Int(n) => minijinja::Value::from(*n),
+            BamlValue::Float(n) => minijinja::Value::from(*n),
+            BamlValue::Bool(b) => minijinja::Value::from(*b),
             BamlValue::Map(m) => {
                 let map = m
                     .into_iter()
-                    .map(|(k, v)| (k.as_str(), v.into_minijinja_value(ir, eval_ctx)));
+                    .map(|(k, v)| (k.as_str(), v.to_minijinja_value(ir, eval_ctx)));
                 minijinja::Value::from_iter(map)
             }
             BamlValue::List(l) => {
                 let list: Vec<minijinja::Value> = l
-                    .into_iter()
-                    .map(|v| v.into_minijinja_value(ir, eval_ctx))
+                    .iter()
+                    .map(|v| v.to_minijinja_value(ir, eval_ctx))
                     .collect();
                 minijinja::Value::from(list)
             }
-            BamlValue::Media(i) => i.into_minijinja_value(ir, eval_ctx),
+            BamlValue::Media(i) => i.to_minijinja_value(ir, eval_ctx),
             // For enums and classes we compute the aliases from the IR, and generate custom jinja structs that print out the alias if stringified.
             BamlValue::Enum(_name, value) => {
                 minijinja::Value::from(value.clone())
@@ -61,21 +61,18 @@ impl IntoMiniJinjaValue for BamlValue {
             BamlValue::Class(name, m) => {
                 let map = m
                     .into_iter()
-                    .map(|(k, v)| (k.as_str(), v.into_minijinja_value(ir, eval_ctx)));
+                    .map(|(k, v)| (k.as_str(), v.to_minijinja_value(ir, eval_ctx)));
 
                 let mut key_to_alias = IndexMap::new();
-                match ir.find_class(name) {
-                    Ok(c) => {
-                        for field in c.walk_fields() {
-                            let key = field
-                                .alias(eval_ctx)
-                                .ok()
-                                .and_then(|a| a)
-                                .unwrap_or_else(|| field.name().to_string());
-                            key_to_alias.insert(field.name().to_string(), key);
-                        }
+                if let Ok(c) = ir.find_class(name) {
+                    for field in c.walk_fields() {
+                        let key = field
+                            .alias(eval_ctx)
+                            .ok()
+                            .and_then(|a| a)
+                            .unwrap_or_else(|| field.name().to_string());
+                        key_to_alias.insert(field.name().to_string(), key);
                     }
-                    Err(_) => (),
                 }
 
                 minijinja::Value::from_object(MinijinjaBamlClass {
@@ -99,7 +96,7 @@ impl From<BamlMedia> for MinijinjaBamlMedia {
 }
 
 impl IntoMiniJinjaValue for BamlMedia {
-    fn into_minijinja_value(
+    fn to_minijinja_value(
         &self,
         _ir: &IntermediateRepr,
         _eval_ctx: &EvaluationContext<'_>,
@@ -108,7 +105,7 @@ impl IntoMiniJinjaValue for BamlMedia {
     }
 }
 
-const MAGIC_MEDIA_DELIMITER: &'static str = "BAML_MEDIA_MAGIC_STRING_DELIMITER";
+const MAGIC_MEDIA_DELIMITER: &str = "BAML_MEDIA_MAGIC_STRING_DELIMITER";
 
 impl std::fmt::Display for MinijinjaBamlMedia {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -168,7 +165,7 @@ impl minijinja::value::Object for MinijinjaBamlEnum {
 
 impl minijinja::value::StructObject for MinijinjaBamlEnum {
     fn get_field(&self, _name: &str) -> Option<minijinja::Value> {
-        return None;
+        None
     }
 
     fn static_fields(&self) -> Option<&'static [&'static str]> {

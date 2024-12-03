@@ -93,11 +93,11 @@ impl SseResponseTrait for GoogleAIClient {
     fn response_stream(
         &self,
         resp: reqwest::Response,
-        prompt: &Vec<RenderedChatMessage>,
+        prompt: &[RenderedChatMessage],
         system_start: web_time::SystemTime,
         instant_start: web_time::Instant,
     ) -> StreamResponse {
-        let prompt = prompt.clone();
+        let prompt = prompt.to_vec();
         let client_name = self.context.name.clone();
         let model_id = self.properties.model.clone();
         let params = self.properties.properties.clone();
@@ -139,7 +139,7 @@ impl SseResponseTrait for GoogleAIClient {
                                 return std::future::ready(Some(LLMResponse::LLMFailure(
                                     LLMErrorResponse {
                                         client: client_name.clone(),
-                                        model: if inner.model == "" {
+                                        model: if inner.model.is_empty() {
                                             None
                                         } else {
                                             Some(inner.model.clone())
@@ -157,17 +157,13 @@ impl SseResponseTrait for GoogleAIClient {
                             }
                         };
 
-                        if let Some(choice) = event.candidates.get(0) {
-                            if let Some(content) = choice.content.parts.get(0) {
+                        if let Some(choice) = event.candidates.first() {
+                            if let Some(content) = choice.content.parts.first() {
                                 inner.content += &content.text;
                             }
-                            match choice.finish_reason.as_ref() {
-                                Some(FinishReason::Stop) => {
-                                    inner.metadata.baml_is_complete = true;
-                                    inner.metadata.finish_reason =
-                                        Some(FinishReason::Stop.to_string());
-                                }
-                                _ => (),
+                            if let Some(FinishReason::Stop) = choice.finish_reason.as_ref() {
+                                inner.metadata.baml_is_complete = true;
+                                inner.metadata.finish_reason = Some(FinishReason::Stop.to_string());
                             }
                         }
                         inner.latency = instant_start.elapsed();
@@ -183,7 +179,7 @@ impl WithStreamChat for GoogleAIClient {
     async fn stream_chat(
         &self,
         _ctx: &RuntimeContext,
-        prompt: &Vec<RenderedChatMessage>,
+        prompt: &[RenderedChatMessage],
     ) -> StreamResponse {
         //incomplete, streaming response object is returned
         let (response, system_now, instant_now) =
@@ -197,7 +193,7 @@ impl WithStreamChat for GoogleAIClient {
 
 impl GoogleAIClient {
     pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Self> {
-        let properties = resolve_properties(&client.elem().provider, &client.options(), ctx)?;
+        let properties = resolve_properties(&client.elem().provider, client.options(), ctx)?;
         let default_role = properties.default_role.clone();
         Ok(Self {
             name: client.name().into(),
@@ -255,7 +251,7 @@ impl RequestBuilder for GoogleAIClient {
 
     async fn build_request(
         &self,
-        prompt: either::Either<&String, &Vec<RenderedChatMessage>>,
+        prompt: either::Either<&String, &[RenderedChatMessage]>,
         allow_proxy: bool,
         stream: bool,
     ) -> Result<reqwest::RequestBuilder> {
@@ -312,7 +308,7 @@ impl WithChat for GoogleAIClient {
         ))
     }
 
-    async fn chat(&self, _ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse {
+    async fn chat(&self, _ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse {
         //non-streaming, complete response is returned
         let (response, system_now, instant_now) =
             match make_parsed_request::<GoogleResponse>(self, either::Either::Right(prompt), false)
@@ -326,7 +322,7 @@ impl WithChat for GoogleAIClient {
             return LLMResponse::LLMFailure(LLMErrorResponse {
                 client: self.context.name.to_string(),
                 model: None,
-                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
                 start_time: system_now,
                 request_options: self.properties.properties.clone(),
                 latency: instant_now.elapsed(),
@@ -340,17 +336,17 @@ impl WithChat for GoogleAIClient {
 
         LLMResponse::Success(LLMCompleteResponse {
             client: self.context.name.to_string(),
-            prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+            prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
             content: response.candidates[0].content.parts[0].text.clone(),
             start_time: system_now,
             latency: instant_now.elapsed(),
             request_options: self.properties.properties.clone(),
             model: self.properties.model.clone(),
             metadata: LLMCompleteResponseMetadata {
-                baml_is_complete: match response.candidates[0].finish_reason {
-                    Some(FinishReason::Stop) => true,
-                    _ => false,
-                },
+                baml_is_complete: matches!(
+                    response.candidates[0].finish_reason,
+                    Some(FinishReason::Stop)
+                ),
                 finish_reason: response.candidates[0]
                     .finish_reason
                     .as_ref()
@@ -379,7 +375,7 @@ fn convert_completion_prompt_to_body(prompt: &String) -> HashMap<String, serde_j
 impl ToProviderMessageExt for GoogleAIClient {
     fn chat_to_message(
         &self,
-        chat: &Vec<RenderedChatMessage>,
+        chat: &[RenderedChatMessage],
     ) -> Result<serde_json::Map<String, serde_json::Value>> {
         let mut res = serde_json::Map::new();
         res.insert(

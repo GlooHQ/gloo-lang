@@ -170,9 +170,7 @@ impl FunctionResult {
                     format!("Failed to parse LLM response: {}", actual_error),
                 LLMResponse::LLMFailure(err) => format!(
                     "LLM Failure: {} ({}) - {}",
-                    err.message,
-                    err.code.to_string(),
-                    actual_error
+                    err.message, err.code, actual_error
                 ),
                 LLMResponse::UserFailure(err) =>
                     format!("User Failure: {} - {}", err, actual_error),

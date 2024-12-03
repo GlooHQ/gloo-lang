@@ -17,7 +17,7 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
         for c in cls.static_fields() {
             let field = c.ast_field();
             if let Some(ft) = &field.expr {
-                validate_type(ctx, &ft);
+                validate_type(ctx, ft);
             }
         }
 
@@ -42,7 +42,7 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
 
             let field_type = ctx.db.to_jinja_type(&arg.ast_arg().1.field_type);
 
-            defined_types.add_variable(&name, field_type);
+            defined_types.add_variable(name, field_type);
         });
 
         defined_types.end_scope();
@@ -116,7 +116,7 @@ fn reserved_names(
     let language_keywords: Vec<(&str, GeneratorOutputType)> = [
         if generator_output_types.contains(&GeneratorOutputType::PythonPydantic) {
             RESERVED_NAMES_PYTHON
-                .into_iter()
+                .iter()
                 .map(|name| (*name, GeneratorOutputType::PythonPydantic))
                 .collect()
         } else {
@@ -124,7 +124,7 @@ fn reserved_names(
         },
         if generator_output_types.contains(&GeneratorOutputType::Typescript) {
             RESERVED_NAMES_TYPESCRIPT
-                .into_iter()
+                .iter()
                 .map(|name| (*name, GeneratorOutputType::Typescript))
                 .collect()
         } else {

@@ -9,7 +9,7 @@ use internal_baml_schema_ast::ast::{
 
 use crate::validate::validation_pipeline::context::Context;
 
-fn errors_with_names<'a>(ctx: &'a mut Context<'_>, idn: &Identifier) {
+fn errors_with_names(ctx: &mut Context<'_>, idn: &Identifier) {
     // Push the error with the appropriate message
     ctx.push_error(DatamodelError::new_type_not_found_error(
         idn.name(),
@@ -55,7 +55,7 @@ fn validate_type_allowed(ctx: &mut Context<'_>, field_type: &FieldType) {
         FieldType::Map(arity, kv_types, ..) => {
             if arity.is_optional() {
                 ctx.push_error(DatamodelError::new_validation_error(
-                    format!("Maps are not allowed to be optional").as_str(),
+                    "Maps are not allowed to be optional",
                     field_type.span().clone(),
                 ));
             }
@@ -120,7 +120,7 @@ fn validate_type_allowed(ctx: &mut Context<'_>, field_type: &FieldType) {
         FieldType::List(arity, field_type, ..) => {
             if arity.is_optional() {
                 ctx.push_error(DatamodelError::new_validation_error(
-                    format!("Lists are not allowed to be optional").as_str(),
+                    "Lists are not allowed to be optional",
                     field_type.span().clone(),
                 ));
             }

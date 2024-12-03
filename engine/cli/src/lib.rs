@@ -10,5 +10,5 @@ use anyhow::Result;
 use clap::Parser;
 
 pub fn run_cli(argv: Vec<String>, caller_type: baml_runtime::RuntimeCliDefaults) -> Result<()> {
-    commands::RuntimeCli::parse_from(argv.into_iter()).run(caller_type)
+    commands::RuntimeCli::parse_from(argv).run(caller_type)
 }

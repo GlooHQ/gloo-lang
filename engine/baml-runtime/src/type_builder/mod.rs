@@ -73,6 +73,12 @@ impl ClassPropertyBuilder {
     }
 }
 
+impl Default for ClassBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ClassBuilder {
     pub fn new() -> Self {
         Self {
@@ -103,6 +109,12 @@ pub struct EnumValueBuilder {
 }
 impl_meta!(EnumValueBuilder);
 
+impl Default for EnumBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EnumBuilder {
     pub fn new() -> Self {
         Self {
@@ -124,7 +136,7 @@ impl EnumBuilder {
 impl std::fmt::Debug for TypeBuilder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // Start the debug printout with the struct name
-        write!(f, "TypeBuilder {{\n")?;
+        writeln!(f, "TypeBuilder {{")?;
 
         // Safely attempt to acquire the lock and print classes
         write!(f, "  classes: ")?;
@@ -133,9 +145,9 @@ impl std::fmt::Debug for TypeBuilder {
                 // We iterate through the keys only to avoid deadlocks and because we might not be able to print the values
                 // safely without deep control over locking mechanisms
                 let keys: Vec<_> = classes.keys().collect();
-                write!(f, "{:?},\n", keys)?
+                writeln!(f, "{:?},", keys)?
             }
-            Err(_) => write!(f, "Cannot acquire lock,\n")?,
+            Err(_) => writeln!(f, "Cannot acquire lock,")?,
         }
 
         // Safely attempt to acquire the lock and print enums
@@ -144,9 +156,9 @@ impl std::fmt::Debug for TypeBuilder {
             Ok(enums) => {
                 // Similarly, print only the keys
                 let keys: Vec<_> = enums.keys().collect();
-                write!(f, "{:?}\n", keys)?
+                writeln!(f, "{:?}", keys)?
             }
-            Err(_) => write!(f, "Cannot acquire lock,\n")?,
+            Err(_) => writeln!(f, "Cannot acquire lock,")?,
         }
 
         // Close the struct printout
@@ -158,6 +170,12 @@ impl std::fmt::Debug for TypeBuilder {
 pub struct TypeBuilder {
     classes: Arc<Mutex<IndexMap<String, Arc<Mutex<ClassBuilder>>>>>,
     enums: Arc<Mutex<IndexMap<String, Arc<Mutex<EnumBuilder>>>>>,
+}
+
+impl Default for TypeBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TypeBuilder {

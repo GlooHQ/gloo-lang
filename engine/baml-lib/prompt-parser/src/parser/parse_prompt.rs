@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::{assert_correct_parser, ast::*, unreachable_rule};
 use internal_baml_diagnostics::{DatamodelError, Diagnostics, Span};
@@ -22,10 +22,10 @@ fn pretty_print<'a>(pair: pest::iterators::Pair<'a, Rule>, indent_level: usize) 
 }
 
 pub fn parse_prompt(
-    root_path: &PathBuf,
+    root_path: &Path,
     raw_string: &RawString,
 ) -> Result<(PromptAst, Diagnostics), Diagnostics> {
-    let mut diagnostics = Diagnostics::new(root_path.clone());
+    let mut diagnostics = Diagnostics::new(root_path.to_path_buf());
 
     // Do not set diagnostics source here. Instead we should always use:
     // raw_string.to_span(...)

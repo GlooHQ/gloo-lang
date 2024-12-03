@@ -24,16 +24,7 @@ pub enum Identifier {
     Invalid(String, Span),
 }
 
-impl Identifier {
-    pub fn to_string(&self) -> String {
-        match self {
-            Identifier::ENV(s, _) => format!("env.{s}"),
-            Identifier::Ref(ref_identifier, _) => ref_identifier.full_name.clone(),
-            Identifier::Local(s, _) => s.clone(),
-            Identifier::String(s, _) => s.clone(),
-            Identifier::Invalid(s, _) => s.clone(),
-        }
-    }
+impl Identifier 
     pub fn is_valid_type(&self) -> bool {
         match self {
             Identifier::ENV(_, _) => false,
@@ -131,6 +122,12 @@ impl From<(&str, Span)> for Identifier {
 
 impl Display for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_string())
+        match self {
+            Identifier::ENV(s, _) => write!(f, "env.{s}"),
+            Identifier::Ref(ref_identifier, _) => f.write_str(&ref_identifier.full_name),
+            Identifier::Local(s, _) => f.write_str(s),
+            Identifier::String(s, _) => f.write_str(s),
+            Identifier::Invalid(s, _) => f.write_str(s),
+        }
     }
 }

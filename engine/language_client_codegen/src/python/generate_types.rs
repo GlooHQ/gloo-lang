@@ -7,7 +7,8 @@ use crate::{field_type_attributes, type_check_attributes, TypeCheckAttributes};
 
 use super::python_language_features::ToPython;
 use internal_baml_core::ir::{
-    repr::{Docstring, IntermediateRepr}, ClassWalker, EnumWalker, FieldType, IRHelper,
+    repr::{Docstring, IntermediateRepr},
+    ClassWalker, EnumWalker, FieldType, IRHelper,
 };
 
 #[derive(askama::Template)]
@@ -39,7 +40,6 @@ struct PythonClass<'ir> {
     fields: Vec<(Cow<'ir, str>, String, Option<String>)>,
     dynamic: bool,
 }
-
 
 #[derive(askama::Template)]
 #[template(path = "partial_types.py.j2", escape = "none")]
@@ -93,9 +93,9 @@ impl<'ir> From<EnumWalker<'ir>> for PythonEnum<'ir> {
                 .elem
                 .values
                 .iter()
-                .map(|v| (v.0.elem.0.as_str(), v.1.as_ref().map(|d| render_docstring(d))))
+                .map(|v| (v.0.elem.0.as_str(), v.1.as_ref().map(render_docstring)))
                 .collect(),
-            docstring: e.item.elem.docstring.as_ref().map(|s| render_docstring(s))
+            docstring: e.item.elem.docstring.as_ref().map(render_docstring),
         }
     }
 }
@@ -115,13 +115,13 @@ impl<'ir> From<ClassWalker<'ir>> for PythonClass<'ir> {
                         Cow::Borrowed(f.elem.name.as_str()),
                         add_default_value(
                             &f.elem.r#type.elem,
-                            &f.elem.r#type.elem.to_type_ref(&c.db),
+                            &f.elem.r#type.elem.to_type_ref(c.db),
                         ),
-                        f.elem.docstring.as_ref().map(|d| render_docstring(d)),
+                        f.elem.docstring.as_ref().map(render_docstring),
                     )
                 })
                 .collect(),
-            docstring: c.item.elem.docstring.as_ref().map(|d| render_docstring(d)),
+            docstring: c.item.elem.docstring.as_ref().map(render_docstring),
         }
     }
 }
@@ -154,22 +154,22 @@ impl<'ir> From<ClassWalker<'ir>> for PartialPythonClass<'ir> {
                         f.elem.name.as_str(),
                         add_default_value(
                             &f.elem.r#type.elem,
-                            &f.elem.r#type.elem.to_partial_type_ref(&c.db, false),
+                            &f.elem.r#type.elem.to_partial_type_ref(c.db, false),
                         ),
-                        f.elem.docstring.as_ref().map(|d| render_docstring(d)),
+                        f.elem.docstring.as_ref().map(render_docstring),
                     )
                 })
                 .collect(),
-            docstring: c.item.elem.docstring.as_ref().map(|d| render_docstring(d)),
+            docstring: c.item.elem.docstring.as_ref().map(render_docstring),
         }
     }
 }
 
 pub fn add_default_value(node: &FieldType, type_str: &String) -> String {
     if type_str.starts_with("Optional[") {
-        return format!("{} = None", type_str);
+        format!("{} = None", type_str)
     } else {
-        return type_str.clone();
+        type_str.clone()
     }
 }
 
@@ -183,7 +183,6 @@ pub fn type_name_for_checks(checks: &TypeCheckAttributes) -> String {
 
     format!["Literal[{check_names}]"]
 }
-
 
 /// Returns the Python `Literal` representation of `self`.
 pub fn to_python_literal(literal: &LiteralValue) -> String {

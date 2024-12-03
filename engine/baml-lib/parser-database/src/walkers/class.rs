@@ -27,7 +27,7 @@ impl<'db> ClassWalker<'db> {
     pub fn static_fields(self) -> impl ExactSizeIterator<Item = FieldWalker<'db>> {
         self.ast_type_block()
             .iter_fields()
-            .map(move |(field_id, _)| self.walk((self.id, field_id.into(), false)))
+            .map(move |(field_id, _)| self.walk((self.id, field_id, false)))
             .collect::<Vec<_>>()
             .into_iter()
     }
@@ -59,10 +59,12 @@ impl<'db> ClassWalker<'db> {
             })
     }
 
-
     /// Class docstring.
     pub fn get_documentation(&self) -> Option<String> {
-        self.ast_type_block().documentation.as_ref().map(|c| c.text.clone())
+        self.ast_type_block()
+            .documentation
+            .as_ref()
+            .map(|c| c.text.clone())
     }
 
     /// The name of the template string.
@@ -98,7 +100,8 @@ impl<'db> ClassWalker<'db> {
 
     /// Get the constraints of a class or an enum.
     pub fn get_constraints(&self, sub_type: SubType) -> Option<Vec<Constraint>> {
-        self.get_default_attributes(sub_type).map(|attrs| attrs.constraints.clone())
+        self.get_default_attributes(sub_type)
+            .map(|attrs| attrs.constraints.clone())
     }
 
     /// Arguments of the function.

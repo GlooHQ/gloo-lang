@@ -275,14 +275,10 @@ fn test_output_format() {
     );
 }
 
-
 #[test]
 fn sum_filter() {
     let types = PredefinedTypes::default(JinjaContext::Prompt);
-    assert_eq!(
-        assert_evaluates_to!(r#"[1,2,3]|sum"#, types),
-        Type::Int
-    );
+    assert_eq!(assert_evaluates_to!(r#"[1,2,3]|sum"#, types), Type::Int);
     assert_eq!(
         assert_evaluates_to!(r#"[1.1,2.1,3.2]|sum"#, types),
         Type::Float

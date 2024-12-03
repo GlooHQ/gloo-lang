@@ -118,9 +118,8 @@ fn last_value_as_number(value: &mut Value) -> Vec<&mut Value> {
         Value::Markdown(_, sub_value) => last_value_as_number(sub_value),
         Value::FixedJson(fixed_val, _fixes) => last_value_as_number(fixed_val),
         Value::AnyOf(variants, _) => variants
-            .into_iter()
-            .map(|variant| last_value_as_number(variant))
-            .flatten()
+            .iter_mut()
+            .flat_map(|variant| last_value_as_number(variant))
             .collect(),
     }
 }

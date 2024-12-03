@@ -43,23 +43,16 @@ impl TryFrom<(&ClientWalker<'_>, &RuntimeContext)> for LLMStrategyProvider {
 
     fn try_from((client, ctx): (&ClientWalker, &RuntimeContext)) -> Result<Self> {
         match &client.elem().provider {
-            ClientProvider::Strategy(strategy_client_provider) => {
-                match strategy_client_provider {
-                    StrategyClientProvider::RoundRobin => {
-                        RoundRobinStrategy::try_from((client, ctx))
-                            .map(Arc::new)
-                            .map(LLMStrategyProvider::RoundRobin)
-                    }
-                    StrategyClientProvider::Fallback => {
-                        FallbackStrategy::try_from((client, ctx)).map(LLMStrategyProvider::Fallback)
-                    }
+            ClientProvider::Strategy(strategy_client_provider) => match strategy_client_provider {
+                StrategyClientProvider::RoundRobin => RoundRobinStrategy::try_from((client, ctx))
+                    .map(Arc::new)
+                    .map(LLMStrategyProvider::RoundRobin),
+                StrategyClientProvider::Fallback => {
+                    FallbackStrategy::try_from((client, ctx)).map(LLMStrategyProvider::Fallback)
                 }
-            }
+            },
             _ => {
-            anyhow::bail!(
-                    "Unsupported strategy provider: {}",
-                    client.elem().provider,
-                )
+                anyhow::bail!("Unsupported strategy provider: {}", client.elem().provider,)
             }
         }
     }
@@ -71,15 +64,13 @@ impl TryFrom<(&ClientProperty, &RuntimeContext)> for LLMStrategyProvider {
     fn try_from((client, ctx): (&ClientProperty, &RuntimeContext)) -> Result<Self> {
         match &client.provider {
             ClientProvider::Strategy(strategy) => match strategy {
-                StrategyClientProvider::RoundRobin => {
-                    RoundRobinStrategy::try_from((client, ctx))
-                        .map(Arc::new)
-                    .map(LLMStrategyProvider::RoundRobin)
-                }
+                StrategyClientProvider::RoundRobin => RoundRobinStrategy::try_from((client, ctx))
+                    .map(Arc::new)
+                    .map(LLMStrategyProvider::RoundRobin),
                 StrategyClientProvider::Fallback => {
                     FallbackStrategy::try_from((client, ctx)).map(LLMStrategyProvider::Fallback)
                 }
-            }
+            },
             other => {
                 let options = ["round-robin", "fallback"];
                 anyhow::bail!(

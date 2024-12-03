@@ -66,13 +66,13 @@ pub trait ToProviderMessage: WithClient {
     ) -> Result<Map<String, serde_json::Value>>;
 }
 
-fn merge_messages(chat: &Vec<RenderedChatMessage>) -> Vec<RenderedChatMessage> {
-    let mut chat = chat.clone();
+fn merge_messages(chat: &[RenderedChatMessage]) -> Vec<RenderedChatMessage> {
+    let mut chat = chat.to_owned();
     let mut i = 0;
     while i < chat.len() - 1 {
         let (left, right) = chat.split_at_mut(i + 1);
         if left[i].role == right[0].role && !right[0].allow_duplicate_role {
-            left[i].parts.extend(right[0].parts.drain(..));
+            left[i].parts.append(&mut right[0].parts);
             chat.remove(i + 1);
         } else {
             i += 1;
@@ -84,7 +84,7 @@ fn merge_messages(chat: &Vec<RenderedChatMessage>) -> Vec<RenderedChatMessage> {
 pub trait ToProviderMessageExt: ToProviderMessage {
     fn chat_to_message(
         &self,
-        chat: &Vec<RenderedChatMessage>,
+        chat: &[RenderedChatMessage],
     ) -> Result<Map<String, serde_json::Value>>;
 
     fn part_to_message(
@@ -96,7 +96,7 @@ pub trait ToProviderMessageExt: ToProviderMessage {
             ChatMessagePart::Text(t) => self.to_chat_message(content, t),
             ChatMessagePart::Media(m) => self.to_media_message(content, m),
             ChatMessagePart::WithMeta(p, meta) => {
-                let mut content = self.part_to_message(content, &p)?;
+                let mut content = self.part_to_message(content, p)?;
                 for (k, v) in meta {
                     if self.model_features().allowed_metadata.is_allowed(k) {
                         content.insert(k.clone(), v.clone());
@@ -109,12 +109,12 @@ pub trait ToProviderMessageExt: ToProviderMessage {
 
     fn parts_to_message(
         &self,
-        parts: &Vec<ChatMessagePart>,
+        parts: &[ChatMessagePart],
     ) -> Result<Vec<Map<String, serde_json::Value>>> {
-        Ok(parts
+        parts
             .iter()
             .map(|p| self.part_to_message(Map::new(), p))
-            .collect::<Result<Vec<_>>>()?)
+            .collect::<Result<Vec<_>>>()
     }
 }
 
@@ -136,7 +136,7 @@ pub trait WithRenderRawCurl {
     async fn render_raw_curl(
         &self,
         ctx: &RuntimeContext,
-        prompt: &Vec<RenderedChatMessage>,
+        prompt: &[RenderedChatMessage],
         render_settings: RenderCurlSettings,
     ) -> Result<String>;
 }
@@ -241,21 +241,18 @@ where
 
         if features.anthropic_system_constraints {
             // Do some more fixes.
-            match &mut prompt {
-                RenderedPrompt::Chat(chat) => {
-                    if chat.len() == 1 && chat[0].role == "system" {
-                        // If there is only one message and it is a system message, change it to a user message, because anthropic always requires a user message.
-                        chat[0].role = "user".into();
-                    } else {
-                        // Otherwise, proceed with the existing logic for other messages.
-                        chat.iter_mut().skip(1).for_each(|c| {
-                            if c.role == "system" {
-                                c.role = "assistant".into();
-                            }
-                        });
-                    }
+            if let RenderedPrompt::Chat(chat) = &mut prompt {
+                if chat.len() == 1 && chat[0].role == "system" {
+                    // If there is only one message and it is a system message, change it to a user message, because anthropic always requires a user message.
+                    chat[0].role = "user".into();
+                } else {
+                    // Otherwise, proceed with the existing logic for other messages.
+                    chat.iter_mut().skip(1).for_each(|c| {
+                        if c.role == "system" {
+                            c.role = "assistant".into();
+                        }
+                    });
                 }
-                _ => {}
             }
         }
 
@@ -270,7 +267,7 @@ where
     async fn render_raw_curl(
         &self,
         ctx: &RuntimeContext,
-        prompt: &Vec<internal_baml_jinja::RenderedChatMessage>,
+        prompt: &[internal_baml_jinja::RenderedChatMessage],
         render_settings: RenderCurlSettings,
     ) -> Result<String> {
         let chat_messages: Vec<RenderedChatMessage> = process_media_urls(
@@ -317,7 +314,7 @@ pub trait SseResponseTrait {
     fn response_stream(
         &self,
         resp: reqwest::Response,
-        prompt: &Vec<internal_baml_jinja::RenderedChatMessage>,
+        prompt: &[internal_baml_jinja::RenderedChatMessage],
         system_start: web_time::SystemTime,
         instant_start: web_time::Instant,
     ) -> StreamResponse;
@@ -399,13 +396,14 @@ async fn process_media_urls(
     resolve_files: bool,
     render_settings: Option<RenderCurlSettings>,
     ctx: &RuntimeContext,
-    chat: &Vec<RenderedChatMessage>,
+    chat: &[RenderedChatMessage],
 ) -> Result<Vec<RenderedChatMessage>, anyhow::Error> {
     let render_settings = render_settings.unwrap_or(RenderCurlSettings {
         stream: false,
         as_shell_commands: false,
     });
-    let messages_result = futures::stream::iter(chat.iter().map(|p| {
+
+    futures::stream::iter(chat.iter().map(|p| {
         let new_parts = p
             .parts
             .iter()
@@ -418,7 +416,7 @@ async fn process_media_urls(
                     resolve_files,
                     render_settings,
                     ctx,
-                    &part,
+                    part,
                 )
                 .await
                 .map(ChatMessagePart::Media)?;
@@ -449,9 +447,7 @@ async fn process_media_urls(
     .collect::<Vec<_>>()
     .await
     .into_iter()
-    .collect::<Result<Vec<_>, _>>();
-
-    messages_result
+    .collect::<Result<Vec<_>, _>>()
 }
 
 async fn process_media(
@@ -496,13 +492,13 @@ async fn process_media(
 
             let mut mime_type = part.mime_type.clone();
 
-            if mime_type == None {
+            if mime_type.is_none() {
                 if let Some(ext) = media_file.extension() {
                     mime_type = Some(format!("{}/{}", part.media_type, ext));
                 }
             }
 
-            if mime_type == None {
+            if mime_type.is_none() {
                 if let Some(t) = infer::get(&bytes) {
                     mime_type = Some(t.mime_type().to_string());
                 }
@@ -545,10 +541,7 @@ async fn process_media(
             // is how it was implemented originally, and while that could be
             // problematic in theory, I'm not going to change it until a
             // customer complains.
-            match (
-                resolve_media_urls,
-                part.mime_type.as_ref().map(|s| s.as_str()),
-            ) {
+            match (resolve_media_urls, part.mime_type.as_deref()) {
                 (ResolveMediaUrls::Always, _) => {}
                 (ResolveMediaUrls::EnsureMime, Some("")) | (ResolveMediaUrls::EnsureMime, None) => {
                 }
@@ -558,7 +551,7 @@ async fn process_media(
             }
 
             let (base64, inferred_mime_type) =
-                to_base64_with_inferred_mime_type(&ctx, media_url).await?;
+                to_base64_with_inferred_mime_type(ctx, media_url).await?;
 
             Ok(BamlMedia::base64(
                 part.media_type,
@@ -598,7 +591,7 @@ async fn process_media(
 
             let mut mime_type = part.mime_type.clone();
 
-            if mime_type == None {
+            if mime_type.is_none() {
                 if let Some(t) = infer::get(&bytes) {
                     mime_type = Some(t.mime_type().to_string());
                 }
@@ -617,7 +610,7 @@ async fn to_base64_with_inferred_mime_type(
     ctx: &RuntimeContext,
     media_url: &MediaUrl,
 ) -> Result<(String, String)> {
-    if let Some((mime_type, base64)) = as_base64(&media_url.url.as_str()) {
+    if let Some((mime_type, base64)) = as_base64(media_url.url.as_str()) {
         return Ok((base64.to_string(), mime_type.to_string()));
     }
     let response = match fetch_with_proxy(&media_url.url, ctx.proxy_url()).await {
@@ -643,7 +636,7 @@ async fn to_base64_with_inferred_mime_type(
 /// fields like 'charset' will be ignored) and only base64 data URLs.
 ///
 /// See: https://fetch.spec.whatwg.org/#data-urls
-fn as_base64<'s>(maybe_base64_url: &'s str) -> Option<(&'s str, &'s str)> {
+fn as_base64(maybe_base64_url: &str) -> Option<(&str, &str)> {
     if let Some(data_url) = maybe_base64_url.strip_prefix("data:") {
         if let Some((mime_type, base64)) = data_url.split_once(";base64,") {
             return Some((mime_type, base64));

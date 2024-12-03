@@ -194,10 +194,10 @@ impl RenderOptions {
 
     // TODO: Might need a builder pattern for this as well.
     pub(crate) fn with_hoisted_class_prefix(prefix: &str) -> Self {
-        let mut render_options = Self::default();
-        render_options.hoisted_class_prefix = RenderSetting::Always(prefix.to_owned());
-
-        render_options
+        Self {
+            hoisted_class_prefix: RenderSetting::Always(prefix.to_owned()),
+            ..Default::default()
+        }
     }
 }
 
@@ -223,19 +223,19 @@ impl EnumRender {
                     RenderSetting::Always(ref prefix) => prefix,
                     RenderSetting::Never => "",
                 },
-                value.to_string()
+                value
             ));
         }
         result
     }
 }
 
-impl Attribute {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for Attribute {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(description) = &self.description {
-            format!("{}: {}", self.name, description.replace("\n", "\n  "))
+            write!(f, "{}: {}", self.name, description.replace("\n", "\n  "))
         } else {
-            self.name.clone()
+            write!(f, "{}", self.name)
         }
     }
 }
@@ -304,7 +304,7 @@ impl OutputFormatContent {
         Builder::new(target)
     }
 
-    fn prefix<'a>(&self, options: &'a RenderOptions) -> Option<String> {
+    fn prefix(&self, options: &RenderOptions) -> Option<String> {
         fn auto_prefix(
             ft: &FieldType,
             options: &RenderOptions,
@@ -603,12 +603,12 @@ impl OutputFormatContent {
 
         let mut output = String::new();
 
-        if enum_definitions.len() > 0 {
+        if !enum_definitions.is_empty() {
             output.push_str(&enum_definitions.join("\n\n"));
             output.push_str("\n\n");
         }
 
-        if class_definitions.len() > 0 {
+        if !class_definitions.is_empty() {
             output.push_str(&class_definitions.join("\n\n"));
             output.push_str("\n\n");
         }

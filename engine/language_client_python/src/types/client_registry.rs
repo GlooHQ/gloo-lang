@@ -10,6 +10,12 @@ use client_registry::ClientProvider;
 
 crate::lang_wrapper!(ClientRegistry, client_registry::ClientRegistry);
 
+impl Default for ClientRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl ClientRegistry {
     #[new]
@@ -42,11 +48,15 @@ impl ClientRegistry {
         let provider = match ClientProvider::from_str(&provider) {
             Ok(provider) => provider,
             Err(e) => {
-                return Err(BamlInvalidArgumentError::new_err(format!("Invalid provider: {:?}", e)));
+                return Err(BamlInvalidArgumentError::new_err(format!(
+                    "Invalid provider: {:?}",
+                    e
+                )));
             }
         };
 
-        let client_property = client_registry::ClientProperty::new(name, provider, retry_policy, args_map);
+        let client_property =
+            client_registry::ClientProperty::new(name, provider, retry_policy, args_map);
 
         self.inner.add_client(client_property);
         Ok(())

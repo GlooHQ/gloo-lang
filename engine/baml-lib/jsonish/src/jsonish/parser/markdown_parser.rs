@@ -12,7 +12,7 @@ pub enum MarkdownResult {
     String(String),
 }
 
-pub fn parse<'a>(str: &'a str, options: &ParseOptions) -> Result<Vec<MarkdownResult>> {
+pub fn parse(str: &str, options: &ParseOptions) -> Result<Vec<MarkdownResult>> {
     let mut values = vec![];
 
     let mut remaining = str;

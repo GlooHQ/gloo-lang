@@ -1,6 +1,8 @@
 use either::Either;
 use internal_baml_jinja_types::{PredefinedTypes, Type};
-use internal_baml_schema_ast::ast::{self, ArgumentId, BlockArgs, Span, WithIdentifier, WithName, WithSpan};
+use internal_baml_schema_ast::ast::{
+    self, ArgumentId, BlockArgs, Span, WithIdentifier, WithName, WithSpan,
+};
 
 use crate::types::TemplateStringProperties;
 
@@ -76,7 +78,6 @@ impl<'a> WithSpan for TemplateStringWalker<'a> {
         self.ast_node().span()
     }
 }
-
 
 pub type ArgWalker<'db> = super::Walker<'db, (ast::TemplateStringId, ArgumentId)>;
 

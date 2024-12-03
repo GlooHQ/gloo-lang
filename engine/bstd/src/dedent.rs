@@ -52,7 +52,6 @@ pub fn dedent(s: &str) -> DedentedString {
                 ""
             }
         })
-        .into_iter()
         .skip_while(|&l| l.is_empty())
         .collect::<Vec<_>>()
         .join("\n");
@@ -102,7 +101,7 @@ back to first level"#;
 
     #[test]
     fn test_empty_lines() {
-        let input = vec!["", "        line1", "", "        ", "        line2"].join("\n");
+        let input = ["", "        line1", "", "        ", "        line2"].join("\n");
         let expected = r#"line1
 
 

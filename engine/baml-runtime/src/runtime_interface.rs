@@ -20,7 +20,7 @@ use crate::{RenderCurlSettings, RuntimeContextManager};
 
 pub(crate) trait RuntimeConstructor {
     #[cfg(not(target_arch = "wasm32"))]
-    fn from_directory(dir: &std::path::PathBuf) -> Result<InternalBamlRuntime>;
+    fn from_directory(dir: &std::path::Path) -> Result<InternalBamlRuntime>;
 
     fn from_file_content<T: AsRef<str>>(
         root_path: &str,
@@ -145,7 +145,7 @@ pub trait InternalRuntimeInterface {
         &self,
         function_name: &str,
         ctx: &RuntimeContext,
-        prompt: &Vec<internal_baml_jinja::RenderedChatMessage>,
+        prompt: &[internal_baml_jinja::RenderedChatMessage],
         render_settings: RenderCurlSettings,
         node_index: Option<usize>,
     ) -> Result<String>;
@@ -164,6 +164,6 @@ pub trait InternalRuntimeInterface {
         &self,
         function_name: &str,
         test_name: &str,
-        ctx: &RuntimeContext
+        ctx: &RuntimeContext,
     ) -> Result<Vec<Constraint>>;
 }

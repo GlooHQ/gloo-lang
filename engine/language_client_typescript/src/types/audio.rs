@@ -62,7 +62,7 @@ impl BamlAudio {
                 "base64": base64.base64,
                 "media_type": self.inner.mime_type.clone().unwrap_or("".to_string())
             }),
-            _ => format!("Unknown BamlAudioPy variant").into(),
+            _ => "Unknown BamlAudioPy variant".into(),
         })
     }
 }

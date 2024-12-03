@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::{
     parse_template_string::parse_template_string,
@@ -26,10 +26,10 @@ fn pretty_print<'a>(pair: pest::iterators::Pair<'a, Rule>, indent_level: usize) 
 /// Parse a PSL string and return its AST.
 /// It validates some basic things on the AST like name conflicts. Further validation is in baml-core
 pub fn parse_schema(
-    root_path: &PathBuf,
+    root_path: &Path,
     source: &SourceFile,
 ) -> Result<(SchemaAst, Diagnostics), Diagnostics> {
-    let mut diagnostics = Diagnostics::new(root_path.clone());
+    let mut diagnostics = Diagnostics::new(root_path.to_path_buf());
     diagnostics.set_source(source);
 
     if !source.path().ends_with(".baml") {
@@ -167,8 +167,21 @@ pub fn parse_schema(
     }
 }
 
+fn get_expected_from_error(positives: &[Rule]) -> String {
+    use std::fmt::Write as _;
+    let mut out = String::with_capacity(positives.len() * 6);
+
+    for positive in positives {
+        write!(out, "{positive:?}").unwrap();
+    }
+
+    out
+}
+
 #[cfg(test)]
 mod tests {
+
+    use std::path::Path;
 
     use super::parse_schema;
     use crate::ast::*; // Add this line to import the ast module
@@ -187,7 +200,7 @@ mod tests {
         let root_path = "test_file.baml";
         let source = SourceFile::new_static(root_path.into(), input);
 
-        let result = parse_schema(&root_path.into(), &source);
+        let result = parse_schema(Path::new(root_path), &source);
 
         assert!(result.is_ok());
         let (schema_ast, _) = result.unwrap();
@@ -243,7 +256,7 @@ mod tests {
         let root_path = "example_file.baml";
         let source = SourceFile::new_static(root_path.into(), input);
 
-        let result = parse_schema(&root_path.into(), &source).unwrap();
+        let result = parse_schema(Path::new(root_path), &source).unwrap();
         assert_eq!(result.1.errors().len(), 0);
     }
 
@@ -273,7 +286,7 @@ mod tests {
         "##;
         let root_path = "a.baml";
         let source = SourceFile::new_static(root_path.into(), input);
-        let schema = parse_schema(&root_path.into(), &source).unwrap().0;
+        let schema = parse_schema(Path::new(root_path), &source).unwrap().0;
         let mut tops = schema.iter_tops();
         let foo_top = tops.next().unwrap().1;
         match foo_top {
@@ -343,15 +356,4 @@ mod tests {
             }
         }
     }
-}
-
-fn get_expected_from_error(positives: &[Rule]) -> String {
-    use std::fmt::Write as _;
-    let mut out = String::with_capacity(positives.len() * 6);
-
-    for positive in positives {
-        write!(out, "{positive:?}").unwrap();
-    }
-
-    out
 }

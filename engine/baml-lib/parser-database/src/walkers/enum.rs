@@ -59,7 +59,7 @@ impl<'db> EnumValueWalker<'db> {
 
 impl<'db> WithSpan for EnumValueWalker<'db> {
     fn span(&self) -> &internal_baml_diagnostics::Span {
-        &self.r#enum().ast_type_block()[self.id.1].span()
+        self.r#enum().ast_type_block()[self.id.1].span()
     }
 }
 

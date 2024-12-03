@@ -34,7 +34,7 @@ impl GenerateArgs {
             .context("Failed while searching for .baml files in baml_src/")?;
         let all_files = src_files
             .iter()
-            .map(|k| Ok((k.clone(), std::fs::read_to_string(&k)?)))
+            .map(|k| Ok((k.clone(), std::fs::read_to_string(k)?)))
             .collect::<Result<_>>()
             .context("Failed while reading .baml files in baml_src/")?;
         let generated = runtime
@@ -69,7 +69,7 @@ impl GenerateArgs {
                 .generate_client(
                     &client_type,
                     &internal_baml_codegen::GeneratorArgs::new(
-                        &output_dir_relative_to_baml_src.join("baml_client"),
+                        output_dir_relative_to_baml_src.join("baml_client"),
                         &self.from,
                         all_files.iter(),
                         version.to_string(),

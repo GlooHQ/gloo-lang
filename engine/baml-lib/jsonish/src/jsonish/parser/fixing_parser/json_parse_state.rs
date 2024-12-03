@@ -89,27 +89,20 @@ impl JsonParseState {
     }
 
     fn is_string_complete(&self) -> bool {
-        if let Some((last, _)) = self.collection_stack.last() {
-            match last {
-                JsonCollection::UnquotedString(v) => {
-                    // Check if the token is a valid json character
-                    match v.as_str() {
-                        "true" | "false" | "null" => {
-                            return true;
-                        }
-                        _ => {
-                            // Check if the token parses as a number
-                            if let Ok(_) = v.parse::<f64>() {
-                                return true;
-                            }
-                            false
-                        }
-                    }
+        let Some((JsonCollection::UnquotedString(v), _)) = self.collection_stack.last() else {
+            return false;
+        };
+
+        // Check if the token is a valid json character
+        match v.as_str() {
+            "true" | "false" | "null" => true,
+            _ => {
+                // Check if the token parses as a number
+                if v.parse::<f64>().is_ok() {
+                    return true;
                 }
-                _ => false,
+                false
             }
-        } else {
-            false
         }
     }
 
@@ -139,7 +132,7 @@ impl JsonParseState {
             0 => {
                 // in nothing, so perhaps the first '{' or '[' is the start of a new object or array
                 let mut counter = 0;
-                while let Some((idx, c)) = next.next() {
+                for (idx, c) in next.by_ref() {
                     counter = idx;
                     match c {
                         // If at some point we find a valid json character, we'll close the string
@@ -155,7 +148,7 @@ impl JsonParseState {
             2 => {
                 // in object key
                 let mut counter = 0;
-                while let Some((idx, c)) = next.next() {
+                for (idx, c) in next.by_ref() {
                     counter = idx;
                     match c {
                         ':' => return Some(idx),
@@ -263,7 +256,7 @@ impl JsonParseState {
             4 => {
                 // in array
                 let mut counter = 0;
-                while let Some((idx, c)) = next.next() {
+                for (idx, c) in next {
                     counter = idx;
                     match c {
                         ',' => return Some(idx),
@@ -420,11 +413,7 @@ impl JsonParseState {
                         // a unit test), but to fix this we need to do a bit of
                         // refactoring, so for now we'll live with it.
                         let is_triple_quoted = match next.peek() {
-                            Some((_, '"')) => match next.peek() {
-                                Some((_, '"')) => true,
-                                None => true,
-                                _ => false,
-                            },
+                            Some((_, '"')) => matches!(next.peek(), Some((_, '"')) | None),
                             None => true,
                             _ => false,
                         };
@@ -517,11 +506,7 @@ impl JsonParseState {
                         // a unit test), but to fix this we need to do a bit of
                         // refactoring, so for now we'll live with it.
                         let is_triple_quoted = match next.peek() {
-                            Some((_, '`')) => match next.peek() {
-                                Some((_, '`')) => true,
-                                None => true,
-                                _ => false,
-                            },
+                            Some((_, '`')) => matches!(next.peek(), Some((_, '`')) | None),
                             None => true,
                             _ => false,
                         };
@@ -737,6 +722,6 @@ impl JsonParseState {
             }
         };
 
-        return Ok(0);
+        Ok(0)
     }
 }

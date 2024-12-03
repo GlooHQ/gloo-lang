@@ -13,18 +13,21 @@ pub enum TypeValue {
     Null,
     Media(BamlMediaType),
 }
-impl TypeValue {
-    pub fn from_str(s: &str) -> Option<TypeValue> {
-        match s {
-            "string" => Some(TypeValue::String),
-            "int" => Some(TypeValue::Int),
-            "float" => Some(TypeValue::Float),
-            "bool" => Some(TypeValue::Bool),
-            "null" => Some(TypeValue::Null),
-            "image" => Some(TypeValue::Media(BamlMediaType::Image)),
-            "audio" => Some(TypeValue::Media(BamlMediaType::Audio)),
-            _ => None,
-        }
+
+impl std::str::FromStr for TypeValue {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "string" => TypeValue::String,
+            "int" => TypeValue::Int,
+            "float" => TypeValue::Float,
+            "bool" => TypeValue::Bool,
+            "null" => TypeValue::Null,
+            "image" => TypeValue::Media(BamlMediaType::Image),
+            "audio" => TypeValue::Media(BamlMediaType::Audio),
+            _ => return Err(()),
+        })
     }
 }
 
@@ -119,9 +122,9 @@ impl std::fmt::Display for FieldType {
                         .join(", ")
                 )
             }
-            FieldType::Map(k, v) => write!(f, "map<{}, {}>", k.to_string(), v.to_string()),
-            FieldType::List(t) => write!(f, "{}[]", t.to_string()),
-            FieldType::Optional(t) => write!(f, "{}?", t.to_string()),
+            FieldType::Map(k, v) => write!(f, "map<{k}, {v}>"),
+            FieldType::List(t) => write!(f, "{t}[]"),
+            FieldType::Optional(t) => write!(f, "{t}?"),
             FieldType::Constrained { base, .. } => base.fmt(f),
         }
     }

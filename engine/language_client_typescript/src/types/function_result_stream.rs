@@ -79,8 +79,8 @@ impl FunctionResultStream {
         };
 
         let ctx_mng = rctx.inner.clone();
-        let tb = self.tb.as_ref().map(|tb| tb.clone());
-        let cb = self.cb.as_ref().map(|cb| cb.clone());
+        let tb = self.tb.clone();
+        let cb = self.cb.clone();
 
         let fut = async move {
             let ctx_mng = ctx_mng;
@@ -89,9 +89,7 @@ impl FunctionResultStream {
                 .await
                 .run(on_event, &ctx_mng, tb.as_ref(), cb.as_ref())
                 .await;
-            res.0
-                .map(FunctionResult::from)
-                .map_err(|e| from_anyhow_error(e))
+            res.0.map(FunctionResult::from).map_err(from_anyhow_error)
         };
 
         env.execute_tokio_future(fut, |&mut _, data| Ok(data))

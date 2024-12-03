@@ -7,9 +7,9 @@
     strum::EnumString,
     strum::VariantArray,
     strum::VariantNames,
+    PartialEq,
+    Eq,
 )]
-
-#[derive(PartialEq, Eq)]
 pub enum GeneratorOutputType {
     #[strum(serialize = "rest/openapi")]
     OpenApi,
@@ -29,7 +29,6 @@ impl std::hash::Hash for GeneratorOutputType {
         core::mem::discriminant(self).hash(state);
     }
 }
-
 
 impl GeneratorOutputType {
     pub fn default_client_mode(&self) -> GeneratorDefaultClientMode {

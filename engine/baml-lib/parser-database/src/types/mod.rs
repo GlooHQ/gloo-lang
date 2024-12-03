@@ -100,7 +100,7 @@ impl Hash for PromptVariable {
     }
 }
 
-impl<'a> PromptVariable {
+impl PromptVariable {
     /// Unique Key
     pub fn key(&self) -> String {
         match self {
@@ -350,7 +350,7 @@ fn visit_function<'db>(idx: ValExpId, function: &'db ast::ValueExprBlock, ctx: &
     let input_deps = function
         .input()
         .map(|input| input.flat_idns())
-        .unwrap_or_else(Vec::new)
+        .unwrap_or_default()
         .iter()
         .map(|f| f.name().to_string())
         .collect::<HashSet<_>>();
@@ -531,13 +531,10 @@ fn visit_client<'db>(idx: ValExpId, client: &'db ast::ValueExprBlock, ctx: &mut 
                             options,
                         },
                     );
-                },
+                }
                 Err(errors) => {
                     for error in errors {
-                        ctx.push_error(DatamodelError::new_client_error(
-                            error.message,
-                            error.span,
-                        ));
+                        ctx.push_error(DatamodelError::new_client_error(error.message, error.span));
                     }
                 }
             }

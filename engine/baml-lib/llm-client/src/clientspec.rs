@@ -218,8 +218,7 @@ impl UnresolvedAllowedRoleMetadata {
             Self::Value(role) => role.required_env_vars(),
             Self::Only(roles) => roles
                 .iter()
-                .map(|role| role.required_env_vars())
-                .flatten()
+                .flat_map(|role| role.required_env_vars())
                 .collect(),
             _ => HashSet::new(),
         }

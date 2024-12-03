@@ -189,15 +189,12 @@ pub(crate) fn parse_field_type_with_attr(
     match field_type {
         Some(mut ft) => {
             // ft.set_attributes(field_attributes);
-            match &mut ft {
-                FieldType::Union(_arity, ref mut _variants, _, _) => {
-                    reassociate_union_attributes(&mut ft);
+            if let FieldType::Union(_arity, ref mut _variants, _, _) = &mut ft {
+                reassociate_union_attributes(&mut ft);
 
-                    // if let Some(attributes) = attributes.as_ref() {
-                    //     ft.set_attributes(attributes.clone()); // Clone the borrowed `Vec<Attribute>`
-                    // }
-                }
-                _ => {}
+                // if let Some(attributes) = attributes.as_ref() {
+                //     ft.set_attributes(attributes.clone()); // Clone the borrowed `Vec<Attribute>`
+                // }
             }
             ft.extend_attributes(field_attributes);
 
