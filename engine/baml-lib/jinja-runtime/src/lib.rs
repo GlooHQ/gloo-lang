@@ -701,7 +701,7 @@ mod render_tests {
                     name: "gpt4".to_string(),
                     provider: "openai".to_string(),
                     default_role: "system".to_string(),
-                    allowed_roles: vec!["system".to_string()],
+                    allowed_roles: vec!["system".to_string(), "john doe".to_string()],
                 },
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
@@ -1072,7 +1072,7 @@ mod render_tests {
                     name: "gpt4".to_string(),
                     provider: "openai".to_string(),
                     default_role: "system".to_string(),
-                    allowed_roles: vec!["system".to_string()],
+                    allowed_roles: vec!["system".to_string(), "john doe".to_string()],
                 },
                 output_format: OutputFormatContent::new_string(),
                 tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
@@ -1107,6 +1107,91 @@ mod render_tests {
                 },
                 RenderedChatMessage {
                     role: "john doe".to_string(),
+                    allow_duplicate_role: false,
+                    parts: vec![ChatMessagePart::Text(
+                        "End the haiku with a line about your maker, openai.".to_string()
+                    )]
+                }
+            ])
+        );
+
+        Ok(())
+    }
+
+
+    #[test]
+    fn render_with_kwargs_default_role() -> anyhow::Result<()> {
+        setup_logging();
+
+        let args: BamlValue = BamlValue::Map(BamlMap::from([(
+            "haiku_subject".to_string(),
+            BamlValue::String("sakura".to_string()),
+        )]));
+
+        let ir = make_test_ir(
+            "
+            class C {
+                
+            }
+            ",
+        )?;
+
+        let rendered = render_prompt(
+            r#"
+
+                    You are an assistant that always responds
+                    in a very excited way with emojis
+                    and also outputs this word 4 times
+                    after giving a response: {{ haiku_subject }}
+
+                    {{ _.chat(role=ctx.tags.ROLE) }}
+
+                    Tell me a haiku about {{ haiku_subject }}. {{ ctx.output_format }}
+
+                    {{ _.chat("user") }}
+                    End the haiku with a line about your maker, {{ ctx.client.provider }}.
+            "#,
+            &args,
+            RenderContext {
+                client: RenderContext_Client {
+                    name: "gpt4".to_string(),
+                    provider: "openai".to_string(),
+                    default_role: "system".to_string(),
+                    allowed_roles: vec!["system".to_string(), "user".to_string()],
+                },
+                output_format: OutputFormatContent::new_string(),
+                tags: HashMap::from([("ROLE".to_string(), BamlValue::String("john doe".into()))]),
+            },
+            &[],
+            &ir,
+            &HashMap::new(),
+        )?;
+
+        assert_eq!(
+            rendered,
+            RenderedPrompt::Chat(vec![
+                RenderedChatMessage {
+                    role: "system".to_string(),
+                    allow_duplicate_role: false,
+                    parts: vec![ChatMessagePart::Text(
+                        [
+                            "You are an assistant that always responds",
+                            "in a very excited way with emojis",
+                            "and also outputs this word 4 times",
+                            "after giving a response: sakura"
+                        ]
+                        .join("\n")
+                    )]
+                },
+                RenderedChatMessage {
+                    role: "system".to_string(),
+                    allow_duplicate_role: false,
+                    parts: vec![ChatMessagePart::Text(
+                        "Tell me a haiku about sakura.".to_string()
+                    )]
+                },
+                RenderedChatMessage {
+                    role: "user".to_string(),
                     allow_duplicate_role: false,
                     parts: vec![ChatMessagePart::Text(
                         "End the haiku with a line about your maker, openai.".to_string()
