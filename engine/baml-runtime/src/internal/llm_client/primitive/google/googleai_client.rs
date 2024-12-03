@@ -209,6 +209,7 @@ impl GoogleAIClient {
                 name: client.name().into(),
                 provider: client.elem().provider.to_string(),
                 default_role: properties.default_role(),
+                allowed_roles: properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -236,6 +237,7 @@ impl GoogleAIClient {
                 name: client.name.clone(),
                 provider: client.provider.to_string(),
                 default_role: properties.default_role(),
+                allowed_roles: properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -308,7 +310,7 @@ impl RequestBuilder for GoogleAIClient {
 }
 
 impl WithChat for GoogleAIClient {
-    async fn chat(&self, _ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse {
+    async fn chat(&self, _ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse {
         //non-streaming, complete response is returned
         let (response, system_now, instant_now) =
             match make_parsed_request::<GoogleResponse>(self, either::Either::Right(prompt), false)
@@ -338,7 +340,7 @@ impl WithChat for GoogleAIClient {
             return LLMResponse::LLMFailure(LLMErrorResponse {
                 client: self.context.name.to_string(),
                 model: None,
-                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
                 start_time: system_now,
                 request_options: self.properties.properties.clone(),
                 latency: instant_now.elapsed(),
@@ -349,7 +351,7 @@ impl WithChat for GoogleAIClient {
 
         LLMResponse::Success(LLMCompleteResponse {
             client: self.context.name.to_string(),
-            prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+            prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
             content: content.parts[0].text.clone(),
             start_time: system_now,
             latency: instant_now.elapsed(),

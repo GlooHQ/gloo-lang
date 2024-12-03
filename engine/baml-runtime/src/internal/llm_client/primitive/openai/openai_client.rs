@@ -157,7 +157,7 @@ impl WithNoCompletion for OpenAIClient {}
 // }
 
 impl WithChat for OpenAIClient {
-    async fn chat(&self, _ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse {
+    async fn chat(&self, _ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse {
         let (response, system_start, instant_start) =
             match make_parsed_request::<ChatCompletionResponse>(
                 self,
@@ -406,6 +406,7 @@ macro_rules! make_openai_client {
                 name: $client.name.clone(),
                 provider: $client.provider.to_string(),
                 default_role: $properties.default_role(),
+                allowed_roles: $properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -427,6 +428,7 @@ macro_rules! make_openai_client {
                 name: $client.name().into(),
                 provider: $client.elem().provider.to_string(),
                 default_role: $properties.default_role(),
+                allowed_roles: $properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,

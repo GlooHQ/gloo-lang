@@ -268,6 +268,7 @@ impl AnthropicClient {
                 name: client.name.clone(),
                 provider: client.provider.to_string(),
                 default_role: properties.default_role(),
+                allowed_roles: properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -290,6 +291,7 @@ impl AnthropicClient {
                 name: client.name().into(),
                 provider: client.elem().provider.to_string(),
                 default_role: properties.default_role(),
+                allowed_roles: properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -368,7 +370,7 @@ impl RequestBuilder for AnthropicClient {
 }
 
 impl WithChat for AnthropicClient {
-    async fn chat(&self, _ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse {
+    async fn chat(&self, _ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse {
         let (response, system_now, instant_now) = match make_parsed_request::<
             AnthropicMessageResponse,
         >(

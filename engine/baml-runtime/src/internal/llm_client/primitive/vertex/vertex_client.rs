@@ -251,6 +251,7 @@ impl VertexClient {
                 name: client.name().into(),
                 provider: client.elem().provider.to_string(),
                 default_role: properties.default_role(),
+                allowed_roles: properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -278,6 +279,7 @@ impl VertexClient {
                 name: client.name.clone(),
                 provider: client.provider.to_string(),
                 default_role: properties.default_role(),
+                allowed_roles: properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -397,7 +399,7 @@ impl RequestBuilder for VertexClient {
 }
 
 impl WithChat for VertexClient {
-    async fn chat(&self, _ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse {
+    async fn chat(&self, _ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse {
         //non-streaming, complete response is returned
         let (response, system_now, instant_now) =
             match make_parsed_request::<VertexResponse>(self, either::Either::Right(prompt), false)

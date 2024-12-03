@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use crate::{AllowedRoleMetadata, SupportedRequestModes, UnresolvedAllowedRoleMetadata};
 use anyhow::Result;
 use crate::{
-    AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection
+    FinishReasonFilter, RolesSelection, UnresolvedFinishReasonFilter, UnresolvedRolesSelection
 };
 
 use baml_types::{EvaluationContext, StringOr, UnresolvedValue};
@@ -69,7 +69,14 @@ impl ResolvedGoogleAI {
     }
 
     pub fn default_role(&self) -> String {
-        self.role_selection.default_or_else(|| "user".to_string())
+        self.role_selection.default_or_else(|| {
+            let allowed_roles = self.allowed_roles();
+            if allowed_roles.contains(&"user".to_string()) {
+                "user".to_string()
+            } else {
+                allowed_roles.first().cloned().unwrap_or_else(|| "user".to_string())
+            }
+        })
     }
 }
 

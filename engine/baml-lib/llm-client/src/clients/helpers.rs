@@ -183,7 +183,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             })
     }
 
-    pub fn ensure_roles_selection(&mut self) -> UnresolvedRolesSelection {
+    pub(crate) fn ensure_roles_selection(&mut self) -> UnresolvedRolesSelection {
         let allowed_roles = self.ensure_allowed_roles();
         let default_role = self.ensure_default_role(allowed_roles.as_ref().unwrap_or(&vec![
             StringOr::Value("user".to_string()),
@@ -276,8 +276,8 @@ impl<Meta: Clone> PropertyHandler<Meta> {
                 )
             }
             (None, Some((_, deny, _))) => {
-                UnresolvedFinishReasonFilter::DenyList(deny.into_iter().filter_map(|v| match v.to_str() {
-                    Ok(s) => Some(s.0),
+                UnresolvedFinishReasonFilter::DenyList(deny.into_iter().filter_map(|v| match v.into_str() {
+                    Ok((s, _)) => Some(s.clone()),
                     Err(other) => {
                         self.push_error(
                                 "values in finish_reason_deny_list must be strings.",

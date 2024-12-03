@@ -78,7 +78,15 @@ impl ResolvedAwsBedrock {
     }
 
     pub fn default_role(&self) -> String {
-        self.role_selection.default_or_else(|| "user".to_string())
+        self.role_selection
+            .default_or_else(|| {
+                let allowed_roles = self.allowed_roles();
+                if allowed_roles.contains(&"user".to_string()) {
+                    "user".to_string()
+                } else {
+                    allowed_roles.first().cloned().unwrap_or_else(|| "user".to_string())
+                }
+            })
     }
 }
 
@@ -201,11 +209,11 @@ impl UnresolvedAwsBedrock {
                         }),
                         "stop_sequences" => inference_config.stop_sequences = match v.into_array() {
                             Ok((stop_sequences, _)) => Some(stop_sequences.into_iter().filter_map(|s| match s.into_str() {
-                                Ok((s, _)) => Some(s),
-                                Err(e) => {
-                                    properties.push_error(format!("stop_sequences values must be a string: got {}", e.r#type()), e.meta().clone());
-                                    None
-                                }
+                                    Ok((s, _)) => Some(s),
+                                    Err(e) => {
+                                        properties.push_error(format!("stop_sequences values must be a string: got {}", e.r#type()), e.meta().clone());
+                                        None
+                                    }
                                 })
                                 .collect::<Vec<_>>()),
                             Err(e) => {

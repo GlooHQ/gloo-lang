@@ -72,6 +72,7 @@ impl AwsClient {
                 name: client.name.clone(),
                 provider: client.provider.to_string(),
                 default_role: properties.default_role(),
+                allowed_roles: properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -94,6 +95,7 @@ impl AwsClient {
                 name: client.name().into(),
                 provider: client.elem().provider.to_string(),
                 default_role: properties.default_role(),
+                allowed_roles: properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
