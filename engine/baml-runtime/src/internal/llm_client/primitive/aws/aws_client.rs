@@ -65,14 +65,13 @@ fn resolve_properties(
 impl AwsClient {
     pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<AwsClient> {
         let properties = resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
-        let default_role = properties.default_role.clone();
 
         Ok(Self {
             name: client.name.clone(),
             context: RenderContext_Client {
                 name: client.name.clone(),
                 provider: client.provider.to_string(),
-                default_role,
+                default_role: properties.default_role(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -87,15 +86,14 @@ impl AwsClient {
     }
 
     pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<AwsClient> {
-        let properties = resolve_properties(&client.elem().provider, client.options(), ctx)?;
-        let default_role = properties.default_role.clone(); // clone before moving
+        let properties = resolve_properties(&client.elem().provider, &client.options(), ctx)?;
 
         Ok(Self {
             name: client.name().into(),
             context: RenderContext_Client {
                 name: client.name().into(),
                 provider: client.elem().provider.to_string(),
-                default_role,
+                default_role: properties.default_role(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -281,6 +279,15 @@ impl WithClientProperties for AwsClient {
             .supported_request_modes
             .stream
             .unwrap_or(true)
+    }
+    fn finish_reason_filter(&self) -> &internal_llm_client::FinishReasonFilter {
+        &self.properties.finish_reason_filter
+    }
+    fn default_role(&self) -> String {
+        self.properties.default_role()
+    }
+    fn allowed_roles(&self) -> Vec<String> {
+        self.properties.allowed_roles()
     }
 }
 
@@ -589,13 +596,6 @@ impl AwsClient {
 }
 
 impl WithChat for AwsClient {
-    fn chat_options(&self, _ctx: &RuntimeContext) -> Result<internal_baml_jinja::ChatOptions> {
-        Ok(internal_baml_jinja::ChatOptions::new(
-            self.properties.default_role.clone(),
-            None,
-        ))
-    }
-
     async fn chat(
         &self,
         _ctx: &RuntimeContext,

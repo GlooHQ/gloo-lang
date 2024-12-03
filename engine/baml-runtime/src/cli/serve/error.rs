@@ -27,6 +27,13 @@ pub enum BamlError {
         raw_output: String,
         message: String,
     },
+    #[serde(rename_all = "snake_case")]
+    FinishReasonError {
+        prompt: String,
+        raw_output: String,
+        message: String,
+        finish_reason: Option<String>,
+    },
     /// This is the only variant not documented at the aforementioned link:
     /// this is the catch-all for unclassified errors.
     #[serde(rename_all = "snake_case")]
@@ -45,6 +52,17 @@ impl BamlError {
                     prompt: prompt.to_string(),
                     raw_output: raw_output.to_string(),
                     message: message.to_string(),
+                },
+                ExposedError::FinishReasonError {
+                    prompt,
+                    raw_output,
+                    message,
+                    finish_reason,
+                } => Self::FinishReasonError {
+                    prompt: prompt.to_string(),
+                    raw_output: raw_output.to_string(),
+                    message: message.to_string(),
+                    finish_reason: finish_reason.clone(),
                 },
             }
         } else if let Some(er) = err.downcast_ref::<ScopeStack>() {
@@ -93,6 +111,7 @@ impl IntoResponse for BamlError {
             match &self {
                 BamlError::InvalidArgument { .. } => StatusCode::BAD_REQUEST,
                 BamlError::ClientError { .. } => StatusCode::BAD_GATEWAY,
+                BamlError::FinishReasonError { .. } => StatusCode::INTERNAL_SERVER_ERROR, // ??? - FIXME
                 BamlError::ValidationFailure { .. } => StatusCode::INTERNAL_SERVER_ERROR, // ??? - FIXME
                 BamlError::InternalError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
             },

@@ -218,6 +218,7 @@ pub enum TestFailReason<'a> {
     TestUnspecified(anyhow::Error),
     TestLLMFailure(&'a LLMResponse),
     TestParseFailure(&'a anyhow::Error),
+    TestFinishReasonFailed(&'a anyhow::Error),
     TestConstraintsFailure {
         checks: Vec<(String, bool)>,
         failed_assert: Option<String>,
@@ -230,6 +231,9 @@ impl PartialEq for TestFailReason<'_> {
             (Self::TestUnspecified(a), Self::TestUnspecified(b)) => a.to_string() == b.to_string(),
             (Self::TestLLMFailure(_), Self::TestLLMFailure(_)) => true,
             (Self::TestParseFailure(a), Self::TestParseFailure(b)) => {
+                a.to_string() == b.to_string()
+            }
+            (Self::TestFinishReasonFailed(a), Self::TestFinishReasonFailed(b)) => {
                 a.to_string() == b.to_string()
             }
             _ => false,
@@ -265,9 +269,13 @@ impl TestResponse {
                     }
                 }
             } else {
-                TestStatus::Fail(TestFailReason::TestParseFailure(
-                    parsed.as_ref().unwrap_err(),
-                ))
+                let err = parsed.as_ref().unwrap_err();
+                match err.downcast_ref::<crate::errors::ExposedError>() {
+                    Some(ExposedError::FinishReasonError { .. }) => {
+                        TestStatus::Fail(TestFailReason::TestFinishReasonFailed(&err))
+                    }
+                    _ => TestStatus::Fail(TestFailReason::TestParseFailure(&err)),
+                }
             }
         } else {
             TestStatus::Fail(TestFailReason::TestLLMFailure(func_res.llm_response()))

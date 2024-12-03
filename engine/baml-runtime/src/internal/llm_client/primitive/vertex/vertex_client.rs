@@ -113,6 +113,15 @@ impl WithClientProperties for VertexClient {
             .stream
             .unwrap_or(true)
     }
+    fn finish_reason_filter(&self) -> &internal_llm_client::FinishReasonFilter {
+        &self.properties.finish_reason_filter
+    }
+    fn default_role(&self) -> String {
+        self.properties.default_role()
+    }
+    fn allowed_roles(&self) -> Vec<String> {
+        self.properties.allowed_roles()
+    }
 }
 
 impl WithClient for VertexClient {
@@ -236,13 +245,12 @@ impl WithStreamChat for VertexClient {
 impl VertexClient {
     pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Self> {
         let properties = resolve_properties(&client.elem().provider, client.options(), ctx)?;
-        let default_role = properties.default_role.clone();
         Ok(Self {
             name: client.name().into(),
             context: RenderContext_Client {
                 name: client.name().into(),
                 provider: client.elem().provider.to_string(),
-                default_role,
+                default_role: properties.default_role(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -263,14 +271,13 @@ impl VertexClient {
 
     pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<Self> {
         let properties = resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
-        let default_role = properties.default_role.clone();
 
         Ok(Self {
             name: client.name.clone(),
             context: RenderContext_Client {
                 name: client.name.clone(),
                 provider: client.provider.to_string(),
-                default_role,
+                default_role: properties.default_role(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -390,14 +397,7 @@ impl RequestBuilder for VertexClient {
 }
 
 impl WithChat for VertexClient {
-    fn chat_options(&self, _ctx: &RuntimeContext) -> Result<internal_baml_jinja::ChatOptions> {
-        Ok(internal_baml_jinja::ChatOptions::new(
-            self.properties.default_role.clone(),
-            None,
-        ))
-    }
-
-    async fn chat(&self, _ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse {
+    async fn chat(&self, _ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse {
         //non-streaming, complete response is returned
         let (response, system_now, instant_now) =
             match make_parsed_request::<VertexResponse>(self, either::Either::Right(prompt), false)

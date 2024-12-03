@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::PathBuf, pin::Pin};
 
 use anyhow::{Context, Result};
 use aws_smithy_types::byte_stream::error::Error;
-use internal_llm_client::AllowedRoleMetadata;
+use internal_llm_client::{AllowedRoleMetadata, FinishReasonFilter};
 use serde_json::{json, Map};
 
 mod chat;
@@ -36,6 +36,9 @@ pub trait WithRetryPolicy {
 pub trait WithClientProperties {
     fn allowed_metadata(&self) -> &AllowedRoleMetadata;
     fn supports_streaming(&self) -> bool;
+    fn finish_reason_filter(&self) -> &FinishReasonFilter;
+    fn default_role(&self) -> String;
+    fn allowed_roles(&self) -> Vec<String>;
 }
 
 pub trait WithSingleCallable {
@@ -143,10 +146,11 @@ pub trait WithRenderRawCurl {
 
 impl<T> WithSingleCallable for T
 where
-    T: WithClient + WithChat + WithCompletion,
+    T: WithClient + WithChat + WithCompletion + WithClientProperties,
 {
     #[allow(async_fn_in_trait)]
     async fn single_call(&self, ctx: &RuntimeContext, prompt: &RenderedPrompt) -> LLMResponse {
+        log::warn!("debug single_call start: {:?}", prompt);
         if let RenderedPrompt::Chat(chat) = &prompt {
             match process_media_urls(
                 self.model_features().resolve_media_urls,

@@ -6,7 +6,7 @@ use baml_types::{BamlMap, BamlMedia, BamlMediaContent, BamlMediaType};
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{ChatMessagePart, RenderContext_Client, RenderedChatMessage};
 use internal_llm_client::openai::ResolvedOpenAI;
-use internal_llm_client::AllowedRoleMetadata;
+use internal_llm_client::{AllowedRoleMetadata, FinishReasonFilter};
 use serde_json::json;
 
 use crate::internal::llm_client::{
@@ -14,7 +14,7 @@ use crate::internal::llm_client::{
 };
 
 use super::properties;
-use super::types::{ChatCompletionResponse, ChatCompletionResponseDelta, FinishReason};
+use super::types::{ChatCompletionResponse, ChatCompletionResponseDelta};
 
 use crate::client_registry::ClientProperty;
 use crate::internal::llm_client::primitive::request::{
@@ -56,19 +56,21 @@ impl WithClientProperties for OpenAIClient {
     fn allowed_metadata(&self) -> &AllowedRoleMetadata {
         &self.properties.allowed_metadata
     }
+
+    fn finish_reason_filter(&self) -> &FinishReasonFilter {
+        &self.properties.finish_reason_filter
+    }
+
+    fn allowed_roles(&self) -> Vec<String> {
+        self.properties.allowed_roles()
+    }
+
+    fn default_role(&self) -> String {
+        self.properties.default_role()
+    }
+
     fn supports_streaming(&self) -> bool {
-        match self.properties.supported_request_modes.stream {
-            Some(v) => v,
-            None => {
-                match self.properties.properties.get("model") {
-                    Some(serde_json::Value::String(model)) => {
-                        // OpenAI's streaming is not available for o1-* models
-                        !model.starts_with("o1-")
-                    }
-                    _ => true,
-                }
-            }
-        }
+        self.properties.supports_streaming()
     }
 }
 
@@ -155,14 +157,7 @@ impl WithNoCompletion for OpenAIClient {}
 // }
 
 impl WithChat for OpenAIClient {
-    fn chat_options(&self, _ctx: &RuntimeContext) -> Result<internal_baml_jinja::ChatOptions> {
-        Ok(internal_baml_jinja::ChatOptions::new(
-            self.properties.default_role.clone(),
-            None,
-        ))
-    }
-
-    async fn chat(&self, _ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse {
+    async fn chat(&self, _ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse {
         let (response, system_start, instant_start) =
             match make_parsed_request::<ChatCompletionResponse>(
                 self,
@@ -207,16 +202,12 @@ impl WithChat for OpenAIClient {
             model: response.model,
             request_options: self.properties.properties.clone(),
             metadata: LLMCompleteResponseMetadata {
-                baml_is_complete: match response.choices.first() {
-                    Some(c) => matches!(c.finish_reason, Some(FinishReason::Stop)),
+                baml_is_complete: match response.choices.get(0) {
+                    Some(c) => c.finish_reason.as_ref().is_some_and(|f| f == "stop"),
                     None => false,
                 },
-                finish_reason: match response.choices.first() {
-                    Some(c) => match c.finish_reason {
-                        Some(FinishReason::Stop) => Some(FinishReason::Stop.to_string()),
-                        Some(other) => Some(other.to_string()),
-                        _ => None,
-                    },
+                finish_reason: match response.choices.get(0) {
+                    Some(c) => c.finish_reason.clone(),
                     None => None,
                 },
                 prompt_tokens: usage.map(|u| u.prompt_tokens),
@@ -374,18 +365,8 @@ impl SseResponseTrait for OpenAIClient {
                                 inner.content += content.as_str();
                             }
                             inner.model = event.model;
-                            match choice.finish_reason.as_ref() {
-                                Some(FinishReason::Stop) => {
-                                    inner.metadata.baml_is_complete = true;
-                                    inner.metadata.finish_reason =
-                                        Some(FinishReason::Stop.to_string());
-                                }
-                                finish_reason => {
-                                    inner.metadata.baml_is_complete = false;
-                                    inner.metadata.finish_reason =
-                                        finish_reason.as_ref().map(|r| r.to_string());
-                                }
-                            }
+                            inner.metadata.finish_reason = choice.finish_reason.clone();
+                            inner.metadata.baml_is_complete = choice.finish_reason.as_ref().is_some_and(|s| s == "stop");
                         }
                         inner.latency = instant_start.elapsed();
                         if let Some(usage) = event.usage.as_ref() {
@@ -424,7 +405,7 @@ macro_rules! make_openai_client {
             context: RenderContext_Client {
                 name: $client.name.clone(),
                 provider: $client.provider.to_string(),
-                default_role: $properties.default_role.clone(),
+                default_role: $properties.default_role(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -445,7 +426,7 @@ macro_rules! make_openai_client {
             context: RenderContext_Client {
                 name: $client.name().into(),
                 provider: $client.elem().provider.to_string(),
-                default_role: $properties.default_role.clone(),
+                default_role: $properties.default_role(),
             },
             features: ModelFeatures {
                 chat: true,

@@ -1,5 +1,6 @@
 // Run from the baml-schema-wasm folder with:
 // wasm-pack test --node
+#[cfg(target_arch = "wasm32")]
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;

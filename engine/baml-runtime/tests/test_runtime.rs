@@ -9,7 +9,7 @@ mod internal_tests {
     use baml_runtime::BamlRuntime;
     use std::sync::Once;
 
-    use baml_runtime::internal::llm_client::orchestrator::OrchestrationScope;
+    // use baml_runtime::internal::llm_client::orchestrator::OrchestrationScope;
     use baml_runtime::InternalRuntimeInterface;
     use baml_types::BamlValue;
 
@@ -255,8 +255,6 @@ mod internal_tests {
         )?;
         log::info!("Runtime:");
 
-        let missing_env_vars = runtime.internal().ir().required_env_vars();
-
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
             .create_ctx_with_default();
@@ -335,8 +333,6 @@ test ImageReceiptTest {
 }
         "##,
         )?;
-
-        let missing_env_vars = runtime.internal().ir().required_env_vars();
 
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
@@ -419,8 +415,6 @@ test TestName {
         "##,
         )?;
 
-        let missing_env_vars = runtime.internal().ir().required_env_vars();
-
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
             .create_ctx_with_default();
@@ -488,8 +482,6 @@ test TestTree {
 }
         "##,
         )?;
-
-        let missing_env_vars = runtime.internal().ir().required_env_vars();
 
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)

@@ -25,6 +25,17 @@ fn raise_baml_validation_error(prompt: String, message: String, raw_output: Stri
     })
 }
 
+#[allow(non_snake_case)]
+fn raise_baml_client_finish_reason_error(prompt: String, raw_output: String, message: String, finish_reason: Option<String>) -> PyErr {
+    Python::with_gil(|py| {
+        let internal_monkeypatch = py.import("baml_py.internal_monkeypatch").unwrap();
+        let exception = internal_monkeypatch.getattr("BamlClientFinishReasonError").unwrap();
+        let args = (prompt, message, raw_output, finish_reason);
+        let inst = exception.call1(args).unwrap();
+        PyErr::from_value(inst)
+    })
+}
+
 /// Defines the errors module with the BamlValidationError exception.
 /// IIRC the name of this function is the name of the module that pyo3 generates (errors.py)
 #[pymodule]
@@ -63,6 +74,14 @@ impl BamlError {
                     // Assuming ValidationError has fields that correspond to prompt, message, and raw_output
                     // If not, you may need to adjust this part based on the actual structure of ValidationError
                     raise_baml_validation_error(prompt.clone(), message.clone(), raw_output.clone())
+                }
+                ExposedError::FinishReasonError {
+                    prompt,
+                    raw_output,
+                    message,
+                    finish_reason,
+                } => {
+                    raise_baml_client_finish_reason_error(prompt.clone(), raw_output.clone(), message.clone(), finish_reason.clone())
                 }
             }
         } else if let Some(er) = err.downcast_ref::<ScopeStack>() {

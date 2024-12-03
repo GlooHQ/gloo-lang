@@ -58,6 +58,8 @@ const TestStatusMessage: React.FC<{ testStatus: DoneTestStatusType }> = ({ testS
       return <div className='text-vscode-testing-iconFailed'>LLM Failed</div>
     case 'parse_failed':
       return <div className='text-vscode-testing-iconFailed'>Parse Failed</div>
+    case 'finish_reason_failed':
+      return <div className='text-vscode-testing-iconFailed'>Finish Reason Failed</div>
     case 'constraints_failed':
       return <div className='text-vscode-testing-iconFailed'>Constraints Failed</div>
     case 'error':
@@ -101,9 +103,25 @@ const TestStatusIcon: React.FC<{
   )
 }
 
-type FilterValues = 'queued' | 'running' | 'error' | 'llm_failed' | 'parse_failed' | 'constraints_failed' | 'passed'
+type FilterValues =
+  | 'queued'
+  | 'running'
+  | 'error'
+  | 'llm_failed'
+  | 'parse_failed'
+  | 'constraints_failed'
+  | 'passed'
+  | 'finish_reason_failed'
 const filterAtom = atom(
-  new Set<FilterValues>(['running', 'error', 'llm_failed', 'parse_failed', 'constraints_failed', 'passed']),
+  new Set<FilterValues>([
+    'running',
+    'error',
+    'llm_failed',
+    'parse_failed',
+    'constraints_failed',
+    'passed',
+    'finish_reason_failed',
+  ]),
 )
 
 const checkFilter = (filter: Set<FilterValues>, status: TestStatusType, test_status?: DoneTestStatusType) => {
@@ -149,6 +167,17 @@ const ParsedTestResult: React.FC<{ doneStatus: string; parsed?: WasmParsedTestRe
       }
     }
   }, [parsed, hasClosedIntroToChecksDialog, setShowIntroToChecksDialog])
+
+  if (doneStatus === 'finish_reason_failed') {
+    return (
+      <div className='flex relative flex-col'>
+        <div className='flex flex-row '>Pre-parse Error</div>
+        <div className='relative px-1 py-2'>
+          {failure && <pre className='text-xs whitespace-pre-wrap text-vscode-errorForeground'>{failure}</pre>}
+        </div>
+      </div>
+    )
+  }
 
   if (doneStatus === 'parse_failed' || parsed !== undefined) {
     return (

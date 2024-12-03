@@ -226,7 +226,7 @@ impl Server {
         baml_api_key: Option<&XBamlApiKey>,
     ) -> AuthEnforcementMode {
         let Ok(password) = std::env::var("BAML_PASSWORD") else {
-            log::warn!("BAML_PASSWORD not set, skipping auth check");
+            log_once::warn_once!("BAML_PASSWORD not set, skipping auth check");
             return AuthEnforcementMode::NoEnforcement;
         };
 

@@ -5,6 +5,12 @@ pub enum ExposedError {
         raw_output: String,
         message: String,
     },
+    FinishReasonError {
+        prompt: String,
+        raw_output: String,
+        message: String,
+        finish_reason: Option<String>,
+    },
 }
 
 impl std::error::Error for ExposedError {}
@@ -21,6 +27,21 @@ impl std::fmt::Display for ExposedError {
                     f,
                     "Parsing error: {}\nPrompt: {}\nRaw Response: {}",
                     message, prompt, raw_output
+                )
+            }
+            ExposedError::FinishReasonError {
+                prompt,
+                raw_output,
+                message,
+                finish_reason,
+            } => {
+                write!(
+                    f,
+                    "Finish reason error: {}\nPrompt: {}\nRaw Response: {}\nFinish Reason: {}",
+                    message,
+                    prompt,
+                    raw_output,
+                    finish_reason.as_ref().map_or("<none>", |f| f.as_str())
                 )
             }
         }

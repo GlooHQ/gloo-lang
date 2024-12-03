@@ -219,3 +219,25 @@ impl WithStreamable for OrchestratorNode {
         self.provider.stream(ctx, prompt).await
     }
 }
+
+impl WithClientProperties for OrchestratorNode {
+    fn default_role(&self) -> String {
+        self.provider.default_role()
+    }
+
+    fn allowed_metadata(&self) -> &internal_llm_client::AllowedRoleMetadata {
+        self.provider.allowed_metadata()
+    }
+
+    fn supports_streaming(&self) -> bool {
+        self.provider.supports_streaming()
+    }
+
+    fn finish_reason_filter(&self) -> &internal_llm_client::FinishReasonFilter {
+        self.provider.finish_reason_filter()
+    }
+
+    fn allowed_roles(&self) -> Vec<String> {
+        self.provider.allowed_roles()
+    }
+}

@@ -94,6 +94,15 @@ impl WithClientProperties for LLMPrimitiveProvider {
     fn supports_streaming(&self) -> bool {
         match_llm_provider!(self, supports_streaming)
     }
+    fn finish_reason_filter(&self) -> &internal_llm_client::FinishReasonFilter {
+        match_llm_provider!(self, finish_reason_filter)
+    }
+    fn default_role(&self) -> String {
+        match_llm_provider!(self, default_role)
+    }
+    fn allowed_roles(&self) -> Vec<String> {
+        match_llm_provider!(self, allowed_roles)
+    }
 }
 
 impl TryFrom<(&ClientProperty, &RuntimeContext)> for LLMPrimitiveProvider {

@@ -75,6 +75,15 @@ impl WithClientProperties for GoogleAIClient {
             .stream
             .unwrap_or(true)
     }
+    fn finish_reason_filter(&self) -> &internal_llm_client::FinishReasonFilter {
+        &self.properties.finish_reason_filter
+    }
+    fn default_role(&self) -> String {
+        self.properties.default_role()
+    }
+    fn allowed_roles(&self) -> Vec<String> {
+        self.properties.allowed_roles()
+    }
 }
 
 impl WithClient for GoogleAIClient {
@@ -157,8 +166,8 @@ impl SseResponseTrait for GoogleAIClient {
                             }
                         };
 
-                        if let Some(choice) = event.candidates.first() {
-                            if let Some(content) = choice.content.parts.first() {
+                        if let Some(choice) = event.candidates.get(0) {
+                            if let Some(content) = choice.content.as_ref().and_then(|c| c.parts.get(0)) {
                                 inner.content += &content.text;
                             }
                             if let Some(FinishReason::Stop) = choice.finish_reason.as_ref() {
@@ -193,14 +202,13 @@ impl WithStreamChat for GoogleAIClient {
 
 impl GoogleAIClient {
     pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<Self> {
-        let properties = resolve_properties(&client.elem().provider, client.options(), ctx)?;
-        let default_role = properties.default_role.clone();
+        let properties = resolve_properties(&client.elem().provider, &client.options(), ctx)?;
         Ok(Self {
             name: client.name().into(),
             context: RenderContext_Client {
                 name: client.name().into(),
                 provider: client.elem().provider.to_string(),
-                default_role,
+                default_role: properties.default_role(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -221,14 +229,13 @@ impl GoogleAIClient {
 
     pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<Self> {
         let properties = resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
-        let default_role = properties.default_role.clone();
 
         Ok(Self {
             name: client.name.clone(),
             context: RenderContext_Client {
                 name: client.name.clone(),
                 provider: client.provider.to_string(),
-                default_role,
+                default_role: properties.default_role(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -301,14 +308,7 @@ impl RequestBuilder for GoogleAIClient {
 }
 
 impl WithChat for GoogleAIClient {
-    fn chat_options(&self, _ctx: &RuntimeContext) -> Result<internal_baml_jinja::ChatOptions> {
-        Ok(internal_baml_jinja::ChatOptions::new(
-            self.properties.default_role.clone(),
-            None,
-        ))
-    }
-
-    async fn chat(&self, _ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse {
+    async fn chat(&self, _ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse {
         //non-streaming, complete response is returned
         let (response, system_now, instant_now) =
             match make_parsed_request::<GoogleResponse>(self, either::Either::Right(prompt), false)
@@ -334,10 +334,23 @@ impl WithChat for GoogleAIClient {
             });
         }
 
+        let Some(content) = response.candidates[0].content.as_ref() else {
+            return LLMResponse::LLMFailure(LLMErrorResponse {
+                client: self.context.name.to_string(),
+                model: None,
+                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+                start_time: system_now,
+                request_options: self.properties.properties.clone(),
+                latency: instant_now.elapsed(),
+                message: "No content returned".to_string(),
+                code: ErrorCode::Other(200),
+            });
+        };
+
         LLMResponse::Success(LLMCompleteResponse {
             client: self.context.name.to_string(),
-            prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
-            content: response.candidates[0].content.parts[0].text.clone(),
+            prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+            content: content.parts[0].text.clone(),
             start_time: system_now,
             latency: instant_now.elapsed(),
             request_options: self.properties.properties.clone(),

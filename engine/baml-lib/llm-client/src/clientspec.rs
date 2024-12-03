@@ -198,6 +198,163 @@ impl SupportedRequestModes {
 }
 
 #[derive(Clone, Debug)]
+pub enum UnresolvedFinishReasonFilter {
+    All,
+    AllowList(HashSet<StringOr>),
+    DenyList(HashSet<StringOr>),
+}
+
+#[derive(Clone, Debug)]
+pub enum FinishReasonFilter {
+    All,
+    AllowList(HashSet<String>),
+    DenyList(HashSet<String>),
+}
+
+impl UnresolvedFinishReasonFilter {
+    pub fn required_env_vars(&self) -> HashSet<String> {
+        match self {
+            Self::AllowList(allow) => allow
+                .iter()
+                .map(|s| s.required_env_vars())
+                .flatten()
+                .collect(),
+            Self::DenyList(deny) => deny
+                .iter()
+                .map(|s| s.required_env_vars())
+                .flatten()
+                .collect(),
+            _ => HashSet::new(),
+        }
+    }
+
+    pub fn resolve(&self, ctx: &impl GetEnvVar) -> Result<FinishReasonFilter> {
+        match self {
+            Self::AllowList(allow) => Ok(FinishReasonFilter::AllowList(
+                allow
+                    .iter()
+                    .map(|s| s.resolve(ctx))
+                    .collect::<Result<HashSet<_>>>()?,
+            )),
+            Self::DenyList(deny) => Ok(FinishReasonFilter::DenyList(
+                deny.iter()
+                    .map(|s| s.resolve(ctx))
+                    .collect::<Result<HashSet<_>>>()?,
+            )),
+            Self::All => Ok(FinishReasonFilter::All),
+        }
+    }
+}
+
+impl FinishReasonFilter {
+    pub fn is_allowed(&self, reason: Option<impl AsRef<str>>) -> bool {
+        log::warn!(
+            "debug is_allowed: {:?} {}",
+            self,
+            reason
+                .as_ref()
+                .map(|r| r.as_ref().to_string())
+                .unwrap_or("<none>".into())
+        );
+        match self {
+            Self::AllowList(allow) => {
+                let Some(reason) = reason.map(|r| r.as_ref().to_string()) else {
+                    return false;
+                };
+                allow.contains(&reason)
+            }
+            Self::DenyList(deny) => {
+                let Some(reason) = reason.map(|r| r.as_ref().to_string()) else {
+                    return true;
+                };
+                !deny.contains(&reason)
+            }
+            Self::All => true,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct UnresolvedRolesSelection {
+    pub allowed: Option<Vec<StringOr>>,
+    pub default: Option<StringOr>,
+}
+
+impl UnresolvedRolesSelection {
+    pub fn new(allowed: Option<Vec<StringOr>>, default: Option<StringOr>) -> Self {
+        Self { allowed, default }
+    }
+
+    pub fn required_env_vars(&self) -> HashSet<String> {
+        let mut env_vars = HashSet::new();
+        if let Some(allowed) = &self.allowed {
+            env_vars.extend(allowed.iter().map(|s| s.required_env_vars()).flatten());
+        }
+        if let Some(default) = &self.default {
+            env_vars.extend(default.required_env_vars());
+        }
+        env_vars
+    }
+
+    pub fn resolve(&self, ctx: &impl GetEnvVar) -> Result<RolesSelection> {
+        let allowed = self
+            .allowed
+            .as_ref()
+            .map(|allowed| {
+                allowed
+                    .iter()
+                    .map(|s| s.resolve(ctx))
+                    .collect::<Result<Vec<_>>>()
+            })
+            .transpose()?;
+
+        let default = self
+            .default
+            .as_ref()
+            .map(|default| default.resolve(ctx))
+            .transpose()?;
+
+        match (&allowed, &default) {
+            (Some(allowed), Some(default)) => {
+                if !allowed.contains(&default) {
+                    return Err(anyhow::anyhow!("default_role must be in allowed_roles: {}. Not found in {:?}", default, allowed));
+                }
+            }
+            (None, Some(default)) => {
+                match default.as_str() {
+                    "system" | "user" | "assistant" => {}
+                    _ => return Err(anyhow::anyhow!("default_role must be one of 'system', 'user' or 'assistant': {}. Please specify \"allowed_roles\" if you want to use other custom default role.", default)),
+                }
+            }
+            _ => {}
+        }
+        Ok(RolesSelection { allowed, default })
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct RolesSelection {
+    allowed: Option<Vec<String>>,
+    default: Option<String>,
+}
+
+impl RolesSelection {
+    pub fn allowed_or_else(&self, f: impl FnOnce() -> Vec<String>) -> Vec<String> {
+        match self.allowed.as_ref() {
+            Some(allowed) => allowed.clone(),
+            None => f(),
+        }
+    }
+
+    pub fn default_or_else(&self, f: impl FnOnce() -> String) -> String {
+        match self.default.as_ref() {
+            Some(default) => default.clone(),
+            None => f(),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub enum UnresolvedAllowedRoleMetadata {
     Value(StringOr),
     All,

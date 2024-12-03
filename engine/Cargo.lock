@@ -967,6 +967,7 @@ dependencies = [
  "jsonish",
  "jsonwebtoken",
  "log",
+ "log-once",
  "mime",
  "mime_guess",
  "minijinja",
@@ -2975,6 +2976,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 dependencies = [
  "value-bag",
+]
+
+[[package]]
+name = "log-once"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d8a05e3879b317b1b6dbf353e5bba7062bedcc59815267bb23eaa0c576cebf0"
+dependencies = [
+ "log",
 ]
 
 [[package]]

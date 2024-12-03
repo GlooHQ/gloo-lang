@@ -422,6 +422,7 @@ pub enum TestStatus {
     Passed,
     LLMFailure,
     ParseFailure,
+    FinishReasonFailed,
     ConstraintsFailed,
     AssertFailed,
     UnableToRun,
@@ -597,6 +598,9 @@ impl WasmTestResponse {
                     baml_runtime::TestFailReason::TestUnspecified(_) => TestStatus::UnableToRun,
                     baml_runtime::TestFailReason::TestLLMFailure(_) => TestStatus::LLMFailure,
                     baml_runtime::TestFailReason::TestParseFailure(_) => TestStatus::ParseFailure,
+                    baml_runtime::TestFailReason::TestFinishReasonFailed(_) => {
+                        TestStatus::FinishReasonFailed
+                    }
                     baml_runtime::TestFailReason::TestConstraintsFailure {
                         failed_assert, ..
                     } => {
@@ -784,7 +788,20 @@ impl WithRenderError for baml_runtime::TestFailReason<'_> {
         match &self {
             baml_runtime::TestFailReason::TestUnspecified(e) => Some(format!("{e:#}")),
             baml_runtime::TestFailReason::TestLLMFailure(f) => f.render_error(),
-            baml_runtime::TestFailReason::TestParseFailure(e) => Some(format!("{e:#}")),
+            baml_runtime::TestFailReason::TestParseFailure(e)
+            | baml_runtime::TestFailReason::TestFinishReasonFailed(e) => {
+                match e.downcast_ref::<baml_runtime::errors::ExposedError>() {
+                    Some(exposed_error) => match exposed_error {
+                        baml_runtime::errors::ExposedError::ValidationError { message, .. } => {
+                            Some(message.clone())
+                        }
+                        baml_runtime::errors::ExposedError::FinishReasonError {
+                            message, ..
+                        } => Some(message.clone()),
+                    },
+                    None => Some(format!("{e:#}")),
+                }
+            }
             baml_runtime::TestFailReason::TestConstraintsFailure {
                 checks,
                 failed_assert,
@@ -847,10 +864,10 @@ fn get_dummy_value(
                 TypeValue::Bool => "true".to_string(),
                 TypeValue::Null => "null".to_string(),
                 TypeValue::Media(BamlMediaType::Image) => {
-                    "{ url \"https://imgs.xkcd.com/comics/standards.png\"}".to_string()
+                    "{ url \"https://imgs.xkcd.com/comics/standards.png\" }".to_string()
                 }
                 TypeValue::Media(BamlMediaType::Audio) => {
-                    "{ url \"https://actions.google.com/sounds/v1/emergency/beeper_emergency_call.ogg\"}".to_string()
+                    "{ url \"https://actions.google.com/sounds/v1/emergency/beeper_emergency_call.ogg\" }".to_string()
                 }
             };
 

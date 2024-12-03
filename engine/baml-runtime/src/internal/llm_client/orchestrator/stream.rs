@@ -9,7 +9,7 @@ use crate::{
     internal::{
         llm_client::{
             parsed_value_to_response,
-            traits::{WithPrompt, WithStreamable},
+            traits::{WithClientProperties, WithPrompt, WithStreamable},
             LLMErrorResponse, LLMResponse, ResponseBamlValue,
         },
         prompt_renderer::PromptRenderer,
@@ -100,7 +100,21 @@ where
         };
 
         let parsed_response = match &final_response {
-            LLMResponse::Success(s) => Some(parse_fn(&s.content)),
+            LLMResponse::Success(s) => {
+                if !node
+                    .finish_reason_filter()
+                    .is_allowed(s.metadata.finish_reason.as_ref())
+                {
+                    Some(Err(anyhow::anyhow!(crate::errors::ExposedError::FinishReasonError {
+                        prompt: s.prompt.to_string(),
+                        raw_output: s.content.clone(),
+                        message: "Finish reason not allowed".to_string(),
+                        finish_reason: s.metadata.finish_reason.clone(),
+                    })))
+                } else {
+                    Some(parse_fn(&s.content))
+                }
+            },
             _ => None,
         };
         let (parsed_response, response_value) = match parsed_response {
