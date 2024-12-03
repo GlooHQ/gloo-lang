@@ -25,7 +25,12 @@ pub fn from_anyhow_error(err: anyhow::Error) -> napi::Error {
                 message,
                 raw_output: raw_response,
                 finish_reason,
-            } => throw_baml_client_finish_reason_error(prompt, raw_response, message, finish_reason),
+            } => throw_baml_client_finish_reason_error(
+                prompt,
+                raw_response,
+                message,
+                finish_reason.as_ref().map(|f| f.as_str()),
+            ),
         }
     } else if let Some(er) = err.downcast_ref::<ScopeStack>() {
         invalid_argument_error(&format!("{}", er))
