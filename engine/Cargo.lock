@@ -808,6 +808,7 @@ dependencies = [
  "cfg-if",
  "chrono",
  "clap",
+ "clap-cargo",
  "colored",
  "console",
  "console_log",
@@ -908,6 +909,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing-subscriber",
+ "valuable",
 ]
 
 [[package]]
@@ -1317,6 +1319,16 @@ checksum = "64acc1846d54c1fe936a78dc189c34e28d3f5afc348403f28ecf53660b9b8462"
 dependencies = [
  "clap_builder",
  "clap_derive",
+]
+
+[[package]]
+name = "clap-cargo"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23b2ea69cefa96b848b73ad516ad1d59a195cdf9263087d977f648a818c8b43e"
+dependencies = [
+ "anstyle",
+ "clap",
 ]
 
 [[package]]
