@@ -24,7 +24,7 @@ pub enum Identifier {
     Invalid(String, Span),
 }
 
-impl Identifier 
+impl Identifier {
     pub fn is_valid_type(&self) -> bool {
         match self {
             Identifier::ENV(_, _) => false,
