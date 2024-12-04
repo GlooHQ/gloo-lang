@@ -64,7 +64,7 @@ fn print_env() {
 
     println!("Environment variables:");
     for (key, value) in &env {
-        println!("{}={}", key, value);
+        println!("{key}={value}");
     }
 }
 
@@ -100,7 +100,7 @@ fn main() {
     println!();
     println!("The following errors occurred during build checks:");
     for error in errors {
-        println!("{:#}", error);
+        println!("{error:#}");
     }
 
     // println!();

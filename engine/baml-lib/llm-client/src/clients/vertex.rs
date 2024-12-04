@@ -77,8 +77,7 @@ impl<Meta> UnresolvedServiceAccountDetails<Meta> {
                             // Not a valid JSON, so we assume it's a file path
                             // Load the file and parse it as JSON
                             let file = std::fs::read_to_string(&value).context(format!(
-                                "Failed to read service account file: {}",
-                                value
+                                "Failed to read service account file: {value}"
                             ))?;
                             let json = serde_json::from_str(&file)
                                 .context("Failed to parse service account file as JSON")?;

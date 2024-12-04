@@ -115,8 +115,7 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
                     let resource_name = resource_name.resolve(ctx)?;
                     let deployment_id = deployment_id.resolve(ctx)?;
                     Ok(format!(
-                        "https://{}.openai.azure.com/openai/deployments/{}",
-                        resource_name, deployment_id
+                        "https://{resource_name}.openai.azure.com/openai/deployments/{deployment_id}"
                     ))
                 }
             })

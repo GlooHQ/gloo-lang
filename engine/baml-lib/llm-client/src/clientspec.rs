@@ -71,12 +71,12 @@ pub enum StrategyClientProvider {
 impl std::fmt::Display for ClientProvider {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ClientProvider::OpenAI(variant) => write!(f, "{}", variant),
+            ClientProvider::OpenAI(variant) => write!(f, "{variant}"),
             ClientProvider::Anthropic => write!(f, "anthropic"),
             ClientProvider::AwsBedrock => write!(f, "aws-bedrock"),
             ClientProvider::GoogleAi => write!(f, "google-ai"),
             ClientProvider::Vertex => write!(f, "vertex-ai"),
-            ClientProvider::Strategy(variant) => write!(f, "{}", variant),
+            ClientProvider::Strategy(variant) => write!(f, "{variant}"),
         }
     }
 }
@@ -179,8 +179,8 @@ impl ClientProvider {
 impl std::fmt::Display for ClientSpec {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ClientSpec::Named(n) => write!(f, "{}", n),
-            ClientSpec::Shorthand(provider, model) => write!(f, "{}/{}", provider, model),
+            ClientSpec::Named(n) => write!(f, "{n}"),
+            ClientSpec::Shorthand(provider, model) => write!(f, "{provider}/{model}"),
         }
     }
 }

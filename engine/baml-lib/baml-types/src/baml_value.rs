@@ -81,7 +81,7 @@ impl BamlValue {
                 if value_types.is_empty() {
                     "map<string, ?>".into()
                 } else {
-                    format!("map<string, {}>", value_types)
+                    format!("map<string, {value_types}>")
                 }
             }
             BamlValue::List(k) => {
@@ -95,7 +95,7 @@ impl BamlValue {
                 if value_type.is_empty() {
                     "list<?>".into()
                 } else {
-                    format!("list<{}>", value_type)
+                    format!("list<{value_type}>")
                 }
             }
             BamlValue::Media(m) => match m.media_type {
@@ -103,8 +103,8 @@ impl BamlValue {
                 BamlMediaType::Audio => "audio",
             }
             .into(),
-            BamlValue::Enum(e, _) => format!("enum {}", e),
-            BamlValue::Class(c, _) => format!("class {}", c),
+            BamlValue::Enum(e, _) => format!("enum {e}"),
+            BamlValue::Class(c, _) => format!("class {c}"),
             BamlValue::Null => "null".into(),
         }
     }

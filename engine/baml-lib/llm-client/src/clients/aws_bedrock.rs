@@ -198,21 +198,21 @@ impl UnresolvedAwsBedrock {
                         "max_tokens" => inference_config.max_tokens = v.as_numeric().and_then(|val| match val.parse() {
                             Ok(v) => Some(v),
                             Err(e) => {
-                                properties.push_error(format!("max_tokens must be a number: {}", e), v.meta().clone());
+                                properties.push_error(format!("max_tokens must be a number: {e}"), v.meta().clone());
                                 None
                             }
                         }),
                         "temperature" => inference_config.temperature = v.as_numeric().and_then(|val| match val.parse() {
                             Ok(v) => Some(v),
                             Err(e) => {
-                                properties.push_error(format!("temperature must be a number: {}", e), v.meta().clone());
+                                properties.push_error(format!("temperature must be a number: {e}"), v.meta().clone());
                                 None
                             }
                         }),
                         "top_p" => inference_config.top_p = v.as_numeric().and_then(|val| match val.parse() {
                             Ok(v) => Some(v),
                             Err(e) => {
-                                properties.push_error(format!("top_p must be a number: {}", e), v.meta().clone());
+                                properties.push_error(format!("top_p must be a number: {e}"), v.meta().clone());
                                 None
                             }
                         }),
@@ -234,7 +234,7 @@ impl UnresolvedAwsBedrock {
                             }
                         },
                         _ => {
-                            properties.push_error(format!("unknown inference_config key: {}", k), key_span.clone());
+                            properties.push_error(format!("unknown inference_config key: {k}"), key_span.clone());
                         },
                     }
                 }

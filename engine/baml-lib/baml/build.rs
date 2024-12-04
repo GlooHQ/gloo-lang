@@ -47,9 +47,9 @@ fn build_folder_tests(dir: &'static str, out_file_name: &str) {
     let mut out_file = fs::File::create(format!("{CARGO_MANIFEST_DIR}/{out_file_name}")).unwrap();
     for schema_path in &all_schemas {
         let file_path = format!("{CARGO_MANIFEST_DIR}/{dir}{schema_path}");
-        println!("Reading file: {}", file_path);
+        println!("Reading file: {file_path}");
         let file_content = fs::read_to_string(&file_path).unwrap();
-        writeln!(out_file, "{}", file_content).unwrap();
+        writeln!(out_file, "{file_content}").unwrap();
     }
 }
 

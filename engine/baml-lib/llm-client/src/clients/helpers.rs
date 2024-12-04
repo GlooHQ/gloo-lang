@@ -68,7 +68,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
         let result = match ensure_string(&mut self.options, key) {
             Ok(result) => {
                 if required && result.is_none() {
-                    self.push_option_error(format!("Missing required property: {}", key));
+                    self.push_option_error(format!("Missing required property: {key}"));
                 }
                 result
             }
@@ -89,7 +89,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
         let result = match ensure_map(&mut self.options, key) {
             Ok(result) => {
                 if required && result.is_none() {
-                    self.push_option_error(format!("Missing required property: {}", key));
+                    self.push_option_error(format!("Missing required property: {key}"));
                 }
                 result
             }
@@ -110,7 +110,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
         let result = match ensure_array(&mut self.options, key) {
             Ok(result) => {
                 if required && result.is_none() {
-                    self.push_option_error(format!("Missing required property: {}", key));
+                    self.push_option_error(format!("Missing required property: {key}"));
                 }
                 result
             }
@@ -127,7 +127,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
         let result = match ensure_bool(&mut self.options, key) {
             Ok(result) => {
                 if required && result.is_none() {
-                    self.push_option_error(format!("Missing required property: {}", key));
+                    self.push_option_error(format!("Missing required property: {key}"));
                 }
                 result
             }
@@ -144,7 +144,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
         let result = match ensure_int(&mut self.options, key) {
             Ok(result) => {
                 if required && result.is_none() {
-                    self.push_option_error(format!("Missing required property: {}", key));
+                    self.push_option_error(format!("Missing required property: {key}"));
                 }
                 result
             }
@@ -191,13 +191,12 @@ impl<Meta: Clone> PropertyHandler<Meta> {
                 } else {
                     let allowed_roles_str = allowed_roles
                         .iter()
-                        .map(|v| format!("{:?}", v))
+                        .map(|v| format!("{v:?}"))
                         .collect::<Vec<_>>()
                         .join(", ");
                     self.push_error(
                         format!(
-                            "default_role must be one of {}. Got: {}",
-                            allowed_roles_str, value
+                            "default_role must be one of {allowed_roles_str}. Got: {value}"
                         ),
                         span,
                     );
@@ -304,7 +303,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
                                 if let Ok(client_spec) =
                                     crate::ClientSpec::new_from_id(value.as_str()).map_err(|e| {
                                         self.push_error(
-                                            format!("Invalid strategy: {}", e),
+                                            format!("Invalid strategy: {e}"),
                                             v.meta().clone(),
                                         );
                                     })
@@ -332,7 +331,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
     pub fn finalize_empty(self) -> Vec<Error<Meta>> {
         let mut errors = self.errors;
         for (k, (key_span, _)) in self.options {
-            errors.push(Error::new(format!("Unsupported property: {}", k), key_span));
+            errors.push(Error::new(format!("Unsupported property: {k}"), key_span));
         }
         errors
     }
@@ -426,7 +425,7 @@ fn ensure_int<Meta: Clone>(
                     Ok(Some((key_span, i, meta)))
                 } else {
                     Err(Error {
-                        message: format!("{} must be an integer. Got: {}", key, i),
+                        message: format!("{key} must be an integer. Got: {i}"),
                         span: meta,
                     })
                 }
