@@ -12,7 +12,10 @@ use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{
     ChatMessagePart, RenderContext_Client, RenderedChatMessage, RenderedPrompt,
 };
-use internal_llm_client::{anthropic::ResolvedAnthropic, AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty};
+use internal_llm_client::{
+    anthropic::ResolvedAnthropic, AllowedRoleMetadata, ClientProvider, ResolvedClientProperty,
+    UnresolvedClientProperty,
+};
 
 use crate::{
     client_registry::ClientProperty,
@@ -78,7 +81,19 @@ impl WithClientProperties for AnthropicClient {
         &self.properties.allowed_metadata
     }
     fn supports_streaming(&self) -> bool {
-        self.properties.supported_request_modes.stream.unwrap_or(true)
+        self.properties
+            .supported_request_modes
+            .stream
+            .unwrap_or(true)
+    }
+    fn finish_reason_filter(&self) -> &internal_llm_client::FinishReasonFilter {
+        &self.properties.finish_reason_filter
+    }
+    fn default_role(&self) -> String {
+        self.properties.default_role()
+    }
+    fn allowed_roles(&self) -> Vec<String> {
+        self.properties.allowed_roles()
     }
 }
 
@@ -99,11 +114,11 @@ impl SseResponseTrait for AnthropicClient {
     fn response_stream(
         &self,
         resp: reqwest::Response,
-        prompt: &Vec<RenderedChatMessage>,
+        prompt: &[RenderedChatMessage],
         system_start: web_time::SystemTime,
         instant_start: web_time::Instant,
     ) -> StreamResponse {
-        let prompt = prompt.clone();
+        let prompt = prompt.to_vec();
         let client_name = self.context.name.clone();
         let params = self.properties.properties.clone();
 
@@ -140,7 +155,7 @@ impl SseResponseTrait for AnthropicClient {
                                 return std::future::ready(Some(LLMResponse::LLMFailure(
                                     LLMErrorResponse {
                                         client: client_name.clone(),
-                                        model: if inner.model == "" {
+                                        model: if inner.model.is_empty() {
                                             None
                                         } else {
                                             Some(inner.model.clone())
@@ -161,13 +176,11 @@ impl SseResponseTrait for AnthropicClient {
                             MessageChunk::MessageStart(chunk) => {
                                 let body = chunk.message;
                                 inner.model = body.model;
-                                let ref mut inner = inner.metadata;
-                                inner.baml_is_complete = match body.stop_reason {
-                                    Some(StopReason::StopSequence) | Some(StopReason::EndTurn) => {
-                                        true
-                                    }
-                                    _ => false,
-                                };
+                                let inner = &mut inner.metadata;
+                                inner.baml_is_complete = matches!(
+                                    body.stop_reason,
+                                    Some(StopReason::StopSequence) | Some(StopReason::EndTurn)
+                                );
                                 inner.finish_reason =
                                     body.stop_reason.as_ref().map(ToString::to_string);
                                 inner.prompt_tokens = Some(body.usage.input_tokens);
@@ -182,14 +195,12 @@ impl SseResponseTrait for AnthropicClient {
                             MessageChunk::ContentBlockStop(_) => (),
                             MessageChunk::Ping => (),
                             MessageChunk::MessageDelta(body) => {
-                                let ref mut inner = inner.metadata;
+                                let inner = &mut inner.metadata;
 
-                                inner.baml_is_complete = match body.delta.stop_reason {
-                                    Some(StopReason::StopSequence) | Some(StopReason::EndTurn) => {
-                                        true
-                                    }
-                                    _ => false,
-                                };
+                                inner.baml_is_complete = matches!(
+                                    body.delta.stop_reason,
+                                    Some(StopReason::StopSequence) | Some(StopReason::EndTurn)
+                                );
                                 inner.finish_reason = body
                                     .delta
                                     .stop_reason
@@ -205,13 +216,13 @@ impl SseResponseTrait for AnthropicClient {
                                 return std::future::ready(Some(LLMResponse::LLMFailure(
                                     LLMErrorResponse {
                                         client: client_name.clone(),
-                                        model: if inner.model == "" {
+                                        model: if inner.model.is_empty() {
                                             None
                                         } else {
                                             Some(inner.model.clone())
                                         },
                                         prompt: internal_baml_jinja::RenderedPrompt::Chat(
-                                            prompt.clone(),
+                                            prompt.to_vec(),
                                         ),
                                         request_options: params.clone(),
                                         start_time: system_start,
@@ -236,7 +247,7 @@ impl WithStreamChat for AnthropicClient {
     async fn stream_chat(
         &self,
         _ctx: &RuntimeContext,
-        prompt: &Vec<RenderedChatMessage>,
+        prompt: &[RenderedChatMessage],
     ) -> StreamResponse {
         let (response, system_now, instant_now) =
             match make_request(self, either::Either::Right(prompt), true).await {
@@ -251,13 +262,13 @@ impl WithStreamChat for AnthropicClient {
 impl AnthropicClient {
     pub fn dynamic_new(client: &ClientProperty, ctx: &RuntimeContext) -> Result<Self> {
         let properties = resolve_properties(&client.provider, &client.unresolved_options()?, ctx)?;
-        let default_role = properties.default_role.clone();
         Ok(Self {
             name: client.name.clone(),
             context: RenderContext_Client {
                 name: client.name.clone(),
                 provider: client.provider.to_string(),
-                default_role,
+                default_role: properties.default_role(),
+                allowed_roles: properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -274,13 +285,13 @@ impl AnthropicClient {
 
     pub fn new(client: &ClientWalker, ctx: &RuntimeContext) -> Result<AnthropicClient> {
         let properties = resolve_properties(&client.elem().provider, &client.options(), ctx)?;
-        let default_role = properties.default_role.clone();
         Ok(Self {
             name: client.name().into(),
             context: RenderContext_Client {
                 name: client.name().into(),
                 provider: client.elem().provider.to_string(),
-                default_role,
+                default_role: properties.default_role(),
+                allowed_roles: properties.allowed_roles(),
             },
             features: ModelFeatures {
                 chat: true,
@@ -308,7 +319,7 @@ impl RequestBuilder for AnthropicClient {
 
     async fn build_request(
         &self,
-        prompt: either::Either<&String, &Vec<RenderedChatMessage>>,
+        prompt: either::Either<&String, &[RenderedChatMessage]>,
         allow_proxy: bool,
         stream: bool,
     ) -> Result<reqwest::RequestBuilder> {
@@ -316,7 +327,7 @@ impl RequestBuilder for AnthropicClient {
             self.properties
                 .proxy_url
                 .as_ref()
-                .unwrap_or_else(|| &self.properties.base_url)
+                .unwrap_or(&self.properties.base_url)
         } else {
             &self.properties.base_url
         };
@@ -359,14 +370,7 @@ impl RequestBuilder for AnthropicClient {
 }
 
 impl WithChat for AnthropicClient {
-    fn chat_options(&self, _ctx: &RuntimeContext) -> Result<internal_baml_jinja::ChatOptions> {
-        Ok(internal_baml_jinja::ChatOptions::new(
-            self.properties.default_role.clone(),
-            None,
-        ))
-    }
-
-    async fn chat(&self, _ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse {
+    async fn chat(&self, _ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse {
         let (response, system_now, instant_now) = match make_parsed_request::<
             AnthropicMessageResponse,
         >(
@@ -382,7 +386,7 @@ impl WithChat for AnthropicClient {
             return LLMResponse::LLMFailure(LLMErrorResponse {
                 client: self.context.name.to_string(),
                 model: None,
-                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+                prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
                 start_time: system_now,
                 request_options: self.properties.properties.clone(),
                 latency: instant_now.elapsed(),
@@ -396,17 +400,17 @@ impl WithChat for AnthropicClient {
 
         LLMResponse::Success(LLMCompleteResponse {
             client: self.context.name.to_string(),
-            prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+            prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
             content: response.content[0].text.clone(),
             start_time: system_now,
             latency: instant_now.elapsed(),
             request_options: self.properties.properties.clone(),
             model: response.model,
             metadata: LLMCompleteResponseMetadata {
-                baml_is_complete: match response.stop_reason {
-                    Some(StopReason::StopSequence) | Some(StopReason::EndTurn) => true,
-                    _ => false,
-                },
+                baml_is_complete: matches!(
+                    response.stop_reason,
+                    Some(StopReason::StopSequence) | Some(StopReason::EndTurn)
+                ),
                 finish_reason: response
                     .stop_reason
                     .as_ref()
@@ -475,7 +479,7 @@ impl ToProviderMessage for AnthropicClient {
 impl ToProviderMessageExt for AnthropicClient {
     fn chat_to_message(
         &self,
-        chat: &Vec<RenderedChatMessage>,
+        chat: &[RenderedChatMessage],
     ) -> Result<serde_json::Map<String, serde_json::Value>> {
         // merge all adjacent roles of the same type
         let mut res = serde_json::Map::new();

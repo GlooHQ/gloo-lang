@@ -22,20 +22,19 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
             }
         }
 
-
         // Do any additional validation here for providers that need it.
         match &f.properties().options {
-            internal_llm_client::UnresolvedClientProperty::OpenAI(_) |
-            internal_llm_client::UnresolvedClientProperty::Anthropic(_) |
-            internal_llm_client::UnresolvedClientProperty::AWSBedrock(_) |
-            internal_llm_client::UnresolvedClientProperty::Vertex(_) |
-            internal_llm_client::UnresolvedClientProperty::GoogleAI(_) => {},
+            internal_llm_client::UnresolvedClientProperty::OpenAI(_)
+            | internal_llm_client::UnresolvedClientProperty::Anthropic(_)
+            | internal_llm_client::UnresolvedClientProperty::AWSBedrock(_)
+            | internal_llm_client::UnresolvedClientProperty::Vertex(_)
+            | internal_llm_client::UnresolvedClientProperty::GoogleAI(_) => {}
             internal_llm_client::UnresolvedClientProperty::RoundRobin(options) => {
                 validate_strategy(options, ctx);
-            },
+            }
             internal_llm_client::UnresolvedClientProperty::Fallback(options) => {
                 validate_strategy(options, ctx);
-            },
+            }
         }
     }
 }
@@ -46,13 +45,11 @@ fn validate_strategy(options: &impl StrategyClientProperty<Span>, ctx: &mut Cont
     for (client, span) in options.strategy() {
         if let either::Either::Right(ClientSpec::Named(s)) = client {
             if !valid_clients.contains(s) {
-                ctx.push_error(
-                    DatamodelError::new_client_not_found_error(
-                        s,
-                       span.clone(),
-                        &valid_clients
-                    )
-                );
+                ctx.push_error(DatamodelError::new_client_not_found_error(
+                    s,
+                    span.clone(),
+                    &valid_clients,
+                ));
             }
         }
     }

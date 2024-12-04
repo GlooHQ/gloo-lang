@@ -160,12 +160,10 @@ impl<'db> FunctionWalker<'db> {
                 }
             }
             Ok(spec) => Ok(spec),
-            Err(e) => {
-                return Err(DatamodelError::new_validation_error(
-                    &e.to_string(),
-                    client.1.clone(),
-                ));
-            }
+            Err(e) => Err(DatamodelError::new_validation_error(
+                &e.to_string(),
+                client.1.clone(),
+            )),
         }
     }
 }

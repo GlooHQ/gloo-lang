@@ -42,11 +42,8 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
             defined_types.add_variable("_", Type::ClassRef("_".to_string()));
             args.keys()
                 .for_each(|arg_name| defined_types.add_variable(arg_name, Type::Unknown));
-            match (level, label) {
-                (ConstraintLevel::Check, Some(check_name)) => {
-                    check_names.push(check_name.to_string());
-                }
-                _ => {}
+            if let (ConstraintLevel::Check, Some(check_name)) = (level, label) {
+                check_names.push(check_name.to_string());
             }
             match validate_expression(expression.0.as_str(), &mut defined_types) {
                 Ok(_) => {}

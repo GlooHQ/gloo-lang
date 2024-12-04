@@ -5,7 +5,10 @@ use internal_baml_core::{
     configuration::{GeneratorDefaultClientMode, GeneratorOutputType},
     ir::repr::IntermediateRepr,
 };
-use std::{collections::{BTreeMap, HashSet}, path::PathBuf};
+use std::{
+    collections::{BTreeMap, HashSet},
+    path::{Path, PathBuf},
+};
 use version_check::{check_version, GeneratorType, VersionCheckMode};
 
 mod dir_writer;
@@ -32,7 +35,7 @@ pub struct GeneratorArgs {
     on_generate: Vec<String>,
 }
 
-fn relative_path_to_baml_src(path: &PathBuf, baml_src: &PathBuf) -> Result<PathBuf> {
+fn relative_path_to_baml_src(path: &Path, baml_src: &Path) -> Result<PathBuf> {
     pathdiff::diff_paths(path, baml_src).ok_or_else(|| {
         anyhow::anyhow!(
             "Failed to compute relative path from {} to {}",
@@ -173,7 +176,7 @@ impl GenerateClient for GeneratorOutputType {
                 &gen.version,
                 GeneratorType::CLI,
                 VersionCheckMode::Strict,
-                self.clone(),
+                *self,
             )?;
         }
 
@@ -213,7 +216,7 @@ impl GenerateClient for GeneratorOutputType {
         }
 
         Ok(GenerateOutput {
-            client_type: self.clone(),
+            client_type: *self,
             output_dir_shorthand: gen.output_dir_relative_to_baml_src.clone(),
             output_dir_full: gen.output_dir(),
             files,
@@ -229,20 +232,20 @@ impl GenerateClient for GeneratorOutputType {
 pub struct TypeCheckAttributes(pub HashSet<String>);
 
 impl PartialEq for TypeCheckAttributes {
-   fn eq(&self, other: &Self) -> bool {
-       self.0.len() == other.0.len() && self.0.iter().all(|x| other.0.contains(x))
-   }
+    fn eq(&self, other: &Self) -> bool {
+        self.0.len() == other.0.len() && self.0.iter().all(|x| other.0.contains(x))
+    }
 }
 
-impl <'a> std::hash::Hash for TypeCheckAttributes {
+impl std::hash::Hash for TypeCheckAttributes {
     fn hash<H>(&self, state: &mut H)
-        where H: std::hash::Hasher
+    where
+        H: std::hash::Hasher,
     {
         let mut strings: Vec<_> = self.0.iter().collect();
         strings.sort();
         strings.into_iter().for_each(|s| s.hash(state))
     }
-
 }
 
 impl TypeCheckAttributes {
@@ -279,11 +282,7 @@ impl TypeCheckAttributes {
 ///
 /// We will need to construct two district support types:
 /// `Classes_a` and `Classes_a_b`.
-pub fn type_check_attributes(
-    ir: &IntermediateRepr
-) -> HashSet<TypeCheckAttributes> {
-
-
+pub fn type_check_attributes(ir: &IntermediateRepr) -> HashSet<TypeCheckAttributes> {
     let mut all_types_in_ir: Vec<&FieldType> = Vec::new();
     for class in ir.walk_classes() {
         for field in class.item.elem.static_fields.iter() {
@@ -299,56 +298,60 @@ pub fn type_check_attributes(
         all_types_in_ir.push(return_type);
     }
 
-    all_types_in_ir.into_iter().filter_map(field_type_attributes).collect()
-
+    all_types_in_ir
+        .into_iter()
+        .filter_map(field_type_attributes)
+        .collect()
 }
 
 /// The set of Check names associated with a type.
-fn field_type_attributes<'a>(field_type: &FieldType) -> Option<TypeCheckAttributes> {
+fn field_type_attributes(field_type: &FieldType) -> Option<TypeCheckAttributes> {
     match field_type {
-        FieldType::Constrained {base, constraints} => {
+        FieldType::Constrained { base, constraints } => {
             let direct_sub_attributes = field_type_attributes(base);
-            let mut check_names =
-                TypeCheckAttributes(
-                    constraints
-                        .iter()
-                        .filter_map(|Constraint {label, level, ..}|
-                                    if matches!(level, ConstraintLevel::Check) {
-                                        Some(label.clone().expect("TODO"))
-                                    } else { None }
-                        ).collect::<HashSet<String>>());
+            let mut check_names = TypeCheckAttributes(
+                constraints
+                    .iter()
+                    .filter_map(|Constraint { label, level, .. }| {
+                        if matches!(level, ConstraintLevel::Check) {
+                            Some(label.clone().expect("TODO"))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<HashSet<String>>(),
+            );
             if let Some(ref sub_attrs) = direct_sub_attributes {
-                check_names.extend(&sub_attrs);
+                check_names.extend(sub_attrs);
             }
             if !check_names.is_empty() {
                 Some(check_names)
             } else {
                 None
             }
-        },
-        _ => None
+        }
+        _ => None,
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use internal_baml_core::ir::repr::make_test_ir;
     use super::*;
-
+    use internal_baml_core::ir::repr::make_test_ir;
 
     /// Utility function for creating test fixtures.
     fn mk_tc_attrs(names: &[&str]) -> TypeCheckAttributes {
-        TypeCheckAttributes(names.into_iter().map(|s| s.to_string()).collect())
+        TypeCheckAttributes(names.iter().map(|s| s.to_string()).collect())
     }
 
     #[test]
     fn type_check_attributes_eq() {
         assert_eq!(mk_tc_attrs(&["a", "b"]), mk_tc_attrs(&["b", "a"]));
 
-        let attrs: HashSet<TypeCheckAttributes> = vec![mk_tc_attrs(&["a", "b"])].into_iter().collect();
-        assert!(attrs.contains( &mk_tc_attrs(&["a", "b"]) ));
-        assert!(attrs.contains( &mk_tc_attrs(&["b", "a"]) ));
-
+        let attrs: HashSet<TypeCheckAttributes> =
+            vec![mk_tc_attrs(&["a", "b"])].into_iter().collect();
+        assert!(attrs.contains(&mk_tc_attrs(&["a", "b"])));
+        assert!(attrs.contains(&mk_tc_attrs(&["b", "a"])));
     }
 
     #[test]
@@ -378,14 +381,16 @@ class Bar {
   nil int @description("no checks") @assert(a, {{this}}) @assert(d, {{this}})
 }
 
-        "##).expect("Valid source");
+        "##,
+        )
+        .expect("Valid source");
 
         let attrs = type_check_attributes(&ir);
         dbg!(&attrs);
         assert_eq!(attrs.len(), 3);
-        assert!(attrs.contains( &mk_tc_attrs(&["a","b"]) ));
-        assert!(attrs.contains( &mk_tc_attrs(&["a"]) ));
-        assert!(attrs.contains( &mk_tc_attrs(&["b", "c"]) ));
-        assert!(!attrs.contains( &mk_tc_attrs(&["a", "d"]) ));
+        assert!(attrs.contains(&mk_tc_attrs(&["a", "b"])));
+        assert!(attrs.contains(&mk_tc_attrs(&["a"])));
+        assert!(attrs.contains(&mk_tc_attrs(&["b", "c"])));
+        assert!(!attrs.contains(&mk_tc_attrs(&["a", "d"])));
     }
 }

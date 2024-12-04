@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.70.0](https://github.com/boundaryml/baml/compare/0.69.0..0.70.0) - 2024-12-04
+
+### Bug Fixes
+
+- Improvements for promptfiddle (#1201) - ([c6fb306](https://github.com/boundaryml/baml/commit/c6fb3067ce74f7864c8e071ed9ea3b3b1f69d00a)) - aaronvg
+- Add vscode config to disable proxying (#1197) - ([c593284](https://github.com/boundaryml/baml/commit/c59328479a60847147d7141f0053fb208821d49a)) - aaronvg
+- update lezer syntax for tests (#1199) - ([269ad9d](https://github.com/boundaryml/baml/commit/269ad9da5ca1dede5bf3d6a42f11f158cfe57dda)) - aaronvg
+- Various playground fixes (#1202) - ([ce4f397](https://github.com/boundaryml/baml/commit/ce4f39737b88d2fcf27851ff8b230eda5a1e714b)) - aaronvg
+
+
+### Documentation
+
+- Add test-block constraints docs (#1198) - ([b566d4c](https://github.com/boundaryml/baml/commit/b566d4ceadab2bff0ae77765be63aadb4d3660d2)) - Greg Hale
+
+### Features
+- Fix azure client - ([9b57395](https://github.com/boundaryml/baml/commit/9b5739565b684c2179ac2ab24cabaa441a6269a7)) - hellovai
+- Add new client paramters: allowed_roles, default_role, finish_reason_allow_list, finish_reason_deny_list (#1209) - ([9b57395](https://github.com/boundaryml/baml/commit/9b5739565b684c2179ac2ab24cabaa441a6269a7)) - hellovai
+
+
+### Miscellaneous Chores
+- cargo clippy (#1206) - ([c17e0da](https://github.com/boundaryml/baml/commit/c17e0da45db4188e0b0618d9e69f21220dc2fcff)) - Antonio Sarosi
+- add colors to the CLI by default (#1208) - ([eba73c7](https://github.com/boundaryml/baml/commit/eba73c783c7f4e0013c0f128b0f2a7c20af330f0)) - Samuel Lijin
+- simplify string formatting for readability (#1072) - ([3ebf08f](https://github.com/boundaryml/baml/commit/3ebf08fe54bcfcc384188296f32efa6a878416ec)) - Hamir Mahal
+
+
 ## [0.69.0](https://github.com/boundaryml/baml/compare/0.68.0..0.69.0) - 2024-11-26
 
 ### Documentation

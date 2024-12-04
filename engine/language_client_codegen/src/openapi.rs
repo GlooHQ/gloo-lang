@@ -319,9 +319,7 @@ pub(crate) fn generate(
 "#,
     );
 
-    let stats = collector.commit(&generator.output_dir());
-
-    stats
+    collector.commit(&generator.output_dir())
 }
 
 impl<'ir> TryFrom<(&'ir IntermediateRepr, &'_ crate::GeneratorArgs)> for OpenApiSchema<'ir> {
@@ -496,7 +494,7 @@ impl<'ir> TryFrom<ClassWalker<'ir>> for TypeSpecWithMeta {
                     .map(|f| {
                         Ok((
                             f.elem.name.to_string(),
-                            f.elem.r#type.elem.to_type_spec(&c.db).context(format!(
+                            f.elem.r#type.elem.to_type_spec(c.db).context(format!(
                                 "Failed to convert {}.{} to OpenAPI type",
                                 c.name(),
                                 f.elem.name
@@ -528,7 +526,7 @@ trait ToTypeReferenceInTypeDefinition<'ir> {
 }
 
 impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
-    fn to_type_spec(&self, ir: &'ir IntermediateRepr) -> Result<TypeSpecWithMeta> {
+    fn to_type_spec(&self, _ir: &'ir IntermediateRepr) -> Result<TypeSpecWithMeta> {
         Ok(match self {
             FieldType::Enum(name) | FieldType::Class(name) => TypeSpecWithMeta {
                 meta: TypeMetadata {
@@ -541,7 +539,7 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                     r#ref: format!("#/components/schemas/{}", name),
                 },
             },
-            FieldType::Alias { resolution, .. } => resolution.to_type_spec(ir)?,
+            FieldType::Alias { resolution, .. } => resolution.to_type_spec(_ir)?,
             FieldType::Literal(v) => TypeSpecWithMeta {
                 meta: TypeMetadata {
                     title: None,
@@ -563,7 +561,7 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                     nullable: false,
                 },
                 type_spec: TypeSpec::Inline(TypeDef::Array {
-                    items: inner.to_type_spec(ir)?.into(),
+                    items: inner.to_type_spec(_ir)?.into(),
                 }),
             },
             FieldType::Map(key, value) => {
@@ -578,7 +576,7 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                         nullable: false,
                     },
                     type_spec: TypeSpec::Inline(TypeDef::Map {
-                        additional_properties: Box::new(value.to_type_spec(ir)?),
+                        additional_properties: Box::new(value.to_type_spec(_ir)?),
                     }),
                 }
             }
@@ -600,20 +598,20 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                     ),
                     TypeValue::String => TypeSpec::Inline(TypeDef::String),
                     TypeValue::Media(BamlMediaType::Audio) => TypeSpec::Ref {
-                        r#ref: format!("#/components/schemas/BamlAudio"),
+                        r#ref: "#/components/schemas/BamlAudio".to_string(),
                     },
                     TypeValue::Media(BamlMediaType::Image) => TypeSpec::Ref {
-                        r#ref: format!("#/components/schemas/BamlImage"),
+                        r#ref: "#/components/schemas/BamlImage".to_string(),
                     },
                 },
             },
             FieldType::Union(union) => {
                 let (_nulls, nonnull_types): (Vec<_>, Vec<_>) =
-                    union.into_iter().partition(|t| t.is_null());
+                    union.iter().partition(|t| t.is_null());
 
                 let one_of = nonnull_types
                     .iter()
-                    .map(|t| t.to_type_spec(ir))
+                    .map(|t| t.to_type_spec(_ir))
                     .collect::<Result<Vec<_>>>()?;
 
                 if one_of.is_empty() {
@@ -634,14 +632,13 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                 anyhow::bail!("BAML<->OpenAPI tuple support is not implemented")
             }
             FieldType::Optional(inner) => {
-                let type_spec = inner.to_type_spec(ir)?;
                 // TODO: if type_spec is of an enum, consider adding "null" to the list of values
                 // something i saw suggested doing this
-                type_spec
+                inner.to_type_spec(_ir)?
             }
             FieldType::Constrained { base, .. } => match field_type_attributes(self) {
                 Some(checks) => {
-                    let base_type_ref = base.to_type_spec(ir)?;
+                    let base_type_ref = base.to_type_spec(_ir)?;
                     let checks_type_spec = type_def_for_checks(checks);
                     TypeSpecWithMeta {
                         meta: TypeMetadata::default(),
@@ -657,7 +654,7 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                         }),
                     }
                 }
-                None => base.to_type_spec(ir)?,
+                None => base.to_type_spec(_ir)?,
             },
         })
     }
@@ -672,7 +669,7 @@ struct TypeSpecWithMeta {
     type_spec: TypeSpec,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Default)]
 struct TypeMetadata {
     /// Pydantic includes this by default.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -691,17 +688,6 @@ struct TypeMetadata {
     /// Nulls in OpenAPI are weird: https://swagger.io/docs/specification/data-models/data-types/
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     nullable: bool,
-}
-
-impl Default for TypeMetadata {
-    fn default() -> Self {
-        TypeMetadata {
-            title: None,
-            r#enum: None,
-            r#const: None,
-            nullable: false,
-        }
-    }
 }
 
 #[derive(Clone, Debug, Serialize)]

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::{AllowedRoleMetadata, SupportedRequestModes, UnresolvedAllowedRoleMetadata};
+use crate::{AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection};
 use anyhow::Result;
 
 use baml_types::{GetEnvVar, StringOr, UnresolvedValue};
@@ -12,13 +12,13 @@ use super::helpers::{Error, PropertyHandler, UnresolvedUrl};
 pub struct UnresolvedOpenAI<Meta> {
     base_url: Option<either::Either<UnresolvedUrl, (StringOr, StringOr)>>,
     api_key: Option<StringOr>,
-    allowed_roles: Vec<StringOr>,
-    default_role: Option<StringOr>,
+    role_selection: UnresolvedRolesSelection,
     allowed_role_metadata: UnresolvedAllowedRoleMetadata,
     supported_request_modes: SupportedRequestModes,
     headers: IndexMap<String, StringOr>,
     properties: IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
     query_params: IndexMap<String, StringOr>,
+    finish_reason_filter: UnresolvedFinishReasonFilter,
 }
 
 impl<Meta> UnresolvedOpenAI<Meta> {
@@ -26,8 +26,7 @@ impl<Meta> UnresolvedOpenAI<Meta> {
         UnresolvedOpenAI {
             base_url: self.base_url.clone(),
             api_key: self.api_key.clone(),
-            allowed_roles: self.allowed_roles.clone(),
-            default_role: self.default_role.clone(),
+            role_selection: self.role_selection.clone(),
             allowed_role_metadata: self.allowed_role_metadata.clone(),
             supported_request_modes: self.supported_request_modes.clone(),
             headers: self
@@ -45,6 +44,7 @@ impl<Meta> UnresolvedOpenAI<Meta> {
                 .iter()
                 .map(|(k, v)| (k.clone(), v.clone()))
                 .collect(),
+            finish_reason_filter: self.finish_reason_filter.clone(),
         }
     }
 }
@@ -52,38 +52,67 @@ impl<Meta> UnresolvedOpenAI<Meta> {
 pub struct ResolvedOpenAI {
     pub base_url: String,
     pub api_key: Option<String>,
-    pub allowed_roles: Vec<String>,
-    pub default_role: String,
+    role_selection: RolesSelection,
     pub allowed_metadata: AllowedRoleMetadata,
-    pub supported_request_modes: SupportedRequestModes,
+    supported_request_modes: SupportedRequestModes,
     pub headers: IndexMap<String, String>,
     pub properties: IndexMap<String, serde_json::Value>,
     pub query_params: IndexMap<String, String>,
     pub proxy_url: Option<String>,
+    pub finish_reason_filter: FinishReasonFilter,
+}
+
+impl ResolvedOpenAI {
+    fn is_o1_model(&self) -> bool {
+        self.properties.get("model").is_some_and(|model| model.as_str().map(|s| s.starts_with("o1-")).unwrap_or(false))
+    }
+
+    pub fn supports_streaming(&self) -> bool {
+        match self.supported_request_modes.stream {
+            Some(v) => v,
+            None => !self.is_o1_model(),
+        }
+    }
+
+    pub fn allowed_roles(&self) -> Vec<String> {
+        self.role_selection.allowed_or_else(|| {
+            if self.is_o1_model() {
+                vec!["user".to_string(), "assistant".to_string()]
+            } else {
+                vec!["system".to_string(), "user".to_string(), "assistant".to_string()]
+            }
+        })
+    }
+
+    pub fn default_role(&self) -> String {
+        self.role_selection.default_or_else(|| {
+            // TODO: guard against empty allowed_roles
+            // The compiler should already guarantee that this is non-empty
+            self.allowed_roles().remove(0)
+        
+        })
+    }
 }
 
 impl<Meta: Clone> UnresolvedOpenAI<Meta> {
     pub fn required_env_vars(&self) -> HashSet<String> {
         let mut env_vars = HashSet::new();
 
-        self.base_url.as_ref().map(|url| match url {
-            either::Either::Left(url) => {
-                env_vars.extend(url.required_env_vars());
+        if let Some(url) = self.base_url.as_ref() {
+            match url {
+                either::Either::Left(url) => {
+                    env_vars.extend(url.required_env_vars());
+                }
+                either::Either::Right((resource_name, deployment_id)) => {
+                    env_vars.extend(resource_name.required_env_vars());
+                    env_vars.extend(deployment_id.required_env_vars());
+                }
             }
-            either::Either::Right((resource_name, deployment_id)) => {
-                env_vars.extend(resource_name.required_env_vars());
-                env_vars.extend(deployment_id.required_env_vars());
-            }
-        });
-        self.api_key
-            .as_ref()
-            .map(|key| env_vars.extend(key.required_env_vars()));
-        self.allowed_roles
-            .iter()
-            .for_each(|role| env_vars.extend(role.required_env_vars()));
-        self.default_role
-            .as_ref()
-            .map(|role| env_vars.extend(role.required_env_vars()));
+        };
+        if let Some(key) = self.api_key.as_ref() {
+            env_vars.extend(key.required_env_vars())
+        }
+        env_vars.extend(self.role_selection.required_env_vars());
         env_vars.extend(self.allowed_role_metadata.required_env_vars());
         env_vars.extend(self.supported_request_modes.required_env_vars());
         self.headers
@@ -99,7 +128,11 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         env_vars
     }
 
-    pub fn resolve(&self, provider: &crate::ClientProvider, ctx: &impl GetEnvVar) -> Result<ResolvedOpenAI> {
+    pub fn resolve(
+        &self,
+        provider: &crate::ClientProvider,
+        ctx: &impl GetEnvVar,
+    ) -> Result<ResolvedOpenAI> {
         let base_url = self
             .base_url
             .as_ref()
@@ -109,8 +142,7 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
                     let resource_name = resource_name.resolve(ctx)?;
                     let deployment_id = deployment_id.resolve(ctx)?;
                     Ok(format!(
-                        "https://{}.openai.azure.com/openai/deployments/{}",
-                        resource_name, deployment_id
+                        "https://{resource_name}.openai.azure.com/openai/deployments/{deployment_id}"
                     ))
                 }
             })
@@ -126,24 +158,7 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
             .map(|key| key.resolve(ctx))
             .transpose()?;
 
-        let allowed_roles = self
-            .allowed_roles
-            .iter()
-            .map(|role| role.resolve(ctx))
-            .collect::<Result<Vec<_>>>()?;
-
-        let Some(default_role) = self.default_role.as_ref() else {
-            return Err(anyhow::anyhow!("default_role must be provided"));
-        };
-        let default_role = default_role.resolve(ctx)?;
-
-        if !allowed_roles.contains(&default_role) {
-            return Err(anyhow::anyhow!(
-                "default_role must be in allowed_roles: {} not in {:?}",
-                default_role,
-                allowed_roles
-            ));
-        }
+        let role_selection = self.role_selection.resolve(ctx)?;
 
         let headers = self
             .headers
@@ -157,9 +172,12 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
                 .iter()
                 .map(|(k, (_, v))| Ok((k.clone(), v.resolve_serde::<serde_json::Value>(ctx)?)))
                 .collect::<Result<IndexMap<_, _>>>()?;
-            
+
             // TODO(vbv): Only do this for azure
-            if matches!(provider, crate::ClientProvider::OpenAI(crate::OpenAIClientProviderVariant::Azure)) {
+            if matches!(
+                provider,
+                crate::ClientProvider::OpenAI(crate::OpenAIClientProviderVariant::Azure)
+            ) {
                 properties
                     .entry("max_tokens".into())
                     .or_insert(serde_json::json!(4096));
@@ -176,26 +194,26 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         Ok(ResolvedOpenAI {
             base_url,
             api_key,
-            allowed_roles,
-            default_role,
+            role_selection,
             allowed_metadata: self.allowed_role_metadata.resolve(ctx)?,
             supported_request_modes: self.supported_request_modes.clone(),
             headers,
             properties,
             query_params,
             proxy_url: super::helpers::get_proxy_url(ctx),
+            finish_reason_filter: self.finish_reason_filter.resolve(ctx)?,
         })
     }
 
     pub fn create_standard(
         mut properties: PropertyHandler<Meta>,
     ) -> Result<Self, Vec<Error<Meta>>> {
-        let base_url = properties.ensure_base_url_with_default(UnresolvedUrl::new_static("https://api.openai.com/v1"));
+        let base_url = properties
+            .ensure_base_url_with_default(UnresolvedUrl::new_static("https://api.openai.com/v1"));
 
         let api_key = Some(
             properties
                 .ensure_api_key()
-                .map(|v| v.clone())
                 .unwrap_or_else(|| StringOr::EnvVar("OPENAI_API_KEY".to_string())),
         );
 
@@ -247,20 +265,19 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
             }
         };
 
-        let api_key = Some(
-            properties
-                .ensure_api_key()
-                .map(|v| v.clone())
-                .unwrap_or_else(|| StringOr::EnvVar("AZURE_OPENAI_API_KEY".to_string())),
-        );
+        let api_key = properties
+            .ensure_api_key()
+            .map(|v| v.clone())
+            .unwrap_or_else(|| StringOr::EnvVar("AZURE_OPENAI_API_KEY".to_string()));
 
         let mut query_params = IndexMap::new();
         if let Some((_, v, _)) = properties.ensure_string("api_version", false) {
             query_params.insert("api-version".to_string(), v.clone());
         }
 
-        let mut instance = Self::create_common(properties, base_url, api_key)?;
+        let mut instance = Self::create_common(properties, base_url, None)?;
         instance.query_params = query_params;
+        instance.headers.entry("api-key".to_string()).or_insert(api_key);
 
         Ok(instance)
     }
@@ -268,7 +285,7 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
     pub fn create_generic(mut properties: PropertyHandler<Meta>) -> Result<Self, Vec<Error<Meta>>> {
         let base_url = properties.ensure_base_url(true);
 
-        let api_key = properties.ensure_api_key().map(|v| v.clone());
+        let api_key = properties.ensure_api_key();
 
         Self::create_common(
             properties,
@@ -278,11 +295,18 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
     }
 
     pub fn create_ollama(mut properties: PropertyHandler<Meta>) -> Result<Self, Vec<Error<Meta>>> {
-        let base_url = properties.ensure_base_url_with_default(UnresolvedUrl::new_static("http://localhost:11434/v1"));
+        let base_url = properties
+            .ensure_base_url_with_default(UnresolvedUrl::new_static("http://localhost:11434/v1"));
 
-        let api_key = properties.ensure_api_key().map(|v| v.clone());
+        let api_key = properties.ensure_api_key();
 
-        Self::create_common(properties, Some(either::Either::Left(base_url)), api_key)
+        let mut instance = Self::create_common(properties, Some(either::Either::Left(base_url)), api_key)?;
+        // Ollama uses smaller models many of which prefer the user role
+        if instance.role_selection.default.is_none() {
+            instance.role_selection.default = Some(StringOr::Value("user".to_string()));
+        }
+
+        Ok(instance)
     }
 
     fn create_common(
@@ -290,16 +314,11 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         base_url: Option<either::Either<UnresolvedUrl, (StringOr, StringOr)>>,
         api_key: Option<StringOr>,
     ) -> Result<Self, Vec<Error<Meta>>> {
-        let allowed_roles = properties.ensure_allowed_roles().unwrap_or(vec![
-            StringOr::Value("system".to_string()),
-            StringOr::Value("user".to_string()),
-            StringOr::Value("assistant".to_string()),
-        ]);
-
-        let default_role = properties.ensure_default_role(allowed_roles.as_slice(), 1);
+        let role_selection = properties.ensure_roles_selection();
         let allowed_metadata = properties.ensure_allowed_metadata();
         let supported_request_modes = properties.ensure_supported_request_modes();
         let headers = properties.ensure_headers().unwrap_or_default();
+        let finish_reason_filter = properties.ensure_finish_reason_filter();
         let (properties, errors) = properties.finalize();
 
         if !errors.is_empty() {
@@ -309,13 +328,13 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         Ok(Self {
             base_url,
             api_key,
-            allowed_roles,
-            default_role,
+            role_selection,
             allowed_role_metadata: allowed_metadata,
             supported_request_modes,
             headers,
             properties,
             query_params: IndexMap::new(),
+            finish_reason_filter,
         })
     }
 }

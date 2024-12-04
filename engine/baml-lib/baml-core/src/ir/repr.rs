@@ -102,13 +102,11 @@ impl IntermediateRepr {
         &self.finite_recursive_cycles
     }
 
-    pub fn walk_enums<'a>(&'a self) -> impl ExactSizeIterator<Item = Walker<'a, &'a Node<Enum>>> {
+    pub fn walk_enums(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<Enum>>> {
         self.enums.iter().map(|e| Walker { db: self, item: e })
     }
 
-    pub fn walk_classes<'a>(
-        &'a self,
-    ) -> impl ExactSizeIterator<Item = Walker<'a, &'a Node<Class>>> {
+    pub fn walk_classes(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<Class>>> {
         self.classes.iter().map(|e| Walker { db: self, item: e })
     }
 
@@ -116,15 +114,13 @@ impl IntermediateRepr {
         self.functions.iter().map(|f| f.elem.name())
     }
 
-    pub fn walk_functions<'a>(
-        &'a self,
-    ) -> impl ExactSizeIterator<Item = Walker<'a, &'a Node<Function>>> {
+    pub fn walk_functions(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<Function>>> {
         self.functions.iter().map(|e| Walker { db: self, item: e })
     }
 
-    pub fn walk_tests<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = Walker<'a, (&'a Node<Function>, &'a Node<TestCase>)>> {
+    pub fn walk_tests(
+        &self,
+    ) -> impl Iterator<Item = Walker<'_, (&Node<Function>, &Node<TestCase>)>> {
         self.functions.iter().flat_map(move |f| {
             f.elem.tests().iter().map(move |t| Walker {
                 db: self,
@@ -133,24 +129,22 @@ impl IntermediateRepr {
         })
     }
 
-    pub fn walk_clients<'a>(
-        &'a self,
-    ) -> impl ExactSizeIterator<Item = Walker<'a, &'a Node<Client>>> {
+    pub fn walk_clients(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<Client>>> {
         self.clients.iter().map(|e| Walker { db: self, item: e })
     }
 
-    pub fn walk_template_strings<'a>(
-        &'a self,
-    ) -> impl ExactSizeIterator<Item = Walker<'a, &'a Node<TemplateString>>> {
+    pub fn walk_template_strings(
+        &self,
+    ) -> impl ExactSizeIterator<Item = Walker<'_, &Node<TemplateString>>> {
         self.template_strings
             .iter()
             .map(|e| Walker { db: self, item: e })
     }
 
     #[allow(dead_code)]
-    pub fn walk_retry_policies<'a>(
-        &'a self,
-    ) -> impl ExactSizeIterator<Item = Walker<'a, &'a Node<RetryPolicy>>> {
+    pub fn walk_retry_policies(
+        &self,
+    ) -> impl ExactSizeIterator<Item = Walker<'_, &Node<RetryPolicy>>> {
         self.retry_policies
             .iter()
             .map(|e| Walker { db: self, item: e })
@@ -210,7 +204,7 @@ impl IntermediateRepr {
         repr.enums.sort_by(|a, b| a.elem.name.cmp(&b.elem.name));
         repr.classes.sort_by(|a, b| a.elem.name.cmp(&b.elem.name));
         repr.functions
-            .sort_by(|a, b| a.elem.name().cmp(&b.elem.name()));
+            .sort_by(|a, b| a.elem.name().cmp(b.elem.name()));
         repr.clients.sort_by(|a, b| a.elem.name.cmp(&b.elem.name));
         repr.retry_policies
             .sort_by(|a, b| a.elem.name.0.cmp(&b.elem.name.0));
@@ -306,7 +300,7 @@ fn to_ir_attributes(
 
         let meta = vec![description, alias, dynamic_type, skip]
             .into_iter()
-            .filter_map(|s| s)
+            .flatten()
             .collect();
         (meta, constraints.clone())
     })
@@ -394,10 +388,10 @@ impl WithRepr<FieldType> for ast::FieldType {
 
     fn repr(&self, db: &ParserDatabase) -> Result<FieldType> {
         let constraints = WithRepr::attributes(self, db).constraints;
-        let has_constraints = constraints.len() > 0;
+        let has_constraints = !constraints.is_empty();
         let base = match self {
             ast::FieldType::Primitive(arity, typeval, ..) => {
-                let repr = FieldType::Primitive(typeval.clone());
+                let repr = FieldType::Primitive(*typeval);
                 if arity.is_optional() {
                     FieldType::Optional(Box::new(repr))
                 } else {
@@ -417,20 +411,24 @@ impl WithRepr<FieldType> for ast::FieldType {
                     Some(TypeWalker::Class(class_walker)) => {
                         let base_class = FieldType::Class(class_walker.name().to_string());
                         match class_walker.get_constraints(SubType::Class) {
-                            Some(constraints) if constraints.len() > 0 => FieldType::Constrained {
-                                base: Box::new(base_class),
-                                constraints,
-                            },
+                            Some(constraints) if !constraints.is_empty() => {
+                                FieldType::Constrained {
+                                    base: Box::new(base_class),
+                                    constraints,
+                                }
+                            }
                             _ => base_class,
                         }
                     }
                     Some(TypeWalker::Enum(enum_walker)) => {
                         let base_type = FieldType::Enum(enum_walker.name().to_string());
                         match enum_walker.get_constraints(SubType::Enum) {
-                            Some(constraints) if constraints.len() > 0 => FieldType::Constrained {
-                                base: Box::new(base_type),
-                                constraints,
-                            },
+                            Some(constraints) if !constraints.is_empty() => {
+                                FieldType::Constrained {
+                                    base: Box::new(base_type),
+                                    constraints,
+                                }
+                            }
                             _ => base_type,
                         }
                     }
@@ -460,7 +458,7 @@ impl WithRepr<FieldType> for ast::FieldType {
             ast::FieldType::Map(arity, kv, ..) => {
                 // NB: we can't just unpack (*kv) into k, v because that would require a move/copy
                 let mut repr =
-                    FieldType::Map(Box::new((*kv).0.repr(db)?), Box::new((*kv).1.repr(db)?));
+                    FieldType::Map(Box::new((kv).0.repr(db)?), Box::new((kv).1.repr(db)?));
 
                 if arity.is_optional() {
                     repr = FieldType::optional(repr);
@@ -541,9 +539,9 @@ impl WithRepr<TemplateString> for TemplateStringWalker<'_> {
     fn repr(&self, _db: &ParserDatabase) -> Result<TemplateString> {
         Ok(TemplateString {
             name: self.name().to_string(),
-            params: self.ast_node().input().map_or(vec![], |e| match e {
-                ast::BlockArgs { args, .. } => args
-                    .iter()
+            params: self.ast_node().input().map_or(vec![], |e| {
+                let ast::BlockArgs { args, .. } = e;
+                args.iter()
                     .filter_map(|(id, arg)| {
                         arg.field_type
                             .node(_db)
@@ -554,7 +552,7 @@ impl WithRepr<TemplateString> for TemplateStringWalker<'_> {
                             })
                             .ok()
                     })
-                    .collect::<Vec<_>>(),
+                    .collect::<Vec<_>>()
             }),
             content: self.template_string().to_string(),
         })
@@ -612,7 +610,7 @@ impl WithRepr<Enum> for EnumWalker<'_> {
                         .map(|v| (v, w.documentation().map(|s| Docstring(s.to_string()))))
                 })
                 .collect::<Result<Vec<_>, _>>()?,
-            docstring: self.get_documentation().map(|s| Docstring(s)),
+            docstring: self.get_documentation().map(Docstring),
         })
     }
 }
@@ -654,7 +652,7 @@ impl WithRepr<Field> for FieldWalker<'_> {
                     .repr(db)?,
                 attributes: self.attributes(db),
             },
-            docstring: self.get_documentation().map(|s| Docstring(s)),
+            docstring: self.get_documentation().map(Docstring),
         })
     }
 }
@@ -708,7 +706,7 @@ impl WithRepr<Class> for ClassWalker<'_> {
                     .collect::<Result<Vec<_>>>()?,
                 None => Vec::new(),
             },
-            docstring: self.get_documentation().map(|s| Docstring(s)),
+            docstring: self.get_documentation().map(Docstring),
         })
     }
 }
@@ -898,7 +896,7 @@ impl WithRepr<Function> for FunctionWalker<'_> {
                 prompt_template: self.jinja_prompt().to_string(),
                 prompt_span: self.ast_function().span().clone(),
                 client: match self.client_spec() {
-                    Ok(spec) => ClientSpec::from(spec),
+                    Ok(spec) => spec,
                     Err(e) => anyhow::bail!("{}", e.message()),
                 },
             }],

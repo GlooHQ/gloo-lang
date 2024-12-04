@@ -22,12 +22,9 @@ fn find_in_json_markdown(str: &str, options: &JSONishOptions) -> Result<serde_js
         if let Some(end_idx) = str[start_idx..].find("```") {
             let end_idx = end_idx + start_idx;
             let json_str = str[start_idx..end_idx].trim();
-            if json_str.len() > 0 {
-                match parse_jsonish_value(json_str, options.recursive()) {
-                    Ok(value) => {
-                        values.push(value);
-                    }
-                    Err(_) => {}
+            if !json_str.is_empty() {
+                if let Ok(value) = parse_jsonish_value(json_str, options.recursive()) {
+                    values.push(value);
                 }
             }
             if end_idx + 3 >= remaining.len() {
@@ -37,12 +34,9 @@ fn find_in_json_markdown(str: &str, options: &JSONishOptions) -> Result<serde_js
             remaining = &remaining[end_idx + 3..];
         } else {
             let json_str = str[start_idx..].trim();
-            if json_str.len() > 0 {
-                match parse_jsonish_value(json_str, options.recursive()) {
-                    Ok(value) => {
-                        values.push(value);
-                    }
-                    Err(_) => {}
+            if !json_str.is_empty() {
+                if let Ok(value) = parse_jsonish_value(json_str, options.recursive()) {
+                    values.push(value);
                 }
             }
             break;
@@ -50,9 +44,9 @@ fn find_in_json_markdown(str: &str, options: &JSONishOptions) -> Result<serde_js
     }
 
     match values.len() {
-        0 => return Err(anyhow::anyhow!("No JSON object found")),
-        1 => return Ok(values[0].clone()),
-        _ => return Ok(serde_json::Value::Array(values)),
+        0 => Err(anyhow::anyhow!("No JSON object found")),
+        1 => Ok(values[0].clone()),
+        _ => Ok(serde_json::Value::Array(values)),
     }
 }
 
@@ -245,27 +239,20 @@ impl JsonParseState {
     }
 
     fn is_string_complete(&self) -> bool {
-        if let Some(last) = self.collection_stack.last() {
-            match last {
-                JsonCollection::UnquotedString(v) => {
-                    // Check if the token is a valid json character
-                    match v.as_str() {
-                        "true" | "false" | "null" => {
-                            return true;
-                        }
-                        _ => {
-                            // Check if the token parses as a number
-                            if let Ok(_) = v.parse::<f64>() {
-                                return true;
-                            }
-                            false
-                        }
-                    }
+        let Some(JsonCollection::UnquotedString(v)) = self.collection_stack.last() else {
+            return false;
+        };
+
+        // Check if the token is a valid json character
+        match v.as_str() {
+            "true" | "false" | "null" => true,
+            _ => {
+                // Check if the token parses as a number
+                if v.parse::<f64>().is_ok() {
+                    return true;
                 }
-                _ => false,
+                false
             }
-        } else {
-            false
         }
     }
 
@@ -295,7 +282,7 @@ impl JsonParseState {
             0 => {
                 // in nothing, so perhaps the first '{' or '[' is the start of a new object or array
                 let mut counter = 0;
-                while let Some((idx, c)) = next.next() {
+                for (idx, c) in next.by_ref() {
                     counter = idx;
                     match c {
                         // If at some point we find a valid json character, we'll close the string
@@ -311,7 +298,7 @@ impl JsonParseState {
             2 => {
                 // in object key
                 let mut counter = 0;
-                while let Some((idx, c)) = next.next() {
+                for (idx, c) in next.by_ref() {
                     counter = idx;
                     match c {
                         ':' => return Some(idx),
@@ -353,7 +340,7 @@ impl JsonParseState {
             4 => {
                 // in array
                 let mut counter = 0;
-                while let Some((idx, c)) = next.next() {
+                for (idx, c) in next {
                     counter = idx;
                     match c {
                         ',' => return Some(idx),
@@ -641,11 +628,11 @@ impl JsonParseState {
             }
         };
 
-        return Ok(0);
+        Ok(0)
     }
 }
 
-pub fn try_fix_jsonish<'a>(str: &str) -> Result<serde_json::Value> {
+pub fn try_fix_jsonish(str: &str) -> Result<serde_json::Value> {
     // Try to fix some common JSON issues
     // - Unquoted single word strings
     // - Single quoted strings
@@ -755,7 +742,7 @@ impl JSONishOptions {
 
 // Responsible for taking a string --> valid JSON
 // TODO: @hellovai add max recursive loop
-pub fn parse_jsonish_value<'a>(str: &'a str, options: JSONishOptions) -> Result<serde_json::Value> {
+pub fn parse_jsonish_value(str: &str, options: JSONishOptions) -> Result<serde_json::Value> {
     log::debug!("Parsing:\n{:?}\n-------\n{:?}\n-------", options, str);
 
     if options.depth > 10 {

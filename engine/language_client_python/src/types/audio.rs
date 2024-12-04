@@ -62,7 +62,7 @@ impl BamlAudioPy {
                     self.inner.mime_type.clone().unwrap_or("".to_string())
                 )
             }
-            _ => format!("Unknown BamlAudioPy variant"),
+            _ => "Unknown BamlAudioPy variant".to_string(),
         }
     }
 
@@ -79,7 +79,7 @@ impl BamlAudioPy {
     fn baml_deserialize(data: PyObject, py: Python<'_>) -> PyResult<Self> {
         let data: UserFacingBamlMedia = depythonize_bound(data.into_bound(py))?;
         Ok(BamlAudioPy {
-            inner: data.to_baml_media(baml_types::BamlMediaType::Audio),
+            inner: data.into_baml_media(baml_types::BamlMediaType::Audio),
         })
     }
 

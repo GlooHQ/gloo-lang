@@ -7,14 +7,13 @@ use crate::ClientSpec;
 
 mod helpers;
 
-pub mod openai;
 pub mod anthropic;
 pub mod aws_bedrock;
 pub mod fallback;
-pub mod vertex;
 pub mod google_ai;
+pub mod openai;
 pub mod round_robin;
-
+pub mod vertex;
 
 #[derive(Debug)]
 pub enum UnresolvedClientProperty<Meta> {
@@ -64,72 +63,125 @@ impl<Meta: Clone> UnresolvedClientProperty<Meta> {
         }
     }
 
-    pub fn resolve(&self, provider: &crate::ClientProvider, ctx: &EvaluationContext<'_>) -> anyhow::Result<ResolvedClientProperty> {
+    pub fn resolve(
+        &self,
+        provider: &crate::ClientProvider,
+        ctx: &EvaluationContext<'_>,
+    ) -> anyhow::Result<ResolvedClientProperty> {
         match self {
-            UnresolvedClientProperty::OpenAI(o) => o.resolve(&provider, ctx).map(ResolvedClientProperty::OpenAI),
-            UnresolvedClientProperty::Anthropic(a) => a.resolve(ctx).map(ResolvedClientProperty::Anthropic),
-            UnresolvedClientProperty::AWSBedrock(a) => a.resolve(ctx).map(ResolvedClientProperty::AWSBedrock),
-            UnresolvedClientProperty::Vertex(v) => v.resolve(ctx).map(ResolvedClientProperty::Vertex),
-            UnresolvedClientProperty::GoogleAI(g) => g.resolve(ctx).map(ResolvedClientProperty::GoogleAI),
-            UnresolvedClientProperty::RoundRobin(r) => r.resolve(ctx).map(ResolvedClientProperty::RoundRobin),
-            UnresolvedClientProperty::Fallback(f) => f.resolve(ctx).map(ResolvedClientProperty::Fallback),
+            UnresolvedClientProperty::OpenAI(o) => {
+                o.resolve(provider, ctx).map(ResolvedClientProperty::OpenAI)
+            }
+            UnresolvedClientProperty::Anthropic(a) => {
+                a.resolve(ctx).map(ResolvedClientProperty::Anthropic)
+            }
+            UnresolvedClientProperty::AWSBedrock(a) => {
+                a.resolve(ctx).map(ResolvedClientProperty::AWSBedrock)
+            }
+            UnresolvedClientProperty::Vertex(v) => {
+                v.resolve(ctx).map(ResolvedClientProperty::Vertex)
+            }
+            UnresolvedClientProperty::GoogleAI(g) => {
+                g.resolve(ctx).map(ResolvedClientProperty::GoogleAI)
+            }
+            UnresolvedClientProperty::RoundRobin(r) => {
+                r.resolve(ctx).map(ResolvedClientProperty::RoundRobin)
+            }
+            UnresolvedClientProperty::Fallback(f) => {
+                f.resolve(ctx).map(ResolvedClientProperty::Fallback)
+            }
         }
     }
 
     pub fn without_meta(&self) -> UnresolvedClientProperty<()> {
         match self {
-            UnresolvedClientProperty::OpenAI(o) => UnresolvedClientProperty::OpenAI(o.without_meta()),
-            UnresolvedClientProperty::Anthropic(a) => UnresolvedClientProperty::Anthropic(a.without_meta()),
-            UnresolvedClientProperty::AWSBedrock(a) => UnresolvedClientProperty::AWSBedrock(a.clone()),
-            UnresolvedClientProperty::Vertex(v) => UnresolvedClientProperty::Vertex(v.without_meta()),
-            UnresolvedClientProperty::GoogleAI(g) => UnresolvedClientProperty::GoogleAI(g.without_meta()),
-            UnresolvedClientProperty::RoundRobin(r) => UnresolvedClientProperty::RoundRobin(r.without_meta()),
-            UnresolvedClientProperty::Fallback(f) => UnresolvedClientProperty::Fallback(f.without_meta()),
+            UnresolvedClientProperty::OpenAI(o) => {
+                UnresolvedClientProperty::OpenAI(o.without_meta())
+            }
+            UnresolvedClientProperty::Anthropic(a) => {
+                UnresolvedClientProperty::Anthropic(a.without_meta())
+            }
+            UnresolvedClientProperty::AWSBedrock(a) => {
+                UnresolvedClientProperty::AWSBedrock(a.clone())
+            }
+            UnresolvedClientProperty::Vertex(v) => {
+                UnresolvedClientProperty::Vertex(v.without_meta())
+            }
+            UnresolvedClientProperty::GoogleAI(g) => {
+                UnresolvedClientProperty::GoogleAI(g.without_meta())
+            }
+            UnresolvedClientProperty::RoundRobin(r) => {
+                UnresolvedClientProperty::RoundRobin(r.without_meta())
+            }
+            UnresolvedClientProperty::Fallback(f) => {
+                UnresolvedClientProperty::Fallback(f.without_meta())
+            }
         }
     }
 }
 
 impl crate::ClientProvider {
-    pub fn parse_client_property<Meta: Clone>(&self, properties: PropertyHandler<Meta>) -> Result<UnresolvedClientProperty<Meta>, Vec<helpers::Error<Meta>>> {
+    pub fn parse_client_property<Meta: Clone>(
+        &self,
+        properties: PropertyHandler<Meta>,
+    ) -> Result<UnresolvedClientProperty<Meta>, Vec<helpers::Error<Meta>>> {
         Ok(match self {
             crate::ClientProvider::OpenAI(open_aiclient_provider_variant) => {
-                UnresolvedClientProperty::OpenAI(open_aiclient_provider_variant.create_from(properties)?)
-            },
-            crate::ClientProvider::Anthropic => {
-                UnresolvedClientProperty::Anthropic(anthropic::UnresolvedAnthropic::create_from(properties)?)
-            },
-            crate::ClientProvider::AwsBedrock => {
-                UnresolvedClientProperty::AWSBedrock(aws_bedrock::UnresolvedAwsBedrock::create_from(properties)?)
-            },
-            crate::ClientProvider::GoogleAi => {
-                UnresolvedClientProperty::GoogleAI(google_ai::UnresolvedGoogleAI::create_from(properties)?)
-            },
+                UnresolvedClientProperty::OpenAI(
+                    open_aiclient_provider_variant.create_from(properties)?,
+                )
+            }
+            crate::ClientProvider::Anthropic => UnresolvedClientProperty::Anthropic(
+                anthropic::UnresolvedAnthropic::create_from(properties)?,
+            ),
+            crate::ClientProvider::AwsBedrock => UnresolvedClientProperty::AWSBedrock(
+                aws_bedrock::UnresolvedAwsBedrock::create_from(properties)?,
+            ),
+            crate::ClientProvider::GoogleAi => UnresolvedClientProperty::GoogleAI(
+                google_ai::UnresolvedGoogleAI::create_from(properties)?,
+            ),
             crate::ClientProvider::Vertex => {
                 UnresolvedClientProperty::Vertex(vertex::UnresolvedVertex::create_from(properties)?)
-            },
-            crate::ClientProvider::Strategy(s) => {
-                s.create_from(properties)?
-            },
+            }
+            crate::ClientProvider::Strategy(s) => s.create_from(properties)?,
         })
     }
 }
 
 impl crate::OpenAIClientProviderVariant {
-    fn create_from<Meta: Clone>(&self, properties: PropertyHandler<Meta>) -> Result<openai::UnresolvedOpenAI<Meta>, Vec<helpers::Error<Meta>>> {
+    fn create_from<Meta: Clone>(
+        &self,
+        properties: PropertyHandler<Meta>,
+    ) -> Result<openai::UnresolvedOpenAI<Meta>, Vec<helpers::Error<Meta>>> {
         match self {
-            crate::OpenAIClientProviderVariant::Base => openai::UnresolvedOpenAI::create_standard(properties),
-            crate::OpenAIClientProviderVariant::Ollama => openai::UnresolvedOpenAI::create_ollama(properties),
-            crate::OpenAIClientProviderVariant::Azure => openai::UnresolvedOpenAI::create_azure(properties),
-            crate::OpenAIClientProviderVariant::Generic => openai::UnresolvedOpenAI::create_generic(properties),
+            crate::OpenAIClientProviderVariant::Base => {
+                openai::UnresolvedOpenAI::create_standard(properties)
+            }
+            crate::OpenAIClientProviderVariant::Ollama => {
+                openai::UnresolvedOpenAI::create_ollama(properties)
+            }
+            crate::OpenAIClientProviderVariant::Azure => {
+                openai::UnresolvedOpenAI::create_azure(properties)
+            }
+            crate::OpenAIClientProviderVariant::Generic => {
+                openai::UnresolvedOpenAI::create_generic(properties)
+            }
         }
     }
 }
 
 impl crate::StrategyClientProvider {
-    fn create_from<Meta: Clone>(&self, properties: PropertyHandler<Meta>) -> Result<UnresolvedClientProperty<Meta>, Vec<helpers::Error<Meta>>> {
+    fn create_from<Meta: Clone>(
+        &self,
+        properties: PropertyHandler<Meta>,
+    ) -> Result<UnresolvedClientProperty<Meta>, Vec<helpers::Error<Meta>>> {
         match self {
-            crate::StrategyClientProvider::Fallback => Ok(UnresolvedClientProperty::Fallback(fallback::UnresolvedFallback::create_from(properties)?)),
-            crate::StrategyClientProvider::RoundRobin => Ok(UnresolvedClientProperty::RoundRobin(round_robin::UnresolvedRoundRobin::create_from(properties)?)),
+            crate::StrategyClientProvider::Fallback => Ok(UnresolvedClientProperty::Fallback(
+                fallback::UnresolvedFallback::create_from(properties)?,
+            )),
+            crate::StrategyClientProvider::RoundRobin => Ok(UnresolvedClientProperty::RoundRobin(
+                round_robin::UnresolvedRoundRobin::create_from(properties)?,
+            )),
         }
     }
 }

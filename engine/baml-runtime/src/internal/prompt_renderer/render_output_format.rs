@@ -20,11 +20,11 @@ pub fn render_output_format(
 ) -> Result<OutputFormatContent> {
     let (enums, classes, recursive_classes) = relevant_data_models(ir, output, ctx)?;
 
-    return Ok(OutputFormatContent::target(output.clone())
+    Ok(OutputFormatContent::target(output.clone())
         .enums(enums)
         .classes(classes)
         .recursive_classes(recursive_classes)
-        .build());
+        .build())
 }
 
 enum OverridableValue<T> {
@@ -66,11 +66,11 @@ impl OverridableValue<String> {
     }
 }
 
-fn find_new_class_field<'a>(
+fn find_new_class_field(
     class_name: &str,
     field_name: &str,
     class_walker: &Result<ClassWalker<'_>>,
-    overrides: &'a RuntimeClassOverride,
+    overrides: &RuntimeClassOverride,
     _ctx: &RuntimeContext,
 ) -> Result<(Name, FieldType, Option<String>)> {
     let Some(field_overrides) = overrides.new_fields.get(field_name) else {
@@ -97,10 +97,10 @@ fn find_new_class_field<'a>(
     Ok((name, field_overrides.0.clone(), desc))
 }
 
-fn find_existing_class_field<'a>(
+fn find_existing_class_field(
     class_name: &str,
     field_name: &str,
-    class_walker: &Result<ClassWalker<'a>>,
+    class_walker: &Result<ClassWalker<'_>>,
     overrides: &Option<&RuntimeClassOverride>,
     ctx: &RuntimeContext,
 ) -> Result<(Name, FieldType, Option<String>)> {
@@ -224,14 +224,14 @@ fn relevant_data_models<'a>(
             (FieldType::Enum(enm), constraints) => {
                 if checked_types.insert(output.to_string()) {
                     let overrides = ctx.enum_overrides.get(enm);
-                    let walker = ir.find_enum(&enm);
+                    let walker = ir.find_enum(enm);
 
                     let real_values = walker
                         .as_ref()
                         .map(|e| e.walk_values().map(|v| v.name().to_string()))
                         .ok();
                     let override_values = overrides
-                        .map(|o| o.values.keys().map(|k| k.clone()))
+                        .map(|o| o.values.keys().cloned())
                         .into_iter()
                         .flatten();
                     let values = real_values
@@ -281,7 +281,7 @@ fn relevant_data_models<'a>(
                 }
             }
             (FieldType::Tuple(options), _) | (FieldType::Union(options), _) => {
-                if checked_types.insert((&output).to_string()) {
+                if checked_types.insert(output.to_string()) {
                     for inner in options {
                         if !checked_types.contains(&inner.to_string()) {
                             start.push(inner.clone());
@@ -292,14 +292,14 @@ fn relevant_data_models<'a>(
             (FieldType::Class(cls), constraints) => {
                 if checked_types.insert(output.to_string()) {
                     let overrides = ctx.class_override.get(cls);
-                    let walker = ir.find_class(&cls);
+                    let walker = ir.find_class(cls);
 
                     let real_fields = walker
                         .as_ref()
                         .map(|e| e.walk_fields().map(|v| v.name().to_string()))
                         .ok();
                     let override_fields = overrides
-                        .map(|o| o.update_fields.keys().map(|k| k.clone()))
+                        .map(|o| o.update_fields.keys().cloned())
                         .into_iter()
                         .flatten();
 
@@ -311,7 +311,7 @@ fn relevant_data_models<'a>(
                         .into_iter()
                         .map(|field| {
                             let meta =
-                                find_existing_class_field(&cls, &field, &walker, &overrides, ctx)?;
+                                find_existing_class_field(cls, &field, &walker, &overrides, ctx)?;
                             Ok(meta)
                         });
 
@@ -319,7 +319,7 @@ fn relevant_data_models<'a>(
                         .map(|o| {
                             o.new_fields
                                 .keys()
-                                .map(|k| find_new_class_field(&cls, k, &walker, o, ctx))
+                                .map(|k| find_new_class_field(cls, k, &walker, o, ctx))
                         })
                         .into_iter()
                         .flatten();

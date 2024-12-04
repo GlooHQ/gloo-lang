@@ -1,5 +1,5 @@
-mod clientspec;
 mod clients;
+mod clientspec;
 
-pub use clientspec::*;
 pub use clients::*;
+pub use clientspec::*;

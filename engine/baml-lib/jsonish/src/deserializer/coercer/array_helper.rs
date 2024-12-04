@@ -32,7 +32,7 @@ pub(super) fn pick_best(
     let res_index = (0..res.len())
         .map(|i| match res[i] {
             Ok(ref v) => (i, v.score()),
-            Err(_) => (i, i32::max_value()),
+            Err(_) => (i, i32::MAX),
         })
         .collect::<Vec<_>>();
 
@@ -116,62 +116,36 @@ pub(super) fn pick_best(
             }
 
             // De-value default values when comparing
-            match (a_val, b_val) {
-                (
-                    BamlValueWithFlags::Class(_, a_conds, a_props),
-                    BamlValueWithFlags::Class(_, b_conds, b_props),
-                ) => {
-                    // If matching on a union, and one of the choices is picking an object that only
-                    // had a single string coerced from JSON, prefer the other one
-                    // (since string cost is low, its better to pick the other one if possible)
-                    if matches!(target, FieldType::Union(_)) {
-                        let a_is_coerced_string = a_props.len() == 1
-                            && a_props.iter().all(|(_, cond)| {
-                                matches!(cond, BamlValueWithFlags::String(..))
-                                    && cond
-                                        .conditions()
-                                        .flags
-                                        .iter()
-                                        .any(|f| matches!(f, Flag::ImpliedKey(..)))
-                            });
+            if let (
+                BamlValueWithFlags::Class(_, a_conds, a_props),
+                BamlValueWithFlags::Class(_, b_conds, b_props),
+            ) = (a_val, b_val)
+            {
+                // If matching on a union, and one of the choices is picking an object that only
+                // had a single string coerced from JSON, prefer the other one
+                // (since string cost is low, its better to pick the other one if possible)
+                if matches!(target, FieldType::Union(_)) {
+                    let a_is_coerced_string = a_props.len() == 1
+                        && a_props.iter().all(|(_, cond)| {
+                            matches!(cond, BamlValueWithFlags::String(..))
+                                && cond
+                                    .conditions()
+                                    .flags
+                                    .iter()
+                                    .any(|f| matches!(f, Flag::ImpliedKey(..)))
+                        });
 
-                        let b_is_coerced_string = b_props.len() == 1
-                            && b_props.iter().all(|(_, cond)| {
-                                matches!(cond, BamlValueWithFlags::String(..))
-                                    && cond
-                                        .conditions()
-                                        .flags
-                                        .iter()
-                                        .any(|f| matches!(f, Flag::ImpliedKey(..)))
-                            });
+                    let b_is_coerced_string = b_props.len() == 1
+                        && b_props.iter().all(|(_, cond)| {
+                            matches!(cond, BamlValueWithFlags::String(..))
+                                && cond
+                                    .conditions()
+                                    .flags
+                                    .iter()
+                                    .any(|f| matches!(f, Flag::ImpliedKey(..)))
+                        });
 
-                        match (a_is_coerced_string, b_is_coerced_string) {
-                            // Return B
-                            (true, false) => return std::cmp::Ordering::Greater,
-                            // Return A
-                            (false, true) => return std::cmp::Ordering::Less,
-                            _ => {}
-                        }
-                    }
-
-                    let a_is_default = a_props.iter().all(|(k, cond)| {
-                        cond.conditions().flags.iter().any(|f| {
-                            matches!(
-                                f,
-                                Flag::OptionalDefaultFromNoValue | Flag::DefaultFromNoValue
-                            )
-                        })
-                    });
-                    let b_is_default = b_props.iter().all(|(k, cond)| {
-                        cond.conditions().flags.iter().any(|f| {
-                            matches!(
-                                f,
-                                Flag::OptionalDefaultFromNoValue | Flag::DefaultFromNoValue
-                            )
-                        })
-                    });
-
-                    match (a_is_default, b_is_default) {
+                    match (a_is_coerced_string, b_is_coerced_string) {
                         // Return B
                         (true, false) => return std::cmp::Ordering::Greater,
                         // Return A
@@ -179,7 +153,31 @@ pub(super) fn pick_best(
                         _ => {}
                     }
                 }
-                _ => {}
+
+                let a_is_default = a_props.iter().all(|(k, cond)| {
+                    cond.conditions().flags.iter().any(|f| {
+                        matches!(
+                            f,
+                            Flag::OptionalDefaultFromNoValue | Flag::DefaultFromNoValue
+                        )
+                    })
+                });
+                let b_is_default = b_props.iter().all(|(k, cond)| {
+                    cond.conditions().flags.iter().any(|f| {
+                        matches!(
+                            f,
+                            Flag::OptionalDefaultFromNoValue | Flag::DefaultFromNoValue
+                        )
+                    })
+                });
+
+                match (a_is_default, b_is_default) {
+                    // Return B
+                    (true, false) => return std::cmp::Ordering::Greater,
+                    // Return A
+                    (false, true) => return std::cmp::Ordering::Less,
+                    _ => {}
+                }
             }
 
             match a_default.cmp(&b_default) {
@@ -202,9 +200,9 @@ pub(super) fn pick_best(
         res.as_ref()
             .iter()
             .enumerate()
-            .filter_map(|(idx, r)| match r {
-                Ok(r) => Some(format!("{idx} {:#}", r)),
-                Err(e) => Some(format!("{idx} {:#}", e)),
+            .map(|(idx, r)| match r {
+                Ok(r) => format!("{idx} {r:#}"),
+                Err(e) => format!("{idx} {e:#}"),
             })
             .collect::<Vec<_>>()
             .join("\n")
@@ -224,7 +222,7 @@ pub(super) fn pick_best(
             Ok(v.to_owned())
         }
         None => {
-            if res.len() > 0 {
+            if !res.is_empty() {
                 let errors = res.iter().filter_map(|r| match r {
                     Ok(_) => None,
                     Err(e) => Some(e),

@@ -47,20 +47,27 @@ impl FunctionResult {
 fn pythonize_checks<'a>(
     py: Python<'a>,
     types_module: &Bound<'_, PyModule>,
-    checks: &Vec<ResponseCheck>,
+    checks: &[ResponseCheck],
 ) -> PyResult<Bound<'a, PyDict>> {
     let dict = PyDict::new_bound(py);
     let check_class: &PyType = types_module.getattr("Check")?.extract()?;
-    checks.iter().try_for_each(|ResponseCheck{name, expression, status}| {
-        // Construct the Check.
-        let check_properties_dict = pyo3::types::PyDict::new_bound(py);
-        check_properties_dict.set_item("name", name)?;
-        check_properties_dict.set_item("expression", expression)?;
-        check_properties_dict.set_item("status", status)?;
-        let check_instance = check_class.call_method("model_validate", (check_properties_dict,), None)?;
-        dict.set_item(name, check_instance)?;
-        PyResult::Ok(())
-    })?;
+    checks.iter().try_for_each(
+        |ResponseCheck {
+             name,
+             expression,
+             status,
+         }| {
+            // Construct the Check.
+            let check_properties_dict = pyo3::types::PyDict::new_bound(py);
+            check_properties_dict.set_item("name", name)?;
+            check_properties_dict.set_item("expression", expression)?;
+            check_properties_dict.set_item("status", status)?;
+            let check_instance =
+                check_class.call_method("model_validate", (check_properties_dict,), None)?;
+            dict.set_item(name, check_instance)?;
+            PyResult::Ok(())
+        },
+    )?;
     Ok(dict)
 }
 
@@ -152,8 +159,12 @@ fn pythonize_strict(
                 // the field is a `Checked` before doing a `model_dump`.
                 let value_model = value.call_method0(py, "model_dump");
                 match value_model {
-                    Err(_) => { properties_dict.set_item(key, value)?; }
-                    Ok(m) => {properties_dict.set_item(key, m)?;}
+                    Err(_) => {
+                        properties_dict.set_item(key, value)?;
+                    }
+                    Ok(m) => {
+                        properties_dict.set_item(key, m)?;
+                    }
                 }
             }
 
@@ -167,7 +178,8 @@ fn pythonize_strict(
                 Err(_) => return Ok(properties_dict.into()),
             };
 
-            let instance = class_type.call_method("model_validate", (properties_dict.clone(),), None)?;
+            let instance =
+                class_type.call_method("model_validate", (properties_dict.clone(),), None)?;
 
             Ok(instance.into())
         }
@@ -177,9 +189,8 @@ fn pythonize_strict(
     if meta.is_empty() {
         Ok(py_value_without_constraints)
     } else {
-
         // Generate the Python checks
-        let python_checks = pythonize_checks(py, &cls_module, &meta)?;
+        let python_checks = pythonize_checks(py, cls_module, &meta)?;
 
         // Get the type of the original value
         let value_type = py_value_without_constraints.bind(py).get_type();
@@ -203,16 +214,17 @@ fn pythonize_strict(
         let class_checked_type_constructor = cls_module.getattr("Checked")?;
 
         // Prepare type parameters for Checked[...]
-        let type_parameters_tuple = PyTuple::new_bound(py, &[value_type.as_ref(), &literal_check_names]);
+        let type_parameters_tuple =
+            PyTuple::new_bound(py, [value_type.as_ref(), &literal_check_names]);
 
         // Create the Checked type using __class_getitem__
         let class_checked_type: Bound<'_, PyAny> = class_checked_type_constructor
             .call_method1("__class_getitem__", (type_parameters_tuple,))?;
 
         // Validate the model with the constructed type
-        let checked_instance = class_checked_type.call_method("model_validate", (properties_dict.clone(),), None)?;
+        let checked_instance =
+            class_checked_type.call_method("model_validate", (properties_dict.clone(),), None)?;
 
         Ok(checked_instance.into())
     }
-
 }

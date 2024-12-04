@@ -267,8 +267,8 @@ impl FieldType {
         use FieldType::*;
 
         fn attrs_eq(attrs1: &Option<Vec<Attribute>>, attrs2: &Option<Vec<Attribute>>) {
-            let attrs1 = attrs1.clone().unwrap_or(vec![]);
-            let attrs2 = attrs2.clone().unwrap_or(vec![]);
+            let attrs1 = attrs1.clone().unwrap_or_default();
+            let attrs2 = attrs2.clone().unwrap_or_default();
             assert_eq!(
                 attrs1.len(),
                 attrs2.len(),
@@ -285,11 +285,7 @@ impl FieldType {
                 attrs_eq(attrs1, attrs2);
             }
             (Symbol(..), _) => {
-                panic!(
-                    "Different types:\n{}\n---\n{}",
-                    self.to_string(),
-                    other.to_string()
-                )
+                panic!("Different types:\n{self}\n---\n{other}")
             }
             (Primitive(arity1, prim_ty1, _, attrs1), Primitive(arity2, prim_ty2, _, attrs2)) => {
                 assert_eq!(arity1, arity2);
@@ -297,11 +293,7 @@ impl FieldType {
                 attrs_eq(attrs1, attrs2);
             }
             (Primitive(..), _) => {
-                panic!(
-                    "Different types: \n{}\n---\n{}",
-                    self.to_string(),
-                    other.to_string()
-                )
+                panic!("Different types: \n{self}\n---\n{other}")
             }
             (Literal(arity1, val1, _, attrs1), Literal(arity2, val2, _, attrs2)) => {
                 assert_eq!(arity1, arity2);
@@ -309,11 +301,7 @@ impl FieldType {
                 attrs_eq(attrs1, attrs2);
             }
             (Literal(_, _, _, _), _) => {
-                panic!(
-                    "Different types: \n{}\n---\n{}",
-                    self.to_string(),
-                    other.to_string()
-                )
+                panic!("Different types: \n{self}\n---\n{other}")
             }
             (List(arity1, inner1, dims1, _, attrs1), List(arity2, inner2, dims2, _, attrs2)) => {
                 assert_eq!(arity1, arity2);
@@ -322,11 +310,7 @@ impl FieldType {
                 attrs_eq(attrs1, attrs2);
             }
             (List(..), _) => {
-                panic!(
-                    "Different types: \n{}\n---\n{}",
-                    self.to_string(),
-                    other.to_string()
-                )
+                panic!("Different types: \n{self}\n---\n{other}")
             }
             (Tuple(arity1, inner1, _, attrs1), Tuple(arity2, inner2, _, attrs2)) => {
                 assert_eq!(arity1, arity2);
@@ -336,11 +320,7 @@ impl FieldType {
                 attrs_eq(attrs1, attrs2);
             }
             (Tuple(..), _) => {
-                panic!(
-                    "Different types: \n{}\n---\n{}",
-                    self.to_string(),
-                    other.to_string()
-                )
+                panic!("Different types: \n{self}\n---\n{other}")
             }
             (Union(arity1, variants1, _, attrs1), Union(arity2, variants2, _, attrs2)) => {
                 assert_eq!(arity1, arity2);
@@ -355,11 +335,7 @@ impl FieldType {
                 attrs_eq(attrs1, attrs2);
             }
             (Union(..), _) => {
-                panic!(
-                    "Different types: \n{}\n---\n{}",
-                    self.to_string(),
-                    other.to_string()
-                )
+                panic!("Different types: \n{self}\n---\n{other}")
             }
             (Map(arity1, kv1, _, attrs1), Map(arity2, kv2, _, attrs2)) => {
                 assert_eq!(arity1, arity2);
@@ -368,11 +344,7 @@ impl FieldType {
                 attrs_eq(attrs1, attrs2);
             }
             (Map(..), _) => {
-                panic!(
-                    "Different types: \n{}\n---\n{}",
-                    self.to_string(),
-                    other.to_string()
-                )
+                panic!("Different types: \n{self}\n---\n{other}")
             }
         }
     }

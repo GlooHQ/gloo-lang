@@ -234,7 +234,7 @@ fn if_else() {
     types.add_variable("prompt", Type::String);
     types.add_function("Foo", Type::Bool, vec![("arg".into(), Type::String)]);
     assert_fails_to!(
-            r#"
+        r#"
 {% if prompt == 'a' -%}
     {% set x = 1 %}
 {%- elif prompt == 'abc' -%}
@@ -244,10 +244,12 @@ fn if_else() {
 {%- endif %}
     {{ Foo(x) }}
         "#
-            .trim(),
-            types,
-            vec![r#"Function 'Foo' expects argument 'arg' to be of type string, but got (undefined | literal["2"] | literal[1])"#]
-        );
+        .trim(),
+        types,
+        vec![
+            r#"Function 'Foo' expects argument 'arg' to be of type string, but got (undefined | literal["2"] | literal[1])"#
+        ]
+    );
 
     let mut types = PredefinedTypes::default(JinjaContext::Prompt);
     types.add_variable("prompt", Type::String);

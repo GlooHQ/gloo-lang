@@ -187,7 +187,7 @@ trait ToTypeReferenceInClientDefinition {
 }
 
 impl ToTypeReferenceInClientDefinition for FieldType {
-    fn to_type_ref(&self, ir: &IntermediateRepr, with_checked: bool) -> String {
+    fn to_type_ref(&self, ir: &IntermediateRepr, _with_checked: bool) -> String {
         match self {
             FieldType::Enum(name) => {
                 if ir
@@ -201,14 +201,14 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 }
             }
             FieldType::Literal(value) => to_python_literal(value),
-            FieldType::Alias { resolution, .. } => resolution.to_type_ref(ir, with_checked),
+            FieldType::Alias { resolution, .. } => resolution.to_type_ref(ir, _with_checked),
             FieldType::Class(name) => format!("types.{name}"),
-            FieldType::List(inner) => format!("List[{}]", inner.to_type_ref(ir, with_checked)),
+            FieldType::List(inner) => format!("List[{}]", inner.to_type_ref(ir, _with_checked)),
             FieldType::Map(key, value) => {
                 format!(
                     "Dict[{}, {}]",
-                    key.to_type_ref(ir, with_checked),
-                    value.to_type_ref(ir, with_checked)
+                    key.to_type_ref(ir, _with_checked),
+                    value.to_type_ref(ir, _with_checked)
                 )
             }
             FieldType::Primitive(r#type) => r#type.to_python(),
@@ -216,7 +216,7 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 "Union[{}]",
                 inner
                     .iter()
-                    .map(|t| t.to_type_ref(ir, with_checked))
+                    .map(|t| t.to_type_ref(ir, _with_checked))
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
@@ -224,20 +224,20 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 "Tuple[{}]",
                 inner
                     .iter()
-                    .map(|t| t.to_type_ref(ir, with_checked))
+                    .map(|t| t.to_type_ref(ir, _with_checked))
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
             FieldType::Optional(inner) => {
-                format!("Optional[{}]", inner.to_type_ref(ir, with_checked))
+                format!("Optional[{}]", inner.to_type_ref(ir, _with_checked))
             }
             FieldType::Constrained { base, .. } => match field_type_attributes(self) {
                 Some(checks) => {
-                    let base_type_ref = base.to_type_ref(ir, with_checked);
+                    let base_type_ref = base.to_type_ref(ir, _with_checked);
                     let checks_type_ref = type_name_for_checks(&checks);
                     format!("Checked[{base_type_ref},types.{checks_type_ref}]")
                 }
-                None => base.to_type_ref(ir, with_checked),
+                None => base.to_type_ref(ir, _with_checked),
             },
         }
     }

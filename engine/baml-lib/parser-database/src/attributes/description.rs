@@ -3,9 +3,7 @@ use internal_baml_diagnostics::DatamodelError;
 use crate::{coerce, context::Context, types::Attributes};
 
 pub(super) fn visit_description_attribute(attributes: &mut Attributes, ctx: &mut Context<'_>) {
-    match ctx
-        .visit_default_arg_with_idx("description")
-    {
+    match ctx.visit_default_arg_with_idx("description") {
         Ok((_, name)) => {
             if attributes.description().is_some() {
                 ctx.push_attribute_validation_error("cannot be specified more than once", false);
@@ -13,7 +11,10 @@ pub(super) fn visit_description_attribute(attributes: &mut Attributes, ctx: &mut
                 if result.as_str().is_some() {
                     attributes.add_description(result);
                 } else {
-                    ctx.push_error(DatamodelError::new_validation_error("must be a string.", result.meta().clone()));
+                    ctx.push_error(DatamodelError::new_validation_error(
+                        "must be a string.",
+                        result.meta().clone(),
+                    ));
                 }
             }
         }

@@ -1,5 +1,11 @@
 use super::{
-    helpers::{parsing_catch_all, Pair}, parse_attribute::parse_attribute, parse_comments::*, parse_field::parse_value_expr, parse_identifier::parse_identifier, parse_named_args_list::{parse_function_arg, parse_named_argument_list}, Rule
+    helpers::{parsing_catch_all, Pair},
+    parse_attribute::parse_attribute,
+    parse_comments::*,
+    parse_field::parse_value_expr,
+    parse_identifier::parse_identifier,
+    parse_named_args_list::{parse_function_arg, parse_named_argument_list},
+    Rule,
 };
 
 use crate::ast::*;
@@ -37,10 +43,12 @@ pub(crate) fn parse_value_expression_block(
                 Ok(arg) => input = Some(arg),
                 Err(err) => diagnostics.push_error(err),
             },
-            Rule::field_type | Rule::field_type_chain => match parse_function_arg(current, diagnostics) {
-                Ok(arg) => output = Some(arg),
-                Err(err) => diagnostics.push_error(err),
-            },
+            Rule::field_type | Rule::field_type_chain => {
+                match parse_function_arg(current, diagnostics) {
+                    Ok(arg) => output = Some(arg),
+                    Err(err) => diagnostics.push_error(err),
+                }
+            }
             Rule::BLOCK_OPEN | Rule::BLOCK_CLOSE => {}
 
             Rule::value_expression_contents => {
@@ -94,12 +102,12 @@ pub(crate) fn parse_value_expression_block(
                                 attributes.push(attribute);
                             } else if !value_is_test {
                                 diagnostics.push_error(DatamodelError::new_validation_error(
-                                    &format!("Only Tests may contain block-level attributes"),
+                                    "Only Tests may contain block-level attributes",
                                     diagnostics.span(span),
                                 ))
                             } else {
                                 diagnostics.push_error(DatamodelError::new_validation_error(
-                                    &format!("Tests may only contain 'check' or 'assert' attributes"),
+                                    "Tests may only contain 'check' or 'assert' attributes",
                                     diagnostics.span(span),
                                 ))
                             }

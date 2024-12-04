@@ -1,0 +1,17 @@
+<ParamField
+  path="default_role"
+  type="string"
+>
+  The role to use if the role is not in the allowed_roles. **Default: `"user"` usually, but some models like OpenAI's `gpt-4o` will use `"system"`**
+
+  Picked the first role in `allowed_roles` if not "user", otherwise "user".
+</ParamField>
+
+<ParamField
+  path="allowed_roles"
+  type="string[]"
+>
+  Which roles should we forward to the API? **Default: `["system", "user", "assistant"]` usually, but some models like OpenAI's `o1-mini` will use `["user", "assistant"]`**
+
+  Anything not in this list will be set to the `default_role`.
+</ParamField>

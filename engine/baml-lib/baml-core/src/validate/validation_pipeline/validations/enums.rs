@@ -29,7 +29,7 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
 
             let field_type = ctx.db.to_jinja_type(&arg.ast_arg().1.field_type);
 
-            defined_types.add_variable(&name, field_type);
+            defined_types.add_variable(name, field_type);
         });
 
         defined_types.end_scope();

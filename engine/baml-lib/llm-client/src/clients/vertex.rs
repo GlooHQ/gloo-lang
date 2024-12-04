@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::{AllowedRoleMetadata, SupportedRequestModes, UnresolvedAllowedRoleMetadata};
+use crate::{AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection};
 use anyhow::{Context, Result};
 
 use baml_types::{GetEnvVar, StringOr, UnresolvedValue};
@@ -56,8 +56,7 @@ impl<Meta> UnresolvedServiceAccountDetails<Meta> {
             UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s) => s.required_env_vars(),
             UnresolvedServiceAccountDetails::Object(s) => s
                 .values()
-                .map(|(_, v)| v.required_env_vars())
-                .flatten()
+                .flat_map(|(_, v)| v.required_env_vars())
                 .collect(),
             UnresolvedServiceAccountDetails::Json(s) => s.required_env_vars(),
         }
@@ -78,11 +77,10 @@ impl<Meta> UnresolvedServiceAccountDetails<Meta> {
                             // Not a valid JSON, so we assume it's a file path
                             // Load the file and parse it as JSON
                             let file = std::fs::read_to_string(&value).context(format!(
-                                "Failed to read service account file: {}",
-                                value
+                                "Failed to read service account file: {value}"
                             ))?;
                             let json = serde_json::from_str(&file)
-                                .context(format!("Failed to parse service account file as JSON"))?;
+                                .context("Failed to parse service account file as JSON")?;
                             Ok(ResolvedServiceAccountDetails::Json(json))
                         }
                         #[cfg(target_arch = "wasm32")]
@@ -101,14 +99,13 @@ impl<Meta> UnresolvedServiceAccountDetails<Meta> {
                     .collect::<Result<IndexMap<_, _>>>()?;
                 Ok(ResolvedServiceAccountDetails::Json(
                     serde_json::from_value(serde_json::json!(raw))
-                        .context(format!("Failed to parse service account JSON"))?,
+                        .context("Failed to parse service account JSON")?,
                 ))
             }
             UnresolvedServiceAccountDetails::Json(s) => {
                 let raw = s.resolve(ctx)?;
                 Ok(ResolvedServiceAccountDetails::Json(
-                    serde_json::from_str(&raw)
-                        .context(format!("Failed to parse service account JSON"))?,
+                    serde_json::from_str(&raw).context("Failed to parse service account JSON")?,
                 ))
             }
         }
@@ -123,10 +120,10 @@ pub struct UnresolvedVertex<Meta> {
     authorization: UnresolvedServiceAccountDetails<Meta>,
     model: StringOr,
     headers: IndexMap<String, StringOr>,
-    allowed_roles: Vec<StringOr>,
-    default_role: Option<StringOr>,
+    role_selection: UnresolvedRolesSelection,
     allowed_role_metadata: UnresolvedAllowedRoleMetadata,
     supported_request_modes: SupportedRequestModes,
+    finish_reason_filter: UnresolvedFinishReasonFilter,
     properties: IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
 }
 
@@ -135,12 +132,31 @@ pub struct ResolvedVertex {
     pub authorization: ResolvedServiceAccountDetails,
     pub model: String,
     pub headers: IndexMap<String, String>,
-    pub allowed_roles: Vec<String>,
-    pub default_role: String,
+    role_selection: RolesSelection,
     pub allowed_metadata: AllowedRoleMetadata,
     pub supported_request_modes: SupportedRequestModes,
     pub properties: IndexMap<String, serde_json::Value>,
     pub proxy_url: Option<String>,
+    pub finish_reason_filter: FinishReasonFilter,
+}
+
+impl ResolvedVertex {
+    pub fn allowed_roles(&self) -> Vec<String> {
+        self.role_selection.allowed_or_else(|| {
+            vec!["system".to_string(), "user".to_string(), "assistant".to_string()]
+        })
+    }
+
+    pub fn default_role(&self) -> String {
+        self.role_selection.default_or_else(|| {
+            let allowed_roles = self.allowed_roles();
+            if allowed_roles.contains(&"user".to_string()) {
+                "user".to_string()
+            } else {
+                allowed_roles.first().cloned().unwrap_or_else(|| "user".to_string())
+            }
+        })
+    }
 }
 
 impl<Meta: Clone> UnresolvedVertex<Meta> {
@@ -155,28 +171,14 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
         }
         env_vars.extend(self.authorization.required_env_vars());
         env_vars.extend(self.model.required_env_vars());
-        env_vars.extend(
-            self.headers
-                .values()
-                .map(|v| v.required_env_vars())
-                .flatten(),
-        );
-        env_vars.extend(
-            self.allowed_roles
-                .iter()
-                .map(|r| r.required_env_vars())
-                .flatten(),
-        );
-        self.default_role
-            .as_ref()
-            .map(|r| env_vars.extend(r.required_env_vars()));
+        env_vars.extend(self.headers.values().flat_map(StringOr::required_env_vars));
+        env_vars.extend(self.role_selection.required_env_vars());
         env_vars.extend(self.allowed_role_metadata.required_env_vars());
         env_vars.extend(self.supported_request_modes.required_env_vars());
         env_vars.extend(
             self.properties
                 .values()
-                .map(|(_, v)| v.required_env_vars())
-                .flatten(),
+                .flat_map(|(_, v)| v.required_env_vars()),
         );
 
         env_vars
@@ -189,8 +191,7 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
             authorization: self.authorization.without_meta(),
             model: self.model.clone(),
             headers: self.headers.clone(),
-            allowed_roles: self.allowed_roles.clone(),
-            default_role: self.default_role.clone(),
+            role_selection: self.role_selection.clone(),
             allowed_role_metadata: self.allowed_role_metadata.clone(),
             supported_request_modes: self.supported_request_modes.clone(),
             properties: self
@@ -198,6 +199,7 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
                 .iter()
                 .map(|(k, (_, v))| (k.clone(), ((), v.without_meta())))
                 .collect(),
+            finish_reason_filter: self.finish_reason_filter.clone(),
         }
     }
 
@@ -231,24 +233,7 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
 
         let model = self.model.resolve(ctx)?;
 
-        let allowed_roles = self
-            .allowed_roles
-            .iter()
-            .map(|role| role.resolve(ctx))
-            .collect::<Result<Vec<_>>>()?;
-
-        let Some(default_role) = self.default_role.as_ref() else {
-            return Err(anyhow::anyhow!("default_role must be provided"));
-        };
-        let default_role = default_role.resolve(ctx)?;
-
-        if !allowed_roles.contains(&default_role) {
-            return Err(anyhow::anyhow!(
-                "default_role must be in allowed_roles: {} not in {:?}",
-                default_role,
-                allowed_roles
-            ));
-        }
+        let role_selection = self.role_selection.resolve(ctx)?;
 
         let headers = self
             .headers
@@ -261,8 +246,7 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
             authorization,
             model,
             headers,
-            allowed_roles,
-            default_role,
+            role_selection,
             allowed_metadata: self.allowed_role_metadata.resolve(ctx)?,
             supported_request_modes: self.supported_request_modes.clone(),
             properties: self
@@ -271,6 +255,7 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
                 .map(|(k, (_, v))| Ok((k.clone(), v.resolve_serde::<serde_json::Value>(ctx)?)))
                 .collect::<Result<IndexMap<_, _>>>()?,
             proxy_url: super::helpers::get_proxy_url(ctx),
+            finish_reason_filter: self.finish_reason_filter.resolve(ctx)?,
         })
     }
 
@@ -358,16 +343,12 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
             .ensure_string("project_id", false)
             .map(|(_, v, _)| v);
 
-        let allowed_roles = properties.ensure_allowed_roles().unwrap_or(vec![
-            StringOr::Value("system".to_string()),
-            StringOr::Value("user".to_string()),
-            StringOr::Value("assistant".to_string()),
-        ]);
-
-        let default_role = properties.ensure_default_role(allowed_roles.as_slice(), 1);
+        let role_selection = properties.ensure_roles_selection();
         let allowed_metadata = properties.ensure_allowed_metadata();
         let supported_request_modes = properties.ensure_supported_request_modes();
         let headers = properties.ensure_headers().unwrap_or_default();
+        let finish_reason_filter = properties.ensure_finish_reason_filter();
+
         let (properties, errors) = properties.finalize();
         if !errors.is_empty() {
             return Err(errors);
@@ -383,11 +364,11 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
             authorization,
             model,
             headers,
-            allowed_roles,
-            default_role,
+            role_selection,
             allowed_role_metadata: allowed_metadata,
             supported_request_modes,
             properties,
+            finish_reason_filter,
         })
     }
 }

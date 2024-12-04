@@ -9,7 +9,7 @@ mod internal_tests {
     use baml_runtime::BamlRuntime;
     use std::sync::Once;
 
-    use baml_runtime::internal::llm_client::orchestrator::OrchestrationScope;
+    // use baml_runtime::internal::llm_client::orchestrator::OrchestrationScope;
     use baml_runtime::InternalRuntimeInterface;
     use baml_types::BamlValue;
 
@@ -18,7 +18,6 @@ mod internal_tests {
     };
 
     use wasm_bindgen_test::*;
-    use wasm_logger;
 
     static INIT: Once = Once::new();
 
@@ -187,7 +186,7 @@ mod internal_tests {
         let render_prompt_future =
             runtime
                 .internal()
-                .render_prompt(&function_name, &ctx, &params, Some(0));
+                .render_prompt(function_name, &ctx, &params, Some(0));
 
         let (prompt, scope, _) = runtime.async_runtime.block_on(render_prompt_future)?;
 
@@ -256,8 +255,6 @@ mod internal_tests {
         )?;
         log::info!("Runtime:");
 
-        let missing_env_vars = runtime.internal().ir().required_env_vars();
-
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
             .create_ctx_with_default();
@@ -267,7 +264,7 @@ mod internal_tests {
         let render_prompt_future =
             runtime
                 .internal()
-                .render_prompt(&function_name, &ctx, &params, Some(0));
+                .render_prompt(function_name, &ctx, &params, Some(0));
 
         let (prompt, scope, _) = runtime.async_runtime.block_on(render_prompt_future)?;
 
@@ -336,8 +333,6 @@ test ImageReceiptTest {
 }
         "##,
         )?;
-
-        let missing_env_vars = runtime.internal().ir().required_env_vars();
 
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
@@ -420,8 +415,6 @@ test TestName {
         "##,
         )?;
 
-        let missing_env_vars = runtime.internal().ir().required_env_vars();
-
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)
             .create_ctx_with_default();
@@ -489,8 +482,6 @@ test TestTree {
 }
         "##,
         )?;
-
-        let missing_env_vars = runtime.internal().ir().required_env_vars();
 
         let ctx = runtime
             .create_ctx_manager(BamlValue::String("test".to_string()), None)

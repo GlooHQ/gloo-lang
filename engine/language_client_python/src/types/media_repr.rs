@@ -27,7 +27,7 @@ pub enum UserFacingBamlMediaContent {
 }
 
 impl UserFacingBamlMedia {
-    pub fn to_baml_media(self, media_type: BamlMediaType) -> BamlMedia {
+    pub fn into_baml_media(self, media_type: BamlMediaType) -> BamlMedia {
         BamlMedia {
             media_type,
             mime_type: self.mime_type,

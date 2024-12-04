@@ -45,7 +45,7 @@ impl Harness {
         cmd.args(args.split_ascii_whitespace());
         cmd.current_dir(&self.test_dir);
         // cmd.env("RUST_BACKTRACE", "1");
-        cmd.env("BAML_LOG", "debug,jsonish=info");
+        // cmd.env("BAML_LOG", "debug,jsonish=info");
 
         Ok(cmd)
     }

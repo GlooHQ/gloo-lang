@@ -9,7 +9,7 @@ use tracing_subscriber::{self, EnvFilter};
 
 #[pyfunction]
 fn invoke_runtime_cli(py: Python) -> PyResult<()> {
-    Ok(baml_cli::run_cli(
+    baml_cli::run_cli(
         py.import_bound("sys")?
             .getattr("argv")?
             .extract::<Vec<String>>()?,
@@ -17,7 +17,7 @@ fn invoke_runtime_cli(py: Python) -> PyResult<()> {
             output_type: baml_types::GeneratorOutputType::PythonPydantic,
         },
     )
-    .map_err(errors::BamlError::from_anyhow)?)
+    .map_err(errors::BamlError::from_anyhow)
 }
 
 #[pymodule]

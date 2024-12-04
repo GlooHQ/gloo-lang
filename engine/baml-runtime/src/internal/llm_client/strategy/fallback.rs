@@ -3,11 +3,15 @@ use std::collections::HashMap;
 use anyhow::{Context, Result};
 
 use internal_baml_core::ir::ClientWalker;
-use internal_llm_client::{ClientProvider, ClientSpec, ResolvedClientProperty, UnresolvedClientProperty};
+use internal_llm_client::{
+    ClientProvider, ClientSpec, ResolvedClientProperty, UnresolvedClientProperty,
+};
 
 use crate::{
     client_registry::ClientProperty,
-    internal::llm_client::orchestrator::{ExecutionScope, IterOrchestrator, OrchestrationScope, OrchestrationState},
+    internal::llm_client::orchestrator::{
+        ExecutionScope, IterOrchestrator, OrchestrationScope, OrchestrationState,
+    },
     runtime_interface::InternalClientLookup,
     RuntimeContext,
 };
@@ -25,7 +29,7 @@ fn resolve_strategy(
     ctx: &RuntimeContext,
 ) -> Result<Vec<ClientSpec>> {
     let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
-    let ResolvedClientProperty::Fallback(props) = properties  else {
+    let ResolvedClientProperty::Fallback(props) = properties else {
         anyhow::bail!(
             "Invalid client property. Should have been a fallback property but got: {}",
             properties.name()
@@ -75,27 +79,22 @@ impl IterOrchestrator for FallbackStrategy {
             .iter()
             .enumerate()
             .map(
-                |(idx, client)| {
-                    match client_lookup.get_llm_provider(client, ctx) {
-                        Ok(client) => {
-                            let client = client.clone();
-                            Ok(client.iter_orchestrator(
-                                state,
-                                ExecutionScope::Fallback(self.name.clone(), idx).into(),
-                                ctx,
-                                client_lookup,
-                            ))
-                        }
-                        Err(e) => {
-                            Err(e)
-                        },
+                |(idx, client)| match client_lookup.get_llm_provider(client, ctx) {
+                    Ok(client) => {
+                        let client = client.clone();
+                        Ok(client.iter_orchestrator(
+                            state,
+                            ExecutionScope::Fallback(self.name.clone(), idx).into(),
+                            ctx,
+                            client_lookup,
+                        ))
                     }
-                }
+                    Err(e) => Err(e),
+                },
             )
             .collect::<Result<Vec<_>>>()?
             .into_iter()
             .flatten()
-            .into_iter()
             .flatten()
             .collect();
 

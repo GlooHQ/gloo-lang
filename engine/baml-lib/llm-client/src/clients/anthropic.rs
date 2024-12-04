@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::{AllowedRoleMetadata, SupportedRequestModes, UnresolvedAllowedRoleMetadata};
+use crate::{AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection};
 use anyhow::Result;
 
 use baml_types::{EvaluationContext, StringOr, UnresolvedValue};
@@ -12,12 +12,12 @@ use super::helpers::{Error, PropertyHandler, UnresolvedUrl};
 pub struct UnresolvedAnthropic<Meta> {
     base_url: UnresolvedUrl,
     api_key: StringOr,
-    allowed_roles: Vec<StringOr>,
-    default_role: Option<StringOr>,
+    role_selection: UnresolvedRolesSelection,
     allowed_metadata: UnresolvedAllowedRoleMetadata,
     supported_request_modes: SupportedRequestModes,
     headers: IndexMap<String, StringOr>,
     properties: IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
+    finish_reason_filter: UnresolvedFinishReasonFilter,
 }
 
 impl<Meta> UnresolvedAnthropic<Meta> {
@@ -25,12 +25,20 @@ impl<Meta> UnresolvedAnthropic<Meta> {
         UnresolvedAnthropic {
             base_url: self.base_url.clone(),
             api_key: self.api_key.clone(),
-            allowed_roles: self.allowed_roles.clone(),
-            default_role: self.default_role.clone(),
+            role_selection: self.role_selection.clone(),
             allowed_metadata: self.allowed_metadata.clone(),
             supported_request_modes: self.supported_request_modes.clone(),
-            headers: self.headers.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
-            properties: self.properties.iter().map(|(k, (_, v))| (k.clone(), ((), v.without_meta()))).collect(),
+            headers: self
+                .headers
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect(),
+            properties: self
+                .properties
+                .iter()
+                .map(|(k, (_, v))| (k.clone(), ((), v.without_meta())))
+                .collect(),
+            finish_reason_filter: self.finish_reason_filter.clone(),
         }
     }
 }
@@ -38,50 +46,55 @@ impl<Meta> UnresolvedAnthropic<Meta> {
 pub struct ResolvedAnthropic {
     pub base_url: String,
     pub api_key: String,
-    pub allowed_roles: Vec<String>,
-    pub default_role: String,
+    role_selection: RolesSelection,
     pub allowed_metadata: AllowedRoleMetadata,
     pub supported_request_modes: SupportedRequestModes,
     pub headers: IndexMap<String, String>,
     pub properties: IndexMap<String, serde_json::Value>,
     pub proxy_url: Option<String>,
+    pub finish_reason_filter: FinishReasonFilter,
 }
+
+impl ResolvedAnthropic {
+    pub fn allowed_roles(&self) -> Vec<String> {
+        self.role_selection.allowed_or_else(|| {
+            vec!["system".to_string(), "user".to_string(), "assistant".to_string()]
+        })
+    }
+
+    pub fn default_role(&self) -> String {
+        self.role_selection
+            .default_or_else(|| {
+                let allowed_roles = self.allowed_roles();
+                if allowed_roles.contains(&"user".to_string()) {
+                    "user".to_string()
+                } else {
+                    allowed_roles.first().cloned().unwrap_or_else(|| "user".to_string())
+                }
+            })
+    }
+}
+
 
 impl<Meta: Clone> UnresolvedAnthropic<Meta> {
     pub fn required_env_vars(&self) -> HashSet<String> {
         let mut env_vars = HashSet::new();
         env_vars.extend(self.base_url.required_env_vars());
         env_vars.extend(self.api_key.required_env_vars());
-        env_vars.extend(self.allowed_roles.iter().map(|r| r.required_env_vars()).flatten());
-        self.default_role.as_ref().map(|r| env_vars.extend(r.required_env_vars()));
+        env_vars.extend(self.role_selection.required_env_vars());
         env_vars.extend(self.allowed_metadata.required_env_vars());
         env_vars.extend(self.supported_request_modes.required_env_vars());
-        env_vars.extend(self.headers.values().map(|v| v.required_env_vars()).flatten());
-        env_vars.extend(self.properties.values().map(|(_, v)| v.required_env_vars()).flatten());
+        env_vars.extend(self.headers.values().flat_map(|v| v.required_env_vars()));
+        env_vars.extend(
+            self.properties
+                .values()
+                .flat_map(|(_, v)| v.required_env_vars()),
+        );
 
         env_vars
     }
 
     pub fn resolve(&self, ctx: &EvaluationContext<'_>) -> Result<ResolvedAnthropic> {
-        let allowed_roles = self
-            .allowed_roles
-            .iter()
-            .map(|role| role.resolve(ctx))
-            .collect::<Result<Vec<_>>>()?;
-
-        let Some(default_role) = self.default_role.as_ref() else {
-            return Err(anyhow::anyhow!("default_role must be provided"));
-        };
-        let default_role = default_role.resolve(ctx)?;
-
-        if !allowed_roles.contains(&default_role) {
-            return Err(anyhow::anyhow!(
-                "default_role must be in allowed_roles: {} not in {:?}",
-                default_role,
-                allowed_roles
-            ));
-        }
-
         let base_url = self.base_url.resolve(ctx)?;
 
         let mut headers = self
@@ -112,36 +125,29 @@ impl<Meta: Clone> UnresolvedAnthropic<Meta> {
         Ok(ResolvedAnthropic {
             base_url,
             api_key: self.api_key.resolve(ctx)?,
-            allowed_roles,
-            default_role,
+            role_selection: self.role_selection.resolve(ctx)?,
             allowed_metadata: self.allowed_metadata.resolve(ctx)?,
             supported_request_modes: self.supported_request_modes.clone(),
             headers,
             properties,
             proxy_url: super::helpers::get_proxy_url(ctx),
+            finish_reason_filter: self.finish_reason_filter.resolve(ctx)?,
         })
     }
 
-    pub fn create_from(
-        mut properties: PropertyHandler<Meta>,
-    ) -> Result<Self, Vec<Error<Meta>>> {
-        let base_url = properties.ensure_base_url_with_default(UnresolvedUrl::new_static("https://api.anthropic.com"));
+    pub fn create_from(mut properties: PropertyHandler<Meta>) -> Result<Self, Vec<Error<Meta>>> {
+        let base_url = properties
+            .ensure_base_url_with_default(UnresolvedUrl::new_static("https://api.anthropic.com"));
         let api_key = properties
             .ensure_string("api_key", false)
             .map(|(_, v, _)| v.clone())
             .unwrap_or(StringOr::EnvVar("ANTHROPIC_API_KEY".to_string()));
 
-        let allowed_roles = properties.ensure_allowed_roles().unwrap_or(vec![
-            StringOr::Value("system".to_string()),
-            StringOr::Value("user".to_string()),
-            StringOr::Value("assistant".to_string()),
-        ]);
-
-        let default_role = properties.ensure_default_role(allowed_roles.as_slice(), 1);
+        let role_selection = properties.ensure_roles_selection();
         let allowed_metadata = properties.ensure_allowed_metadata();
         let supported_request_modes = properties.ensure_supported_request_modes();
         let headers = properties.ensure_headers().unwrap_or_default();
-
+        let finish_reason_filter = properties.ensure_finish_reason_filter();
         let (properties, errors) = properties.finalize();
         if !errors.is_empty() {
             return Err(errors);
@@ -150,12 +156,12 @@ impl<Meta: Clone> UnresolvedAnthropic<Meta> {
         Ok(Self {
             base_url,
             api_key,
-            allowed_roles,
-            default_role,
+            role_selection,
             allowed_metadata,
             supported_request_modes,
             headers,
             properties,
+            finish_reason_filter,
         })
     }
 }

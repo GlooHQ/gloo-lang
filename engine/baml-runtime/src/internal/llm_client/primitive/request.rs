@@ -12,7 +12,7 @@ pub trait RequestBuilder {
     #[allow(async_fn_in_trait)]
     async fn build_request(
         &self,
-        prompt: either::Either<&String, &Vec<RenderedChatMessage>>,
+        prompt: either::Either<&String, &[RenderedChatMessage]>,
         allow_proxy: bool,
         stream: bool,
     ) -> Result<reqwest::RequestBuilder>;
@@ -23,17 +23,17 @@ pub trait RequestBuilder {
 }
 
 fn to_prompt(
-    prompt: either::Either<&String, &Vec<RenderedChatMessage>>,
+    prompt: either::Either<&String, &[RenderedChatMessage]>,
 ) -> internal_baml_jinja::RenderedPrompt {
     match prompt {
         either::Left(prompt) => internal_baml_jinja::RenderedPrompt::Completion(prompt.clone()),
-        either::Right(prompt) => internal_baml_jinja::RenderedPrompt::Chat(prompt.clone()),
+        either::Right(prompt) => internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
     }
 }
 
 pub async fn make_request(
     client: &(impl WithClient + RequestBuilder),
-    prompt: either::Either<&String, &Vec<RenderedChatMessage>>,
+    prompt: either::Either<&String, &[RenderedChatMessage]>,
     stream: bool,
 ) -> Result<(Response, web_time::SystemTime, web_time::Instant), LLMResponse> {
     let (system_now, instant_now) = (web_time::SystemTime::now(), web_time::Instant::now());
@@ -120,7 +120,7 @@ pub async fn make_request(
 
 pub async fn make_parsed_request<T: DeserializeOwned>(
     client: &(impl WithClient + RequestBuilder),
-    prompt: either::Either<&String, &Vec<RenderedChatMessage>>,
+    prompt: either::Either<&String, &[RenderedChatMessage]>,
     stream: bool,
 ) -> Result<(T, web_time::SystemTime, web_time::Instant), LLMResponse> {
     let (response, system_now, instant_now) = make_request(client, prompt, stream).await?;

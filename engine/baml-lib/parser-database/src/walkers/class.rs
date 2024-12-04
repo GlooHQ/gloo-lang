@@ -28,7 +28,7 @@ impl<'db> ClassWalker<'db> {
     pub fn static_fields(self) -> impl ExactSizeIterator<Item = FieldWalker<'db>> {
         self.ast_type_block()
             .iter_fields()
-            .map(move |(field_id, _)| self.walk((self.id, field_id.into(), false)))
+            .map(move |(field_id, _)| self.walk((self.id, field_id, false)))
             .collect::<Vec<_>>()
             .into_iter()
     }

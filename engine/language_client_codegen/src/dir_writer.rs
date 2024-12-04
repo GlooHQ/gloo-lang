@@ -53,7 +53,7 @@ fn try_delete_tmp_dir(temp_path: &Path) -> Result<()> {
 
     for attempt in 1..=delete_attempts {
         if temp_path.exists() {
-            match std::fs::remove_dir_all(&temp_path) {
+            match std::fs::remove_dir_all(temp_path) {
                 Ok(_) => {
                     log::debug!("Temp directory successfully removed.");
                     break; // Exit loop after successful deletion
@@ -154,7 +154,7 @@ impl<L: LanguageFeatures + Default> FileCollector<L> {
                 continue;
             }
             let path = entry.path();
-            if let Ok(mut f) = std::fs::File::open(&path) {
+            if let Ok(mut f) = std::fs::File::open(path) {
                 use std::io::Read;
                 let mut buf = [0; 1024];
                 if f.read(&mut buf).is_ok()

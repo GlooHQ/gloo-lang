@@ -200,10 +200,13 @@ impl<'db> Context<'db> {
         }
     }
 
-    pub (crate) fn get_all_args(&mut self) -> Vec<(ArgumentId, &'db ast::Expression)> {
-        let args = self.attributes.args.iter().map(|arg_id| {
-            (arg_id.clone(), &self.arg_at(*arg_id).value)
-        }).collect();
+    pub(crate) fn get_all_args(&mut self) -> Vec<(ArgumentId, &'db ast::Expression)> {
+        let args = self
+            .attributes
+            .args
+            .iter()
+            .map(|arg_id| (*arg_id, &self.arg_at(*arg_id).value))
+            .collect();
         self.attributes.args.clear();
         args
     }

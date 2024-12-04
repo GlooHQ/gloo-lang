@@ -3,7 +3,10 @@ use std::{borrow::Cow, collections::HashSet};
 use baml_types::{GetEnvVar, StringOr, UnresolvedValue};
 use indexmap::IndexMap;
 
-use crate::{SupportedRequestModes, UnresolvedAllowedRoleMetadata};
+use crate::{
+    SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter,
+    UnresolvedRolesSelection,
+};
 
 #[derive(Debug, Clone)]
 pub struct UnresolvedUrl(StringOr);
@@ -68,7 +71,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
         let result = match ensure_string(&mut self.options, key) {
             Ok(result) => {
                 if required && result.is_none() {
-                    self.push_option_error(format!("Missing required property: {}", key));
+                    self.push_option_error(format!("Missing required property: {key}"));
                 }
                 result
             }
@@ -78,10 +81,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             }
         };
 
-        let final_result =
-            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
-
-        final_result
+        result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()))
     }
 
     pub fn ensure_map(
@@ -92,7 +92,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
         let result = match ensure_map(&mut self.options, key) {
             Ok(result) => {
                 if required && result.is_none() {
-                    self.push_option_error(format!("Missing required property: {}", key));
+                    self.push_option_error(format!("Missing required property: {key}"));
                 }
                 result
             }
@@ -102,10 +102,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             }
         };
 
-        let final_result =
-            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
-
-        final_result
+        result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()))
     }
 
     pub fn ensure_array(
@@ -116,7 +113,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
         let result = match ensure_array(&mut self.options, key) {
             Ok(result) => {
                 if required && result.is_none() {
-                    self.push_option_error(format!("Missing required property: {}", key));
+                    self.push_option_error(format!("Missing required property: {key}"));
                 }
                 result
             }
@@ -126,17 +123,14 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             }
         };
 
-        let final_result =
-            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
-
-        final_result
+        result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()))
     }
 
     pub fn ensure_bool(&mut self, key: &str, required: bool) -> Option<(Meta, bool, Meta)> {
         let result = match ensure_bool(&mut self.options, key) {
             Ok(result) => {
                 if required && result.is_none() {
-                    self.push_option_error(format!("Missing required property: {}", key));
+                    self.push_option_error(format!("Missing required property: {key}"));
                 }
                 result
             }
@@ -146,17 +140,14 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             }
         };
 
-        let final_result =
-            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
-
-        final_result
+        result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()))
     }
 
     pub fn ensure_int(&mut self, key: &str, required: bool) -> Option<(Meta, i32, Meta)> {
         let result = match ensure_int(&mut self.options, key) {
             Ok(result) => {
                 if required && result.is_none() {
-                    self.push_option_error(format!("Missing required property: {}", key));
+                    self.push_option_error(format!("Missing required property: {key}"));
                 }
                 result
             }
@@ -166,15 +157,16 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             }
         };
 
-        let final_result =
-            result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()));
-
-        final_result
+        result.map(|(key_span, value, meta)| (key_span.clone(), value, meta.clone()))
     }
 
-    pub fn ensure_allowed_roles(&mut self) -> Option<Vec<StringOr>> {
+    fn ensure_allowed_roles(&mut self) -> Option<Vec<StringOr>> {
         self.ensure_array("allowed_roles", false)
-            .map(|(_, value, _)| {
+            .map(|(_, value, value_span)| {
+                if value.is_empty() {
+                    self.push_error("allowed_roles must not be empty", value_span);
+                }
+
                 value
                     .into_iter()
                     .filter_map(|v| match v.as_str() {
@@ -194,11 +186,17 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             })
     }
 
-    pub fn ensure_default_role(
-        &mut self,
-        allowed_roles: &[StringOr],
-        default_role_index: usize,
-    ) -> Option<StringOr> {
+    pub(crate) fn ensure_roles_selection(&mut self) -> UnresolvedRolesSelection {
+        let allowed_roles = self.ensure_allowed_roles();
+        let default_role = self.ensure_default_role(allowed_roles.as_ref().unwrap_or(&vec![
+            StringOr::Value("user".to_string()),
+            StringOr::Value("assistant".to_string()),
+            StringOr::Value("system".to_string()),
+        ]));
+        UnresolvedRolesSelection::new(allowed_roles, default_role)
+    }
+
+    fn ensure_default_role(&mut self, allowed_roles: &[StringOr]) -> Option<StringOr> {
         self.ensure_string("default_role", false)
             .and_then(|(_, value, span)| {
                 if allowed_roles.iter().any(|v| value.maybe_eq(v)) {
@@ -206,20 +204,18 @@ impl<Meta: Clone> PropertyHandler<Meta> {
                 } else {
                     let allowed_roles_str = allowed_roles
                         .iter()
-                        .map(|v| format!("{:?}", v))
+                        .map(|v| format!("{v:?}"))
                         .collect::<Vec<_>>()
                         .join(", ");
                     self.push_error(
                         format!(
-                            "default_role must be one of {}. Got: {}",
-                            allowed_roles_str, value
+                            "default_role must be one of {allowed_roles_str}. Got: {value}. To support different default roles, add allowed_roles [\"user\", \"assistant\", \"system\", ...]"
                         ),
                         span,
                     );
                     None
                 }
             })
-            .or_else(|| allowed_roles.get(default_role_index).cloned())
     }
 
     pub fn ensure_api_key(&mut self) -> Option<StringOr> {
@@ -245,6 +241,55 @@ impl<Meta: Clone> PropertyHandler<Meta> {
                 stream: Some(value),
             },
             None => SupportedRequestModes { stream: None },
+        }
+    }
+
+    pub fn ensure_finish_reason_filter(&mut self) -> UnresolvedFinishReasonFilter {
+        let allow_list = self.ensure_array("finish_reason_allow_list", false);
+        let deny_list = self.ensure_array("finish_reason_deny_list", false);
+
+        match (allow_list, deny_list) {
+            (Some(allow), Some(deny)) => {
+                self.push_error(
+                    "finish_reason_allow_list and finish_reason_deny_list cannot be used together",
+                    allow.0,
+                );
+                self.push_error(
+                    "finish_reason_allow_list and finish_reason_deny_list cannot be used together",
+                    deny.0,
+                );
+                UnresolvedFinishReasonFilter::All
+            }
+            (Some((_, allow, _)), None) => UnresolvedFinishReasonFilter::AllowList(
+                allow
+                    .into_iter()
+                    .filter_map(|v| match v.as_str() {
+                        Some(s) => Some(s.clone()),
+                        None => {
+                            self.push_error(
+                                "values in finish_reason_allow_list must be strings.",
+                                v.meta().clone(),
+                            );
+                            None
+                        }
+                    })
+                    .collect(),
+            ),
+            (None, Some((_, deny, _))) => UnresolvedFinishReasonFilter::DenyList(
+                deny.into_iter()
+                    .filter_map(|v| match v.into_str() {
+                        Ok((s, _)) => Some(s.clone()),
+                        Err(other) => {
+                            self.push_error(
+                                "values in finish_reason_deny_list must be strings.",
+                                other.meta().clone(),
+                            );
+                            None
+                        }
+                    })
+                    .collect(),
+            ),
+            (None, None) => UnresolvedFinishReasonFilter::All,
         }
     }
 
@@ -319,7 +364,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
                                 if let Ok(client_spec) =
                                     crate::ClientSpec::new_from_id(value.as_str()).map_err(|e| {
                                         self.push_error(
-                                            format!("Invalid strategy: {}", e),
+                                            format!("Invalid strategy: {e}"),
                                             v.meta().clone(),
                                         );
                                     })
@@ -347,7 +392,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
     pub fn finalize_empty(self) -> Vec<Error<Meta>> {
         let mut errors = self.errors;
         for (k, (key_span, _)) in self.options {
-            errors.push(Error::new(format!("Unsupported property: {}", k), key_span));
+            errors.push(Error::new(format!("Unsupported property: {k}"), key_span));
         }
         errors
     }
@@ -367,7 +412,7 @@ fn ensure_string<Meta: Clone>(
     key: &str,
 ) -> Result<Option<(Meta, StringOr, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
-        match value.to_str() {
+        match value.into_str() {
             Ok((s, meta)) => Ok(Some((key_span, s, meta))),
             Err(other) => Err(Error {
                 message: format!("{} must be a string. Got: {}", key, other.r#type()),
@@ -384,7 +429,7 @@ fn ensure_array<Meta: Clone>(
     key: &str,
 ) -> Result<Option<(Meta, Vec<UnresolvedValue<Meta>>, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
-        match value.to_array() {
+        match value.into_array() {
             Ok((a, meta)) => Ok(Some((key_span, a, meta))),
             Err(other) => Err(Error {
                 message: format!("{} must be an array. Got: {}", key, other.r#type()),
@@ -401,7 +446,7 @@ fn ensure_map<Meta: Clone>(
     key: &str,
 ) -> Result<Option<(Meta, IndexMap<String, (Meta, UnresolvedValue<Meta>)>, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
-        match value.to_map() {
+        match value.into_map() {
             Ok((m, meta)) => Ok(Some((key_span, m, meta))),
             Err(other) => Err(Error {
                 message: format!("{} must be a map. Got: {}", key, other.r#type()),
@@ -418,7 +463,7 @@ fn ensure_bool<Meta: Clone>(
     key: &str,
 ) -> Result<Option<(Meta, bool, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
-        match value.to_bool() {
+        match value.into_bool() {
             Ok((b, meta)) => Ok(Some((key_span, b, meta))),
             Err(other) => Err(Error {
                 message: format!("{} must be a bool. Got: {}", key, other.r#type()),
@@ -435,13 +480,13 @@ fn ensure_int<Meta: Clone>(
     key: &str,
 ) -> Result<Option<(Meta, i32, Meta)>, Error<Meta>> {
     if let Some((key_span, value)) = options.shift_remove(key) {
-        match value.to_numeric() {
+        match value.into_numeric() {
             Ok((i, meta)) => {
                 if let Ok(i) = i.parse::<i32>() {
                     Ok(Some((key_span, i, meta)))
                 } else {
                     Err(Error {
-                        message: format!("{} must be an integer. Got: {}", key, i),
+                        message: format!("{key} must be an integer. Got: {i}"),
                         span: meta,
                     })
                 }

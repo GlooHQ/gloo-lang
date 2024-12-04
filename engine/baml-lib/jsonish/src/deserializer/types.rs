@@ -63,11 +63,11 @@ impl BamlValueWithFlags {
             BamlValueWithFlags::Int(v) => &v.flags,
             BamlValueWithFlags::Float(v) => &v.flags,
             BamlValueWithFlags::Bool(v) => &v.flags,
-            BamlValueWithFlags::List(v, _) => &v,
-            BamlValueWithFlags::Map(v, _) => &v,
+            BamlValueWithFlags::List(v, _) => v,
+            BamlValueWithFlags::Map(v, _) => v,
             BamlValueWithFlags::Enum(_, v) => &v.flags,
-            BamlValueWithFlags::Class(_, v, _) => &v,
-            BamlValueWithFlags::Null(v) => &v,
+            BamlValueWithFlags::Class(_, v, _) => v,
+            BamlValueWithFlags::Null(v) => v,
             BamlValueWithFlags::Media(v) => &v.flags,
         }
     }
@@ -104,7 +104,7 @@ impl BamlValueWithFlags {
                 if !causes.is_empty() {
                     expls.push(ParsingError {
                         scope: scope.clone(),
-                        reason: format!("error while parsing string"),
+                        reason: "error while parsing string".to_string(),
                         causes,
                     });
                 }
@@ -114,7 +114,7 @@ impl BamlValueWithFlags {
                 if !causes.is_empty() {
                     expls.push(ParsingError {
                         scope: scope.clone(),
-                        reason: format!("error while parsing int"),
+                        reason: "error while parsing int".to_string(),
                         causes,
                     });
                 }
@@ -124,7 +124,7 @@ impl BamlValueWithFlags {
                 if !causes.is_empty() {
                     expls.push(ParsingError {
                         scope: scope.clone(),
-                        reason: format!("error while parsing float"),
+                        reason: "error while parsing float".to_string(),
                         causes,
                     });
                 }
@@ -134,7 +134,7 @@ impl BamlValueWithFlags {
                 if !causes.is_empty() {
                     expls.push(ParsingError {
                         scope: scope.clone(),
-                        reason: format!("error while parsing bool"),
+                        reason: "error while parsing bool".to_string(),
                         causes,
                     });
                 }
@@ -144,7 +144,7 @@ impl BamlValueWithFlags {
                 if !causes.is_empty() {
                     expls.push(ParsingError {
                         scope: scope.clone(),
-                        reason: format!("error while parsing list"),
+                        reason: "error while parsing list".to_string(),
                         causes,
                     });
                 }
@@ -159,7 +159,7 @@ impl BamlValueWithFlags {
                 if !causes.is_empty() {
                     expls.push(ParsingError {
                         scope: scope.clone(),
-                        reason: format!("error while parsing map"),
+                        reason: "error while parsing map".to_string(),
                         causes,
                     });
                 }
@@ -198,7 +198,7 @@ impl BamlValueWithFlags {
                 }
                 for (k, v) in fields.iter() {
                     let mut scope = scope.clone();
-                    scope.push(format!("{}", k));
+                    scope.push(k.to_string());
                     v.explanation_impl(scope, expls);
                 }
             }
@@ -208,7 +208,7 @@ impl BamlValueWithFlags {
                 if !causes.is_empty() {
                     expls.push(ParsingError {
                         scope: scope.clone(),
-                        reason: format!("error while parsing null"),
+                        reason: "error while parsing null".to_string(),
                         causes,
                     });
                 }
@@ -218,7 +218,7 @@ impl BamlValueWithFlags {
                 if !causes.is_empty() {
                     expls.push(ParsingError {
                         scope: scope.clone(),
-                        reason: format!("error while parsing media"),
+                        reason: "error while parsing media".to_string(),
                         causes,
                     });
                 }
@@ -304,9 +304,7 @@ impl From<&BamlValueWithFlags> for BamlValue {
             BamlValueWithFlags::Int(i) => BamlValue::Int(i.value),
             BamlValueWithFlags::Float(f) => BamlValue::Float(f.value),
             BamlValueWithFlags::Bool(b) => BamlValue::Bool(b.value),
-            BamlValueWithFlags::List(_, v) => {
-                BamlValue::List(v.into_iter().map(|x| x.into()).collect())
-            }
+            BamlValueWithFlags::List(_, v) => BamlValue::List(v.iter().map(|x| x.into()).collect()),
             BamlValueWithFlags::Map(_, m) => BamlValue::Map(
                 m.into_iter()
                     .map(|(k, (_, v))| (k.clone(), v.into()))
@@ -393,7 +391,7 @@ impl std::fmt::Display for BamlValueWithFlags {
                 }
             }
             BamlValueWithFlags::List(flags, v) => {
-                write!(f, "\n")?;
+                writeln!(f)?;
                 for (idx, item) in v.iter().enumerate() {
                     writeln!(f, "  {idx}: {}", item.to_string().replace("\n", "  \n"))?;
                 }
@@ -402,7 +400,7 @@ impl std::fmt::Display for BamlValueWithFlags {
                 }
             }
             BamlValueWithFlags::Map(_, v) => {
-                write!(f, "\n")?;
+                writeln!(f)?;
                 for (key, value) in v {
                     writeln!(f, "{}: {}", key, value.1)?;
                 }
@@ -414,8 +412,8 @@ impl std::fmt::Display for BamlValueWithFlags {
                 }
             }
             BamlValueWithFlags::Class(_, flags, v) => {
-                write!(f, "\n")?;
-                for (_idx, (k, v)) in v.iter().enumerate() {
+                writeln!(f)?;
+                for (k, v) in v.iter() {
                     writeln!(f, "  KV {}", k.to_string().replace("\n", "\n  "))?;
                     writeln!(f, "  {}", v.to_string().replace("\n", "\n  "))?;
                 }

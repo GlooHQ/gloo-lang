@@ -54,17 +54,17 @@ pub struct Schema {
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Value {
     #[serde(rename = "NULL_VALUE")]
-    NullValue,
+    Null,
     #[serde(rename = "NUMBER_VALUE")]
-    NumberValue(f64),
+    Number(f64),
     #[serde(rename = "STRING_VALUE")]
-    StringValue(String),
+    String(String),
     #[serde(rename = "BOOL_VALUE")]
-    BoolValue(bool),
+    Bool(bool),
     #[serde(rename = "STRUCT_VALUE")]
-    StructValue(Struct),
+    Struct(Struct),
     #[serde(rename = "LIST_VALUE")]
-    ListValue(Vec<Value>),
+    List(Vec<Value>),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -82,7 +82,7 @@ pub enum Type {
     #[serde(rename = "ARRAY")]
     Array,
     #[serde(rename = "TYPE_UNSPECIFIED")]
-    TypeUnspecified,
+    Unspecified,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -109,7 +109,7 @@ pub struct SafetySetting {
 #[derive(Serialize, Deserialize, Debug)]
 pub enum HarmBlockThreshold {
     #[serde(rename = "HARM_BLOCK_THRESHOLD_UNSPECIFIED")]
-    HarmBlockThresholdUnspecified,
+    Unspecified,
     #[serde(rename = "BLOCK_LOW_AND_ABOVE")]
     BlockLowAndAbove,
     #[serde(rename = "BLOCK_MEDIUM_AND_ABOVE")]
@@ -123,7 +123,7 @@ pub enum HarmBlockThreshold {
 #[derive(Serialize, Deserialize, Debug)]
 pub enum HarmBlockMethod {
     #[serde(rename = "harm_block_method_unspecified")]
-    HarmBlockMethodUnspecified,
+    Unspecified,
     #[serde(rename = "severity")]
     Severity,
     #[serde(rename = "probability")]
@@ -189,21 +189,21 @@ pub struct SafetyRating {
 #[derive(Serialize, Deserialize, Debug, strum_macros::Display)]
 pub enum HarmCategory {
     #[serde(rename = "HARM_CATEGORY_UNSPECIFIED")]
-    HarmCategoryUnspecified,
+    Unspecified,
     #[serde(rename = "HARM_CATEGORY_HATE_SPEECH")]
-    HarmCategoryHateSpeech,
+    HateSpeech,
     #[serde(rename = "HARM_CATEGORY_DANGEROUS_CONTENT")]
-    HarmCategoryDangerousContent,
+    DangerousContent,
     #[serde(rename = "HARM_CATEGORY_HARASSMENT")]
-    HarmCategoryHarassment,
+    Harassment,
     #[serde(rename = "HARM_CATEGORY_SEXUALLY_EXPLICIT")]
-    HarmCategorySexuallyExplicit,
+    SexuallyExplicit,
 }
 
 #[derive(Serialize, Deserialize, Debug, strum_macros::Display)]
 pub enum HarmProbability {
     #[serde(rename = "HARM_PROBABILITY_UNSPECIFIED")]
-    HarmProbabilityUnspecified,
+    Unspecified,
     #[serde(rename = "NEGLIGIBLE")]
     Negligible,
     #[serde(rename = "LOW")]
@@ -217,15 +217,15 @@ pub enum HarmProbability {
 #[derive(Serialize, Deserialize, Debug, strum_macros::Display)]
 pub enum HarmSeverity {
     #[serde(rename = "HARM_SEVERITY_UNSPECIFIED")]
-    HarmSeverityUnspecified,
+    Unspecified,
     #[serde(rename = "HARM_SEVERITY_NEGLIGIBLE")]
-    HarmSeverityNegligible,
+    Negligible,
     #[serde(rename = "HARM_SEVERITY_LOW")]
-    HarmSeverityLow,
+    Low,
     #[serde(rename = "HARM_SEVERITY_MEDIUM")]
-    HarmSeverityMedium,
+    Medium,
     #[serde(rename = "HARM_SEVERITY_HIGH")]
-    HarmSeverityHigh,
+    High,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -305,7 +305,7 @@ pub struct Duration {
 #[derive(Serialize, Deserialize, Debug, strum_macros::Display)]
 pub enum FinishReason {
     #[serde(rename = "FINISH_REASON_UNSPECIFIED")]
-    FinishReasonUnspecified,
+    Unspecified,
     #[serde(rename = "STOP")]
     Stop,
     #[serde(rename = "MAX_TOKENS")]
@@ -439,7 +439,7 @@ mod tests {
                 println!("Error line: {}", e.line());
                 println!("Error column: {}", e.column());
                 println!("Error cause: {:?}", e.classify());
-                assert!(false, "Deserialization failed");
+                panic!("Deserialization failed");
             }
         }
     }

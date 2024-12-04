@@ -9,14 +9,14 @@ use internal_baml_parser_database::ParserDatabase;
 pub(crate) fn validate(
     db: &ParserDatabase,
     preview_features: BitFlags<PreviewFeature>,
-    mut diagnostics: &mut Diagnostics,
+    diagnostics: &mut Diagnostics,
 ) {
     // Early return so that the validator does not have to deal with invalid schemas
 
     let mut context = context::Context {
-        db: &db,
+        db,
         preview_features,
-        diagnostics: &mut diagnostics,
+        diagnostics,
     };
 
     validations::validate(&mut context);

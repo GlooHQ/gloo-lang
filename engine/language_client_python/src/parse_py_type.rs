@@ -5,7 +5,7 @@ use baml_types::{BamlMap, BamlValue};
 use pyo3::{
     exceptions::{PyRuntimeError, PyTypeError},
     prelude::{PyAnyMethods, PyTypeMethods},
-    types::{PyBool, PyBoolMethods, PyDict, PyList},
+    types::{PyBool, PyBoolMethods, PyDict, PyDictMethods, PyList},
     PyErr, PyObject, PyResult, Python, ToPyObject,
 };
 
@@ -16,12 +16,12 @@ struct SerializationError {
     message: String,
 }
 
-impl SerializationError {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for SerializationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.position.is_empty() {
-            return self.message.clone();
+            f.write_str(&self.message)
         } else {
-            format!("{}: {}", self.position.join("."), self.message)
+            write!(f, "{}: {}", self.position.join("."), self.message)
         }
     }
 }
@@ -30,18 +30,18 @@ struct Errors {
     errors: Vec<SerializationError>,
 }
 
-impl Into<PyErr> for Errors {
-    fn into(self) -> PyErr {
-        let errs = self.errors;
+impl From<Errors> for PyErr {
+    fn from(errors: Errors) -> Self {
+        let errs = errors.errors;
         match errs.len() {
             0 => PyRuntimeError::new_err(
                 "Unexpected error! Report this bug to github.com/boundaryml/baml (code: pyo3-zero)",
             ),
-            1 => PyTypeError::new_err(errs.get(0).unwrap().to_string()),
+            1 => PyTypeError::new_err(errs.first().unwrap().to_string()),
             _ => {
                 let mut message = format!("{} errors occurred:\n", errs.len());
                 for err in errs {
-                    message.push_str(&format!(" - {}\n", err.to_string()));
+                    message.push_str(&format!(" - {err}\n"));
                 }
                 PyTypeError::new_err(message)
             }
@@ -170,8 +170,7 @@ where
         MappedPyType::List(items) => {
             let mut errs = vec![];
             let mut arr = vec![];
-            let mut count = 0;
-            for item in items {
+            for (count, item) in items.into_iter().enumerate() {
                 let mut prefix = prefix.clone();
                 prefix.push(count.to_string());
                 match pyobject_to_json(item, py, to_type, prefix, handle_unknown_types) {
@@ -179,7 +178,6 @@ where
                     Ok(None) => {}
                     Err(e) => errs.extend(e),
                 }
-                count += 1;
             }
             if !errs.is_empty() {
                 return Err(errs);
@@ -265,7 +263,7 @@ pub fn parse_py_type(
 
                 // Get extra fields (like if this is a @@dynamic class)
                 if let Ok(extra) = any.getattr(py, "__pydantic_extra__") {
-                    if let Ok(extra_dict) = extra.downcast::<PyDict>(py) {
+                    if let Ok(extra_dict) = extra.downcast_bound::<PyDict>(py) {
                         for (key, value) in extra_dict.iter() {
                             if let (Ok(key), value) = (key.extract::<String>(), value) {
                                 fields.insert(key, value.to_object(py));
@@ -313,19 +311,13 @@ pub fn parse_py_type(
             } else if let Ok(b) = any.downcast_bound::<BamlAudioPy>(py) {
                 let b = b.borrow();
                 Ok(MappedPyType::BamlMedia(b.inner.clone()))
+            } else if matches!(unknown_type_handler, UnknownTypeHandler::SerializeAsStr) {
+                // Call the __str__ method on the object
+                // Call the type() function on the object
+                let t = any.bind(py).get_type();
+                Ok(MappedPyType::String(format!("{t}: {any}")))
             } else {
-                if matches!(unknown_type_handler, UnknownTypeHandler::SerializeAsStr) {
-                    // Call the __str__ method on the object
-                    // Call the type() function on the object
-                    let t = any.bind(py).get_type();
-                    Ok(MappedPyType::String(format!(
-                        "{}: {}",
-                        t.to_string(),
-                        any.to_string()
-                    )))
-                } else {
-                    Ok(MappedPyType::Unsupported(format!("{:?}", t)))
-                }
+                Ok(MappedPyType::Unsupported(format!("{t:?}")))
             }
         };
 

@@ -4,7 +4,7 @@ use crate::evaluate_type::types::Type;
 
 use super::{expr::evaluate_type, types::PredefinedTypes, TypeError};
 
-fn track_walk<'a>(node: &ast::Stmt<'a>, state: &mut PredefinedTypes) {
+fn track_walk(node: &ast::Stmt<'_>, state: &mut PredefinedTypes) {
     match node {
         ast::Stmt::Template(stmt) => {
             state.start_scope();
@@ -101,18 +101,16 @@ fn track_walk<'a>(node: &ast::Stmt<'a>, state: &mut PredefinedTypes) {
         }
         ast::Stmt::WithBlock(_) => todo!(),
         ast::Stmt::Set(stmt) => {
-            let expr_type = evaluate_type(&stmt.expr, state);
-
-            let expr_type = if expr_type.is_err() {
-                state.errors_mut().extend(expr_type.err().unwrap());
-                Type::Unknown
-            } else {
-                expr_type.unwrap()
+            let expr_type = match evaluate_type(&stmt.expr, state) {
+                Ok(expr_type) => expr_type,
+                Err(e) => {
+                    state.errors_mut().extend(e);
+                    Type::Unknown
+                }
             };
 
-            match &stmt.target {
-                ast::Expr::Var(var) => state.add_variable(var.id, expr_type),
-                _ => {}
+            if let ast::Expr::Var(var) = &stmt.target {
+                state.add_variable(var.id, expr_type)
             }
         }
         ast::Stmt::SetBlock(stmt) => {
@@ -128,7 +126,7 @@ fn track_walk<'a>(node: &ast::Stmt<'a>, state: &mut PredefinedTypes) {
     }
 }
 
-pub fn get_variable_types<'a>(stmt: &Stmt, state: &mut PredefinedTypes) -> Vec<TypeError> {
+pub fn get_variable_types(stmt: &Stmt, state: &mut PredefinedTypes) -> Vec<TypeError> {
     track_walk(stmt, state);
     state.errors().to_vec()
 }

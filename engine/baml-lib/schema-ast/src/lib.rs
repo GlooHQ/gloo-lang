@@ -9,7 +9,10 @@ pub use self::parser::parse_schema;
 /// source span information.
 pub mod ast;
 
+mod formatter;
 mod parser;
+
+pub use formatter::{format_schema, FormatOptions};
 
 /// Transform the input string into a valid (quoted and escaped) PSL string literal.
 ///

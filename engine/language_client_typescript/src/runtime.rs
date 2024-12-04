@@ -55,7 +55,7 @@ impl BamlRuntime {
     ) -> napi::Result<Self> {
         let directory = PathBuf::from(directory);
         Ok(CoreRuntime::from_directory(&directory, env_vars)
-            .map_err(|e| from_anyhow_error(e))?
+            .map_err(from_anyhow_error)?
             .into())
     }
 
@@ -66,7 +66,7 @@ impl BamlRuntime {
         env_vars: HashMap<String, String>,
     ) -> napi::Result<Self> {
         Ok(CoreRuntime::from_file_content(&root_path, &files, env_vars)
-            .map_err(|e| from_anyhow_error(e))?
+            .map_err(from_anyhow_error)?
             .into())
     }
 
@@ -123,7 +123,7 @@ impl BamlRuntime {
             result
                 .0
                 .map(FunctionResult::from)
-                .map_err(|e| from_anyhow_error(e))
+                .map_err(from_anyhow_error)
         };
 
         env.execute_tokio_future(fut, |&mut _, data| Ok(data))
@@ -160,9 +160,7 @@ impl BamlRuntime {
             cb.as_ref(),
         );
 
-        result
-            .map(FunctionResult::from)
-            .map_err(|e| from_anyhow_error(e))
+        result.map(FunctionResult::from).map_err(from_anyhow_error)
     }
 
     #[napi]
@@ -199,7 +197,7 @@ impl BamlRuntime {
                 tb.as_ref(),
                 client_registry.as_ref(),
             )
-            .map_err(|e| from_anyhow_error(e))?;
+            .map_err(from_anyhow_error)?;
 
         let cb = match cb {
             Some(cb) => Some(env.create_reference(cb)?),
@@ -243,7 +241,7 @@ impl BamlRuntime {
                 tb.as_ref(),
                 client_registry.as_ref(),
             )
-            .map_err(|e| from_anyhow_error(e))?;
+            .map_err(from_anyhow_error)?;
 
         let cb = match cb {
             Some(cb) => Some(env.create_reference(cb)?),
@@ -276,9 +274,7 @@ impl BamlRuntime {
                 let mut tsfn = env.create_threadsafe_function(
                     &cb,
                     0,
-                    |ctx: ThreadSafeCallContext<BamlLogEvent>| {
-                        Ok(vec![BamlLogEvent::from(ctx.value)])
-                    },
+                    |ctx: ThreadSafeCallContext<BamlLogEvent>| Ok(vec![ctx.value]),
                 )?;
                 let tsfn_clone = tsfn.clone();
 
@@ -307,7 +303,7 @@ impl BamlRuntime {
                 let res = self
                     .inner
                     .set_log_event_callback(Some(cb))
-                    .map_err(|e| from_anyhow_error(e));
+                    .map_err(from_anyhow_error);
                 let _ = tsfn.unref(&env);
 
                 match res {
@@ -322,7 +318,7 @@ impl BamlRuntime {
                 let res = self
                     .inner
                     .set_log_event_callback(None)
-                    .map_err(|e| from_anyhow_error(e));
+                    .map_err(from_anyhow_error);
 
                 match res {
                     Ok(_) => Ok(()),
@@ -347,7 +343,7 @@ impl BamlRuntime {
 
     #[napi]
     pub fn flush(&mut self, _env: Env) -> napi::Result<()> {
-        self.inner.flush().map_err(|e| from_anyhow_error(e))
+        self.inner.flush().map_err(from_anyhow_error)
     }
 
     #[napi]

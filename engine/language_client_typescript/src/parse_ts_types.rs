@@ -19,12 +19,12 @@ struct SerializationError {
     message: String,
 }
 
-impl SerializationError {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for SerializationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.position.is_empty() {
-            return self.message.clone();
+            f.write_str(&self.message)
         } else {
-            format!("{}: {}", self.position.join("."), self.message)
+            write!(f, "{}: {}", self.position.join("."), self.message)
         }
     }
 }
@@ -33,18 +33,18 @@ struct Errors {
     errors: Vec<SerializationError>,
 }
 
-impl Into<napi::Error> for Errors {
-    fn into(self) -> napi::Error {
-        let errs = self.errors;
+impl From<Errors> for napi::Error {
+    fn from(errors: Errors) -> Self {
+        let errs = errors.errors;
         match errs.len() {
             0 => napi::Error::from_reason(
                 "Unexpected error! Report this bug to github.com/boundaryml/baml (code: napi-zero)",
             ),
-            1 => napi::Error::from_reason(errs.get(0).unwrap().to_string()),
+            1 => napi::Error::from_reason(errs.first().unwrap().to_string()),
             _ => {
                 let mut message = format!("{} errors occurred:\n", errs.len());
                 for err in errs {
-                    message.push_str(&format!(" - {}\n", err.to_string()));
+                    message.push_str(&format!(" - {err}\n"));
                 }
                 napi::Error::from_reason(message)
             }

@@ -28,7 +28,7 @@ impl BamlSpan {
 
         let span = runtime
             .inner
-            .start_span(&function_name, &args_map, &ctx.inner);
+            .start_span(&function_name, args_map, &ctx.inner);
         log::trace!("Starting span: {:#?} for {:?}\n", span, function_name);
         Ok(Self {
             inner: span.into(),
