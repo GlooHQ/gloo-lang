@@ -3,7 +3,10 @@ use std::{borrow::Cow, collections::HashSet};
 use baml_types::{GetEnvVar, StringOr, UnresolvedValue};
 use indexmap::IndexMap;
 
-use crate::{SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection};
+use crate::{
+    SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter,
+    UnresolvedRolesSelection,
+};
 
 #[derive(Debug, Clone)]
 pub struct UnresolvedUrl(StringOr);
@@ -193,10 +196,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
         UnresolvedRolesSelection::new(allowed_roles, default_role)
     }
 
-    fn ensure_default_role(
-        &mut self,
-        allowed_roles: &[StringOr],
-    ) -> Option<StringOr> {
+    fn ensure_default_role(&mut self, allowed_roles: &[StringOr]) -> Option<StringOr> {
         self.ensure_string("default_role", false)
             .and_then(|(_, value, span)| {
                 if allowed_roles.iter().any(|v| value.maybe_eq(v)) {
@@ -209,8 +209,7 @@ impl<Meta: Clone> PropertyHandler<Meta> {
                         .join(", ");
                     self.push_error(
                         format!(
-                            "default_role must be one of {allowed_roles_str}. Got: {value}. To support different default roles, add allowed_roles [\"user\", \"assistant\", \"system\", ...]",
-                            allowed_roles_str, value
+                            "default_role must be one of {allowed_roles_str}. Got: {value}. To support different default roles, add allowed_roles [\"user\", \"assistant\", \"system\", ...]"
                         ),
                         span,
                     );
@@ -253,42 +252,43 @@ impl<Meta: Clone> PropertyHandler<Meta> {
             (Some(allow), Some(deny)) => {
                 self.push_error(
                     "finish_reason_allow_list and finish_reason_deny_list cannot be used together",
-                    allow.0
+                    allow.0,
                 );
                 self.push_error(
                     "finish_reason_allow_list and finish_reason_deny_list cannot be used together",
                     deny.0,
                 );
                 UnresolvedFinishReasonFilter::All
-            },
-            (Some((_, allow, _)), None) => {
-                UnresolvedFinishReasonFilter::AllowList(allow.into_iter().filter_map(|v| match v.as_str() {
-                    Some(s) => Some(s.clone()),
-                    None => {
-                        self.push_error(
-                            "values in finish_reason_allow_list must be strings.",
-                            v.meta().clone(),
-                        );
-                        None
-                        }
-                    })
-                    .collect()
-                )
             }
-            (None, Some((_, deny, _))) => {
-                UnresolvedFinishReasonFilter::DenyList(deny.into_iter().filter_map(|v| match v.into_str() {
-                    Ok((s, _)) => Some(s.clone()),
-                    Err(other) => {
-                        self.push_error(
-                                "values in finish_reason_deny_list must be strings.",
-                                other.meta().clone()
+            (Some((_, allow, _)), None) => UnresolvedFinishReasonFilter::AllowList(
+                allow
+                    .into_iter()
+                    .filter_map(|v| match v.as_str() {
+                        Some(s) => Some(s.clone()),
+                        None => {
+                            self.push_error(
+                                "values in finish_reason_allow_list must be strings.",
+                                v.meta().clone(),
                             );
                             None
                         }
                     })
-                    .collect()
-                )
-            }
+                    .collect(),
+            ),
+            (None, Some((_, deny, _))) => UnresolvedFinishReasonFilter::DenyList(
+                deny.into_iter()
+                    .filter_map(|v| match v.into_str() {
+                        Ok((s, _)) => Some(s.clone()),
+                        Err(other) => {
+                            self.push_error(
+                                "values in finish_reason_deny_list must be strings.",
+                                other.meta().clone(),
+                            );
+                            None
+                        }
+                    })
+                    .collect(),
+            ),
             (None, None) => UnresolvedFinishReasonFilter::All,
         }
     }
