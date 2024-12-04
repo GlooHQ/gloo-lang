@@ -159,27 +159,42 @@ impl ParserDatabase {
         // instead of strings (class names). That requires less conversions when
         // working with the graph. Once the work is done, IDs can be converted
         // to names where needed.
-        let finite_cycles = Tarjan::components(&HashMap::from_iter(
-            self.types.class_dependencies.iter().map(|(id, deps)| {
-                let deps =
-                    HashSet::from_iter(deps.iter().filter_map(
-                        |dep| match self.find_type_by_str(dep) {
-                            Some(TypeWalker::Class(cls)) => Some(cls.id),
-                            Some(TypeWalker::Enum(_)) => None,
-                            Some(TypeWalker::TypeAlias(_)) => None,
-                            None => panic!("Unknown class `{dep}`"),
-                        },
-                    ));
-                (*id, deps)
-            }),
-        ));
+        let mut resolved_dependency_graph = HashMap::new();
 
-        // Inject finite cycles into parser DB. This will then be passed into
-        // the IR and then into the Jinja output format.
-        self.types.finite_recursive_cycles = finite_cycles
-            .into_iter()
-            .map(|cycle| cycle.into_iter().collect())
-            .collect();
+        for (id, deps) in self.types.class_dependencies.iter() {
+            let mut resolved_deps = HashSet::new();
+
+            for dep in deps {
+                match self.find_type_by_str(dep) {
+                    Some(TypeWalker::Class(cls)) => {
+                        resolved_deps.insert(cls.id);
+                    }
+                    Some(TypeWalker::Enum(_)) => {}
+                    // Gotta resolve type aliases.
+                    Some(TypeWalker::TypeAlias(alias)) => {
+                        resolved_deps.extend(alias.resolved().flat_idns().iter().map(|ident| {
+                            match self.find_type_by_str(ident.name()) {
+                                Some(TypeWalker::Class(cls)) => cls.id,
+                                Some(TypeWalker::Enum(_)) => {
+                                    panic!("Enums are not allowed in type aliases")
+                                }
+                                Some(TypeWalker::TypeAlias(alias)) => {
+                                    panic!("Alias should be resolved at this point")
+                                }
+                                None => panic!("Unknown class `{dep}`"),
+                            }
+                        }))
+                    }
+                    None => panic!("Unknown class `{dep}`"),
+                }
+            }
+
+            resolved_dependency_graph.insert(*id, resolved_deps);
+        }
+
+        // Find the cycles and inject them into parser DB. This will then be
+        // passed into the IR and then into the Jinja output format.
+        self.types.finite_recursive_cycles = Tarjan::components(&resolved_dependency_graph);
 
         // Fully resolve function dependencies.
         let extends = self
