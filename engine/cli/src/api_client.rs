@@ -113,7 +113,7 @@ pub struct CreateDeploymentRequest {
 #[derive(Debug, Deserialize)]
 pub struct CreateDeploymentResponse {
     #[allow(dead_code)]
-    deployment_id: String,
+    deployment_tag: String,
 }
 
 impl ApiClient {
