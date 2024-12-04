@@ -19,51 +19,6 @@ fn invoke_runtime_cli(py: Python) -> PyResult<()> {
     )
     .map_err(errors::BamlError::from_anyhow)
 }
-#[pyo3::prelude::pyclass(module = "baml_py.baml_py")]
-pub struct LoremIpsum {
-    #[allow(dead_code)]
-    pub(crate) inner: String,
-}
-
-#[pyo3::prelude::pymethods]
-impl LoremIpsum {
-    #[new]
-    pub fn new() -> Self {
-        Self {
-            inner: "Lorem ipsum dolor sit amet".to_string(),
-        }
-    }
-
-    // pub fn __getnewargs__<'py>(
-    //     &self,
-    //     py: Python<'py>,
-    // ) -> PyResult<Bound<'py, pyo3::types::PyTuple>> {
-    //     println!("__getnewargs__ LoremIpsum placeholder");
-    //     Ok(pyo3::types::PyTuple::empty_bound(py))
-    // }
-
-    #[classmethod]
-    pub fn __get_pydantic_core_schema__(
-        _cls: Bound<'_, pyo3::types::PyType>,
-        _source_type: Bound<'_, pyo3::types::PyAny>,
-        _handler: Bound<'_, pyo3::types::PyAny>,
-    ) -> PyResult<pyo3::PyObject> {
-        Python::with_gil(|py| {
-            let code = r#"
-from pydantic_core import core_schema, SchemaValidator
-
-ret = core_schema.str_schema()
-    "#;
-            // py.run(code, None, Some(ret_dict));
-            let fun: pyo3::Py<pyo3::types::PyAny> =
-                PyModule::from_code_bound(py, code, "pretend-file", "pretend-module")?
-                    .getattr("ret")?
-                    .into();
-            use pyo3::ToPyObject;
-            Ok(fun.to_object(py))
-        })
-    }
-}
 
 pub(crate) const MODULE_NAME: &str = "baml_py.baml_py";
 
@@ -101,8 +56,6 @@ fn baml_py(m: Bound<'_, PyModule>) -> PyResult<()> {
         }
     }
 
-    m.add_class::<LoremIpsum>()?;
-
     m.add_class::<runtime::BamlRuntime>()?;
 
     m.add_class::<types::FunctionResult>()?;
@@ -128,14 +81,4 @@ fn baml_py(m: Bound<'_, PyModule>) -> PyResult<()> {
     errors::errors(&m)?;
 
     Ok(())
-}
-
-mod test {
-    #[test]
-    fn test_inspect() {
-        assert_eq!(
-            crate::MODULE_NAME,
-            format!("baml_py.{}", stringify!(baml_asdfpy))
-        );
-    }
 }
