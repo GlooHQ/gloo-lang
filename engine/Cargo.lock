@@ -909,6 +909,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing-subscriber",
+ "valuable",
 ]
 
 [[package]]
