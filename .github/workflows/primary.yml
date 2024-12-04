@@ -106,3 +106,15 @@ jobs:
       - name: Build rust for wasm32
         run: cargo build --target=wasm32-unknown-unknown
         working-directory: engine/baml-schema-wasm
+  integ-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - name: run python tests
+        run: |
+          cd integ-tests/python
+          ./run_tests.sh

@@ -199,11 +199,12 @@ impl BamlTracer {
         let trace_stats = TraceStats::default();
 
         let tracer = BamlTracer {
-            tracer: if options.enabled() {
-                Some(TracerImpl::new(&options, 20, trace_stats.clone()))
-            } else {
-                None
-            },
+            // tracer: if options.enabled() {
+            //     Some(TracerImpl::new(&options, 20, trace_stats.clone()))
+            // } else {
+            //     None
+            // },
+            tracer: None,
             options,
             trace_stats,
         };

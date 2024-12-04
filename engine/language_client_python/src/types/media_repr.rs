@@ -129,7 +129,7 @@ def get_schema():
 ret = get_schema()
     "#;
         // py.run(code, None, Some(ret_dict));
-        let fun: Py<PyAny> = PyModule::from_code_bound(py, code, "", "")?
+        let fun: Py<PyAny> = PyModule::from_code_bound(py, code, file!(), crate::MODULE_NAME)?
             .getattr("ret")?
             .into();
         Ok(fun.to_object(py))

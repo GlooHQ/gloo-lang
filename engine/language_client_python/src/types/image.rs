@@ -1,5 +1,5 @@
 use pyo3::prelude::{pymethods, PyResult};
-use pyo3::types::PyType;
+use pyo3::types::{PyTuple, PyType};
 use pyo3::{Bound, PyAny, PyObject, Python};
 use pythonize::{depythonize_bound, pythonize};
 
@@ -47,6 +47,28 @@ impl BamlImagePy {
             ]),
             _ => Err(BamlInvalidArgumentError::new_err("Image is not base64")),
         }
+    }
+
+    // pub fn __setstate__(&mut self, state: PyObject, py: Python<'_>) -> PyResult<()> {
+    //     log::info!("Setting state");
+    //     *self = BamlImagePy::baml_deserialize(state, py)?;
+    //     Ok(())
+    // }
+
+    // pub fn __getstate__(&self, py: Python<'_>) -> PyResult<PyObject> {
+    //     log::info!("Getting state");
+    //     self.baml_serialize(py)
+    // }
+
+    #[new]
+    pub fn py_new(_py: Python<'_>) -> PyResult<Self> {
+        Ok(BamlImagePy::from_url(
+            "https://example.com/screenshot.png".to_string(),
+        ))
+    }
+
+    pub fn __getnewargs__<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyTuple>> {
+        Ok(PyTuple::empty_bound(py))
     }
 
     pub fn __repr__(&self) -> String {
