@@ -28,7 +28,7 @@ pub struct ChatCompletionGeneric<C> {
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct CompletionChoice {
-    pub finish_reason: Option<FinishReason>,
+    pub finish_reason: Option<String>,
     pub index: u32,
     pub text: String,
 }
@@ -42,7 +42,7 @@ pub struct ChatCompletionChoice {
     /// `length` if the maximum number of tokens specified in the request was reached,
     /// `content_filter` if content was omitted due to a flag from our content filters,
     /// `tool_calls` if the model called a tool, or `function_call` (deprecated) if the model called a function.
-    pub finish_reason: Option<FinishReason>,
+    pub finish_reason: Option<String>,
     /// Log probability information for the choice.
     pub logprobs: Option<ChatChoiceLogprobs>,
 }
@@ -78,7 +78,7 @@ pub struct ChatCompletionResponseMessage {
 #[derive(Deserialize, Clone, Debug)]
 pub struct ChatCompletionChoiceDelta {
     pub index: u64,
-    pub finish_reason: Option<FinishReason>,
+    pub finish_reason: Option<String>,
     pub delta: ChatCompletionMessageDelta,
 }
 
@@ -99,7 +99,7 @@ pub struct ChatCompletionMessageDelta {
     // pub function_call: Option<ChatCompletionFunctionCallDelta>,
 }
 
-#[derive(Debug, Deserialize, Clone, Copy, Default, PartialEq)]
+#[derive(Debug, Deserialize, Clone, Default, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum ChatCompletionMessageRole {
     System,
@@ -108,19 +108,6 @@ pub enum ChatCompletionMessageRole {
     Assistant,
     Tool,
     Function,
-}
-
-#[derive(Debug, Deserialize, strum_macros::Display, Clone, Copy, PartialEq, Serialize)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
-pub enum FinishReason {
-    Stop,
-    Length,
-    ToolCalls,
-    ContentFilter,
-    FunctionCall,
-    #[serde(other)]
-    Unknown,
 }
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]

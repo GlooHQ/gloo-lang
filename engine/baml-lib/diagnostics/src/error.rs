@@ -496,19 +496,33 @@ impl DatamodelError {
             )
         };
 
-        Self::new(format!("{}{}", prefix, suggestions), span)
+        Self::new(format!("{prefix}{suggestions}"), span)
     }
 
-    pub fn new_client_not_found_error(client_name: &str, span: Span, valid_clients: &[String]) -> DatamodelError {
-        let names = valid_clients.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+    pub fn new_client_not_found_error(
+        client_name: &str,
+        span: Span,
+        valid_clients: &[String],
+    ) -> DatamodelError {
+        let names = valid_clients
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
         let close_names = sort_by_match(client_name, &names, Some(10));
 
         let msg = if close_names.is_empty() {
-            format!("client `{}` does not exist.", client_name)
+            format!("client `{client_name}` does not exist.")
         } else if close_names.len() == 1 {
-            format!("client `{}` does not exist. Did you mean `{}`?", client_name, close_names[0])
+            format!(
+                "client `{}` does not exist. Did you mean `{}`?",
+                client_name, close_names[0]
+            )
         } else {
-            format!("client `{}` does not exist. Did you mean one of these: `{}`?", client_name, close_names.join("`, `"))
+            format!(
+                "client `{}` does not exist. Did you mean one of these: `{}`?",
+                client_name,
+                close_names.join("`, `")
+            )
         };
 
         Self::new(msg, span)
@@ -523,7 +537,7 @@ impl DatamodelError {
 
         let msg = if close_names.is_empty() {
             // If no names are close enough, suggest nothing or provide a generic message
-            format!("Type `{}` does not exist.", type_name)
+            format!("Type `{type_name}` does not exist.")
         } else if close_names.len() == 1 {
             // If there's only one close name, suggest it
             format!(
@@ -534,8 +548,7 @@ impl DatamodelError {
             // If there are multiple close names, suggest them all
             let suggestions = close_names.join("`, `");
             format!(
-                "Type `{}` does not exist. Did you mean one of these: `{}`?",
-                type_name, suggestions
+                "Type `{type_name}` does not exist. Did you mean one of these: `{suggestions}`?"
             )
         };
 

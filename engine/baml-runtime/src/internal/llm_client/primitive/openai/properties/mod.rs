@@ -1,7 +1,8 @@
-use internal_llm_client::{openai::ResolvedOpenAI, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty};
+use internal_llm_client::{
+    openai::ResolvedOpenAI, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty,
+};
 
 use crate::RuntimeContext;
-
 
 pub fn resolve_properties(
     provider: &ClientProvider,

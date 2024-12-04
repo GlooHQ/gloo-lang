@@ -5,7 +5,8 @@ use clap::{Parser, Subcommand};
 use baml_runtime::BamlRuntime;
 
 #[derive(Parser, Debug)]
-#[command(author, version, about = "A CLI tool for working with the BAML runtime.", long_about = None)]
+#[command(author, version, about = "A CLI tool for working with BAML. Learn more at https://docs.boundaryml.com.", long_about = None)]
+#[command(styles = clap_cargo::style::CLAP_STYLING)]
 #[command(propagate_version = true)]
 pub(crate) struct RuntimeCli {
     /// Specifies a subcommand to run.
@@ -35,6 +36,9 @@ pub(crate) enum Commands {
 
     #[command(about = "Deploy a BAML project to Boundary Cloud")]
     Deploy(crate::deploy::DeployArgs),
+
+    #[command(about = "Format BAML source files", name = "fmt", hide = true)]
+    Format(crate::format::FormatArgs),
 }
 
 impl RuntimeCli {
@@ -64,6 +68,7 @@ impl RuntimeCli {
                 args.from = BamlRuntime::parse_baml_src_path(&args.from)?;
                 t.block_on(async { args.run_async().await })
             }
+            Commands::Format(args) => args.run(),
         }
     }
 }

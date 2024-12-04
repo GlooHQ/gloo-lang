@@ -2,8 +2,6 @@ use anyhow::Result;
 use baml_types::{BamlValue, EvaluationContext, UnresolvedValue};
 use indexmap::IndexMap;
 use internal_baml_core::ir::FieldType;
-use serde;
-use serde_json;
 use std::{collections::HashMap, sync::Arc};
 
 use crate::internal::llm_client::llm_provider::LLMProvider;
@@ -61,7 +59,7 @@ pub struct RuntimeContext {
 }
 
 impl RuntimeContext {
-    pub fn eval_ctx<'a>(&'a self, strict: bool) -> EvaluationContext<'a> {
+    pub fn eval_ctx(&self, strict: bool) -> EvaluationContext<'_> {
         EvaluationContext::new(&self.env, !strict)
     }
 

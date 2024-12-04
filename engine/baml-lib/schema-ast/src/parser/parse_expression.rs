@@ -84,16 +84,14 @@ fn parse_string_literal(token: Pair<'_>, diagnostics: &mut Diagnostics) -> Expre
 
             if content.contains(' ') {
                 Expression::StringValue(content, span)
+            } else if content.eq("true") || content.eq("false") {
+                Expression::BoolValue(content.eq("true"), span)
             } else {
-                if content.eq("true") || content.eq("false") {
-                    Expression::BoolValue(content.eq("true"), span)
-                } else {
-                    match Identifier::from((content.as_str(), span.clone())) {
-                        Identifier::Invalid(..) | Identifier::String(..) => {
-                            Expression::StringValue(content, span)
-                        }
-                        identifier => Expression::Identifier(identifier),
+                match Identifier::from((content.as_str(), span.clone())) {
+                    Identifier::Invalid(..) | Identifier::String(..) => {
+                        Expression::StringValue(content, span)
                     }
+                    identifier => Expression::Identifier(identifier),
                 }
             }
         }
@@ -348,7 +346,7 @@ mod tests {
         let expr = parse_jinja_expression(pair, &mut diagnostics);
         match expr {
             Expression::JinjaExpressionValue(JinjaExpression(s), _) => assert_eq!(s, "1 + 1"),
-            _ => panic!("Expected JinjaExpression, got {:?}", expr),
+            _ => panic!("Expected JinjaExpression, got {expr:?}"),
         }
     }
 }

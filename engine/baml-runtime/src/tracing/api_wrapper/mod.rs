@@ -203,15 +203,13 @@ impl BoundaryAPI for APIWrapper {
     }
 
     async fn create_session(&self) -> Result<api_interface::CreateSessionResponse> {
-        let result = match &self.config {
+        match &self.config {
             APIConfig::LocalOnly(config) => Ok(api_interface::CreateSessionResponse {
                 session_id: config.sessions_id.clone(),
                 dashboard_url: None,
             }),
             APIConfig::Web(config) => config.create_session().await,
-        };
-
-        result
+        }
     }
 
     async fn finish_session(&self) -> Result<()> {
@@ -243,7 +241,7 @@ impl BoundaryTestAPI for APIWrapper {
             APIConfig::LocalOnly(_) => Ok(()),
             APIConfig::Web(config) => {
                 for query in queries {
-                    config.post("tests/create-case", &query).await?;
+                    config.post::<()>("tests/create-case", &query).await?;
                 }
                 Ok(())
             }
@@ -287,7 +285,7 @@ impl BoundaryTestAPI for APIWrapper {
         match &self.config {
             APIConfig::LocalOnly(_) => Ok(()),
             APIConfig::Web(config) => {
-                config.post("tests/update", &json!(body)).await?;
+                config.post::<()>("tests/update", &json!(body)).await?;
                 Ok(())
             }
         }

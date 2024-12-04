@@ -57,7 +57,7 @@ impl SyncFunctionResultStream {
 #[pymethods]
 impl FunctionResultStream {
     fn __str__(&self) -> String {
-        format!("FunctionResultStream")
+        "FunctionResultStream".to_string()
     }
 
     /// Set the callback to be called when an event is received
@@ -88,8 +88,8 @@ impl FunctionResultStream {
         });
 
         let ctx_mng = ctx.inner.clone();
-        let tb = self.tb.as_ref().map(|tb| tb.clone());
-        let cb = self.cb.as_ref().map(|cb| cb.clone());
+        let tb = self.tb.clone();
+        let cb = self.cb.clone();
         pyo3_asyncio::tokio::future_into_py(py, async move {
             let ctx_mng = ctx_mng;
             let mut locked = inner.lock().await;
@@ -106,7 +106,7 @@ impl FunctionResultStream {
 #[pymethods]
 impl SyncFunctionResultStream {
     fn __str__(&self) -> String {
-        format!("SyncFunctionResultStream")
+        "SyncFunctionResultStream".to_string()
     }
 
     /// Set the callback to be called when an event is received
@@ -137,14 +137,13 @@ impl SyncFunctionResultStream {
         });
 
         let ctx_mng = ctx.inner.clone();
-        let tb = self.tb.as_ref().map(|tb| tb.clone());
-        let cb = self.cb.as_ref().map(|cb| cb.clone());
+        let tb = self.tb.clone();
+        let cb = self.cb.clone();
 
         let ctx_mng = ctx_mng;
         let mut locked = inner.lock().unwrap();
         let (res, _) = locked.run_sync(on_event, &ctx_mng, tb.as_ref(), cb.as_ref());
         res.map(FunctionResult::from)
             .map_err(BamlError::from_anyhow)
-            .map(|f| f.into())
     }
 }

@@ -35,7 +35,6 @@ impl FunctionResultStream {
             Some(move |event: baml_runtime::FunctionResult| {
                 // ignore errors if they happen
                 let _ = proc.call::<_, magnus::Value>((FunctionResult::new(event),));
-                ()
             })
         } else {
             None

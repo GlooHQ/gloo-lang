@@ -5,11 +5,22 @@ use crate::{internal::llm_client::LLMResponse, RuntimeContext};
 
 use super::StreamResponse;
 
-pub trait WithChat: Sync + Send {
+pub trait WithChatOptions {
     fn chat_options(&self, ctx: &RuntimeContext) -> Result<ChatOptions>;
+}
 
+impl<T> WithChatOptions for T
+where
+    T: super::WithClientProperties,
+{
+    fn chat_options(&self, ctx: &RuntimeContext) -> Result<ChatOptions> {
+        Ok(ChatOptions::new(self.default_role(), Some(self.allowed_roles())))
+    }
+}
+
+pub trait WithChat: Sync + Send + WithChatOptions {
     #[allow(async_fn_in_trait)]
-    async fn chat(&self, ctx: &RuntimeContext, prompt: &Vec<RenderedChatMessage>) -> LLMResponse;
+    async fn chat(&self, ctx: &RuntimeContext, prompt: &[RenderedChatMessage]) -> LLMResponse;
 }
 
 pub trait WithStreamChat: Sync + Send {
@@ -17,7 +28,7 @@ pub trait WithStreamChat: Sync + Send {
     async fn stream_chat(
         &self,
         ctx: &RuntimeContext,
-        prompt: &Vec<RenderedChatMessage>,
+        prompt: &[RenderedChatMessage],
     ) -> StreamResponse;
 }
 
@@ -25,14 +36,10 @@ pub trait WithNoChat {}
 
 impl<T> WithChat for T
 where
-    T: WithNoChat + Send + Sync,
+    T: WithNoChat + Send + Sync + WithChatOptions,
 {
-    fn chat_options(&self, _ctx: &RuntimeContext) -> Result<ChatOptions> {
-        anyhow::bail!("Chat prompts are not supported by this provider")
-    }
-
     #[allow(async_fn_in_trait)]
-    async fn chat(&self, _: &RuntimeContext, _: &Vec<RenderedChatMessage>) -> LLMResponse {
+    async fn chat(&self, _: &RuntimeContext, _: &[RenderedChatMessage]) -> LLMResponse {
         LLMResponse::InternalFailure("Chat prompts are not supported by this provider".to_string())
     }
 }
@@ -42,11 +49,7 @@ where
     T: WithNoChat + Send + Sync,
 {
     #[allow(async_fn_in_trait)]
-    async fn stream_chat(
-        &self,
-        _: &RuntimeContext,
-        _: &Vec<RenderedChatMessage>,
-    ) -> StreamResponse {
+    async fn stream_chat(&self, _: &RuntimeContext, _: &[RenderedChatMessage]) -> StreamResponse {
         Err(LLMResponse::InternalFailure(
             "Chat prompts are not supported by this provider".to_string(),
         ))

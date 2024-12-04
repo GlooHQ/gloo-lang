@@ -1,7 +1,7 @@
-use baml_types::{BamlValue, BamlMap, BamlValueWithMeta, ResponseCheck};
+use baml_types::{BamlMap, BamlValue, BamlValueWithMeta, ResponseCheck};
 use indexmap::IndexMap;
 use magnus::{
-    prelude::*, typed_data::Obj, value::Value, class, Error, Float, Integer, IntoValue, RArray, RClass,
+    prelude::*, typed_data::Obj, value::Value, Error, Float, Integer, IntoValue, RArray, RClass,
     RHash, RModule, RString, Ruby, Symbol, TypedData,
 };
 use std::result::Result;
@@ -27,28 +27,38 @@ impl<'rb> RubyToJson<'rb> {
     }
 
     /// Serialize a list of check results into some `Checked__*` instance.
-    pub fn serialize_response_checks(ruby: &Ruby, checks: &Vec<ResponseCheck>) -> crate::Result<RHash> {
-
-
+    pub fn serialize_response_checks(
+        ruby: &Ruby,
+        checks: &[ResponseCheck],
+    ) -> crate::Result<RHash> {
         // Create a `Check` for each check in the `Checked__*`.
         let hash = ruby.hash_new();
-        checks.iter().try_for_each(|ResponseCheck{name, expression, status}| {
-            let check_class = ruby.eval::<RClass>("Baml::Checks::Check")?;
-            let check_hash = ruby.hash_new();
-            check_hash.aset(ruby.sym_new("name"), name.as_str())?;
-            check_hash.aset(ruby.sym_new("expr"), expression.as_str())?;
-            check_hash.aset(ruby.sym_new("status"), status.as_str())?;
+        checks.iter().try_for_each(
+            |ResponseCheck {
+                 name,
+                 expression,
+                 status,
+             }| {
+                let check_class = ruby.eval::<RClass>("Baml::Checks::Check")?;
+                let check_hash = ruby.hash_new();
+                check_hash.aset(ruby.sym_new("name"), name.as_str())?;
+                check_hash.aset(ruby.sym_new("expr"), expression.as_str())?;
+                check_hash.aset(ruby.sym_new("status"), status.as_str())?;
 
-            let check: Value = check_class.funcall("new", (check_hash,))?;
-            hash.aset(ruby.sym_new(name.as_str()), check)?;
-            crate::Result::Ok(())
-        })?;
+                let check: Value = check_class.funcall("new", (check_hash,))?;
+                hash.aset(ruby.sym_new(name.as_str()), check)?;
+                crate::Result::Ok(())
+            },
+        )?;
 
-        Ok(hash.into())
+        Ok(hash)
     }
 
-    pub fn serialize_baml(ruby: &Ruby, types: RModule, mut from: BamlValueWithMeta<Vec<ResponseCheck>>) -> crate::Result<Value> {
-
+    pub fn serialize_baml(
+        ruby: &Ruby,
+        types: RModule,
+        mut from: BamlValueWithMeta<Vec<ResponseCheck>>,
+    ) -> crate::Result<Value> {
         // If we encounter a BamlValue node with check results, serialize it as
         // { value: T, checks: K }. To compute `value`, we strip the metadata
         // off the node and pass it back to `serialize_baml`.
@@ -93,7 +103,7 @@ impl<'rb> RubyToJson<'rb> {
 
                     Ok(ruby.str_new(&enum_value).into_value_with(ruby))
                 }
-                BamlValueWithMeta::Map(m,_) => {
+                BamlValueWithMeta::Map(m, _) => {
                     let hash = ruby.hash_new();
                     for (k, v) in m.into_iter() {
                         let k = ruby.str_new(&k);
@@ -110,9 +120,8 @@ impl<'rb> RubyToJson<'rb> {
                     }
                     Ok(arr.into_value_with(ruby))
                 }
-            _ => serde_magnus::serialize(&from),
+                _ => serde_magnus::serialize(&from),
             }
-
         }
     }
 
@@ -212,7 +221,7 @@ impl<'rb> RubyToJson<'rb> {
         }
 
         if let Ok(superclass) = any.class().superclass() {
-            let superclass = unsafe { superclass.name() }.to_owned().to_string();
+            let superclass = unsafe { superclass.name() };
 
             if superclass == "T::Struct" {
                 return self.struct_to_map(any, field_pos);
@@ -249,14 +258,14 @@ impl<'rb> RubyToJson<'rb> {
             return Ok(BamlValue::Int(any));
         }
 
-        return Err(vec![SerializationError {
+        Err(vec![SerializationError {
             position: field_pos,
             message: format!("failed to convert {:?} to i64", any),
-        }]);
+        }])
     }
 
     fn to_float(&self, any: Float, _: Vec<String>) -> Result<BamlValue, Vec<SerializationError>> {
-        return Ok(BamlValue::Float(any.to_f64()));
+        Ok(BamlValue::Float(any.to_f64()))
     }
 
     fn to_string(
@@ -270,7 +279,7 @@ impl<'rb> RubyToJson<'rb> {
                 message: format!("cannot convert {:#?} to utf-8 string", any),
             }]);
         };
-        return Ok(any);
+        Ok(any)
     }
 
     fn to_array(
@@ -281,7 +290,7 @@ impl<'rb> RubyToJson<'rb> {
         let mut errs = vec![];
         let mut arr = vec![];
 
-        for (i, value) in any.each().enumerate() {
+        for (i, value) in any.enumeratorize("each", ()).enumerate() {
             let mut field_pos = field_pos.clone();
             field_pos.push(i.to_string());
 
@@ -304,7 +313,7 @@ impl<'rb> RubyToJson<'rb> {
             return Err(errs);
         }
 
-        return Ok(BamlValue::List(arr));
+        Ok(BamlValue::List(arr))
     }
 
     fn hash_key_to_string(
@@ -387,7 +396,7 @@ impl<'rb> RubyToJson<'rb> {
             return Err(errs);
         }
 
-        return Ok(map);
+        Ok(map)
     }
 
     fn struct_to_map(
@@ -403,7 +412,7 @@ impl<'rb> RubyToJson<'rb> {
             None => {
                 return Err(vec![SerializationError {
                     position: field_pos,
-                    message: format!("class does not respond to :instance_methods"),
+                    message: "class does not respond to :instance_methods".to_string(),
                 }]);
             }
             Some(Err(e)) => {
@@ -420,7 +429,9 @@ impl<'rb> RubyToJson<'rb> {
                     }]);
                 }
                 Some(fields) => {
-                    let fields = fields.each().collect::<crate::Result<Vec<_>>>();
+                    let fields = fields
+                        .enumeratorize("each", ())
+                        .collect::<crate::Result<Vec<_>>>();
                     let fields = match fields {
                         Err(e) => {
                             return Err(vec![SerializationError {
@@ -518,13 +529,13 @@ impl<'rb> RubyToJson<'rb> {
             return self.hash_to_map(any, field_pos).map(BamlValue::Map);
         }
 
-        return Err(vec![SerializationError {
+        Err(vec![SerializationError {
             position: field_pos,
             message: format!(
                 "struct did not respond to :to_hash with a hash, was: {:#?}",
                 any
             ),
-        }]);
+        }])
     }
 
     fn is_type<T: TypedData>(&self, any: Value) -> bool {
@@ -553,21 +564,15 @@ impl<'rb> RubyToJson<'rb> {
         field_pos: Vec<String>,
     ) -> Result<BamlValue, Vec<SerializationError>> {
         match any.check_funcall("serialize", ()) {
-            None => {
-                return Err(vec![SerializationError {
-                    position: field_pos,
-                    message: format!("object does not respond to :serialize"),
-                }]);
-            }
-            Some(Err(e)) => {
-                return Err(vec![SerializationError {
-                    position: field_pos,
-                    message: format!("object responded to :serialize with error: {e}"),
-                }]);
-            }
-            Some(Ok(any)) => {
-                return self.to_json(any, field_pos);
-            }
-        };
+            None => Err(vec![SerializationError {
+                position: field_pos,
+                message: "object does not respond to :serialize".to_string(),
+            }]),
+            Some(Err(e)) => Err(vec![SerializationError {
+                position: field_pos,
+                message: format!("object responded to :serialize with error: {e}"),
+            }]),
+            Some(Ok(any)) => self.to_json(any, field_pos),
+        }
     }
 }

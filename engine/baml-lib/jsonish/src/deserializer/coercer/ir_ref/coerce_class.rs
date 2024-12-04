@@ -204,36 +204,33 @@ impl TypeCoercer for Class {
                                 .insert(field_name.real_name().to_string(), Some(Ok(next)));
                         }
                     }
-                } else {
-                    if let Some(v) = required_values.get(field_name.real_name()) {
-                        let next = match v {
-                            Some(Ok(_)) => None,
-                            Some(Err(e)) => t.default_value(Some(e)).or_else(|| {
-                                if ctx.allow_partials {
-                                    Some(BamlValueWithFlags::Null(
-                                        DeserializerConditions::new()
-                                            .with_flag(Flag::OptionalDefaultFromNoValue),
-                                    ))
-                                } else {
-                                    None
-                                }
-                            }),
-                            None => t.default_value(None).or_else(|| {
-                                if ctx.allow_partials {
-                                    Some(BamlValueWithFlags::Null(
-                                        DeserializerConditions::new()
-                                            .with_flag(Flag::OptionalDefaultFromNoValue),
-                                    ))
-                                } else {
-                                    None
-                                }
-                            }),
-                        };
+                } else if let Some(v) = required_values.get(field_name.real_name()) {
+                    let next = match v {
+                        Some(Ok(_)) => None,
+                        Some(Err(e)) => t.default_value(Some(e)).or_else(|| {
+                            if ctx.allow_partials {
+                                Some(BamlValueWithFlags::Null(
+                                    DeserializerConditions::new()
+                                        .with_flag(Flag::OptionalDefaultFromNoValue),
+                                ))
+                            } else {
+                                None
+                            }
+                        }),
+                        None => t.default_value(None).or_else(|| {
+                            if ctx.allow_partials {
+                                Some(BamlValueWithFlags::Null(
+                                    DeserializerConditions::new()
+                                        .with_flag(Flag::OptionalDefaultFromNoValue),
+                                ))
+                            } else {
+                                None
+                            }
+                        }),
+                    };
 
-                        if let Some(next) = next {
-                            required_values
-                                .insert(field_name.real_name().to_string(), Some(Ok(next)));
-                        }
+                    if let Some(next) = next {
+                        required_values.insert(field_name.real_name().to_string(), Some(Ok(next)));
                     }
                 }
             });
@@ -330,12 +327,10 @@ impl TypeCoercer for Class {
                     self.name.real_name().into(),
                     flags,
                     ordered_valid_fields.clone(),
-                )).and_then(|value| apply_constraints(target, vec![], value, constraints.clone()));
+                ))
+                .and_then(|value| apply_constraints(target, vec![], value, constraints.clone()));
 
-                completed_cls.insert(
-                    0,
-                    completed_instance,
-                );
+                completed_cls.insert(0, completed_instance);
             }
         }
 
@@ -351,7 +346,7 @@ pub fn apply_constraints(
     mut value: BamlValueWithFlags,
     constraints: Vec<Constraint>,
 ) -> Result<BamlValueWithFlags, ParsingError> {
-    let res = if constraints.is_empty() {
+    if constraints.is_empty() {
         Ok(value)
     } else {
         let constrained_class = FieldType::Constrained {
@@ -375,8 +370,7 @@ pub fn apply_constraints(
             .collect();
         value.add_flag(Flag::ConstraintResults(check_results));
         Ok(value)
-    };
-    res
+    }
 }
 
 fn update_map<'a>(

@@ -59,31 +59,28 @@ pub(crate) fn visit_retry_policy<'db>(
                     f.identifier().span().clone(),
                 ))
             }
-            ("max_retries", Some(val)) => match coerce::integer(val, ctx.diagnostics) {
-                Some(val) => max_reties = Some(val as u32),
+            ("max_retries", Some(val)) => {
+                if let Some(val) = coerce::integer(val, ctx.diagnostics) {
+                    max_reties = Some(val as u32)
+                }
+            }
+            ("strategy", Some(val)) => {
+                if let Some(val) = coerce_map(val, &coerce::string_with_span, ctx.diagnostics) {
+                    if let Some(val) = visit_strategy(f.span(), val, ctx.diagnostics) {
+                        strategy = Some(val)
+                    }
+                }
+            }
+            ("options", Some(val)) => match val.to_unresolved_value(ctx.diagnostics) {
+                Some(UnresolvedValue::<Span>::Map(kv, _)) => options = Some(kv),
+                Some(other) => {
+                    ctx.push_error(DatamodelError::new_validation_error(
+                        "`options` must be a map",
+                        other.meta().clone(),
+                    ));
+                }
                 None => {}
             },
-            ("strategy", Some(val)) => {
-                match coerce_map(val, &coerce::string_with_span, ctx.diagnostics) {
-                    Some(val) => match visit_strategy(f.span(), val, ctx.diagnostics) {
-                        Some(val) => strategy = Some(val),
-                        None => {}
-                    },
-                    None => {}
-                }
-            }
-            ("options", Some(val)) => {
-                match val.to_unresolved_value(ctx.diagnostics) {
-                    Some(UnresolvedValue::<Span>::Map(kv, _)) => options = Some(kv),
-                    Some(other) => {
-                        ctx.push_error(DatamodelError::new_validation_error(
-                            "`options` must be a map",
-                            other.meta().clone()
-                        ));
-                    }
-                    None => {}
-                }
-            }
             (name, Some(_)) => ctx.push_error(DatamodelError::new_property_not_known_error(
                 name,
                 f.identifier().span().clone(),
@@ -127,47 +124,47 @@ fn visit_strategy(
 
     val.iter()
         .for_each(|(name_and_span, val)| match name_and_span.0 {
-            "type" => match coerce::string_with_span(val, diagnostics) {
-                Some(val) => r#type = Some(val),
-                None => {}
-            },
-            "delay_ms" => match coerce::integer(val, diagnostics) {
-                Some(val) => delay_ms = Some(val),
-                None => {}
-            },
-            "max_delay_ms" => match coerce::integer(val, diagnostics) {
-                Some(_val) => max_delay_ms = Some((_val, val.span())),
-                None => {}
-            },
-            "multiplier" => match coerce::float(val, diagnostics) {
-                Some(_val) => multiplier = Some((_val, val.span())),
-                None => {}
-            },
+            "type" => {
+                if let Some(val) = coerce::string_with_span(val, diagnostics) {
+                    r#type = Some(val)
+                }
+            }
+            "delay_ms" => {
+                if let Some(val) = coerce::integer(val, diagnostics) {
+                    delay_ms = Some(val)
+                }
+            }
+            "max_delay_ms" => {
+                if let Some(_val) = coerce::integer(val, diagnostics) {
+                    max_delay_ms = Some((_val, val.span()))
+                }
+            }
+            "multiplier" => {
+                if let Some(_val) = coerce::float(val, diagnostics) {
+                    multiplier = Some((_val, val.span()))
+                }
+            }
             _ => {}
         });
 
     match r#type {
         Some(("constant_delay", _)) => {
-            match multiplier {
-              Some((_, span)) =>
+            if let Some((_, span)) = multiplier {
                 diagnostics.push_error(
-                    internal_baml_diagnostics::DatamodelError::new_validation_error(
-                        "The `multiplier` option is not supported for the `constant_delay` strategy",
-                        span.clone(),
-                    ),
+                internal_baml_diagnostics::DatamodelError::new_validation_error(
+                    "The `multiplier` option is not supported for the `constant_delay` strategy",
+                    span.clone(),
                 ),
-                None => {}
+            )
             }
-            match max_delay_ms {
-                Some((_, span)) =>
-                  diagnostics.push_error(
-                      internal_baml_diagnostics::DatamodelError::new_validation_error(
-                          "The `max_delay_ms` option is not supported for the `constant_delay` strategy",
-                          span.clone(),
-                      ),
-                  ),
-                  None => {}
-              }
+            if let Some((_, span)) = max_delay_ms {
+                diagnostics.push_error(
+                internal_baml_diagnostics::DatamodelError::new_validation_error(
+                    "The `max_delay_ms` option is not supported for the `constant_delay` strategy",
+                    span.clone(),
+                ),
+            )
+            }
             Some(RetryPolicyStrategy::ConstantDelay(ContantDelayStrategy {
                 delay_ms: delay_ms.unwrap_or(200) as u32,
             }))
@@ -226,11 +223,8 @@ pub(crate) fn visit_test_case<'db>(
                         "Duplicate `function` property",
                         f.identifier().span().clone(),
                     ));
-                } else {
-                    match coerce::string_with_span(val, ctx.diagnostics) {
-                        Some((t, span)) => functions = Some(vec![(t.to_string(), span.clone())]),
-                        None => {}
-                    }
+                } else if let Some((t, span)) = coerce::string_with_span(val, ctx.diagnostics) {
+                    functions = Some(vec![(t.to_string(), span.clone())])
                 }
             }
             ("functions", Some(val)) => {
@@ -239,31 +233,26 @@ pub(crate) fn visit_test_case<'db>(
                         "Duplicate `functions` property",
                         f.identifier().span().clone(),
                     ));
-                } else {
-                    match coerce_array(val, &coerce::string_with_span, ctx.diagnostics) {
-                        Some(val) => {
-                            functions = Some(
-                                val.iter()
-                                    .map(|&(t, span)| (t.to_string(), span.clone()))
-                                    .collect::<Vec<_>>(),
-                            );
-                        }
-                        None => {}
-                    }
+                } else if let Some(val) =
+                    coerce_array(val, &coerce::string_with_span, ctx.diagnostics)
+                {
+                    functions = Some(
+                        val.iter()
+                            .map(|&(t, span)| (t.to_string(), span.clone()))
+                            .collect::<Vec<_>>(),
+                    );
                 }
             }
-            ("args", Some(val)) => {
-                match val.to_unresolved_value(ctx.diagnostics) {
-                    Some(UnresolvedValue::<Span>::Map(kv, span)) => args = Some((span, kv)),
-                    Some(other) => {
-                        ctx.push_error(DatamodelError::new_validation_error(
-                            "`args` must be a map",
-                            other.meta().clone()
-                        ));
-                    }
-                    None => {}
+            ("args", Some(val)) => match val.to_unresolved_value(ctx.diagnostics) {
+                Some(UnresolvedValue::<Span>::Map(kv, span)) => args = Some((span, kv)),
+                Some(other) => {
+                    ctx.push_error(DatamodelError::new_validation_error(
+                        "`args` must be a map",
+                        other.meta().clone(),
+                    ));
                 }
-            }
+                None => {}
+            },
             (name, Some(_)) => ctx.push_error(DatamodelError::new_property_not_known_error(
                 name,
                 f.identifier().span().clone(),

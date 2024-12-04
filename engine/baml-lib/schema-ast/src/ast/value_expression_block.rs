@@ -90,10 +90,7 @@ impl BlockArgs {
         self.args
             .iter()
             .flat_map(|(_, arg)| arg.field_type.flat_idns())
-            .filter_map(|f| match f {
-                Identifier::String(..) => None,
-                _ => Some(f),
-            })
+            .filter(|ident| !matches!(ident, Identifier::String(..)))
             .collect()
     }
     pub fn iter_args(

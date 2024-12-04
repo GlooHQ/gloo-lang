@@ -12,7 +12,7 @@ use crate::jsonish::{
 
 use super::ParseOptions;
 
-pub fn parse<'a>(str: &'a str, mut options: ParseOptions) -> Result<Value> {
+pub fn parse(str: &str, mut options: ParseOptions) -> Result<Value> {
     log::debug!("Parsing:\n{:?}\n-------\n{}\n-------", options, str);
 
     options.depth += 1;

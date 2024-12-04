@@ -111,7 +111,7 @@ mod tests {
     }
 }
 
-impl<'a> Visualize for FunctionResult {
+impl Visualize for FunctionResult {
     fn visualize(&self, max_chunk_size: usize) -> String {
         let mut s = vec![];
         if self.event_chain().len() > 1 {
@@ -128,7 +128,7 @@ impl<'a> Visualize for FunctionResult {
                     format!("---Parsed Response ({})---", val.r#type()).blue()
                 ));
                 let json_str = serde_json::to_string_pretty(&val).unwrap();
-                s.push(format!("{}", truncate_string(&json_str, max_chunk_size)));
+                s.push(truncate_string(&json_str, max_chunk_size).to_string());
             }
             Some(Err(e)) => {
                 s.push(format!(
@@ -622,12 +622,12 @@ impl
             process_id: api.session_id().to_string(),
             tags: tags
                 .into_iter()
-                .filter_map(|(k, v)| match v.as_str() {
-                    Some(v) => Some((k, v.to_string())),
-                    None => Some((
+                .map(|(k, v)| match v.as_str() {
+                    Some(v) => (k, v.to_string()),
+                    None => (
                         k,
                         serde_json::to_string(&v).unwrap_or_else(|_| "<unknown>".to_string()),
-                    )),
+                    ),
                 })
                 .chain(std::iter::once((
                     "baml.runtime".to_string(),
@@ -828,11 +828,10 @@ impl ToLogSchema for FunctionResult {
                 output: self
                     .result_with_constraints()
                     .as_ref()
-                    .map(|r| r.as_ref().ok())
-                    .flatten()
-                    .and_then(|r| {
+                    .and_then(|r| r.as_ref().ok())
+                    .map(|r| {
                         let v: BamlValue = r.into();
-                        Some(IOValue::from(&v))
+                        IOValue::from(&v)
                     }),
             },
             error: error_from_result(self),
@@ -960,9 +959,7 @@ impl From<&internal_baml_jinja::ChatMessagePart> for ContentPart {
             }
             internal_baml_jinja::ChatMessagePart::WithMeta(inner, meta) => ContentPart::WithMeta(
                 Box::new(inner.as_ref().into()),
-                meta.iter()
-                    .map(|(k, v)| (k.clone(), v.clone().into()))
-                    .collect(),
+                meta.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
             ),
         }
     }

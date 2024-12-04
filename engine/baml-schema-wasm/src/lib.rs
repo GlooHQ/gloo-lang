@@ -1,4 +1,6 @@
+#[cfg(target_arch = "wasm32")]
 pub mod runtime_wasm;
+
 use std::env;
 use wasm_bindgen::prelude::*;
 

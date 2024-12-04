@@ -10,6 +10,12 @@ pub struct Configuration {
     pub generators: Vec<Generator>,
 }
 
+impl Default for Configuration {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Configuration {
     pub fn new() -> Self {
         Self { generators: vec![] }
@@ -54,7 +60,7 @@ impl CodegenGenerator {
     version "{}"
 }}"#,
             self.name,
-            self.output_type.to_string(),
+            self.output_type,
             self.output_dir.display(),
             self.version,
         )

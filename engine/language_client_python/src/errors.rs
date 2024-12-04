@@ -1,7 +1,7 @@
 use baml_runtime::{
     errors::ExposedError, internal::llm_client::LLMResponse, scope_diagnostics::ScopeStack,
 };
-use pyo3::types::PyModule;
+use pyo3::types::{PyAnyMethods, PyModule};
 use pyo3::{create_exception, pymodule, Bound, PyErr, PyResult, Python};
 
 create_exception!(baml_py, BamlError, pyo3::exceptions::PyException);
@@ -17,11 +17,29 @@ create_exception!(baml_py, BamlClientHttpError, BamlClientError);
 #[allow(non_snake_case)]
 fn raise_baml_validation_error(prompt: String, message: String, raw_output: String) -> PyErr {
     Python::with_gil(|py| {
-        let internal_monkeypatch = py.import("baml_py.internal_monkeypatch").unwrap();
+        let internal_monkeypatch = py.import_bound("baml_py.internal_monkeypatch").unwrap();
         let exception = internal_monkeypatch.getattr("BamlValidationError").unwrap();
         let args = (prompt, message, raw_output);
         let inst = exception.call1(args).unwrap();
-        PyErr::from_value(inst)
+        PyErr::from_value_bound(inst)
+    })
+}
+
+#[allow(non_snake_case)]
+fn raise_baml_client_finish_reason_error(
+    prompt: String,
+    raw_output: String,
+    message: String,
+    finish_reason: Option<String>,
+) -> PyErr {
+    Python::with_gil(|py| {
+        let internal_monkeypatch = py.import_bound("baml_py.internal_monkeypatch").unwrap();
+        let exception = internal_monkeypatch
+            .getattr("BamlClientFinishReasonError")
+            .unwrap();
+        let args = (prompt, message, raw_output, finish_reason);
+        let inst = exception.call1(args).unwrap();
+        PyErr::from_value_bound(inst)
     })
 }
 
@@ -64,6 +82,17 @@ impl BamlError {
                     // If not, you may need to adjust this part based on the actual structure of ValidationError
                     raise_baml_validation_error(prompt.clone(), message.clone(), raw_output.clone())
                 }
+                ExposedError::FinishReasonError {
+                    prompt,
+                    raw_output,
+                    message,
+                    finish_reason,
+                } => raise_baml_client_finish_reason_error(
+                    prompt.clone(),
+                    raw_output.clone(),
+                    message.clone(),
+                    finish_reason.clone(),
+                ),
             }
         } else if let Some(er) = err.downcast_ref::<ScopeStack>() {
             PyErr::new::<BamlInvalidArgumentError, _>(format!("Invalid argument: {}", er))
@@ -76,8 +105,7 @@ impl BamlError {
                     baml_runtime::internal::llm_client::ErrorCode::Other(2) => {
                         PyErr::new::<BamlClientError, _>(format!(
                             "Something went wrong with the LLM client {}: {}",
-                            failed.client,
-                            failed.message
+                            failed.client, failed.message
                         ))
                     }
                     baml_runtime::internal::llm_client::ErrorCode::Other(_)

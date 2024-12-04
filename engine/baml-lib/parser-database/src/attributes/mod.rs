@@ -10,7 +10,7 @@ use crate::{context::Context, types::ClassAttributes, types::EnumAttributes};
 use baml_types::{Constraint, UnresolvedValue};
 use internal_baml_schema_ast::ast::{Expression, SubType};
 
-///
+/// Node attributes.
 #[derive(Debug, Default)]
 pub struct Attributes {
     /// Description of the node, used in describing the node to the LLM.

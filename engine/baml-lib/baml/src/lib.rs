@@ -1,6 +1,6 @@
 #![deny(unsafe_code)]
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub use internal_baml_core::{
     self,
@@ -12,7 +12,7 @@ pub use internal_baml_core::{
 /// Parses and validate a schema, but skip analyzing everything except datasource and generator
 /// blocks.
 pub fn parse_configuration(
-    root_path: &PathBuf,
+    root_path: &Path,
     path: impl Into<PathBuf>,
     schema: &str,
 ) -> Result<(Configuration, Diagnostics), Diagnostics> {
@@ -22,7 +22,7 @@ pub fn parse_configuration(
 
 /// Parse and analyze a Prisma schema.
 pub fn parse_and_validate_schema(
-    root_path: &PathBuf,
+    root_path: &Path,
     files: impl Into<Vec<SourceFile>>,
 ) -> Result<ValidatedSchema, Diagnostics> {
     let mut schema = validate(root_path, files.into());
@@ -32,6 +32,6 @@ pub fn parse_and_validate_schema(
 
 /// The most general API for dealing with Prisma schemas. It accumulates what analysis and
 /// validation information it can, and returns it along with any error and warning diagnostics.
-pub fn validate(root_path: &PathBuf, files: Vec<SourceFile>) -> ValidatedSchema {
+pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
     internal_baml_core::validate(root_path, files)
 }

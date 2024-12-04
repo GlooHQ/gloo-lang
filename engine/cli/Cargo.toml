@@ -27,7 +27,8 @@ base64.workspace = true
 bstd.workspace = true
 bytes.workspace = true
 cfg-if.workspace = true
-clap = { workspace = true, features = ["env"] }
+clap = { workspace = true, features = ["color", "env"] }
+clap-cargo = "0.14.1"
 colored = "2.1.0"
 console = "0.15.0"
 dashmap.workspace = true
@@ -100,7 +101,11 @@ sha2 = "0.10.8"
 tracing = "0.1.40"
 # Valuable is needed to prevent serializing objects using Debug, and instead use Serialize.
 # https://github.com/tokio-rs/tracing/issues/1570
-tracing-subscriber = { version = "0.3.18", features = ["json", "env-filter","valuable"] }
+tracing-subscriber = { version = "0.3.18", features = [
+  "json",
+  "env-filter",
+  "valuable",
+] }
 
 
 [features]

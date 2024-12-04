@@ -1385,7 +1385,6 @@ test_deserializer!(
   }
 );
 
-
 test_deserializer!(
   test_recursive_union_on_multiple_fields_single_line_without_quotes,
   r#"class Foo {
@@ -1424,7 +1423,6 @@ test_deserializer!(
   }
 );
 
-
 test_deserializer!(
   test_recursive_single_line,
   r#"class Foo {
@@ -1444,7 +1442,6 @@ test_deserializer!(
     "rec_two": false
   }
 );
-
 
 test_deserializer!(
   test_recursive_union_on_multiple_fields_single_line_without_quotes_complex,

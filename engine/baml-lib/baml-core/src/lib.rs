@@ -5,11 +5,13 @@
 pub use internal_baml_diagnostics;
 pub use internal_baml_parser_database::{self};
 
-
 pub use internal_baml_schema_ast::{self, ast};
 
 use rayon::prelude::*;
-use std::{path::PathBuf, sync::Mutex};
+use std::{
+    path::{Path, PathBuf},
+    sync::Mutex,
+};
 
 use internal_baml_diagnostics::{DatamodelError, Diagnostics, SourceFile, Span};
 
@@ -40,8 +42,8 @@ impl std::fmt::Debug for ValidatedSchema {
 
 /// The most general API for dealing with BAML source code. It accumulates what analysis and
 /// validation information it can, and returns it along with any error and warning diagnostics.
-pub fn validate(root_path: &PathBuf, files: Vec<SourceFile>) -> ValidatedSchema {
-    let mut diagnostics = Diagnostics::new(root_path.clone());
+pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
+    let mut diagnostics = Diagnostics::new(root_path.to_path_buf());
     let mut db = internal_baml_parser_database::ParserDatabase::new();
 
     {
@@ -105,7 +107,7 @@ pub fn validate(root_path: &PathBuf, files: Vec<SourceFile>) -> ValidatedSchema 
 
 /// Loads all configuration blocks from a datamodel using the built-in source definitions.
 pub fn validate_single_file(
-    root_path: &PathBuf,
+    root_path: &Path,
     main_schema: &SourceFile,
 ) -> Result<(Configuration, Diagnostics), Diagnostics> {
     let (ast, mut diagnostics) = internal_baml_schema_ast::parse_schema(root_path, main_schema)?;
@@ -115,7 +117,7 @@ pub fn validate_single_file(
 
     if out.generators.is_empty() {
         diagnostics.push_error(DatamodelError::new_validation_error(
-            "No generator specified".into(),
+            "No generator specified",
             Span {
                 file: main_schema.clone(),
                 start: 0,
@@ -132,11 +134,11 @@ pub fn validate_single_file(
 }
 
 fn validate_config_impl(
-    root_path: &PathBuf,
+    root_path: &Path,
     schema_ast: &ast::SchemaAst,
     // skip_lock_file_validation: bool,
 ) -> (Configuration, Diagnostics) {
-    let mut diagnostics = Diagnostics::new(root_path.clone());
+    let mut diagnostics = Diagnostics::new(root_path.to_path_buf());
     let generators = generator_loader::load_generators_from_ast(schema_ast, &mut diagnostics);
 
     // let lock_files = generators

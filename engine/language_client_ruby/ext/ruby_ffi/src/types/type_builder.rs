@@ -41,14 +41,14 @@ impl TypeBuilder {
 
     pub fn r#enum(&self, name: String) -> EnumBuilder {
         EnumBuilder {
-            inner: self.inner.r#enum(name.as_str()).into(),
+            inner: self.inner.r#enum(name.as_str()),
             name: name.to_string(),
         }
     }
 
     pub fn class(&self, name: String) -> ClassBuilder {
         ClassBuilder {
-            inner: self.inner.class(name.as_str()).into(),
+            inner: self.inner.class(name.as_str()),
             name: name.to_string(),
         }
     }
@@ -171,7 +171,7 @@ impl EnumBuilder {
     pub fn alias(&self, alias: Option<String>) -> Self {
         self.inner.lock().unwrap().with_meta(
             "alias",
-            alias.map_or(baml_types::BamlValue::Null, |s| BamlValue::String(s)),
+            alias.map_or(baml_types::BamlValue::Null, BamlValue::String),
         );
         self.inner.clone().into()
     }
@@ -195,7 +195,7 @@ impl EnumValueBuilder {
     pub fn alias(&self, alias: Option<String>) -> Self {
         self.inner.lock().unwrap().with_meta(
             "alias",
-            alias.map_or(baml_types::BamlValue::Null, |s| BamlValue::String(s)),
+            alias.map_or(baml_types::BamlValue::Null, BamlValue::String),
         );
         self.inner.clone().into()
     }
@@ -212,7 +212,7 @@ impl EnumValueBuilder {
     pub fn description(&self, description: Option<String>) -> Self {
         self.inner.lock().unwrap().with_meta(
             "description",
-            description.map_or(baml_types::BamlValue::Null, |s| BamlValue::String(s)),
+            description.map_or(baml_types::BamlValue::Null, BamlValue::String),
         );
         self.inner.clone().into()
     }
@@ -259,7 +259,7 @@ impl ClassPropertyBuilder {
     pub fn alias(&self, alias: Option<String>) -> Self {
         self.inner.lock().unwrap().with_meta(
             "alias",
-            alias.map_or(baml_types::BamlValue::Null, |s| BamlValue::String(s)),
+            alias.map_or(baml_types::BamlValue::Null, BamlValue::String),
         );
         self.inner.clone().into()
     }
@@ -267,7 +267,7 @@ impl ClassPropertyBuilder {
     pub fn description(&self, description: Option<String>) -> Self {
         self.inner.lock().unwrap().with_meta(
             "description",
-            description.map_or(baml_types::BamlValue::Null, |s| BamlValue::String(s)),
+            description.map_or(baml_types::BamlValue::Null, BamlValue::String),
         );
         self.inner.clone().into()
     }

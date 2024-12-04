@@ -1,4 +1,8 @@
-use std::{collections::HashMap, path::PathBuf, str::FromStr};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 use bstd::ProjectFqn;
 use internal_baml_diagnostics::DatamodelError;
@@ -57,7 +61,7 @@ fn parse_optional_key<'a>(
 
 pub(crate) fn parse_generator(
     ast_generator: &ast::ValueExprBlock,
-    baml_src: &PathBuf,
+    baml_src: &Path,
 ) -> Result<Generator, Vec<DatamodelError>> {
     let generator_name = ast_generator.name();
 
@@ -65,7 +69,7 @@ pub(crate) fn parse_generator(
 
     builder
         .name(generator_name.into())
-        .baml_src(baml_src.clone())
+        .baml_src(baml_src.to_path_buf())
         .span(ast_generator.span().clone());
 
     let args = check_property_allowlist(generator_name, ast_generator)?;
@@ -83,7 +87,7 @@ pub(crate) fn parse_generator(
                     let mut cloud_builder = CloudProjectBuilder::default();
                     cloud_builder
                         .name(generator_name.to_string())
-                        .baml_src(baml_src.clone())
+                        .baml_src(baml_src.to_path_buf())
                         .span(ast_generator.span().clone());
                     parse_cloud_project(ast_generator, &args, &mut cloud_builder)?;
                     return match cloud_builder.build() {
@@ -101,7 +105,7 @@ pub(crate) fn parse_generator(
                         name_span.clone(),
                         GeneratorOutputType::VARIANTS
                             .iter()
-                            .chain(vec![BOUNDARY_CLOUD_OUTPUT_TYPE].iter())
+                            .chain([BOUNDARY_CLOUD_OUTPUT_TYPE].iter())
                             .map(|s| s.to_string())
                             .collect(),
                         false,
@@ -203,7 +207,7 @@ fn parse_cloud_project(
     builder: &mut CloudProjectBuilder,
 ) -> Result<(), Vec<DatamodelError>> {
     let mut errors = vec![];
-    match parse_optional_key(&args, "version") {
+    match parse_optional_key(args, "version") {
         Ok(Some(version_str)) => match Version::parse(version_str) {
             Ok(version) => {
                 builder.version(version.to_string());
@@ -225,8 +229,8 @@ fn parse_cloud_project(
         }
     }
 
-    match parse_optional_key(&args, "project") {
-        Ok(Some(project_fqn_str)) => match ProjectFqn::parse(project_fqn_str.to_string()) {
+    match parse_optional_key(args, "project") {
+        Ok(Some(project_fqn_str)) => match ProjectFqn::parse(project_fqn_str) {
             Ok(project_fqn) => {
                 builder.project_fqn(project_fqn);
             }

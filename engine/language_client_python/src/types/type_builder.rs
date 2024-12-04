@@ -22,6 +22,12 @@ crate::lang_wrapper!(
 );
 crate::lang_wrapper!(FieldType, baml_types::FieldType, sync_thread_safe);
 
+impl Default for TypeBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl TypeBuilder {
     #[new]
@@ -31,7 +37,7 @@ impl TypeBuilder {
 
     pub fn r#enum(&self, name: &str) -> EnumBuilder {
         EnumBuilder {
-            inner: self.inner.r#enum(name).into(),
+            inner: self.inner.r#enum(name),
             name: name.to_string(),
         }
     }
@@ -40,7 +46,7 @@ impl TypeBuilder {
     #[pyo3(name = "class_")]
     pub fn class(&self, name: &str) -> ClassBuilder {
         ClassBuilder {
-            inner: self.inner.class(name).into(),
+            inner: self.inner.class(name),
             name: name.to_string(),
         }
     }
@@ -94,7 +100,7 @@ impl TypeBuilder {
     }
 
     #[pyo3(signature = (*types))]
-    pub fn union<'py>(&self, types: &Bound<'_, PyTuple>) -> PyResult<FieldType> {
+    pub fn union(&self, types: &Bound<'_, PyTuple>) -> PyResult<FieldType> {
         let mut rs_types = vec![];
         for idx in 0..types.len() {
             let item = types.get_item(idx)?;

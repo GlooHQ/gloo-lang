@@ -86,7 +86,7 @@ pub(super) fn coerce_map(
                 // is also checked at `coerce_arg` in
                 // baml-lib/baml-core/src/ir/ir_helpers/to_baml_arg.rs
                 let key_as_jsonish = jsonish::Value::String(key.to_owned());
-                match key_type.coerce(ctx, &key_type, Some(&key_as_jsonish)) {
+                match key_type.coerce(ctx, key_type, Some(&key_as_jsonish)) {
                     Ok(_) => {
                         // Hack to avoid cloning the key twice.
                         let jsonish::Value::String(owned_key) = key_as_jsonish else {

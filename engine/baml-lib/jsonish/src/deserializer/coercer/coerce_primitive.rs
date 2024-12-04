@@ -315,7 +315,7 @@ mod tests {
             // Percentages and Strings with Numbers
             // Percentages
             ("50%", Some(50.0)),
-            ("3.14%", Some(3.14)),
+            ("3.15%", Some(3.15)),
             (".009%", Some(0.009)),
             ("1.234,56%", None),
             ("$1,234.56%", Some(1234.56)),

@@ -176,7 +176,7 @@ fn generate_main_baml_content(
         "".to_string()
     };
 
-    vec![
+    [
         format!(
         r#"
 // This helps use auto generate libraries you can use in the language of

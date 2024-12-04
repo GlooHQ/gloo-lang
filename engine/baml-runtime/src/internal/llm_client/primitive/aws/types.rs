@@ -17,13 +17,13 @@ pub(super) struct InferenceConfiguration {
     stop_sequences: ::std::option::Option<::std::vec::Vec<::std::string::String>>,
 }
 
-impl Into<bedrock::types::InferenceConfiguration> for InferenceConfiguration {
-    fn into(self) -> bedrock::types::InferenceConfiguration {
+impl From<InferenceConfiguration> for bedrock::types::InferenceConfiguration {
+    fn from(val: InferenceConfiguration) -> Self {
         bedrock::types::InferenceConfiguration::builder()
-            .set_max_tokens(self.max_tokens)
-            .set_temperature(self.temperature)
-            .set_top_p(self.top_p)
-            .set_stop_sequences(self.stop_sequences)
+            .set_max_tokens(val.max_tokens)
+            .set_temperature(val.temperature)
+            .set_top_p(val.top_p)
+            .set_stop_sequences(val.stop_sequences)
             .build()
     }
 }

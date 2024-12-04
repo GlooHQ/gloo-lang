@@ -17,10 +17,7 @@ use serde_json::json;
 
 // Run this with cargo test --features internal
 // run the CLI using debug build using: engine/target/debug/baml-runtime dev
-#[cfg(all(
-    not(feature = "skip-integ-tests"),
-    any(feature = "OPENAI_API_KEY", env = "OPENAI_API_KEY")
-))]
+#[cfg(not(feature = "skip-integ-tests"))]
 mod test_cli {
     use super::*;
     use pretty_assertions::assert_eq;

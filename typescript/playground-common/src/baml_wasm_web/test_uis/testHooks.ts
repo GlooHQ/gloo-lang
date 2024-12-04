@@ -10,7 +10,13 @@ export const showTestsAtom = atom(false)
 export const showClientGraphAtom = atom(false)
 
 export type TestStatusType = 'queued' | 'running' | 'done' | 'error'
-export type DoneTestStatusType = 'passed' | 'llm_failed' | 'parse_failed' | 'constraints_failed' | 'error'
+export type DoneTestStatusType =
+  | 'passed'
+  | 'llm_failed'
+  | 'finish_reason_failed'
+  | 'parse_failed'
+  | 'constraints_failed'
+  | 'error'
 export type TestState =
   | {
       status: 'queued'
@@ -37,12 +43,26 @@ export const testStatusAtom = atomFamily(
   (a, b) => a === b,
 )
 export const runningTestsAtom = atom<string[]>([])
+
+// Match the Rust enum
+// engine/baml-schema-wasm/src/runtime_wasm/mod.rs
+enum RustTestStatus {
+  Passed,
+  LLMFailure,
+  ParseFailure,
+  FinishReasonFailed,
+  ConstraintsFailed,
+  AssertFailed,
+  UnableToRun,
+}
+
 export const statusCountAtom = atom({
   queued: 0,
   running: 0,
   done: {
     passed: 0,
     llm_failed: 0,
+    finish_reason_failed: 0,
     parse_failed: 0,
     constraints_failed: 0,
     error: 0,
@@ -135,6 +155,7 @@ export const useRunHooks = () => {
           done: {
             passed: 0,
             llm_failed: 0,
+            finish_reason_failed: 0,
             parse_failed: 0,
             constraints_failed: 0,
             error: 0,
@@ -189,15 +210,17 @@ export const useRunHooks = () => {
               const { res, elapsed } = result.value
               // console.log('result', i, result.value.res.llm_response(), 'batch[i]', batch[i])
 
-              let status: Number = res.status()
+              let status: RustTestStatus = res.status() as unknown as RustTestStatus
               let response_status: DoneTestStatusType = 'error'
-              if (status === 0) {
+              if (status === RustTestStatus.Passed) {
                 response_status = 'passed'
-              } else if (status === 1) {
+              } else if (status === RustTestStatus.LLMFailure) {
                 response_status = 'llm_failed'
-              } else if (status === 2) {
+              } else if (status === RustTestStatus.ParseFailure) {
                 response_status = 'parse_failed'
-              } else if (status === 3 || status === 4) {
+              } else if (status === RustTestStatus.FinishReasonFailed) {
+                response_status = 'finish_reason_failed'
+              } else if (status === RustTestStatus.ConstraintsFailed || status === RustTestStatus.AssertFailed) {
                 response_status = 'constraints_failed'
               } else {
                 response_status = 'error'
