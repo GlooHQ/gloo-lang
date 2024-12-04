@@ -51,7 +51,6 @@ tracing-subscriber = { version = "0.3.18", features = [
   "env-filter",
   "valuable",
 ] }
-valuable = { version = "0.1.0", features = ["derive"] }
 
 [build-dependencies]
 pyo3-build-config = "0.21.2"

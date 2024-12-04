@@ -49,26 +49,18 @@ impl BamlImagePy {
         }
     }
 
-    // pub fn __setstate__(&mut self, state: PyObject, py: Python<'_>) -> PyResult<()> {
-    //     log::info!("Setting state");
-    //     *self = BamlImagePy::baml_deserialize(state, py)?;
-    //     Ok(())
-    // }
-
-    // pub fn __getstate__(&self, py: Python<'_>) -> PyResult<PyObject> {
-    //     log::info!("Getting state");
-    //     self.baml_serialize(py)
-    // }
-
+    /// Defines the default constructor: https://pyo3.rs/v0.23.3/class#constructor
+    ///
+    /// Used for `pickle.load`: https://docs.python.org/3/library/pickle.html#object.__getnewargs__
     #[new]
-    pub fn py_new(_py: Python<'_>) -> PyResult<Self> {
-        Ok(BamlImagePy::from_url(
-            "https://example.com/screenshot.png".to_string(),
-        ))
+    pub fn py_new(data: PyObject, py: Python<'_>) -> PyResult<Self> {
+        Self::baml_deserialize(data, py)
     }
 
+    /// Used for `pickle.dump`: https://docs.python.org/3/library/pickle.html#object.__getnewargs__
     pub fn __getnewargs__<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyTuple>> {
-        Ok(PyTuple::empty_bound(py))
+        let o = self.baml_serialize(py)?;
+        Ok(PyTuple::new_bound(py, vec![o]))
     }
 
     pub fn __repr__(&self) -> String {

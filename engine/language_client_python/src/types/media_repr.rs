@@ -73,6 +73,9 @@ impl TryInto<UserFacingBamlMedia> for &BamlMedia {
 /// can't implement this in internal_monkeypatch without adding a hard dependency
 /// on pydantic. And we don't want to do _that_, because that will make it harder
 /// to implement output_type python/vanilla in the future.
+///
+/// See docs:
+/// https://docs.pydantic.dev/latest/concepts/types/#customizing-validation-with-__get_pydantic_core_schema__
 pub fn __get_pydantic_core_schema__(
     _cls: Bound<'_, PyType>,
     _source_type: Bound<'_, PyAny>,

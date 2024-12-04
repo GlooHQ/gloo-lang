@@ -1,6 +1,6 @@
 use baml_types::BamlMediaContent;
 use pyo3::prelude::{pymethods, PyResult};
-use pyo3::types::PyType;
+use pyo3::types::{PyTuple, PyType};
 use pyo3::{Bound, PyAny, PyObject, Python};
 use pythonize::{depythonize_bound, pythonize};
 
@@ -48,6 +48,20 @@ impl BamlAudioPy {
             ]),
             _ => Err(BamlError::new_err("Audio is not base64")),
         }
+    }
+
+    /// Defines the default constructor: https://pyo3.rs/v0.23.3/class#constructor
+    ///
+    /// Used for `pickle.load`: https://docs.python.org/3/library/pickle.html#object.__getnewargs__
+    #[new]
+    pub fn py_new(data: PyObject, py: Python<'_>) -> PyResult<Self> {
+        Self::baml_deserialize(data, py)
+    }
+
+    /// Used for `pickle.dump`: https://docs.python.org/3/library/pickle.html#object.__getnewargs__
+    pub fn __getnewargs__<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyTuple>> {
+        let o = self.baml_serialize(py)?;
+        Ok(PyTuple::new_bound(py, vec![o]))
     }
 
     pub fn __repr__(&self) -> String {
