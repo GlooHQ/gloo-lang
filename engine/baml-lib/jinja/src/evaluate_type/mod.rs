@@ -90,7 +90,7 @@ impl TypeError {
 
         let message = if close_names.is_empty() {
             // If no names are close enough, suggest nothing or provide a generic message
-            format!("Variable `{}` does not exist.", name)
+            format!("Variable `{name}` does not exist.")
         } else if close_names.len() == 1 {
             // If there's only one close name, suggest it
             format!(
@@ -101,8 +101,7 @@ impl TypeError {
             // If there are multiple close names, suggest them all
             let suggestions = close_names.join("`, `");
             format!(
-                "Variable `{}` does not exist. Did you mean one of these: `{}`?",
-                name, suggestions
+                "Variable `{name}` does not exist. Did you mean one of these: `{suggestions}`?"
             )
         };
 
@@ -131,7 +130,7 @@ impl TypeError {
 
     fn new_missing_arg(func: &str, span: Span, name: &str) -> Self {
         Self {
-            message: format!("Function '{}' expects argument '{}'", func, name),
+            message: format!("Function '{func}' expects argument '{name}'"),
             span,
         }
     }
@@ -139,8 +138,7 @@ impl TypeError {
     fn new_wrong_arg_count(func: &str, span: Span, expected: usize, got: usize) -> Self {
         Self {
             message: format!(
-                "Function '{}' expects {} arguments, but got {}",
-                func, expected, got
+                "Function '{func}' expects {expected} arguments, but got {got}"
             ),
             span,
         }
@@ -154,7 +152,7 @@ impl TypeError {
 
         let message = if close_names.is_empty() {
             // If no names are close enough, suggest nothing or provide a generic message
-            format!("Function '{}' does not have an argument '{}'.", func, name)
+            format!("Function '{func}' does not have an argument '{name}'.")
         } else if close_names.len() == 1 {
             // If there's only one close name, suggest it
             format!(
@@ -165,8 +163,7 @@ impl TypeError {
             // If there are multiple close names, suggest them all
             let suggestions = close_names.join("', '");
             format!(
-                "Function '{}' does not have an argument '{}'. Did you mean one of these: '{}'?",
-                func, name, suggestions
+                "Function '{func}' does not have an argument '{name}'. Did you mean one of these: '{suggestions}'?"
             )
         };
 
@@ -180,7 +177,7 @@ impl TypeError {
 
         let message = if close_names.is_empty() {
             // If no names are close enough, suggest nothing or provide a generic message
-            format!("Filter '{}' does not exist", name)
+            format!("Filter '{name}' does not exist")
         } else if close_names.len() == 1 {
             // If there's only one close name, suggest it
             format!(
@@ -191,8 +188,7 @@ impl TypeError {
             // If there are multiple close names, suggest them all
             let suggestions = close_names.join("', '");
             format!(
-                "Filter '{}' does not exist. Did you mean one of these: '{}'?",
-                name, suggestions
+                "Filter '{name}' does not exist. Did you mean one of these: '{suggestions}'?"
             )
         };
 
@@ -241,8 +237,7 @@ impl TypeError {
     ) -> Self {
         Self {
             message: format!(
-                "class {} ({}) does not have a property '{}'",
-                class_name, variable_name, property
+                "class {class_name} ({variable_name}) does not have a property '{property}'"
             ),
             span,
         }
@@ -250,7 +245,7 @@ impl TypeError {
 
     fn new_class_not_defined(class: &str) -> Self {
         Self {
-            message: format!("Class '{}' is not defined", class),
+            message: format!("Class '{class}' is not defined"),
             span: Span::default(),
         }
     }

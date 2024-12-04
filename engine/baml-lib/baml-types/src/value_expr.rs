@@ -175,7 +175,7 @@ impl std::fmt::Display for StringOr {
         match self {
             Self::Value(s) => write!(f, "{s}"),
             Self::EnvVar(s) => write!(f, "${s}"),
-            Self::JinjaExpression(j) => write!(f, "{{ {} }}", j),
+            Self::JinjaExpression(j) => write!(f, "{{ {j} }}"),
         }
     }
 }

@@ -83,7 +83,7 @@ impl minijinja::value::Object for MinijinjaBamlMedia {
     ) -> Result<minijinja::value::Value, minijinja::Error> {
         Err(minijinja::Error::new(
             minijinja::ErrorKind::UnknownMethod,
-            format!("BamlImage has no callable attribute '{:#?}'", args),
+            format!("BamlImage has no callable attribute '{args:#?}'"),
         ))
     }
 }
