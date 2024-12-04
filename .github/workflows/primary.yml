@@ -10,6 +10,10 @@ on:
       - ".github/workflows/primary.yml"
     branches:
       - canary
+  # need to run this periodically on the default branch to populate the build cache
+  schedule:
+    # daily at 2am PST
+    - cron: 0 10 * * *
   merge_group:
     types: [checks_requested]
   workflow_dispatch: {}
@@ -114,6 +118,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: engine
       - name: run python tests
         run: |
           cd integ-tests/python
