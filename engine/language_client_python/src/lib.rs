@@ -23,8 +23,6 @@ fn invoke_runtime_cli(py: Python) -> PyResult<()> {
 
 pub(crate) const MODULE_NAME: &str = "baml_py.baml_py";
 
-pub(crate) const MODULE_NAME: &str = "baml_py.baml_py";
-
 #[pymodule]
 fn baml_py(m: Bound<'_, PyModule>) -> PyResult<()> {
     let use_json = match std::env::var("BAML_LOG_JSON") {
