@@ -326,7 +326,7 @@ mod test {
     }
 
     fn assert_finite_cycles(baml: &'static str, expected: &[&[&str]]) -> Result<(), Diagnostics> {
-        let mut db = parse(baml)?;
+        let db = parse(baml)?;
 
         assert_eq!(
             db.finite_recursive_cycles()
