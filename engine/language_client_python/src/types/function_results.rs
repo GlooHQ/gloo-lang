@@ -50,7 +50,8 @@ fn pythonize_checks<'a>(
     checks: &[ResponseCheck],
 ) -> PyResult<Bound<'a, PyDict>> {
     let dict = PyDict::new_bound(py);
-    let check_class: &PyType = types_module.getattr("Check")?.extract()?;
+    let check_class = types_module.getattr("Check")?;
+    let check_class = check_class.downcast::<PyType>()?;
     checks.iter().try_for_each(
         |ResponseCheck {
              name,

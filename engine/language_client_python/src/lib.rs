@@ -4,13 +4,14 @@ mod runtime;
 mod types;
 
 use pyo3::prelude::{pyfunction, pymodule, PyAnyMethods, PyModule, PyResult};
+use pyo3::types::PyModuleMethods;
 use pyo3::{wrap_pyfunction, Bound, Python};
 use tracing_subscriber::{self, EnvFilter};
 
 #[pyfunction]
 fn invoke_runtime_cli(py: Python) -> PyResult<()> {
     baml_cli::run_cli(
-        py.import_bound("sys")?
+        py.import("sys")?
             .getattr("argv")?
             .extract::<Vec<String>>()?,
         baml_runtime::RuntimeCliDefaults {

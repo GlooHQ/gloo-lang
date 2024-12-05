@@ -1,7 +1,7 @@
 use pyo3::prelude::{pymethods, PyResult};
 use pyo3::types::{PyTuple, PyType};
 use pyo3::{Bound, PyAny, PyObject, Python};
-use pythonize::{depythonize_bound, pythonize};
+use pythonize::{depythonize, pythonize};
 
 use crate::errors::{BamlError, BamlInvalidArgumentError};
 
@@ -53,14 +53,14 @@ impl BamlImagePy {
     ///
     /// Used for `pickle.load`: https://docs.python.org/3/library/pickle.html#object.__getnewargs__
     #[new]
-    pub fn py_new(data: PyObject, py: Python<'_>) -> PyResult<Self> {
-        Self::baml_deserialize(data, py)
+    pub fn py_new(data: Bound<'_, PyAny>) -> PyResult<Self> {
+        Self::baml_deserialize(data)
     }
 
     /// Used for `pickle.dump`: https://docs.python.org/3/library/pickle.html#object.__getnewargs__
     pub fn __getnewargs__<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyTuple>> {
         let o = self.baml_serialize(py)?;
-        Ok(PyTuple::new_bound(py, vec![o]))
+        PyTuple::new(py, vec![o])
     }
 
     pub fn __repr__(&self) -> String {
@@ -89,8 +89,8 @@ impl BamlImagePy {
     }
 
     #[staticmethod]
-    fn baml_deserialize(data: PyObject, py: Python<'_>) -> PyResult<Self> {
-        let data: UserFacingBamlMedia = depythonize_bound(data.into_bound(py))?;
+    fn baml_deserialize(data: Bound<'_, PyAny>) -> PyResult<Self> {
+        let data: UserFacingBamlMedia = depythonize(&data)?;
         Ok(BamlImagePy {
             inner: data.into_baml_media(baml_types::BamlMediaType::Image),
         })
@@ -99,7 +99,7 @@ impl BamlImagePy {
     pub fn baml_serialize(&self, py: Python<'_>) -> PyResult<PyObject> {
         let s: UserFacingBamlMedia = (&self.inner).try_into().map_err(BamlError::from_anyhow)?;
         let s = serde_json::to_value(&s).map_err(|e| BamlError::from_anyhow(e.into()))?;
-        Ok(pythonize(py, &s)?)
+        Ok(pythonize(py, &s)?.into())
     }
 
     pub fn __eq__(&self, other: &Self) -> bool {

@@ -1,7 +1,7 @@
 use baml_runtime::{
     errors::ExposedError, internal::llm_client::LLMResponse, scope_diagnostics::ScopeStack,
 };
-use pyo3::types::{PyAnyMethods, PyModule};
+use pyo3::types::{PyAnyMethods, PyModule, PyModuleMethods};
 use pyo3::{create_exception, pymodule, Bound, PyErr, PyResult, Python};
 
 create_exception!(baml_py, BamlError, pyo3::exceptions::PyException);
@@ -26,10 +26,17 @@ fn raise_baml_validation_error(prompt: String, message: String, raw_output: Stri
 }
 
 #[allow(non_snake_case)]
-fn raise_baml_client_finish_reason_error(prompt: String, raw_output: String, message: String, finish_reason: Option<String>) -> PyErr {
+fn raise_baml_client_finish_reason_error(
+    prompt: String,
+    raw_output: String,
+    message: String,
+    finish_reason: Option<String>,
+) -> PyErr {
     Python::with_gil(|py| {
         let internal_monkeypatch = py.import("baml_py.internal_monkeypatch").unwrap();
-        let exception = internal_monkeypatch.getattr("BamlClientFinishReasonError").unwrap();
+        let exception = internal_monkeypatch
+            .getattr("BamlClientFinishReasonError")
+            .unwrap();
         let args = (prompt, message, raw_output, finish_reason);
         let inst = exception.call1(args).unwrap();
         PyErr::from_value(inst)
@@ -46,9 +53,7 @@ pub fn errors(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     )?;
     parent_module.add(
         "BamlInvalidArgumentError",
-        parent_module
-            .py()
-            .get_type_bound::<BamlInvalidArgumentError>(),
+        parent_module.py().get_type::<BamlInvalidArgumentError>(),
     )?;
     parent_module.add(
         "BamlClientError",
@@ -80,9 +85,12 @@ impl BamlError {
                     raw_output,
                     message,
                     finish_reason,
-                } => {
-                    raise_baml_client_finish_reason_error(prompt.clone(), raw_output.clone(), message.clone(), finish_reason.clone())
-                }
+                } => raise_baml_client_finish_reason_error(
+                    prompt.clone(),
+                    raw_output.clone(),
+                    message.clone(),
+                    finish_reason.clone(),
+                ),
             }
         } else if let Some(er) = err.downcast_ref::<ScopeStack>() {
             PyErr::new::<BamlInvalidArgumentError, _>(format!("Invalid argument: {}", er))

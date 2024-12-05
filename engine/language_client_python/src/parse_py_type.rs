@@ -227,10 +227,10 @@ pub fn parse_py_type(
                 let name = t
                     .name()
                     .map(|n| {
-                        if let Some(x) = n.rfind("baml_client.types.") {
-                            n[x + "baml_client.types.".len()..].to_string()
-                        } else {
-                            n.to_string()
+                        let n = n.to_string();
+                        match n.strip_prefix("baml_client.types.") {
+                            Some(s) => s.to_string(),
+                            None => n,
                         }
                     })
                     .unwrap_or("<UnnamedEnum>".to_string());
@@ -241,10 +241,10 @@ pub fn parse_py_type(
                 let name = t
                     .name()
                     .map(|n| {
-                        if let Some(x) = n.rfind("baml_client.types.") {
-                            n[x + "baml_client.types.".len()..].to_string()
-                        } else {
-                            n.to_string()
+                        let n = n.to_string();
+                        match n.strip_prefix("baml_client.types.") {
+                            Some(s) => s.to_string(),
+                            None => n,
                         }
                     })
                     .unwrap_or("<UnnamedBaseModel>".to_string());
