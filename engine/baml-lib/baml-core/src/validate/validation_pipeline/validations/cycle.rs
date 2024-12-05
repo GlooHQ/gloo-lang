@@ -16,11 +16,14 @@ use crate::validate::validation_pipeline::context::Context;
 pub(super) fn validate(ctx: &mut Context<'_>) {
     // Solve cycles first. We need that information in case a class points to
     // an unresolveble type alias.
-    let alias_cycles = report_infinite_cycles(
+    let type_aliases_components = report_infinite_cycles(
         &ctx.db.type_alias_dependencies(),
         ctx,
         "These aliases form a dependency cycle",
     );
+
+    // Store this locally to pass refs to the insert_required_deps function.
+    let alias_cycles = type_aliases_components.iter().flatten().copied().collect();
 
     // First, build a graph of all the "required" dependencies represented as an
     // adjacency list. We're only going to consider type dependencies that can
@@ -44,13 +47,7 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
 
         for field in &expr_block.fields {
             if let Some(field_type) = &field.expr {
-                insert_required_deps(
-                    class.id,
-                    field_type,
-                    ctx,
-                    &mut dependencies,
-                    &alias_cycles.iter().flatten().copied().collect(),
-                );
+                insert_required_deps(class.id, field_type, ctx, &mut dependencies, &alias_cycles);
             }
         }
 
