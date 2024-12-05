@@ -21,4 +21,4 @@ jobs:
         with:
           body: ${{steps.latest_release.outputs.changelog}}
           tag_name: "0.70.1"
-          github-token: ${{ secrets.SAM_GITHUB_PAT }}
+          token: ${{ secrets.SAM_GITHUB_PAT }}
