@@ -209,9 +209,9 @@ pub fn parse_py_type(
     serialize_unknown_types_as_str: bool,
 ) -> PyResult<Option<BamlValue>> {
     Python::with_gil(|py| {
-        let enum_type = py.import_bound("enum").and_then(|m| m.getattr("Enum"))?;
+        let enum_type = py.import("enum").and_then(|m| m.getattr("Enum"))?;
         let base_model = py
-            .import_bound("pydantic")
+            .import("pydantic")
             .and_then(|m| m.getattr("BaseModel"))?;
 
         let mut get_type = |py: Python<'_>,
@@ -276,7 +276,7 @@ pub fn parse_py_type(
                 // log::info!("Fields of {}:", name);
                 // for (key, value) in &fields {
                 //     let repr = py
-                //         .import_bound("builtins")?
+                //         .import("builtins")?
                 //         .getattr("repr")?
                 //         .call1((value,))?;
                 //     let repr_str = repr.extract::<String>()?;

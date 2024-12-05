@@ -91,7 +91,7 @@ impl BamlImagePy {
     #[staticmethod]
     fn baml_deserialize(data: Bound<'_, PyAny>) -> PyResult<Self> {
         let data: UserFacingBamlMedia = depythonize(&data)?;
-        Ok(BamlImagePy {
+        Ok(Self {
             inner: data.into_baml_media(baml_types::BamlMediaType::Image),
         })
     }

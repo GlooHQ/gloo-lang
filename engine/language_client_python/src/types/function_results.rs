@@ -49,7 +49,7 @@ fn pythonize_checks<'a>(
     types_module: &Bound<'_, PyModule>,
     checks: &[ResponseCheck],
 ) -> PyResult<Bound<'a, PyDict>> {
-    let dict = PyDict::new_bound(py);
+    let dict = PyDict::new(py);
     let check_class = types_module.getattr("Check")?;
     let check_class = check_class.downcast::<PyType>()?;
     checks.iter().try_for_each(
@@ -59,7 +59,7 @@ fn pythonize_checks<'a>(
              status,
          }| {
             // Construct the Check.
-            let check_properties_dict = pyo3::types::PyDict::new_bound(py);
+            let check_properties_dict = pyo3::types::PyDict::new(py);
             check_properties_dict.set_item("name", name)?;
             check_properties_dict.set_item("expression", expression)?;
             check_properties_dict.set_item("status", status)?;
@@ -85,7 +85,7 @@ fn pythonize_strict(
         BamlValueWithMeta::Float(val, _) => Ok(val.into_py(py)),
         BamlValueWithMeta::Bool(val, _) => Ok(val.into_py(py)),
         BamlValueWithMeta::Map(index_map, _) => {
-            let dict = pyo3::types::PyDict::new_bound(py);
+            let dict = pyo3::types::PyDict::new(py);
             for (key, value) in index_map {
                 let key = key.into_py(py);
                 let value = pythonize_strict(py, value, enum_module, cls_module)?;
@@ -93,13 +93,13 @@ fn pythonize_strict(
             }
             Ok(dict.into())
         }
-        BamlValueWithMeta::List(vec, _) => Ok(pyo3::types::PyList::new_bound(
+        BamlValueWithMeta::List(vec, _) => Ok(pyo3::types::PyList::new(
             py,
             vec.into_iter()
                 .map(|v| pythonize_strict(py, v, enum_module, cls_module))
                 .collect::<PyResult<Vec<_>>>()?,
-        )
-        .into()),
+        )?
+        .into_py(py)),
         BamlValueWithMeta::Media(baml_media, _) => match baml_media.media_type {
             baml_types::BamlMediaType::Image => {
                 Ok(BamlImagePy::from(baml_media.clone()).into_py(py))
@@ -143,7 +143,7 @@ fn pythonize_strict(
                 })
                 .collect::<PyResult<Vec<_>>>()?;
 
-            let properties_dict = pyo3::types::PyDict::new_bound(py);
+            let properties_dict = pyo3::types::PyDict::new(py);
             for (key, value) in properties {
                 // For each field, try to call pydantic's `model_dump` on the
                 // field. This is necessary in case the field is `Checked[_,_]`,
@@ -197,26 +197,25 @@ fn pythonize_strict(
         let value_type = py_value_without_constraints.bind(py).get_type();
 
         // Import the necessary modules and objects
-        let typing = py.import_bound("typing")?;
+        let typing = py.import("typing")?;
         let literal = typing.getattr("Literal")?;
 
         // Collect check names as &str and turn them into a Python tuple
         let check_names: Vec<&str> = meta.iter().map(|check| check.name.as_str()).collect();
-        let literal_args = PyTuple::new_bound(py, check_names);
+        let literal_args = PyTuple::new(py, check_names)?;
 
         // Call Literal[...] dynamically
         let literal_check_names = literal.get_item(literal_args)?;
 
         // Prepare the properties dictionary
-        let properties_dict = pyo3::types::PyDict::new_bound(py);
+        let properties_dict = pyo3::types::PyDict::new(py);
         properties_dict.set_item("value", py_value_without_constraints)?;
         properties_dict.set_item("checks", python_checks)?;
 
         let class_checked_type_constructor = cls_module.getattr("Checked")?;
 
         // Prepare type parameters for Checked[...]
-        let type_parameters_tuple =
-            PyTuple::new_bound(py, [value_type.as_ref(), &literal_check_names]);
+        let type_parameters_tuple = PyTuple::new(py, [value_type.as_ref(), &literal_check_names])?;
 
         // Create the Checked type using __class_getitem__
         let class_checked_type: Bound<'_, PyAny> = class_checked_type_constructor

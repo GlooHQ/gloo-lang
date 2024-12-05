@@ -17,7 +17,7 @@ create_exception!(baml_py, BamlClientHttpError, BamlClientError);
 #[allow(non_snake_case)]
 fn raise_baml_validation_error(prompt: String, message: String, raw_output: String) -> PyErr {
     Python::with_gil(|py| {
-        let internal_monkeypatch = py.import_bound("baml_py.internal_monkeypatch").unwrap();
+        let internal_monkeypatch = py.import("baml_py.internal_monkeypatch").unwrap();
         let exception = internal_monkeypatch.getattr("BamlValidationError").unwrap();
         let args = (prompt, message, raw_output);
         let inst = exception.call1(args).unwrap();
