@@ -27,6 +27,18 @@ jobs:
 
       - run: mkdir dist && mv wheels-*/* dist
 
+      # Verify we have the expected number of wheels
+      - name: Verify wheel count
+        run: |
+          set -euxo pipefail
+          ls dist/
+          wheel_count=$(ls dist/*.whl 2>/dev/null | wc -l)
+          if [ "$wheel_count" -lt 5 ]; then
+            echo "Error: Expected at least 5 wheels, but found $wheel_count"
+            exit 1
+          fi
+          echo "Found $wheel_count wheels"
+
       # authz is managed via OIDC configured at https://pypi.org/manage/project/baml-py/settings/publishing/
       # it is pinned to this github actions filename, so renaming this file is not safe!!
       - name: Publish package to PyPI
