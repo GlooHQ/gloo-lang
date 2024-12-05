@@ -57,7 +57,7 @@ const defaultEnvKeyValues: [string, string][] = (() => {
     const domain = window?.location?.origin || ''
     if (domain.includes('localhost')) {
       // we can do somehting fancier here later if we want to test locally.
-      return [['BOUNDARY_PROXY_URL', 'https://fiddle-proxy.fly.dev']]
+      return [['BOUNDARY_PROXY_URL', 'http://localhost:3000']]
     }
     return [['BOUNDARY_PROXY_URL', 'https://fiddle-proxy.fly.dev']]
   } else {

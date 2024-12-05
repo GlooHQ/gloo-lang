@@ -13,12 +13,16 @@
   "devDependencies": {
     "@flydotio/node-demo": "^0.2.1",
     "cors": "^2.8.5"
-
   },
   "dependencies": {
+    "@aws-crypto/sha256-browser": "^5.2.0",
+    "@aws-sdk/credential-provider-node": "^3.699.0",
+    "@aws-sdk/protocol-http": "^3.370.0",
+    "@aws-sdk/signature-v4": "^3.370.0",
+    "@smithy/signature-v4": "^4.2.3",
     "cors": "^2.8.5",
-    "express": "^4.19.2",
     "dotenv": "16.4.5",
+    "express": "^4.19.2",
     "http-proxy-middleware": "^3.0.0"
   }
 }

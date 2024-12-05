@@ -12,6 +12,7 @@ use aws_smithy_types::Blob;
 use baml_types::{BamlMap, BamlMediaContent};
 use baml_types::{BamlMedia, BamlMediaType};
 use futures::stream;
+use http::HeaderMap;
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{ChatMessagePart, RenderContext_Client, RenderedChatMessage};
 use internal_llm_client::aws_bedrock::ResolvedAwsBedrock;
@@ -132,6 +133,10 @@ impl AwsClient {
             loader = loader.region(Region::new(aws_region.clone()));
         }
 
+        if let Some(proxy_url) = self.properties.proxy_url.as_ref() {
+            loader = loader.endpoint_url(proxy_url.clone());
+        }
+
         if let (Some(aws_access_key_id), Some(aws_secret_access_key)) = (
             self.properties.access_key_id.as_ref(),
             self.properties.secret_access_key.as_ref(),
@@ -151,6 +156,16 @@ impl AwsClient {
             .load()
             .await;
 
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "baml-original-url",
+            "https://bedrock.amazonaws.com".parse().unwrap(),
+        );
+        // add an http client to the config with header set
+        let http_client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()
+            .unwrap();
         Ok(bedrock::Client::new(&config))
     }
 
@@ -257,7 +272,7 @@ impl WithRenderRawCurl for AwsClient {
         // TODO(sam): this is fucked up. The SDK actually hides all the serializers inside the crate and doesn't let the user access them.
 
         Ok(format!(
-            "Note, this is not yet complete!\n\nSee: https://docs.aws.amazon.com/cli/latest/reference/bedrock-runtime/converse.html\n\naws bedrock converse --model-id {} --messages {} {}",
+            "Curl Preview for Bedrock is not yet complete!\n\nSee: https://docs.aws.amazon.com/cli/latest/reference/bedrock-runtime/converse.html\n\nUse the following command to test:\naws bedrock converse --model-id {} --messages {} {}",
             converse_input.model_id.unwrap_or("<model_id>".to_string()),
             "<messages>",
             "TODO"

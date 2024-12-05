@@ -1,6 +1,9 @@
 use std::collections::HashSet;
 
-use crate::{AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection};
+use crate::{
+    AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes,
+    UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection,
+};
 use anyhow::Result;
 
 use baml_types::{EvaluationContext, StringOr};
@@ -68,25 +71,32 @@ pub struct ResolvedAwsBedrock {
     pub allowed_role_metadata: AllowedRoleMetadata,
     pub supported_request_modes: SupportedRequestModes,
     pub finish_reason_filter: FinishReasonFilter,
+    pub proxy_url: Option<String>,
 }
 
 impl ResolvedAwsBedrock {
     pub fn allowed_roles(&self) -> Vec<String> {
         self.role_selection.allowed_or_else(|| {
-            vec!["system".to_string(), "user".to_string(), "assistant".to_string()]
+            vec![
+                "system".to_string(),
+                "user".to_string(),
+                "assistant".to_string(),
+            ]
         })
     }
 
     pub fn default_role(&self) -> String {
-        self.role_selection
-            .default_or_else(|| {
-                let allowed_roles = self.allowed_roles();
-                if allowed_roles.contains(&"user".to_string()) {
-                    "user".to_string()
-                } else {
-                    allowed_roles.first().cloned().unwrap_or_else(|| "user".to_string())
-                }
-            })
+        self.role_selection.default_or_else(|| {
+            let allowed_roles = self.allowed_roles();
+            if allowed_roles.contains(&"user".to_string()) {
+                "user".to_string()
+            } else {
+                allowed_roles
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| "user".to_string())
+            }
+        })
     }
 }
 
@@ -129,6 +139,7 @@ impl UnresolvedAwsBedrock {
                 .map(|c| c.resolve(ctx))
                 .transpose()?,
             finish_reason_filter: self.finish_reason_filter.resolve(ctx)?,
+            proxy_url: super::helpers::get_proxy_url(ctx),
         })
     }
 
