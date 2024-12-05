@@ -86,21 +86,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
-      - uses: actions/download-artifact@v4
-        with:
-          name: baml-vscode-vsix
-          path: typescript/out/
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
         working-directory: typescript/
+      - uses: actions/download-artifact@v4
+        with:
+          name: baml-vscode-vsix
+          path: typescript/vscode-ext/packages/out/
       - run: |
-          cd typescript/
+          cd typescript/vscode-ext/packages
           set -x
           ls -la ./
           ls -la out/
           pnpm help
       - run: |
-          cd typescript
-          pnpm vscode:publish --packagePath ./out/*.vsix
+          cd typescript/vscode-ext/packages
+          pnpm vsce publish --packagePath ./out/*.vsix
+          pnpm ovsx publish --packagePath ./out/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }} 
