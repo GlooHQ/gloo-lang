@@ -99,6 +99,8 @@ jobs:
           ls -la ./
           ls -la out/
           pnpm help
-      - run: pnpm exec vsce publish --packagePath ./out/*.vsix
+      - run: |
+          cd typescript
+          pnpm exec vsce publish --packagePath ./out/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }} 
