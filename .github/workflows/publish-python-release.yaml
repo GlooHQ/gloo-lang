@@ -24,6 +24,7 @@ jobs:
           # path: dist
           # merge-multiple: true
           run-id: 12187401980
+          github-token: ${{ secrets.SAM_GITHUB_PAT }}
 
       - run: mkdir dist && mv wheels-*/* dist
 
