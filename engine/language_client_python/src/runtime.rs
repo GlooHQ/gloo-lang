@@ -10,7 +10,7 @@ use crate::types::ClientRegistry;
 use baml_runtime::runtime_interface::ExperimentalTracingInterface;
 use baml_runtime::BamlRuntime as CoreBamlRuntime;
 use pyo3::prelude::{pymethods, PyResult};
-use pyo3::{pyclass, IntoPyObjectExt, PyObject, Python, ToPyObject};
+use pyo3::{pyclass, IntoPyObjectExt, PyObject, Python};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -124,7 +124,7 @@ impl BamlRuntime {
         tb: Option<&TypeBuilder>,
         cb: Option<&ClientRegistry>,
     ) -> PyResult<PyObject> {
-        let Some(args) = parse_py_type(args.into_bound(py).to_object(py), false)? else {
+        let Some(args) = parse_py_type(args.into_bound(py).into_py_any(py)?, false)? else {
             return Err(BamlInvalidArgumentError::new_err(
                 "Failed to parse args, perhaps you used a non-serializable type?",
             ));
@@ -203,7 +203,7 @@ impl BamlRuntime {
         tb: Option<&TypeBuilder>,
         cb: Option<&ClientRegistry>,
     ) -> PyResult<FunctionResultStream> {
-        let Some(args) = parse_py_type(args.into_bound(py).to_object(py), false)? else {
+        let Some(args) = parse_py_type(args.into_bound(py).into_py_any(py)?, false)? else {
             return Err(BamlInvalidArgumentError::new_err(
                 "Failed to parse args, perhaps you used a non-serializable type?",
             ));
@@ -244,7 +244,7 @@ impl BamlRuntime {
         tb: Option<&TypeBuilder>,
         cb: Option<&ClientRegistry>,
     ) -> PyResult<SyncFunctionResultStream> {
-        let Some(args) = parse_py_type(args.into_bound(py).to_object(py), false)? else {
+        let Some(args) = parse_py_type(args.into_bound(py).into_py_any(py)?, false)? else {
             return Err(BamlInvalidArgumentError::new_err(
                 "Failed to parse args, perhaps you used a non-serializable type?",
             ));
@@ -284,7 +284,7 @@ impl BamlRuntime {
         self.inner.drain_stats().into()
     }
 
-    #[pyo3()]
+    #[pyo3(signature = (callback = None))]
     fn set_log_event_callback(&self, callback: Option<PyObject>, py: Python<'_>) -> PyResult<()> {
         let baml_runtime = self.inner.clone();
 

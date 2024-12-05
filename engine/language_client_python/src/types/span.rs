@@ -1,7 +1,7 @@
 use baml_runtime::runtime_interface::ExperimentalTracingInterface;
 use baml_types::BamlValue;
 use pyo3::prelude::{pymethods, PyResult};
-use pyo3::{PyObject, Python, ToPyObject};
+use pyo3::{IntoPyObjectExt, PyObject, Python};
 
 use crate::errors::{BamlError, BamlInvalidArgumentError};
 use crate::parse_py_type::parse_py_type;
@@ -25,7 +25,7 @@ impl BamlSpan {
         args: PyObject,
         ctx: &RuntimeContextManager,
     ) -> PyResult<Self> {
-        let args = parse_py_type(args.into_bound(py).to_object(py), true)?
+        let args = parse_py_type(args.into_bound(py).into_py_any(py)?, true)?
             .unwrap_or(BamlValue::Map(Default::default()));
         let Some(args_map) = args.as_map() else {
             return Err(BamlInvalidArgumentError::new_err("Failed to parse args"));
@@ -50,7 +50,7 @@ impl BamlSpan {
         ctx: &RuntimeContextManager,
     ) -> PyResult<Option<String>> {
         log::trace!("Finishing span: {:?}", self.inner);
-        let result = parse_py_type(result.into_bound(py).to_object(py), true)?;
+        let result = parse_py_type(result.into_bound(py).into_py_any(py)?, true)?;
 
         let span = self
             .inner

@@ -1,7 +1,7 @@
 use baml_types::{BamlValueWithMeta, ResponseCheck};
 use pyo3::prelude::{pymethods, PyResult};
 use pyo3::types::{PyAnyMethods, PyDict, PyModule, PyTuple, PyType};
-use pyo3::{Bound, IntoPy, PyAny, PyObject, Python};
+use pyo3::{Bound, IntoPyObject, IntoPyObjectExt, PyAny, PyObject, Python};
 
 use crate::errors::BamlError;
 
@@ -80,32 +80,32 @@ fn pythonize_strict(
 ) -> PyResult<PyObject> {
     let meta = parsed.meta().clone();
     let py_value_without_constraints = match parsed {
-        BamlValueWithMeta::String(val, _) => PyResult::Ok(val.into_py(py)),
-        BamlValueWithMeta::Int(val, _) => Ok(val.into_py(py)),
-        BamlValueWithMeta::Float(val, _) => Ok(val.into_py(py)),
-        BamlValueWithMeta::Bool(val, _) => Ok(val.into_py(py)),
+        BamlValueWithMeta::String(val, _) => val.into_py_any(py),
+        BamlValueWithMeta::Int(val, _) => val.into_py_any(py),
+        BamlValueWithMeta::Float(val, _) => val.into_py_any(py),
+        BamlValueWithMeta::Bool(val, _) => val.into_py_any(py),
         BamlValueWithMeta::Map(index_map, _) => {
             let dict = pyo3::types::PyDict::new(py);
             for (key, value) in index_map {
-                let key = key.into_py(py);
+                let key = key.into_pyobject(py)?;
                 let value = pythonize_strict(py, value, enum_module, cls_module)?;
                 dict.set_item(key, value)?;
             }
             Ok(dict.into())
         }
-        BamlValueWithMeta::List(vec, _) => Ok(pyo3::types::PyList::new(
+        BamlValueWithMeta::List(vec, _) => pyo3::types::PyList::new(
             py,
             vec.into_iter()
                 .map(|v| pythonize_strict(py, v, enum_module, cls_module))
                 .collect::<PyResult<Vec<_>>>()?,
         )?
-        .into_py(py)),
+        .into_py_any(py),
         BamlValueWithMeta::Media(baml_media, _) => match baml_media.media_type {
             baml_types::BamlMediaType::Image => {
-                Ok(BamlImagePy::from(baml_media.clone()).into_py(py))
+                BamlImagePy::from(baml_media.clone()).into_py_any(py)
             }
             baml_types::BamlMediaType::Audio => {
-                Ok(BamlAudioPy::from(baml_media.clone()).into_py(py))
+                BamlAudioPy::from(baml_media.clone()).into_py_any(py)
             }
         },
         BamlValueWithMeta::Enum(enum_name, ref value, _) => {
@@ -116,7 +116,7 @@ fn pythonize_strict(
                    tb = TypeBuilder()
                    tb.add_enum("Foo")
                 */
-                Err(_) => return Ok(value.into_py(py)),
+                Err(_) => return value.into_py_any(py),
             };
 
             // Call the constructor with the value
@@ -129,7 +129,7 @@ fn pythonize_strict(
                            @@dynamic
                        }
                     */
-                    return Ok(value.into_py(py));
+                    return value.into_py_any(py);
                 }
             };
             Ok(instance.into())

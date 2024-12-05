@@ -128,6 +128,7 @@ impl EnumBuilder {
         self.inner.lock().unwrap().value(name).into()
     }
 
+    #[pyo3(signature = (alias = None))]
     pub fn alias(&self, alias: Option<&str>) -> Self {
         self.inner.lock().unwrap().with_meta(
             "alias",
@@ -145,6 +146,7 @@ impl EnumBuilder {
 
 #[pymethods]
 impl EnumValueBuilder {
+    #[pyo3(signature = (alias = None))]
     pub fn alias(&self, alias: Option<&str>) -> Self {
         self.inner.lock().unwrap().with_meta(
             "alias",
@@ -164,6 +166,7 @@ impl EnumValueBuilder {
         self.inner.clone().into()
     }
 
+    #[pyo3(signature = (description = None))]
     pub fn description(&self, description: Option<&str>) -> Self {
         self.inner.lock().unwrap().with_meta(
             "description",
@@ -196,6 +199,7 @@ impl ClassPropertyBuilder {
         self.inner.clone().into()
     }
 
+    #[pyo3(signature = (alias = None))]
     pub fn alias(&self, alias: Option<&str>) -> Self {
         self.inner.lock().unwrap().with_meta(
             "alias",
@@ -206,6 +210,7 @@ impl ClassPropertyBuilder {
         self.inner.clone().into()
     }
 
+    #[pyo3(signature = (description = None))]
     pub fn description(&self, description: Option<&str>) -> Self {
         self.inner.lock().unwrap().with_meta(
             "description",

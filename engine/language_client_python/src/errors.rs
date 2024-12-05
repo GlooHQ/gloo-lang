@@ -21,7 +21,7 @@ fn raise_baml_validation_error(prompt: String, message: String, raw_output: Stri
         let exception = internal_monkeypatch.getattr("BamlValidationError").unwrap();
         let args = (prompt, message, raw_output);
         let inst = exception.call1(args).unwrap();
-        PyErr::from_value_bound(inst)
+        PyErr::from_value(inst)
     })
 }
 
@@ -47,21 +47,18 @@ fn raise_baml_client_finish_reason_error(
 /// IIRC the name of this function is the name of the module that pyo3 generates (errors.py)
 #[pymodule]
 pub fn errors(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    parent_module.add(
-        "BamlError",
-        parent_module.py().get_type_bound::<BamlError>(),
-    )?;
+    parent_module.add("BamlError", parent_module.py().get_type::<BamlError>())?;
     parent_module.add(
         "BamlInvalidArgumentError",
         parent_module.py().get_type::<BamlInvalidArgumentError>(),
     )?;
     parent_module.add(
         "BamlClientError",
-        parent_module.py().get_type_bound::<BamlClientError>(),
+        parent_module.py().get_type::<BamlClientError>(),
     )?;
     parent_module.add(
         "BamlClientHttpError",
-        parent_module.py().get_type_bound::<BamlClientHttpError>(),
+        parent_module.py().get_type::<BamlClientHttpError>(),
     )?;
 
     Ok(())

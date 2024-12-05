@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use baml_runtime::client_registry;
 use pyo3::prelude::{pymethods, PyResult};
-use pyo3::{PyObject, Python, ToPyObject};
+use pyo3::{IntoPyObjectExt, PyObject, Python};
 
 use crate::errors::BamlInvalidArgumentError;
 use crate::parse_py_type::parse_py_type;
@@ -34,7 +34,7 @@ impl ClientRegistry {
         options: PyObject,
         retry_policy: Option<String>,
     ) -> PyResult<()> {
-        let Some(args) = parse_py_type(options.into_bound(py).to_object(py), false)? else {
+        let Some(args) = parse_py_type(options.into_bound(py).into_py_any(py)?, false)? else {
             return Err(BamlInvalidArgumentError::new_err(
                 "Failed to parse args, perhaps you used a non-serializable type?",
             ));
