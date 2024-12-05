@@ -93,7 +93,7 @@ impl BamlAudioPy {
     fn baml_deserialize(data: Bound<'_, PyAny>) -> PyResult<Self> {
         let data: UserFacingBamlMedia = depythonize(&data)?;
         Ok(Self {
-            inner: data.into_baml_media(baml_types::BamlMediaType::Image),
+            inner: data.into_baml_media(baml_types::BamlMediaType::Audio),
         })
     }
 
