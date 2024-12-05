@@ -65,6 +65,13 @@ jobs:
         env: ${{ matrix._.env || fromJSON('{}') }}
         with:
           target: ${{ matrix._.target }}
+          # TODO: unpin the maturin version
+          # 1.7.7+ builds wheels that gh-action-pypi-publish can't upload
+          # see:
+          #   - release failure: https://github.com/BoundaryML/baml/actions/runs/12154379580/job/33894619438
+          #   - maturin changelog: https://github.com/PyO3/maturin/blob/ba4d482809a73669242bd7fe7dd5f9106f42702f/Changelog.md?plain=1#L13
+          #   - gh-action-pypi-publish issue: https://github.com/pypa/gh-action-pypi-publish/issues/310
+          maturin-version: "1.7.6"
           command: build
           # building in engine/ ensures that we pick up .cargo/config.toml
           working-directory: engine
