@@ -1,4 +1,4 @@
-name: Release language_client_typescript
+name: BAML Release - Build Typescript
 
 on:
   workflow_call: {}

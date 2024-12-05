@@ -1,4 +1,4 @@
-name: Release language_client_python
+name: BAML Release - Build Python
 
 on:
   workflow_call: {}
