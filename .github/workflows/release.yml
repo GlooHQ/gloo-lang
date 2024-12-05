@@ -1,7 +1,17 @@
 name: BAML Release
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      publish-to-pypi:
+        description: "Publish to PyPI"
+        required: false
+      publish-to-npm:
+        description: "Publish to NPM"
+        required: false
+      publish-to-rubygems:
+        description: "Publish to RubyGems"
+        required: false
   # need to run this periodically on the default branch to populate the build cache
   schedule:
     # daily at 2am PST
@@ -112,7 +122,7 @@ jobs:
 
   publish-to-pypi:
     environment: release
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' || github.event.inputs.publish-to-pypi == 'true'
     needs: [assert-all-builds-passed]
     runs-on: ubuntu-latest
     steps:
@@ -133,7 +143,7 @@ jobs:
 
   publish-to-npm:
     environment: release
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' || github.event.inputs.publish-to-npm == 'true'
     needs: [assert-all-builds-passed]
     runs-on: ubuntu-latest
     env:
@@ -184,7 +194,7 @@ jobs:
 
   publish-to-rubygems:
     environment: release
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' || github.event.inputs.publish-to-rubygems == 'true'
     needs: [assert-all-builds-passed]
     runs-on: ubuntu-latest
     steps:
