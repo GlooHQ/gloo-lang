@@ -22,7 +22,7 @@ jobs:
           run-id: 12187401980
           github-token: ${{ secrets.SAM_GITHUB_PAT }}
       
-      - run: ls gh-artifacts
+      - run: ls -la gh-artifacts
 
       - name: Create Release
         if: false
