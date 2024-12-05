@@ -280,6 +280,29 @@ class BamlAsyncClient:
       )
       return cast(types.Tree, raw.cast_to(types, types))
     
+    async def ClassThatPointsToRecursiveClassThroughAlias(
+        self,
+        cls: types.ClassToRecAlias,
+        baml_options: BamlCallOptions = {},
+    ) -> types.ClassToRecAlias:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "ClassThatPointsToRecursiveClassThroughAlias",
+        {
+          "cls": cls,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.ClassToRecAlias, raw.cast_to(types, types))
+    
     async def ClassifyDynEnumTwo(
         self,
         input: str,
@@ -1798,6 +1821,29 @@ class BamlAsyncClient:
       )
       return cast(str, raw.cast_to(types, types))
     
+    async def RecursiveClassWithAliasIndirection(
+        self,
+        cls: types.NodeWithAliasIndirection,
+        baml_options: BamlCallOptions = {},
+    ) -> types.NodeWithAliasIndirection:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "RecursiveClassWithAliasIndirection",
+        {
+          "cls": cls,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.NodeWithAliasIndirection, raw.cast_to(types, types))
+    
     async def ReturnFailingAssert(
         self,
         inp: int,
@@ -3164,6 +3210,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.Tree, x.cast_to(types, partial_types)),
         lambda x: cast(types.Tree, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def ClassThatPointsToRecursiveClassThroughAlias(
+        self,
+        cls: types.ClassToRecAlias,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.ClassToRecAlias, types.ClassToRecAlias]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "ClassThatPointsToRecursiveClassThroughAlias",
+        {
+          "cls": cls,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.ClassToRecAlias, types.ClassToRecAlias](
+        raw,
+        lambda x: cast(partial_types.ClassToRecAlias, x.cast_to(types, partial_types)),
+        lambda x: cast(types.ClassToRecAlias, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -5149,6 +5225,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
         lambda x: cast(str, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def RecursiveClassWithAliasIndirection(
+        self,
+        cls: types.NodeWithAliasIndirection,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.NodeWithAliasIndirection, types.NodeWithAliasIndirection]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "RecursiveClassWithAliasIndirection",
+        {
+          "cls": cls,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.NodeWithAliasIndirection, types.NodeWithAliasIndirection](
+        raw,
+        lambda x: cast(partial_types.NodeWithAliasIndirection, x.cast_to(types, partial_types)),
+        lambda x: cast(types.NodeWithAliasIndirection, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

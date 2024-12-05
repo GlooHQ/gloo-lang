@@ -199,6 +199,9 @@ impl ParserDatabase {
 
         // Find the cycles and inject them into parser DB. This will then be
         // passed into the IR and then into the Jinja output format.
+        //
+        // TODO: Should we update `class_dependencies` to include resolved
+        // aliases or not?
         self.types.finite_recursive_cycles = Tarjan::components(&resolved_dependency_graph);
 
         // Fully resolve function dependencies.

@@ -207,6 +207,11 @@ export interface ClassOptionalOutput2 {
   
 }
 
+export interface ClassToRecAlias {
+  list: LinkedListAliasNode
+  
+}
+
 export interface ClassWithImage {
   myImage: Image
   param2: string
@@ -441,6 +446,12 @@ export interface NestedBlockConstraintForParam {
 export interface Node {
   data: number
   next?: Node | null
+  
+}
+
+export interface NodeWithAliasIndirection {
+  value: number
+  next?: NodeWithAliasIndirection | null
   
 }
 

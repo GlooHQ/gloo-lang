@@ -100,6 +100,25 @@ describe "ruby<->baml integration tests" do
     #   value: 1,
     #   next: nil,
     # )
+    
+    res = b.ClassThatPointsToRecursiveClassThroughAlias(
+        cls: Baml::Types::ClassToRecAlias.new(
+            list: Baml::Types::LinkedListAliasNode.new(
+                value: 1,
+                next: nil,
+            )
+        )
+    )
+
+    res = b.RecursiveClassWithAliasIndirection.new(
+        cls: Baml::Types::NodeWithAliasIndirection.new(
+            value: 1,
+            next: Baml::Types::NodeWithAliasIndirection.new(
+                value: 2,
+                next: nil,
+            )
+        )
+    )
   end
 
   it "accepts subclass of baml type" do

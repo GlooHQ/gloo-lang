@@ -28,6 +28,7 @@ module Baml
     class BookOrder < T::Struct; end
     class ClassOptionalOutput < T::Struct; end
     class ClassOptionalOutput2 < T::Struct; end
+    class ClassToRecAlias < T::Struct; end
     class ClassWithImage < T::Struct; end
     class CompoundBigNumbers < T::Struct; end
     class ContactInfo < T::Struct; end
@@ -65,6 +66,7 @@ module Baml
     class NestedBlockConstraint < T::Struct; end
     class NestedBlockConstraintForParam < T::Struct; end
     class Node < T::Struct; end
+    class NodeWithAliasIndirection < T::Struct; end
     class OptionalTest_Prop1 < T::Struct; end
     class OptionalTest_ReturnType < T::Struct; end
     class OrderInfo < T::Struct; end
@@ -203,6 +205,18 @@ module Baml
           prop1: props[:prop1],
           prop2: props[:prop2],
           prop3: props[:prop3],
+        )
+
+        @props = props
+      end
+    end
+    class ClassToRecAlias < T::Struct
+      include Baml::Sorbet::Struct
+      const :list, Baml::PartialTypes::LinkedListAliasNode
+
+      def initialize(props)
+        super(
+          list: props[:list],
         )
 
         @props = props
@@ -728,6 +742,20 @@ module Baml
       def initialize(props)
         super(
           data: props[:data],
+          next: props[:next],
+        )
+
+        @props = props
+      end
+    end
+    class NodeWithAliasIndirection < T::Struct
+      include Baml::Sorbet::Struct
+      const :value, T.nilable(Integer)
+      const :next, Baml::PartialTypes::NodeWithAliasIndirection
+
+      def initialize(props)
+        super(
+          value: props[:value],
           next: props[:next],
         )
 
