@@ -171,6 +171,16 @@ describe('Integ tests', () => {
       const res = await b.AliasThatPointsToRecursiveType({ value: 1, next: null })
       expect(res).toEqual({ value: 1, next: null })
     })
+
+    it('class pointing to alias that points to recursive class', async () => {
+      const res = await b.ClassThatPointsToRecursiveClassThroughAlias({ list: { value: 1, next: null } })
+      expect(res).toEqual({ list: { value: 1, next: null } })
+    })
+
+    it('recursive class with alias indirection', async () => {
+      const res = await b.RecursiveClassWithAliasIndirection({ value: 1, next: { value: 2, next: null } })
+      expect(res).toEqual({ value: 1, next: { value: 2, next: null } })
+    })
   })
 
   it('should work for all outputs', async () => {

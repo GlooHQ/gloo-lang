@@ -64,6 +64,9 @@ class ClassOptionalOutput2(BaseModel):
     prop2: Optional[str] = None
     prop3: Optional["Blah"] = None
 
+class ClassToRecAlias(BaseModel):
+    list: Optional["LinkedListAliasNode"] = None
+
 class ClassWithImage(BaseModel):
     myImage: Optional[baml_py.Image] = None
     param2: Optional[str] = None
@@ -222,6 +225,10 @@ class NestedBlockConstraintForParam(BaseModel):
 class Node(BaseModel):
     data: Optional[int] = None
     next: Optional["Node"] = None
+
+class NodeWithAliasIndirection(BaseModel):
+    value: Optional[int] = None
+    next: Optional["NodeWithAliasIndirection"] = None
 
 class OptionalTest_Prop1(BaseModel):
     omega_a: Optional[str] = None

@@ -484,9 +484,12 @@ impl OutputFormatContent {
                 }
                 .to_string()
             }
-            FieldType::Alias { resolution, .. } => {
-                self.inner_type_render(options, &resolution, render_state, group_hoisted_literals)?
-            }
+            FieldType::Alias { resolution, .. } => self.render_possibly_recursive_type(
+                options,
+                &resolution,
+                render_state,
+                group_hoisted_literals,
+            )?,
             FieldType::List(inner) => {
                 let is_recursive = match inner.as_ref() {
                     FieldType::Class(nested_class) => self.recursive_classes.contains(nested_class),

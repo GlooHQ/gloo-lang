@@ -41,6 +41,8 @@ from ..baml_client.types import (
     NestedBlockConstraintForParam,
     MapKey,
     LinkedListAliasNode,
+    ClassToRecAlias,
+    NodeWithAliasIndirection,
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -274,6 +276,24 @@ class TestAllInputs:
             LinkedListAliasNode(value=1, next=None)
         )
         assert res == LinkedListAliasNode(value=1, next=None)
+
+    @pytest.mark.asyncio
+    async def test_class_pointing_to_alias_that_points_to_recursive_class(self):
+        res = await b.ClassThatPointsToRecursiveClassThroughAlias(
+            ClassToRecAlias(list=LinkedListAliasNode(value=1, next=None))
+        )
+        assert res == ClassToRecAlias(list=LinkedListAliasNode(value=1, next=None))
+
+    @pytest.mark.asyncio
+    async def test_recursive_class_with_alias_indirection(self):
+        res = await b.RecursiveClassWithAliasIndirection(
+            NodeWithAliasIndirection(
+                value=1, next=NodeWithAliasIndirection(value=2, next=None)
+            )
+        )
+        assert res == NodeWithAliasIndirection(
+            value=1, next=NodeWithAliasIndirection(value=2, next=None)
+        )
 
 
 class MyCustomClass(NamedArgsSingleClass):

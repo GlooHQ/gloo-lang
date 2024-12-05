@@ -373,6 +373,38 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        cls: Baml::Types::ClassToRecAlias,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::ClassToRecAlias)
+    }
+    def ClassThatPointsToRecursiveClassThroughAlias(
+        *varargs,
+        cls:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ClassThatPointsToRecursiveClassThroughAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "ClassThatPointsToRecursiveClassThroughAlias",
+        {
+          cls: cls,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(T.any(Baml::Types::DynEnumTwo, String))
@@ -2485,6 +2517,38 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        cls: Baml::Types::NodeWithAliasIndirection,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::NodeWithAliasIndirection)
+    }
+    def RecursiveClassWithAliasIndirection(
+        *varargs,
+        cls:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("RecursiveClassWithAliasIndirection may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "RecursiveClassWithAliasIndirection",
+        {
+          cls: cls,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         inp: Integer,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Integer)
@@ -4312,6 +4376,41 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[Baml::PartialTypes::Tree, Baml::Types::Tree].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        cls: Baml::Types::ClassToRecAlias,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::ClassToRecAlias])
+    }
+    def ClassThatPointsToRecursiveClassThroughAlias(
+        *varargs,
+        cls:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ClassThatPointsToRecursiveClassThroughAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "ClassThatPointsToRecursiveClassThroughAlias",
+        {
+          cls: cls,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::ClassToRecAlias, Baml::Types::ClassToRecAlias].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
@@ -6622,6 +6721,41 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[T.nilable(String), String].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        cls: Baml::Types::NodeWithAliasIndirection,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::NodeWithAliasIndirection])
+    }
+    def RecursiveClassWithAliasIndirection(
+        *varargs,
+        cls:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("RecursiveClassWithAliasIndirection may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "RecursiveClassWithAliasIndirection",
+        {
+          cls: cls,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::NodeWithAliasIndirection, Baml::Types::NodeWithAliasIndirection].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
