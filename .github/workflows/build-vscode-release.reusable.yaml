@@ -45,9 +45,8 @@ jobs:
       - name: Build VSCode Extension
         id: build
         run: |
-          pnpm run vscode:package
-          VERSION=$(cat package.json| grep version | cut -d ' ' -f 4 | sed 's/[",]//g')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          pnpm run vscode:package --pre-release
+          echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
         working-directory: typescript/vscode-ext/packages
 
       # Upload the artifact (helpful for debugging and manual downloads)
