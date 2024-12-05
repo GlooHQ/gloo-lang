@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.70.1](https://github.com/boundaryml/baml/compare/0.70.0..0.70.1) - 2024-12-05
+
+### Bug Fixes
+
+- Make baml_py work with playwright/inspect (#1214) - ([6741999](https://github.com/boundaryml/baml/commit/674199992e21fb439a5c972c5868b6b3f106d267)) - Samuel Lijin
+- Fix Python release pipeline (#1218) - ([bde634c](https://github.com/boundaryml/baml/commit/bde634cd6064784e77620f26f52202494fb659ec)) - Samuel Lijin
+
+### Documentation
+
+- Docs for LLM Clients paramaters updated (#1216) - ([6f99a28](https://github.com/boundaryml/baml/commit/6f99a28a918e557a75e2d763ac21ca587350adf4)) - hellovai
+
+
 ## [0.70.0](https://github.com/boundaryml/baml/compare/0.69.0..0.70.0) - 2024-12-04
 
 ### Bug Fixes
