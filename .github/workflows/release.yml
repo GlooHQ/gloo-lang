@@ -123,13 +123,29 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: wheels-*
+          path: dist
+          merge-multiple: true
 
-      - run: mkdir dist && mv wheels-*/* dist
+      # Verify we have the expected number of wheels
+      - name: Verify wheel count
+        run: |
+          set -euo pipefail
+          ls dist/
+          wheel_count=$(ls dist/*.whl 2>/dev/null | wc -l)
+          if [ "$wheel_count" -lt 7 ]; then
+            echo "Error: Expected at least 7 wheels, but found $wheel_count"
+            exit 1
+          fi
+          echo "Found $wheel_count wheels"
+
       # authz is managed via OIDC configured at https://pypi.org/manage/project/baml-py/settings/publishing/
       # it is pinned to this github actions filename, so renaming this file is not safe!!
       - name: Publish package to PyPI
         if: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(github.ref, 'refs/tags/test-release') }}
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: PyO3/maturin-action@v1
+        with:
+          command: upload
+          args: dist/*
 
   publish-to-npm:
     environment: release
@@ -267,11 +283,7 @@ jobs:
   release-github:
     runs-on: ubuntu-latest
     if: github.ref_type == 'tag'
-    needs:
-      - publish-to-pypi
-      - publish-to-npm
-      - publish-to-rubygems
-      # - publish-vscode
+    needs: [assert-all-builds-passed]
     steps:
       - uses: actions/checkout@v4
 
@@ -280,7 +292,13 @@ jobs:
         run: |
           echo "::set-output name=changelog::$(awk '/^## \[/{if (p) exit; p=1} p' CHANGELOG.md)"
 
+      - uses: actions/download-artifact@v4
+        with:
+          path: gh-artifacts
+          merge-multiple: true
+
       - name: Create Release
         uses: mikepenz/action-gh-release@v1 #softprops/action-gh-release
         with:
           body: ${{steps.latest_release.outputs.changelog}}
+          files: gh-artifacts/*
