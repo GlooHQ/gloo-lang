@@ -13,8 +13,13 @@ Example:
 client<llm> MyClient {
   provider aws-bedrock
   options {
-    model_id "anthropic.claude-3-5-sonnet-20240620-v1:0"
-    api_key env.MY_OPENAI_KEY
+    inference_configuration {
+      max_tokens 100
+    }
+    // model_id "mistral.mistral-7b-instruct-v0:2"
+    // model "anthropic.claude-3-5-sonnet-20240620-v1:0"
+    // model_id "anthropic.claude-3-haiku-20240307-v1:0"
+    model "meta.llama3-8b-instruct-v1:0"
   }
 }
 ```
@@ -26,9 +31,9 @@ mechanisms supported by the
 SDK](https://docs.rs/aws-config/latest/aws_config/index.html), including but not
 limited to:
 
-  - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` as set in your environment variables
   - loading the specified `AWS_PROFILE` from `~/.aws/config`
   - built-in authn for services running in EC2, ECS, Lambda, etc.
+  - You can also specify the access key ID, secret access key, and region directly (see below)
 
 
 ## Playground setup
@@ -50,6 +55,8 @@ Add these three environment variables to your extension variables to use the AWS
   We don't have any checks for this field, you can pass any string you wish.
 </ParamField>
 
+<Markdown src="/snippets/role-selection.mdx" />
+
 <Markdown src="/snippets/allowed-role-metadata-basic.mdx" />
 <Markdown src="/snippets/supports-streaming.mdx" />
 
@@ -62,6 +69,21 @@ Add these three environment variables to your extension variables to use the AWS
   We don't have any checks for this field, you can pass any string you wish.
 </ParamField>
 
+<ParamField
+  path="access_key_id"
+  type="string"
+>
+  The AWS access key ID to use. **Default: `AWS_ACCESS_KEY_ID` environment variable**
+</ParamField>
+
+<ParamField
+  path="secret_access_key"
+  type="string"
+>
+  The AWS secret access key to use. **Default: `AWS_SECRET_ACCESS_KEY` environment variable**
+</ParamField>
+
+
 ## Forwarded options
 
 <ParamField
@@ -72,7 +94,7 @@ Add these three environment variables to your extension variables to use the AWS
 </ParamField>
 
 <ParamField
-  path="model_id (or model)"
+  path="model (or model_id)"
   type="string"
 >
   The model to use.
@@ -110,7 +132,6 @@ client<llm> MyClient {
       max_tokens 1000
       temperature 1.0
       top_p 0.8
-      stop_sequence ["_EOF"]
     }
   }
 }
