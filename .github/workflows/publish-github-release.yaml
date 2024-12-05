@@ -1,0 +1,32 @@
+name: Publish GitHub Release
+
+on:
+  workflow_call: {}
+  push:
+    branches: [sam/py-release3]
+
+jobs:
+  release-github:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get Changelog
+        id: latest_release
+        run: |
+          echo "::set-output name=changelog::$(awk '/^## \[/{if (p) exit; p=1} p' CHANGELOG.md)"
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: gh-artifacts
+          merge-multiple: true
+      
+      - run: ls gh-artifacts
+
+      - name: Create Release
+        if: false
+        uses: mikepenz/action-gh-release@v1 #softprops/action-gh-release
+        with:
+          body: ${{steps.latest_release.outputs.changelog}}
+          tag_name: "0.70.1"
+          files: gh-artifacts/*
