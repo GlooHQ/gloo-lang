@@ -13,7 +13,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Build WASM
     steps:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
@@ -81,3 +80,26 @@ jobs:
           name: vscode-playground
           path: typescript/vscode-ext/packages/web-panel/dist
           if-no-files-found: error
+  
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - uses: actions/download-artifact@v4
+        with:
+          name: baml-vscode.vsix
+          path: typescript/out/
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: typescript/
+      - run: |
+          cd typescript/
+          set -x
+          ls -la ./
+          ls -la out/
+          pnpm help
+      - run: pnpm exec vsce publish --packagePath ./out/baml-vscode.vsix
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }} 
