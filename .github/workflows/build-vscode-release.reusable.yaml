@@ -101,7 +101,7 @@ jobs:
           pnpm help
       - run: |
           cd typescript/vscode-ext/packages
-          pnpm vsce publish --packagePath ./out/*.vsix
-          pnpm ovsx publish --packagePath ./out/*.vsix
+          pnpm vsce publish --pre-release --packagePath ./out/*.vsix
+          pnpm ovsx publish --pre-release --packagePath ./out/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }} 

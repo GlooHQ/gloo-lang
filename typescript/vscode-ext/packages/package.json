@@ -1,5 +1,5 @@
 {
-  "name": "baml-extension",
+  "name": "baml-extension-preview",
   "displayName": "Baml",
   "description": "BAML is a DSL for AI applications.",
   "version": "0.70.1",
