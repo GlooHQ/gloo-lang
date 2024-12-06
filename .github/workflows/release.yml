@@ -45,6 +45,8 @@ jobs:
       should-run-publish-job: ${{ github.ref_type == 'tag' }}
       should-run-publish-step: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(github.ref, 'refs/tags/test-release') }}
     steps:
+      - if: github.ref_type == 'tag'
+        run: echo 'ref type is tag'
       - run: echo "::do-nothing::" >/dev/null
 
   publish-to-pypi:
