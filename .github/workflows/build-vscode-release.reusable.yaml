@@ -44,9 +44,7 @@ jobs:
       # Build the VSCode Extension
       - name: Build VSCode Extension
         id: build
-        run: |
-          pnpm run vscode:package --pre-release
-          echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+        run: pnpm run vscode:package --pre-release
         working-directory: typescript/vscode-ext/packages
 
       # Upload the artifact (helpful for debugging and manual downloads)
@@ -54,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: baml-vscode-vsix
-          path: typescript/vscode-ext/packages/baml-extension-${{ steps.build.outputs.version }}.vsix
+          path: typescript/vscode-ext/packages/*.vsix
           if-no-files-found: error
 
       # Upload the artifact (helpful for debugging and manual downloads)
