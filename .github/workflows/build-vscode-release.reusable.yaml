@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   build:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +80,7 @@ jobs:
           if-no-files-found: error
   
   publish:
-    needs: [build]
+    # needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -91,7 +92,7 @@ jobs:
         with:
           name: baml-vscode-vsix
           path: typescript/vscode-ext/packages/out/
-          run-id: 12190612044
+          run-id: 12190929601
           github-token: ${{ secrets.SAM_GITHUB_PAT }}
       - run: |
           cd typescript/vscode-ext/packages
