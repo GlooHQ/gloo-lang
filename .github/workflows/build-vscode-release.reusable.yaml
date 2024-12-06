@@ -13,6 +13,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: false
     steps:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
@@ -91,6 +92,8 @@ jobs:
         with:
           name: baml-vscode-vsix
           path: typescript/vscode-ext/packages/out/
+          run-id: 12190612044
+          github-token: ${{ secrets.SAM_GITHUB_PAT }}
       - run: |
           cd typescript/vscode-ext/packages
           set -x

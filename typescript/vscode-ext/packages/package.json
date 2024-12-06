@@ -1,6 +1,6 @@
 {
   "name": "baml-extension-preview",
-  "displayName": "Baml",
+  "displayName": "Baml (preview)",
   "description": "BAML is a DSL for AI applications.",
   "version": "0.70.1",
   "publisher": "Boundary",
