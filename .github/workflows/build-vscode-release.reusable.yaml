@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   build:
-    if: false
+    # if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
       # Build the VSCode Extension
       - name: Build VSCode Extension
         id: build
-        run: pnpm run vscode:package --pre-release
+        run: pnpm run vscode:package
         working-directory: typescript/vscode-ext/packages
 
       # Upload the artifact (helpful for debugging and manual downloads)
@@ -80,7 +80,7 @@ jobs:
           if-no-files-found: error
   
   publish:
-    # needs: [build]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,8 +92,8 @@ jobs:
         with:
           name: baml-vscode-vsix
           path: typescript/vscode-ext/packages/out/
-          run-id: 12190929601
-          github-token: ${{ secrets.SAM_GITHUB_PAT }}
+          # run-id: 12190929601
+          # github-token: ${{ secrets.SAM_GITHUB_PAT }}
       - run: |
           cd typescript/vscode-ext/packages
           set -x
