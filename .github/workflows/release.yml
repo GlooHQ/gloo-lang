@@ -16,7 +16,7 @@ on:
     tags:
       - "test-release/*.*"
       - "*.*"
-    branches: [sam/vsc-release2]
+    branches: []
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -26,27 +26,27 @@ permissions:
   id-token: write
 
 jobs:
-  # build-python-release:
-  #   uses: ./.github/workflows/build-python-release.reusable.yaml
+  build-python-release:
+    uses: ./.github/workflows/build-python-release.reusable.yaml
 
-  # build-ruby-release:
-  #   uses: ./.github/workflows/build-ruby-release.reusable.yaml
+  build-ruby-release:
+    uses: ./.github/workflows/build-ruby-release.reusable.yaml
 
-  # build-typescript-release:
-  #   uses: ./.github/workflows/build-typescript-release.reusable.yaml
+  build-typescript-release:
+    uses: ./.github/workflows/build-typescript-release.reusable.yaml
 
-  # build-vscode-release:
-  #   uses: ./.github/workflows/build-vscode-release.reusable.yaml
+  build-vscode-release:
+    uses: ./.github/workflows/build-vscode-release.reusable.yaml
 
   # placeholder fan-in step
   all-builds:
     name: Assert all builds passed
     runs-on: ubuntu-latest
-    needs: []
-      # - build-python-release
-      # - build-ruby-release
-      # - build-typescript-release
-      # - build-vscode-release
+    needs:
+      - build-python-release
+      - build-ruby-release
+      - build-typescript-release
+      - build-vscode-release
     steps:
       - run: echo "::do-nothing::" >/dev/null
   
