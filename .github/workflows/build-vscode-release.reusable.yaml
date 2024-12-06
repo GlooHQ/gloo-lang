@@ -100,13 +100,15 @@ jobs:
           ls -la ./
           ls -la out/
           pnpm help
-      - run: |
+      - name: Publish to open-vsx
+        run: |
           cd typescript/vscode-ext/packages
-          pnpm ovsx publish --pre-release --packagePath ./out/*.vsix
+          pnpm ovsx publish --packagePath ./out/*.vsix
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-      - run: |
+      - name: Publish to VSCode Marketplace
+        run: |
           cd typescript/vscode-ext/packages
-          pnpm vsce publish --pre-release --packagePath ./out/*.vsix
+          pnpm vsce publish --packagePath ./out/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCODE_PAT }} 
