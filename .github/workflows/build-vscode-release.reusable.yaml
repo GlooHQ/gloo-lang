@@ -102,4 +102,4 @@ jobs:
           pnpm vsce publish --pre-release --packagePath ./out/*.vsix
           pnpm ovsx publish --pre-release --packagePath ./out/*.vsix
         env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }} 
+          VSCE_PAT: ${{ secrets.VSCODE_PAT }} 
