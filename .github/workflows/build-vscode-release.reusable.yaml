@@ -13,7 +13,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: false
     steps:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
