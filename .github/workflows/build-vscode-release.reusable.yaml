@@ -12,7 +12,6 @@ concurrency:
 
 jobs:
   build:
-    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -80,6 +79,7 @@ jobs:
           if-no-files-found: error
   
   publish:
+    if: false
     needs: [build]
     runs-on: ubuntu-latest
     steps:
