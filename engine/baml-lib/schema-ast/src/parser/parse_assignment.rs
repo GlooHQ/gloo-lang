@@ -109,12 +109,14 @@ mod tests {
                     identifier(0, 4, [single_word(0, 4)]),
                     identifier(5, 9, [single_word(5, 9)]),
                     assignment(10, 11),
-                    field_type(12, 15, [
-                        non_union(12, 15, [
-                            identifier(12, 15, [single_word(12, 15)])
-                        ])
+                    field_type_with_attr(12, 15, [
+                        field_type(12, 15, [
+                            non_union(12, 15, [
+                                identifier(12, 15, [single_word(12, 15)])
+                            ]),
+                        ]),
                     ]),
-                ])
+                ]),
             ]
         }
 
