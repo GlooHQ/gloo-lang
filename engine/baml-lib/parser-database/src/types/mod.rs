@@ -393,7 +393,7 @@ fn visit_class<'db>(
 pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldType {
     match field_type {
         // For symbols we need to check if we're dealing with aliases.
-        FieldType::Symbol(arity, ident, span) => {
+        FieldType::Symbol(arity, ident, attrs) => {
             let Some(string_id) = db.interner.lookup(ident.name()) else {
                 unreachable!(
                     "Attempting to resolve alias `{ident}` that does not exist in the interner"
@@ -406,7 +406,7 @@ pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldT
 
             match top_id {
                 ast::TopId::TypeAlias(alias_id) => {
-                    let resolved = match db.types.resolved_type_aliases.get(alias_id) {
+                    let mut resolved = match db.types.resolved_type_aliases.get(alias_id) {
                         // Check if we can avoid deeper recursion.
                         Some(already_resolved) => already_resolved.to_owned(),
                         // No luck, recurse.
@@ -419,11 +419,24 @@ pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldT
                     // type AliasTwo = AliasOne
                     //
                     // AliasTwo resolves to an "optional" type.
-                    if resolved.is_optional() || arity.is_optional() {
+                    //
+                    // TODO: Add a `set_arity` function or something and avoid
+                    // this clone.
+                    resolved = if resolved.is_optional() || arity.is_optional() {
                         resolved.to_nullable()
                     } else {
                         resolved
-                    }
+                    };
+
+                    // Merge attributes.
+                    resolved.set_attributes({
+                        let mut merged_attrs = Vec::from(field_type.attributes());
+                        merged_attrs.extend(resolved.attributes().to_owned());
+
+                        merged_attrs
+                    });
+
+                    resolved
                 }
 
                 // Class or enum. Already "resolved", pop off the stack.

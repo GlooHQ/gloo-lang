@@ -5,7 +5,11 @@ use super::{
     Rule,
 };
 
-use crate::{assert_correct_parser, ast::*, parser::parse_types::parse_field_type};
+use crate::{
+    assert_correct_parser,
+    ast::*,
+    parser::{parse_field::parse_field_type_with_attr, parse_types::parse_field_type},
+};
 
 use internal_baml_diagnostics::{DatamodelError, Diagnostics};
 
@@ -45,7 +49,13 @@ pub(crate) fn parse_assignment(pair: Pair<'_>, diagnostics: &mut Diagnostics) ->
 
             Rule::assignment => {} // Ok, equal sign.
 
+            // TODO: We probably only need field_type_with_attr since that's how
+            // the PEST syntax is defined.
             Rule::field_type => field_type = parse_field_type(current, diagnostics),
+
+            Rule::field_type_with_attr => {
+                field_type = parse_field_type_with_attr(current, false, diagnostics)
+            }
 
             _ => parsing_catch_all(current, "type_alias"),
         }

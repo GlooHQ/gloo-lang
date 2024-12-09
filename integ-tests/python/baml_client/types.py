@@ -327,6 +327,9 @@ class Martian(BaseModel):
     """The age of the Martian in Mars years.
     So many Mars years."""
 
+class MergeAttrs(BaseModel):
+    amount: Checked[int,Literal["gt_ten"]]
+
 class NamedArgsSingleClass(BaseModel):
     key: str
     key_two: bool

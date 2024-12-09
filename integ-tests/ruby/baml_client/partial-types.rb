@@ -60,6 +60,7 @@ module Baml
     class MalformedConstraints < T::Struct; end
     class MalformedConstraints2 < T::Struct; end
     class Martian < T::Struct; end
+    class MergeAttrs < T::Struct; end
     class NamedArgsSingleClass < T::Struct; end
     class Nested < T::Struct; end
     class Nested2 < T::Struct; end
@@ -659,6 +660,18 @@ module Baml
       def initialize(props)
         super(
           age: props[:age],
+        )
+
+        @props = props
+      end
+    end
+    class MergeAttrs < T::Struct
+      include Baml::Sorbet::Struct
+      const :amount, Baml::Checked[T.nilable(Integer)]
+
+      def initialize(props)
+        super(
+          amount: props[:amount],
         )
 
         @props = props

@@ -600,4 +600,19 @@ mod test {
 
         Ok(())
     }
+
+    #[test]
+    fn merged_alias_attrs() -> Result<(), Diagnostics> {
+        #[rustfmt::skip]
+        let db = parse(r#"
+            type One = int @assert({{ this < 5 }})
+            type Two = One @assert({{ this > 0 }})
+        "#)?;
+
+        let resolved = db.resolved_type_alias_by_name("Two").unwrap();
+
+        assert_eq!(resolved.attributes().len(), 2);
+
+        Ok(())
+    }
 }
