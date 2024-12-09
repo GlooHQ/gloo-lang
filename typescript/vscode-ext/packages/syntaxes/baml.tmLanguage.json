@@ -731,9 +731,10 @@
         { "include": "#comment" },
         { 
           "begin": "(?<=\\=)\\s*",
-          "end": "(?=$|\\n)",
+          "end": "(?=//|$|\\n)",
           "patterns": [
-            { "include": "#type_definition" }
+            { "include": "#type_definition" },
+            { "include": "#block_attribute" }
           ]
         }
       ]

@@ -37,7 +37,7 @@ function NestedAlias(c: Combination) -> Combination {
 
 // Test attribute merging.
 type Currency = int @check(gt_ten, {{ this > 10 }})
-type Amount = Currency @assert ({{ this > 0 }})
+type Amount = Currency @assert({{ this > 0 }})
 
 class MergeAttrs {
     amount Amount @description("In USD")
