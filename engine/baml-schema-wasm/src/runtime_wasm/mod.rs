@@ -1,5 +1,6 @@
 pub mod generator;
 pub mod runtime_prompt;
+pub mod ui;
 use crate::runtime_wasm::runtime_prompt::WasmPrompt;
 use anyhow::Context;
 use baml_runtime::internal::llm_client::orchestrator::OrchestrationScope;
@@ -479,6 +480,56 @@ impl WasmLLMResponse {
         (&self.prompt, &self.scope, &AllowedRoleMetadata::All).into()
     }
 }
+
+#[wasm_bindgen(getter_with_clone, inspectable)]
+#[derive(Clone, Debug)]
+pub struct WasmInputForm {
+    pub items: Vec<WasmInputItem>
+}
+
+#[wasm_bindgen(getter_with_clone, inspectable)]
+#[derive(Clone, Debug)]
+pub struct WasmInputParam {
+    pub name: String,
+    pub item: WasmInputItem
+}
+
+#[wasm_bindgen(getter_with_clone, inspectable)]
+#[derive(Clone, Debug)]
+pub struct WasmInputItem {
+    pub r#type: WasmInputItemType,
+    pub primitive: Option<WasmInputField>,
+    pub class: Option<WasmInputClass>,
+}
+
+#[wasm_bindgen(getter_with_clone, inspectable)]
+#[derive(Clone, Debug)]
+pub struct WasmInputPrimitive {
+ pub r#type: String,
+ pub default: Option<String> 
+}
+
+#[wasm_bindgen(getter_with_clone, inspectable)]
+#[derive(Clone, Debug)]
+pub struct WasmInputClass {
+ pub class_name: String,
+ pub fields: Vec<WasmInputClassField>,
+}
+
+#[wasm_bindgen(getter_with_clone, inspectable)]
+#[derive(Clone, Debug)]
+
+
+#[wasm_bindgen(getter_with_clone, inspectable)]
+#[derive(Clone, Debug)]
+pub enum WasmInputItemType {
+    Primitive,
+    Class,
+//     Enum,
+//     List,
+}
+
+
 
 #[wasm_bindgen]
 impl WasmFunctionResponse {
@@ -1597,39 +1648,7 @@ impl WasmFunction {
             )
             .create_ctx_with_default();
 
-        let params = rt
-            .runtime
-            .get_test_params(&self.name, &test_name, &ctx, false)
-            .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
-
-        let result = rt
-            .runtime
-            .internal()
-            .render_prompt(&self.name, &ctx, &params, wasm_call_context.node_index)
-            .await;
-
-        let final_prompt = match result {
-            Ok((prompt, _, _)) => match prompt {
-                RenderedPrompt::Chat(chat_messages) => chat_messages,
-                RenderedPrompt::Completion(_) => vec![], // or handle this case differently
-            },
-            Err(e) => return Err(wasm_bindgen::JsError::new(format!("{:?}", e).as_str())),
-        };
-
-        rt.runtime
-            .internal()
-            .render_raw_curl(
-                &self.name,
-                &ctx,
-                &final_prompt,
-                RenderCurlSettings {
-                    stream,
-                    as_shell_commands: !expand_images,
-                },
-                wasm_call_context.node_index,
-            )
-            .await
-            .map_err(|e| wasm_bindgen::JsError::new(format!("{e:?}").as_str()))
+        return Ok("Greg test".to_string());
     }
 
     #[wasm_bindgen]
@@ -1666,6 +1685,33 @@ impl WasmFunction {
             span,
             tracing_project_id: rt.env_vars().get("BOUNDARY_PROJECT_ID").cloned(),
         })
+    }
+
+    #[wasm_bindgen]
+    pub async fn input_form(
+        &self,
+        rt: &mut WasmRuntime,
+        test_name: String,
+        get_baml_src_cb: js_sys::Function,
+    ) -> Result<WasmInputForm, JsValue> {
+        let rt = &rt.runtime;
+        let ir = rt.internal().ir();
+        let function_name = self.name.clone();
+        let ctx_mgr = rt.create_ctx_manager(
+            BamlValue::String("wasm".to_string()),
+            js_fn_to_baml_src_reader(get_baml_src_cb),
+        );
+        let ctx = ctx_mgr.create_ctx(None, None).unwrap();
+        let param_types = &ir.find_function(&function_name)
+            .map_err(|e| JsValue::from_str(&format!("{:?}", e)))?
+            .item
+            .elem
+            .inputs
+            ;
+        let test_params = rt.get_test_params(&function_name, &test_name, &ctx, false)
+            .map_err(|e| JsValue::from_str(&format!("{:?}", e)))?;
+        ui::form_from_input(ir, param_types, test_params)
+            .map_err(|e| JsValue::from_str(&format!("{:?}", e)))
     }
 
     pub fn orchestration_graph(&self, rt: &WasmRuntime) -> Result<Vec<WasmScope>, JsValue> {
