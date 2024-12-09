@@ -90,7 +90,7 @@ impl FunctionResultStream {
         let ctx_mng = ctx.inner.clone();
         let tb = self.tb.clone();
         let cb = self.cb.clone();
-        pyo3_asyncio::tokio::future_into_py(py, async move {
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let ctx_mng = ctx_mng;
             let mut locked = inner.lock().await;
             let (res, _) = locked

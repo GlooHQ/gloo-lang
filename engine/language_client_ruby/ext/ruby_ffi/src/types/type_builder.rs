@@ -200,7 +200,6 @@ impl EnumValueBuilder {
         self.inner.clone().into()
     }
 
-    // #[pyo3(signature = (skip = true))]
     pub fn skip(&self, skip: Option<bool>) -> Self {
         self.inner
             .lock()

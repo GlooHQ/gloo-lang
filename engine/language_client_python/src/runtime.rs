@@ -10,9 +10,10 @@ use crate::types::ClientRegistry;
 use baml_runtime::runtime_interface::ExperimentalTracingInterface;
 use baml_runtime::BamlRuntime as CoreBamlRuntime;
 use pyo3::prelude::{pymethods, PyResult};
-use pyo3::{pyclass, PyObject, Python, ToPyObject};
+use pyo3::{pyclass, IntoPyObjectExt, PyObject, Python};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 crate::lang_wrapper!(BamlRuntime, CoreBamlRuntime, clone_safe);
 
@@ -123,7 +124,7 @@ impl BamlRuntime {
         tb: Option<&TypeBuilder>,
         cb: Option<&ClientRegistry>,
     ) -> PyResult<PyObject> {
-        let Some(args) = parse_py_type(args.into_bound(py).to_object(py), false)? else {
+        let Some(args) = parse_py_type(args.into_bound(py).into_py_any(py)?, false)? else {
             return Err(BamlInvalidArgumentError::new_err(
                 "Failed to parse args, perhaps you used a non-serializable type?",
             ));
@@ -140,7 +141,7 @@ impl BamlRuntime {
         let tb = tb.map(|tb| tb.inner.clone());
         let cb = cb.map(|cb| cb.inner.clone());
 
-        pyo3_asyncio::tokio::future_into_py(py, async move {
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let ctx_mng = ctx_mng;
             let (result, _) = baml_runtime
                 .call_function(function_name, &args_map, &ctx_mng, tb.as_ref(), cb.as_ref())
@@ -202,7 +203,7 @@ impl BamlRuntime {
         tb: Option<&TypeBuilder>,
         cb: Option<&ClientRegistry>,
     ) -> PyResult<FunctionResultStream> {
-        let Some(args) = parse_py_type(args.into_bound(py).to_object(py), false)? else {
+        let Some(args) = parse_py_type(args.into_bound(py).into_py_any(py)?, false)? else {
             return Err(BamlInvalidArgumentError::new_err(
                 "Failed to parse args, perhaps you used a non-serializable type?",
             ));
@@ -243,7 +244,7 @@ impl BamlRuntime {
         tb: Option<&TypeBuilder>,
         cb: Option<&ClientRegistry>,
     ) -> PyResult<SyncFunctionResultStream> {
-        let Some(args) = parse_py_type(args.into_bound(py).to_object(py), false)? else {
+        let Some(args) = parse_py_type(args.into_bound(py).into_py_any(py)?, false)? else {
             return Err(BamlInvalidArgumentError::new_err(
                 "Failed to parse args, perhaps you used a non-serializable type?",
             ));
@@ -283,17 +284,17 @@ impl BamlRuntime {
         self.inner.drain_stats().into()
     }
 
-    #[pyo3()]
-    fn set_log_event_callback(&self, callback: Option<PyObject>) -> PyResult<()> {
-        let callback = callback.clone();
+    #[pyo3(signature = (callback = None))]
+    fn set_log_event_callback(&self, callback: Option<PyObject>, py: Python<'_>) -> PyResult<()> {
         let baml_runtime = self.inner.clone();
 
         if let Some(callback) = callback {
+            let arc_callback = Arc::new(callback.into_py_any(py)?);
             baml_runtime
                 .as_ref()
                 .set_log_event_callback(Some(Box::new(move |log_event| {
                     Python::with_gil(|py| {
-                        match callback.call1(
+                        match arc_callback.call1(
                             py,
                             (BamlLogEvent {
                                 metadata: LogEventMetadata {

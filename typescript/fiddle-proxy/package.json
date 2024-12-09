@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2",
+    "express": "^4.21.1",
     "dotenv": "16.4.5",
-    "http-proxy-middleware": "^3.0.0"
+    "http-proxy-middleware": "^3.0.3"
   }
 }

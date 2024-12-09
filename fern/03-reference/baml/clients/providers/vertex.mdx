@@ -171,15 +171,6 @@ The options are passed through directly to the API, barring a few. Here's a shor
 
 
 
-
-<ParamField
-  path="default_role"
-  type="string"
->
-  The default role for any prompts that don't specify a role. **Default: `user`**
-  
-</ParamField>
-
 <ParamField
   path="model"
   type="string"
@@ -216,6 +207,8 @@ client<llm> MyClient {
 }
 ```
 </ParamField>
+
+<Markdown src="/snippets/role-selection.mdx" />
 
 <Markdown src="/snippets/allowed-role-metadata-basic.mdx" />
 

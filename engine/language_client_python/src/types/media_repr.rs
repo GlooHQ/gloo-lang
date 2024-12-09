@@ -1,8 +1,11 @@
+use std::ffi::CString;
+
 use anyhow::Result;
 use baml_types::{BamlMedia, BamlMediaContent, BamlMediaType, MediaBase64, MediaUrl};
 use pyo3::{
+    ffi::c_str,
     types::{PyAnyMethods, PyModule, PyType},
-    Bound, Py, PyAny, PyObject, PyResult, Python, ToPyObject,
+    Bound, IntoPyObjectExt, PyAny, PyObject, PyResult, Python,
 };
 use serde::{Deserialize, Serialize};
 
@@ -73,13 +76,17 @@ impl TryInto<UserFacingBamlMedia> for &BamlMedia {
 /// can't implement this in internal_monkeypatch without adding a hard dependency
 /// on pydantic. And we don't want to do _that_, because that will make it harder
 /// to implement output_type python/vanilla in the future.
+///
+/// See docs:
+/// https://docs.pydantic.dev/latest/concepts/types/#customizing-validation-with-__get_pydantic_core_schema__
 pub fn __get_pydantic_core_schema__(
     _cls: Bound<'_, PyType>,
     _source_type: Bound<'_, PyAny>,
     _handler: Bound<'_, PyAny>,
 ) -> PyResult<PyObject> {
     Python::with_gil(|py| {
-        let code = r#"
+        let code = c_str!(
+            r#"
 from pydantic_core import core_schema, SchemaValidator
 
 def deserialize(data):
@@ -127,11 +134,15 @@ def get_schema():
     )
 
 ret = get_schema()
-    "#;
-        // py.run(code, None, Some(ret_dict));
-        let fun: Py<PyAny> = PyModule::from_code_bound(py, code, "", "")?
-            .getattr("ret")?
-            .into();
-        Ok(fun.to_object(py))
+    "#
+        );
+        PyModule::from_code(
+            py,
+            code,
+            c_str!(file!()),
+            CString::new(crate::MODULE_NAME).unwrap().as_c_str(),
+        )?
+        .getattr("ret")?
+        .into_py_any(py)
     })
 }
