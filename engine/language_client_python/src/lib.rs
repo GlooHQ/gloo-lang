@@ -4,13 +4,14 @@ mod runtime;
 mod types;
 
 use pyo3::prelude::{pyfunction, pymodule, PyAnyMethods, PyModule, PyResult};
+use pyo3::types::PyModuleMethods;
 use pyo3::{wrap_pyfunction, Bound, Python};
 use tracing_subscriber::{self, EnvFilter};
 
 #[pyfunction]
 fn invoke_runtime_cli(py: Python) -> PyResult<()> {
     baml_cli::run_cli(
-        py.import_bound("sys")?
+        py.import("sys")?
             .getattr("argv")?
             .extract::<Vec<String>>()?,
         baml_runtime::RuntimeCliDefaults {
@@ -19,6 +20,8 @@ fn invoke_runtime_cli(py: Python) -> PyResult<()> {
     )
     .map_err(errors::BamlError::from_anyhow)
 }
+
+pub(crate) const MODULE_NAME: &str = "baml_py.baml_py";
 
 #[pymodule]
 fn baml_py(m: Bound<'_, PyModule>) -> PyResult<()> {
@@ -74,11 +77,6 @@ fn baml_py(m: Bound<'_, PyModule>) -> PyResult<()> {
 
     m.add_wrapped(wrap_pyfunction!(invoke_runtime_cli))?;
 
-    // m.add(
-    //     "BamlValidationError",
-    //     m.py().get_type_bound::<errors::BamlValidationError>(),
-    // )?;
-    // m.add_class::<errors::BamlValidationError>()?;
     errors::errors(&m)?;
 
     Ok(())

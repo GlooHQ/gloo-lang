@@ -1,5 +1,7 @@
-use internal_baml_diagnostics::Span;
-use internal_baml_schema_ast::ast::{Top, TopId, TypeExpId, TypeExpressionBlock};
+use internal_baml_diagnostics::{DatamodelError, Span};
+use internal_baml_schema_ast::ast::{
+    Assignment, Top, TopId, TypeAliasId, TypeExpId, TypeExpressionBlock,
+};
 
 mod alias;
 pub mod constraint;
@@ -79,6 +81,9 @@ pub(super) fn resolve_attributes(ctx: &mut Context<'_>) {
             (TopId::Enum(enum_id), Top::Enum(ast_enum)) => {
                 resolve_type_exp_block_attributes(enum_id, ast_enum, ctx, SubType::Enum)
             }
+            (TopId::TypeAlias(alias_id), Top::TypeAlias(assignment)) => {
+                resolve_type_alias_attributes(alias_id, assignment, ctx)
+            }
             _ => (),
         }
     }
@@ -130,5 +135,42 @@ fn resolve_type_exp_block_attributes<'db>(
         }
 
         _ => (),
+    }
+}
+
+/// Quick hack to validate type alias attributes.
+///
+/// Unlike classes and enums, type aliases only support checks and asserts.
+/// Everything else is reported as an error. On top of that, checks and asserts
+/// must be merged when aliases point to other aliases. We do this recursively
+/// when resolving the type alias to its final "virtual" type at
+/// [`crate::types::resolve_type_alias`].
+///
+/// Then checks and asserts are collected from the virtual type and stored in
+/// the IR at `engine/baml-lib/baml-core/src/ir/repr.rs`, so there's no need to
+/// store them in separate classes like [`ClassAttributes`] or similar, at least
+/// for now.
+fn resolve_type_alias_attributes<'db>(
+    alias_id: TypeAliasId,
+    assignment: &'db Assignment,
+    ctx: &mut Context<'db>,
+) {
+    ctx.assert_all_attributes_processed(alias_id.into());
+    let type_alias_attributes = to_string_attribute::visit(ctx, assignment.value.span(), false);
+    ctx.validate_visited_attributes();
+
+    // Some additional specific validation for type alias attributes.
+    if let Some(attrs) = &type_alias_attributes {
+        if attrs.dynamic_type().is_some()
+            || attrs.alias().is_some()
+            || attrs.skip().is_some()
+            || attrs.description().is_some()
+        {
+            ctx.diagnostics
+                .push_error(DatamodelError::new_validation_error(
+                    "type aliases may only have check and assert attributes",
+                    assignment.span.clone(),
+                ));
+        }
     }
 }

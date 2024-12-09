@@ -43,6 +43,7 @@ from ..baml_client.types import (
     LinkedListAliasNode,
     ClassToRecAlias,
     NodeWithAliasIndirection,
+    MergeAttrs,
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -294,6 +295,18 @@ class TestAllInputs:
         assert res == NodeWithAliasIndirection(
             value=1, next=NodeWithAliasIndirection(value=2, next=None)
         )
+
+    @pytest.mark.asyncio
+    async def test_merge_alias_attributes(self):
+        res = await b.MergeAliasAttributes(123)
+        assert res.amount.value == 123
+        assert res.amount.checks["gt_ten"].status == "succeeded"
+
+    @pytest.mark.asyncio
+    async def test_return_alias_with_merged_attrs(self):
+        res = await b.ReturnAliasWithMergedAttributes(123)
+        assert res.value == 123
+        assert res.checks["gt_ten"].status == "succeeded"
 
 
 class MyCustomClass(NamedArgsSingleClass):

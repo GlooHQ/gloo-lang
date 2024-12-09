@@ -1,7 +1,13 @@
 name: BAML Release
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      force_publish_vscode:
+        description: "Force publish to VSCode Marketplace and Open VSX"
+        type: boolean
+        required: false
+        default: false
   # need to run this periodically on the default branch to populate the build cache
   schedule:
     # daily at 2am PST
@@ -10,6 +16,7 @@ on:
     tags:
       - "test-release/*.*"
       - "*.*"
+    branches: []
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -19,77 +26,6 @@ permissions:
   id-token: write
 
 jobs:
-  build-wasm:
-    runs-on: ubuntu-latest
-    name: Build WASM
-    steps:
-      - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v2
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-          targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: engine
-      - name: Bindgen
-        run: cargo install -f wasm-bindgen-cli@0.2.92
-        working-directory: engine/baml-schema-wasm
-      # Set up Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          cache: "pnpm"
-          node-version: 20
-          cache-dependency-path: |
-            typescript/**/pnpm-lock.yaml
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-        working-directory: typescript/
-      - name: Build Typescript Project
-        run: pnpm run build
-        working-directory: typescript/
-
-      # Build the VSCode Extension
-      - name: Build VSCode Extension
-        id: build
-        run: |
-          pnpm run vscode:package
-          VERSION=$(cat package.json| grep version | cut -d ' ' -f 4 | sed 's/[",]//g')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-        working-directory: typescript/vscode-ext/packages
-
-      # Upload the artifact (helpful for debugging and manual downloads)
-      - name: Upload VSCode Extension Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: baml-vscode.vsix
-          path: typescript/vscode-ext/packages/baml-extension-${{ steps.build.outputs.version }}.vsix
-          if-no-files-found: error
-
-      # Upload the artifact (helpful for debugging and manual downloads)
-      - name: Upload VSCode Extension Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: baml-out
-          path: typescript/vscode-ext/packages/vscode/out
-          if-no-files-found: error
-
-      # upload the lang server artifact
-      - name: Upload VSCode Lang Server Extension Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: language-server
-          path: typescript/vscode-ext/packages/language-server/out
-          if-no-files-found: error
-
-      - name: VSCode Playground Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: vscode-playground
-          path: typescript/vscode-ext/packages/web-panel/dist
-          if-no-files-found: error
-
   build-python-release:
     uses: ./.github/workflows/build-python-release.reusable.yaml
 
@@ -99,21 +35,25 @@ jobs:
   build-typescript-release:
     uses: ./.github/workflows/build-typescript-release.reusable.yaml
 
+  build-vscode-release:
+    uses: ./.github/workflows/build-vscode-release.reusable.yaml
+
   # placeholder fan-in step
-  assert-all-builds-passed:
+  all-builds:
+    name: Assert all builds passed
     runs-on: ubuntu-latest
     needs:
       - build-python-release
-      - build-typescript-release
       - build-ruby-release
-      - build-wasm
+      - build-typescript-release
+      - build-vscode-release
     steps:
-      - run: true
-
+      - run: echo "::do-nothing::" >/dev/null
+  
   publish-to-pypi:
     environment: release
-    if: github.ref_type == 'tag'
-    needs: [assert-all-builds-passed]
+    needs: [all-builds]
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -123,18 +63,33 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: wheels-*
+          path: dist
+          merge-multiple: true
 
-      - run: mkdir dist && mv wheels-*/* dist
+      # Verify we have the expected number of wheels
+      - name: Verify wheel count
+        run: |
+          set -euo pipefail
+          ls dist/
+          wheel_count=$(ls dist/*.whl 2>/dev/null | wc -l)
+          if [ "$wheel_count" -lt 7 ]; then
+            echo "Error: Expected at least 7 wheels, but found $wheel_count"
+            exit 1
+          fi
+          echo "Found $wheel_count wheels"
+
       # authz is managed via OIDC configured at https://pypi.org/manage/project/baml-py/settings/publishing/
       # it is pinned to this github actions filename, so renaming this file is not safe!!
       - name: Publish package to PyPI
-        if: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(github.ref, 'refs/tags/test-release') }}
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: PyO3/maturin-action@v1
+        with:
+          command: upload
+          args: dist/*
 
   publish-to-npm:
     environment: release
-    if: github.ref_type == 'tag'
-    needs: [assert-all-builds-passed]
+    needs: [all-builds]
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -154,7 +109,6 @@ jobs:
           node-version: 20
           cache: pnpm
           cache-dependency-path: engine/language_client_typescript/pnpm-lock.yaml
-          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         run: pnpm install
@@ -174,7 +128,6 @@ jobs:
         working-directory: engine/language_client_typescript
 
       - name: Publish
-        if: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(github.ref, 'refs/tags/test-release') }}
         run: |
           npm publish --access public
         working-directory: engine/language_client_typescript
@@ -184,8 +137,8 @@ jobs:
 
   publish-to-rubygems:
     environment: release
-    if: github.ref_type == 'tag'
-    needs: [assert-all-builds-passed]
+    needs: [all-builds]
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -211,67 +164,10 @@ jobs:
             gem push $i
           done
 
-  # publish-vscode:
-  #   environment: release
-  #   needs: [build-release, build-wasm]
-  #   if: github.ref_type == 'tag'
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     # Get all the artifacts
-  #     - name: Get artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: baml-vscode.vsix
-  #         path: typescript/vscode-ext/packages
-  #     - name: Get artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: baml-out
-  #         path: typescript/vscode-ext/packages/vscode/out
-  #     - name: Get artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: language-server
-  #         path: typescript/vscode-ext/packages/language-server/out
-  #     - name: Get artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         pattern: vscode-playground
-  #         path: typescript/vscode-ext/packages/web-panel/dist
-
-  #     - name: setup pnpm
-  #       uses: pnpm/action-setup@v4
-  #       with:
-  #         version: 9.0.6
-  #         package_json_file: typescript/package.json
-  #         run_install: false
-  #     # Set up Node.js
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         cache: "pnpm"
-  #         node-version: 20
-  #         cache-dependency-path: typescript/pnpm-lock.yaml
-
-  #     - name: Install Dependencies
-  #       run: pnpm install --frozen-lockfile
-  #       working-directory: typescript/
-  #     - name: Publish
-  #       if: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(github.ref, 'refs/tags/test-release') }}
-  #       run: |
-  #         pnpm run vscode:publish --no-git-tag-version -p ${{ secrets.VSCODE_PAT }}
-  #       working-directory: typescript/vscode-ext/packages
-
-  release-github:
+  publish-to-github:
+    needs: [all-builds]
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
-    if: github.ref_type == 'tag'
-    needs:
-      - publish-to-pypi
-      - publish-to-npm
-      - publish-to-rubygems
-      # - publish-vscode
     steps:
       - uses: actions/checkout@v4
 
@@ -284,3 +180,45 @@ jobs:
         uses: mikepenz/action-gh-release@v1 #softprops/action-gh-release
         with:
           body: ${{steps.latest_release.outputs.changelog}}
+
+  publish-to-open-vsx:
+    needs: [all-builds]
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.force_publish_vscode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: typescript/
+      - uses: actions/download-artifact@v4
+        with:
+          name: baml-vscode-vsix
+          path: typescript/vscode-ext/packages/out/
+      - name: Publish to open-vsx
+        run: |
+          cd typescript/vscode-ext/packages
+          pnpm ovsx publish --packagePath ./out/*.vsix
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+  publish-to-vscode-marketplace:
+    needs: [all-builds]
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.force_publish_vscode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: typescript/
+      - uses: actions/download-artifact@v4
+        with:
+          name: baml-vscode-vsix
+          path: typescript/vscode-ext/packages/out/
+      - name: Publish to VSCode Marketplace
+        run: |
+          cd typescript/vscode-ext/packages
+          pnpm vsce publish --packagePath ./out/*.vsix
+        env:
+          VSCE_PAT: ${{ secrets.VSCODE_PAT }} 

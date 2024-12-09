@@ -1125,7 +1125,7 @@ pub fn make_test_ir(source_code: &str) -> anyhow::Result<IntermediateRepr> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ir::ir_helpers::IRHelper;
+    use crate::ir::{ir_helpers::IRHelper, TypeValue};
 
     #[test]
     fn test_docstrings() {
@@ -1217,5 +1217,68 @@ mod tests {
         let function = ir.find_function("Foo").unwrap();
         let walker = ir.find_test(&function, "Foo").unwrap();
         assert_eq!(walker.item.1.elem.constraints.len(), 1);
+    }
+
+    #[test]
+    fn test_resolve_type_alias() {
+        let ir = make_test_ir(
+            r##"
+            type One = int 
+            type Two = One 
+            type Three = Two
+
+            class Test {
+                field Three
+            }
+        "##,
+        )
+        .unwrap();
+
+        let class = ir.find_class("Test").unwrap();
+        let alias = class.find_field("field").unwrap();
+
+        let FieldType::Alias { resolution, .. } = alias.r#type() else {
+            panic!("expected alias type, found {:?}", alias.r#type());
+        };
+
+        assert_eq!(**resolution, FieldType::Primitive(TypeValue::Int));
+    }
+
+    #[test]
+    fn test_merge_type_alias_attributes() {
+        let ir = make_test_ir(
+            r##"
+            type One = int @check(gt_ten, {{ this > 10 }})
+            type Two = One @check(lt_twenty, {{ this < 20 }})
+            type Three = Two @assert({{ this != 15 }})
+
+            class Test {
+                field Three
+            }
+        "##,
+        )
+        .unwrap();
+
+        let class = ir.find_class("Test").unwrap();
+        let alias = class.find_field("field").unwrap();
+
+        let FieldType::Alias { resolution, .. } = alias.r#type() else {
+            panic!("expected alias type, found {:?}", alias.r#type());
+        };
+
+        let FieldType::Constrained { base, constraints } = &**resolution else {
+            panic!("expected resolved constrained type, found {:?}", resolution);
+        };
+
+        assert_eq!(constraints.len(), 3);
+
+        assert_eq!(constraints[0].level, ConstraintLevel::Assert);
+        assert_eq!(constraints[0].label, None);
+
+        assert_eq!(constraints[1].level, ConstraintLevel::Check);
+        assert_eq!(constraints[1].label, Some("lt_twenty".to_string()));
+
+        assert_eq!(constraints[2].level, ConstraintLevel::Check);
+        assert_eq!(constraints[2].label, Some("gt_ten".to_string()));
     }
 }

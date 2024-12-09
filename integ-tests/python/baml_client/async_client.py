@@ -1522,6 +1522,29 @@ class BamlAsyncClient:
       )
       return cast(Dict[str, List[str]], raw.cast_to(types, types))
     
+    async def MergeAliasAttributes(
+        self,
+        money: int,
+        baml_options: BamlCallOptions = {},
+    ) -> types.MergeAttrs:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "MergeAliasAttributes",
+        {
+          "money": money,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.MergeAttrs, raw.cast_to(types, types))
+    
     async def MyFunc(
         self,
         input: str,
@@ -1843,6 +1866,29 @@ class BamlAsyncClient:
         __cr__,
       )
       return cast(types.NodeWithAliasIndirection, raw.cast_to(types, types))
+    
+    async def ReturnAliasWithMergedAttributes(
+        self,
+        money: Checked[int,types.Literal["gt_ten"]],
+        baml_options: BamlCallOptions = {},
+    ) -> Checked[int,types.Literal["gt_ten"]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "ReturnAliasWithMergedAttributes",
+        {
+          "money": money,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Checked[int,types.Literal["gt_ten"]], raw.cast_to(types, types))
     
     async def ReturnFailingAssert(
         self,
@@ -4838,6 +4884,36 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def MergeAliasAttributes(
+        self,
+        money: int,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.MergeAttrs, types.MergeAttrs]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "MergeAliasAttributes",
+        {
+          "money": money,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.MergeAttrs, types.MergeAttrs](
+        raw,
+        lambda x: cast(partial_types.MergeAttrs, x.cast_to(types, partial_types)),
+        lambda x: cast(types.MergeAttrs, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def MyFunc(
         self,
         input: str,
@@ -5255,6 +5331,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.NodeWithAliasIndirection, x.cast_to(types, partial_types)),
         lambda x: cast(types.NodeWithAliasIndirection, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def ReturnAliasWithMergedAttributes(
+        self,
+        money: Checked[int,types.Literal["gt_ten"]],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Checked[Optional[int],types.Literal["gt_ten"]], Checked[int,types.Literal["gt_ten"]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "ReturnAliasWithMergedAttributes",
+        {
+          "money": money,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Checked[Optional[int],types.Literal["gt_ten"]], Checked[int,types.Literal["gt_ten"]]](
+        raw,
+        lambda x: cast(Checked[Optional[int],types.Literal["gt_ten"]], x.cast_to(types, partial_types)),
+        lambda x: cast(Checked[int,types.Literal["gt_ten"]], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

@@ -413,6 +413,11 @@ export interface Martian {
   
 }
 
+export interface MergeAttrs {
+  amount: Checked<number,"gt_ten">
+  
+}
+
 export interface NamedArgsSingleClass {
   key: string
   key_two: boolean

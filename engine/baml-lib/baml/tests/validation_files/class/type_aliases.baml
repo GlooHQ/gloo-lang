@@ -6,6 +6,14 @@ type Graph = map<string, string[]>
 
 type Combination = Primitive | List | Graph
 
+// Alias with attrs.
+type Currency = int @check(gt_ten, {{ this > 10 }})
+type Amount = Currency @assert ({{ this > 0 }})
+
+class MergeAttrs {
+    amount Amount @description("In USD")
+}
+
 function PrimitiveAlias(p: Primitive) -> Primitive {
     client "openai/gpt-4o"
     prompt r#"
@@ -30,6 +38,17 @@ function NestedAlias(c: Combination) -> Combination {
       Return the given value back:
 
       {{ c }}
+
+      {{ ctx.output_format }}
+    "#
+}
+
+function MergeAliasAttributes(money: int) -> MergeAttrs {
+    client "openai/gpt-4o"
+    prompt r#"
+      Return the given integer in the specified format:
+
+      {{ money }}
 
       {{ ctx.output_format }}
     "#

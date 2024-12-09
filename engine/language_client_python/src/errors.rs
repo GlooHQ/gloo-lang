@@ -1,7 +1,7 @@
 use baml_runtime::{
     errors::ExposedError, internal::llm_client::LLMResponse, scope_diagnostics::ScopeStack,
 };
-use pyo3::types::{PyAnyMethods, PyModule};
+use pyo3::types::{PyAnyMethods, PyModule, PyModuleMethods};
 use pyo3::{create_exception, pymodule, Bound, PyErr, PyResult, Python};
 
 create_exception!(baml_py, BamlError, pyo3::exceptions::PyException);
@@ -17,11 +17,11 @@ create_exception!(baml_py, BamlClientHttpError, BamlClientError);
 #[allow(non_snake_case)]
 fn raise_baml_validation_error(prompt: String, message: String, raw_output: String) -> PyErr {
     Python::with_gil(|py| {
-        let internal_monkeypatch = py.import_bound("baml_py.internal_monkeypatch").unwrap();
+        let internal_monkeypatch = py.import("baml_py.internal_monkeypatch").unwrap();
         let exception = internal_monkeypatch.getattr("BamlValidationError").unwrap();
         let args = (prompt, message, raw_output);
         let inst = exception.call1(args).unwrap();
-        PyErr::from_value_bound(inst)
+        PyErr::from_value(inst)
     })
 }
 
@@ -33,13 +33,13 @@ fn raise_baml_client_finish_reason_error(
     finish_reason: Option<String>,
 ) -> PyErr {
     Python::with_gil(|py| {
-        let internal_monkeypatch = py.import_bound("baml_py.internal_monkeypatch").unwrap();
+        let internal_monkeypatch = py.import("baml_py.internal_monkeypatch").unwrap();
         let exception = internal_monkeypatch
             .getattr("BamlClientFinishReasonError")
             .unwrap();
         let args = (prompt, message, raw_output, finish_reason);
         let inst = exception.call1(args).unwrap();
-        PyErr::from_value_bound(inst)
+        PyErr::from_value(inst)
     })
 }
 
@@ -47,23 +47,18 @@ fn raise_baml_client_finish_reason_error(
 /// IIRC the name of this function is the name of the module that pyo3 generates (errors.py)
 #[pymodule]
 pub fn errors(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    parent_module.add(
-        "BamlError",
-        parent_module.py().get_type_bound::<BamlError>(),
-    )?;
+    parent_module.add("BamlError", parent_module.py().get_type::<BamlError>())?;
     parent_module.add(
         "BamlInvalidArgumentError",
-        parent_module
-            .py()
-            .get_type_bound::<BamlInvalidArgumentError>(),
+        parent_module.py().get_type::<BamlInvalidArgumentError>(),
     )?;
     parent_module.add(
         "BamlClientError",
-        parent_module.py().get_type_bound::<BamlClientError>(),
+        parent_module.py().get_type::<BamlClientError>(),
     )?;
     parent_module.add(
         "BamlClientHttpError",
-        parent_module.py().get_type_bound::<BamlClientHttpError>(),
+        parent_module.py().get_type::<BamlClientHttpError>(),
     )?;
 
     Ok(())

@@ -1,5 +1,5 @@
 use pyo3::prelude::{pymethods, PyResult};
-use pyo3::{PyObject, Python, ToPyObject};
+use pyo3::{IntoPyObjectExt, PyObject, Python};
 
 use crate::errors::BamlError;
 use crate::parse_py_type::parse_py_type;
@@ -10,7 +10,7 @@ crate::lang_wrapper!(RuntimeContextManager, baml_runtime::RuntimeContextManager)
 impl RuntimeContextManager {
     #[pyo3()]
     fn upsert_tags(&self, py: Python<'_>, tags: PyObject) -> PyResult<bool> {
-        let Some(tags) = parse_py_type(tags.into_bound(py).to_object(py), true)? else {
+        let Some(tags) = parse_py_type(tags.into_bound(py).into_py_any(py)?, true)? else {
             // No tags to process
             return Ok(true);
         };

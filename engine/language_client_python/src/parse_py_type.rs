@@ -6,7 +6,7 @@ use pyo3::{
     exceptions::{PyRuntimeError, PyTypeError},
     prelude::{PyAnyMethods, PyTypeMethods},
     types::{PyBool, PyBoolMethods, PyDict, PyDictMethods, PyList},
-    PyErr, PyObject, PyResult, Python, ToPyObject,
+    IntoPyObjectExt, PyErr, PyObject, PyResult, Python,
 };
 
 use crate::types::{BamlAudioPy, BamlImagePy};
@@ -209,10 +209,8 @@ pub fn parse_py_type(
     serialize_unknown_types_as_str: bool,
 ) -> PyResult<Option<BamlValue>> {
     Python::with_gil(|py| {
-        let enum_type = py.import_bound("enum").and_then(|m| m.getattr("Enum"))?;
-        let base_model = py
-            .import_bound("pydantic")
-            .and_then(|m| m.getattr("BaseModel"))?;
+        let enum_type = py.import("enum").and_then(|m| m.getattr("Enum"))?;
+        let base_model = py.import("pydantic").and_then(|m| m.getattr("BaseModel"))?;
 
         let mut get_type = |py: Python<'_>,
                             any: PyObject,
@@ -227,10 +225,10 @@ pub fn parse_py_type(
                 let name = t
                     .name()
                     .map(|n| {
-                        if let Some(x) = n.rfind("baml_client.types.") {
-                            n[x + "baml_client.types.".len()..].to_string()
-                        } else {
-                            n.to_string()
+                        let n = n.to_string();
+                        match n.strip_prefix("baml_client.types.") {
+                            Some(s) => s.to_string(),
+                            None => n,
                         }
                     })
                     .unwrap_or("<UnnamedEnum>".to_string());
@@ -241,10 +239,10 @@ pub fn parse_py_type(
                 let name = t
                     .name()
                     .map(|n| {
-                        if let Some(x) = n.rfind("baml_client.types.") {
-                            n[x + "baml_client.types.".len()..].to_string()
-                        } else {
-                            n.to_string()
+                        let n = n.to_string();
+                        match n.strip_prefix("baml_client.types.") {
+                            Some(s) => s.to_string(),
+                            None => n,
                         }
                     })
                     .unwrap_or("<UnnamedBaseModel>".to_string());
@@ -256,7 +254,7 @@ pub fn parse_py_type(
                 {
                     for (key, _) in model_fields {
                         if let Ok(value) = any.getattr(py, key.as_str()) {
-                            fields.insert(key, value.to_object(py));
+                            fields.insert(key, value.into_py_any(py)?);
                         }
                     }
                 }
@@ -266,7 +264,7 @@ pub fn parse_py_type(
                     if let Ok(extra_dict) = extra.downcast_bound::<PyDict>(py) {
                         for (key, value) in extra_dict.iter() {
                             if let (Ok(key), value) = (key.extract::<String>(), value) {
-                                fields.insert(key, value.to_object(py));
+                                fields.insert(key, value.into_py_any(py)?);
                             }
                         }
                     }
@@ -276,7 +274,7 @@ pub fn parse_py_type(
                 // log::info!("Fields of {}:", name);
                 // for (key, value) in &fields {
                 //     let repr = py
-                //         .import_bound("builtins")?
+                //         .import("builtins")?
                 //         .getattr("repr")?
                 //         .call1((value,))?;
                 //     let repr_str = repr.extract::<String>()?;
@@ -288,7 +286,7 @@ pub fn parse_py_type(
                 let mut items = vec![];
                 let len = list.len()?;
                 for idx in 0..len {
-                    items.push(list.get_item(idx)?.to_object(py));
+                    items.push(list.get_item(idx)?.into_py_any(py)?);
                 }
                 Ok(MappedPyType::List(items))
             } else if let Ok(kv) = any.extract::<HashMap<String, PyObject>>(py) {

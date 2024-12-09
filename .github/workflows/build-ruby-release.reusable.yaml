@@ -1,4 +1,4 @@
-name: Release engine/language_client_ruby
+name: BAML Release - Build Ruby
 
 on:
   workflow_call: {}

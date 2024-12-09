@@ -78,7 +78,7 @@ single_word     = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_" | "-")* }
 // ######################################
 // Type Alias
 // ######################################
-type_alias = { identifier ~ identifier ~ assignment ~ field_type }
+type_alias = { identifier ~ identifier ~ assignment ~ field_type_with_attr }
 
 // ######################################
 // Arguments
