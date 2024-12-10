@@ -60,8 +60,8 @@ pub fn on_wasm_init() {
             const LOG_LEVEL: log::Level = log::Level::Warn;
         }
     };
-    // This line is required if we want to see normal log::info! messages in JS console logs.
-    wasm_logger::init(wasm_logger::Config::new(LOG_LEVEL));
+    // I dont think we need this line anymore -- seems to break logging if you add it.
+    //wasm_logger::init(wasm_logger::Config::new(LOG_LEVEL));
     match console_log::init_with_level(LOG_LEVEL) {
         Ok(_) => web_sys::console::log_1(
             &format!("Initialized BAML runtime logging as log::{}", LOG_LEVEL).into(),
@@ -1660,6 +1660,8 @@ impl WasmFunction {
         let (test_response, span) = rt
             .run_test(&function_name, &test_name, &ctx, Some(cb))
             .await;
+
+        log::info!("test_response: {:#?}", test_response);
 
         Ok(WasmTestResponse {
             test_response,
