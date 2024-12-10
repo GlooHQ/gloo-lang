@@ -156,21 +156,34 @@ fn resolve_type_alias_attributes<'db>(
     ctx: &mut Context<'db>,
 ) {
     ctx.assert_all_attributes_processed(alias_id.into());
-    let type_alias_attributes = to_string_attribute::visit(ctx, assignment.value.span(), false);
-    ctx.validate_visited_attributes();
 
-    // Some additional specific validation for type alias attributes.
-    if let Some(attrs) = &type_alias_attributes {
-        if attrs.dynamic_type().is_some()
-            || attrs.alias().is_some()
-            || attrs.skip().is_some()
-            || attrs.description().is_some()
-        {
-            ctx.diagnostics
-                .push_error(DatamodelError::new_validation_error(
-                    "type aliases may only have check and assert attributes",
-                    assignment.span.clone(),
-                ));
+    for _ in 0..assignment.value.attributes().len() {
+        // TODO: How does this thing work exactly, the code in the functions
+        // above for visiting class fields suggests that this returns "all" the
+        // attributes that it finds but it does not return repeated checks and
+        // asserts, they are left in the state machine and the Context panics.
+        // So we're gonna run this in a for loop so that the visit function
+        // calls visit_repeated_attr_from_names enough times to consume all the
+        // checks and asserts.
+        let type_alias_attributes = to_string_attribute::visit(ctx, assignment.value.span(), false);
+
+        // Some additional specific validation for type alias attributes.
+        if let Some(attrs) = &type_alias_attributes {
+            if attrs.dynamic_type().is_some()
+                || attrs.alias().is_some()
+                || attrs.skip().is_some()
+                || attrs.description().is_some()
+            {
+                ctx.diagnostics
+                    .push_error(DatamodelError::new_validation_error(
+                        "type aliases may only have @check and @assert attributes",
+                        assignment.span.clone(),
+                    ));
+            }
         }
     }
+
+    // Now this should be safe to call and it should not panic because there are
+    // checks and asserts left.
+    ctx.validate_visited_attributes();
 }

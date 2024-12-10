@@ -93,6 +93,31 @@ export class BamlAsyncClient {
     }
   }
   
+  async AliasWithMultipleAttrs(
+      money: Checked<number,"gt_ten">,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<Checked<number,"gt_ten">> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "AliasWithMultipleAttrs",
+        {
+          "money": money
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as Checked<number,"gt_ten">
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   async AliasedInputClass(
       input: InputClass,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -3251,6 +3276,39 @@ class BamlStreamClient {
         raw,
         (a): a is RecursivePartialNull<LinkedListAliasNode> => a,
         (a): a is LinkedListAliasNode => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  AliasWithMultipleAttrs(
+      money: Checked<number,"gt_ten">,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<Checked<number,"gt_ten">>, Checked<number,"gt_ten">> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "AliasWithMultipleAttrs",
+        {
+          "money": money
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<Checked<number,"gt_ten">>, Checked<number,"gt_ten">>(
+        raw,
+        (a): a is RecursivePartialNull<Checked<number,"gt_ten">> => a,
+        (a): a is Checked<number,"gt_ten"> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
