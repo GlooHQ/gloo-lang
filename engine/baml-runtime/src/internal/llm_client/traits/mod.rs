@@ -655,8 +655,11 @@ async fn fetch_with_proxy(
     proxy_url: Option<&str>,
 ) -> Result<reqwest::Response, anyhow::Error> {
     let client = reqwest::Client::new();
+
     let request = if let Some(proxy) = proxy_url {
-        client.get(proxy).header("baml-original-url", url)
+        client
+            .get(format!("{}/{}", proxy, url))
+            .header("baml-original-url", url)
     } else {
         client.get(url)
     };
