@@ -223,7 +223,7 @@ export function activate(context: vscode.ExtensionContext) {
       on: {
         proxyReq: (proxyReq, req, res) => {
           console.log('proxying request')
-          
+
           try {
             const bamlOriginalUrl = req.headers['baml-original-url']
             if (bamlOriginalUrl === undefined) {
@@ -245,7 +245,6 @@ export function activate(context: vscode.ExtensionContext) {
             // proxyReq.removeHeader('origin')
             // proxyReq.setHeader('Origin', targetUrl.origin)
             console.info('Proxying an LLM request (to bypass CORS)', { proxyReq, req, res })
-
           } catch (err) {
             // This is not console.warn because it's not important
             console.log('baml-original-url is not parsable', err)

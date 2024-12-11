@@ -16,7 +16,6 @@ on:
     tags:
       - "test-release/*.*"
       - "*.*"
-    branches: []
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -49,7 +48,7 @@ jobs:
       - build-vscode-release
     steps:
       - run: echo "::do-nothing::" >/dev/null
-  
+
   publish-to-pypi:
     environment: release
     needs: [all-builds]
@@ -221,4 +220,4 @@ jobs:
           cd typescript/vscode-ext/packages
           pnpm vsce publish --packagePath ./out/*.vsix
         env:
-          VSCE_PAT: ${{ secrets.VSCODE_PAT }} 
+          VSCE_PAT: ${{ secrets.VSCODE_PAT }}
