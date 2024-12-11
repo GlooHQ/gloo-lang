@@ -150,7 +150,6 @@ where
 {
     #[allow(async_fn_in_trait)]
     async fn single_call(&self, ctx: &RuntimeContext, prompt: &RenderedPrompt) -> LLMResponse {
-        log::warn!("debug single_call start: {:?}", prompt);
         if let RenderedPrompt::Chat(chat) = &prompt {
             match process_media_urls(
                 self.model_features().resolve_media_urls,
