@@ -489,7 +489,11 @@ fn visit_type_alias<'db>(
         match item {
             FieldType::Symbol(_, ident, _) => {
                 let Some(string_id) = ctx.interner.lookup(ident.name()) else {
-                    unreachable!("Visiting alias `{ident}` that does not exist in the interner");
+                    ctx.push_error(DatamodelError::new_validation_error(
+                        &format!("Type alias points to unknown identifier `{ident}`"),
+                        item.span().clone(),
+                    ));
+                    return;
                 };
 
                 let Some(top_id) = ctx.names.tops.get(&string_id) else {
