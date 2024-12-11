@@ -248,14 +248,6 @@ impl UnresolvedFinishReasonFilter {
 
 impl FinishReasonFilter {
     pub fn is_allowed(&self, reason: Option<impl AsRef<str>>) -> bool {
-        log::warn!(
-            "debug is_allowed: {:?} {}",
-            self,
-            reason
-                .as_ref()
-                .map(|r| r.as_ref().to_string())
-                .unwrap_or("<none>".into())
-        );
         match self {
             Self::AllowList(allow) => {
                 let Some(reason) = reason.map(|r| r.as_ref().to_string()) else {

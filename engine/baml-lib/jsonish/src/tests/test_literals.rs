@@ -209,3 +209,137 @@ test_deserializer!(
     ]),
     "TWO"
 );
+
+test_deserializer!(
+    test_union_literal_with_multiple_types_from_object,
+    EMPTY_FILE,
+    r#"{
+  "status": 1
+}"#,
+    FieldType::Union(vec![
+        FieldType::Literal(LiteralValue::Int(1)),
+        FieldType::Literal(LiteralValue::Bool(true)),
+        FieldType::Literal(LiteralValue::String("THREE".into())),
+    ]),
+    1
+);
+
+// Test with integer value
+test_deserializer!(
+    test_union_literal_with_multiple_types_from_object_int,
+    EMPTY_FILE,
+    r#"{
+  "status": 1
+}"#,
+    FieldType::Union(vec![
+        FieldType::Literal(LiteralValue::Int(1)),
+        FieldType::Literal(LiteralValue::Bool(true)),
+        FieldType::Literal(LiteralValue::String("THREE".into())),
+    ]),
+    1
+);
+
+// Test with boolean value
+test_deserializer!(
+    test_union_literal_with_multiple_types_from_object_bool,
+    EMPTY_FILE,
+    r#"{
+  "result": true
+}"#,
+    FieldType::Union(vec![
+        FieldType::Literal(LiteralValue::Int(1)),
+        FieldType::Literal(LiteralValue::Bool(true)),
+        FieldType::Literal(LiteralValue::String("THREE".into())),
+    ]),
+    true
+);
+
+// Test with string value
+test_deserializer!(
+    test_union_literal_with_multiple_types_from_object_string,
+    EMPTY_FILE,
+    r#"{
+  "value": "THREE"
+}"#,
+    FieldType::Union(vec![
+        FieldType::Literal(LiteralValue::Int(1)),
+        FieldType::Literal(LiteralValue::Bool(true)),
+        FieldType::Literal(LiteralValue::String("THREE".into())),
+    ]),
+    "THREE"
+);
+
+// Test with object that has multiple keys (should fail)
+test_failing_deserializer!(
+    test_union_literal_with_multiple_types_from_multi_key_object,
+    EMPTY_FILE,
+    r#"{
+  "status": 1,
+  "message": "success"
+}"#,
+    FieldType::Union(vec![
+        FieldType::Literal(LiteralValue::Int(1)),
+        FieldType::Literal(LiteralValue::Bool(true)),
+        FieldType::Literal(LiteralValue::String("THREE".into())),
+    ])
+);
+
+// Test with nested object (should fail)
+test_failing_deserializer!(
+    test_union_literal_with_multiple_types_from_nested_object,
+    EMPTY_FILE,
+    r#"{
+  "status": {
+    "code": 1
+  }
+}"#,
+    FieldType::Union(vec![
+        FieldType::Literal(LiteralValue::Int(1)),
+        FieldType::Literal(LiteralValue::Bool(true)),
+        FieldType::Literal(LiteralValue::String("THREE".into())),
+    ])
+);
+
+// Test with quoted string value
+test_deserializer!(
+    test_union_literal_with_multiple_types_from_object_quoted_string,
+    EMPTY_FILE,
+    r#"{
+  "value": "\"THREE\""
+}"#,
+    FieldType::Union(vec![
+        FieldType::Literal(LiteralValue::Int(1)),
+        FieldType::Literal(LiteralValue::Bool(true)),
+        FieldType::Literal(LiteralValue::String("THREE".into())),
+    ]),
+    "THREE"
+);
+
+// Test with string value and extra text
+test_deserializer!(
+    test_union_literal_with_multiple_types_from_object_string_extra,
+    EMPTY_FILE,
+    r#"{
+  "value": "The answer is THREE"
+}"#,
+    FieldType::Union(vec![
+        FieldType::Literal(LiteralValue::Int(1)),
+        FieldType::Literal(LiteralValue::Bool(true)),
+        FieldType::Literal(LiteralValue::String("THREE".into())),
+    ]),
+    "THREE"
+);
+
+// Test with array value (should fail)
+test_failing_deserializer!(
+    test_union_literal_with_multiple_types_from_object_array,
+    EMPTY_FILE,
+    r#"{
+  "values": [1]
+}"#,
+    FieldType::Union(vec![
+        FieldType::Literal(LiteralValue::Int(1)),
+        FieldType::Literal(LiteralValue::Bool(true)),
+        FieldType::Literal(LiteralValue::String("THREE".into())),
+    ])
+);

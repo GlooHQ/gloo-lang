@@ -93,6 +93,31 @@ export class BamlSyncClient {
     }
   }
   
+  AliasWithMultipleAttrs(
+      money: Checked<number,"gt_ten">,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Checked<number,"gt_ten"> {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "AliasWithMultipleAttrs",
+      {
+        "money": money
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as Checked<number,"gt_ten">
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   AliasedInputClass(
       input: InputClass,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }

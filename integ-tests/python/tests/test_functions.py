@@ -308,6 +308,12 @@ class TestAllInputs:
         assert res.value == 123
         assert res.checks["gt_ten"].status == "succeeded"
 
+    @pytest.mark.asyncio
+    async def test_alias_with_multiple_attrs(self):
+        res = await b.AliasWithMultipleAttrs(123)
+        assert res.value == 123
+        assert res.checks["gt_ten"].status == "succeeded"
+
 
 class MyCustomClass(NamedArgsSingleClass):
     date: datetime.datetime

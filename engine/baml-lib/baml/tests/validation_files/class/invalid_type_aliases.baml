@@ -8,6 +8,9 @@ type One = int
 // Unexpected keyword.
 typpe Two = float
 
+// Unknown identifier.
+type Three = i
+
 // error: Error validating: Unexpected keyword used in assignment: typpe
 //   -->  class/invalid_type_aliases.baml:9
 //    | 
@@ -19,4 +22,10 @@ typpe Two = float
 //    | 
 //  5 | // Already existing name.
 //  6 | type One = int
+//    | 
+// error: Error validating: Type alias points to unknown identifier `i`
+//   -->  class/invalid_type_aliases.baml:12
+//    | 
+// 11 | // Unknown identifier.
+// 12 | type Three = i
 //    | 

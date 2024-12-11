@@ -96,6 +96,29 @@ class BamlAsyncClient:
       )
       return cast(types.LinkedListAliasNode, raw.cast_to(types, types))
     
+    async def AliasWithMultipleAttrs(
+        self,
+        money: Checked[int,types.Literal["gt_ten"]],
+        baml_options: BamlCallOptions = {},
+    ) -> Checked[int,types.Literal["gt_ten"]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "AliasWithMultipleAttrs",
+        {
+          "money": money,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Checked[int,types.Literal["gt_ten"]], raw.cast_to(types, types))
+    
     async def AliasedInputClass(
         self,
         input: types.InputClass,
@@ -3016,6 +3039,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.LinkedListAliasNode, x.cast_to(types, partial_types)),
         lambda x: cast(types.LinkedListAliasNode, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def AliasWithMultipleAttrs(
+        self,
+        money: Checked[int,types.Literal["gt_ten"]],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Checked[Optional[int],types.Literal["gt_ten"]], Checked[int,types.Literal["gt_ten"]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "AliasWithMultipleAttrs",
+        {
+          "money": money,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Checked[Optional[int],types.Literal["gt_ten"]], Checked[int,types.Literal["gt_ten"]]](
+        raw,
+        lambda x: cast(Checked[Optional[int],types.Literal["gt_ten"]], x.cast_to(types, partial_types)),
+        lambda x: cast(Checked[int,types.Literal["gt_ten"]], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
