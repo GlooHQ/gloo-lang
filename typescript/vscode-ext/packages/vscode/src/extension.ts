@@ -197,6 +197,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (path.endsWith('/')) {
           return path.slice(0, -1)
         }
+        console.log('pathRewrite', path, req)
         return path
       },
       router: (req) => {
@@ -211,15 +212,43 @@ export function activate(context: vscode.ExtensionContext) {
           if (originalUrl.endsWith('/')) {
             originalUrl = originalUrl.slice(0, -1)
           }
-          return originalUrl
+          console.log('returning original url', originalUrl)
+          return new URL(originalUrl).origin
         } else {
+          console.log('baml-original-url header is missing or invalid')
           throw new Error('baml-original-url header is missing or invalid')
         }
       },
       logger: console,
       on: {
         proxyReq: (proxyReq, req, res) => {
-          console.debug('Proxying an LLM request (to bypass CORS)', { proxyReq, req, res })
+          console.log('proxying request')
+
+          try {
+            const bamlOriginalUrl = req.headers['baml-original-url']
+            if (bamlOriginalUrl === undefined) {
+              return
+            }
+            const targetUrl = new URL(bamlOriginalUrl)
+            // proxyReq.path = targetUrl.pathname
+            // proxyReq.p
+            // It is very important that we ONLY resolve against API_KEY_INJECTION_ALLOWED
+            // by using the URL origin! (i.e. NOT using str.startsWith - the latter can still
+            // leak API keys to malicious subdomains e.g. https://api.openai.com.evil.com)
+            // const headers = API_KEY_INJECTION_ALLOWED[proxyOrigin]
+            // if (headers === undefined) {
+            //   return
+            // }
+            // for (const [header, value] of Object.entries(headers)) {
+            //   proxyReq.setHeader(header, value)
+            // }
+            // proxyReq.removeHeader('origin')
+            // proxyReq.setHeader('Origin', targetUrl.origin)
+            console.info('Proxying an LLM request (to bypass CORS)', { proxyReq, req, res })
+          } catch (err) {
+            // This is not console.warn because it's not important
+            console.log('baml-original-url is not parsable', err)
+          }
         },
         proxyRes: (proxyRes, req, res) => {
           proxyRes.headers['Access-Control-Allow-Origin'] = '*'
