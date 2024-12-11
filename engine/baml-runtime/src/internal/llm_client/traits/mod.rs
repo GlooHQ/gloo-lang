@@ -621,18 +621,26 @@ async fn to_base64_with_inferred_mime_type(
         Ok(response) => response,
         Err(e) => return Err(anyhow::anyhow!("Failed to fetch media: {e:?}")),
     };
-    let bytes = match response.bytes().await {
-        Ok(bytes) => bytes,
-        Err(e) => return Err(anyhow::anyhow!("Failed to fetch media bytes: {e:?}")),
-    };
-    let base64 = BASE64_STANDARD.encode(&bytes);
-    // TODO: infer based on file extension?
-    let mime_type = match infer::get(&bytes) {
-        Some(t) => t.mime_type(),
-        None => "application/octet-stream",
+    if response.status().is_success() {
+        let bytes = match response.bytes().await {
+            Ok(bytes) => bytes,
+            Err(e) => return Err(anyhow::anyhow!("Failed to fetch media bytes: {e:?}")),
+        };
+        let base64 = BASE64_STANDARD.encode(&bytes);
+        // TODO: infer based on file extension?
+        let mime_type = match infer::get(&bytes) {
+            Some(t) => t.mime_type(),
+            None => "application/octet-stream",
+        }
+        .to_string();
+        Ok((base64, mime_type))
+    } else {
+        Err(anyhow::anyhow!(
+            "Failed to fetch media: {}, {}",
+            response.status(),
+            response.text().await.unwrap_or_default()
+        ))
     }
-    .to_string();
-    Ok((base64, mime_type))
 }
 
 /// A naive implementation of the data URL parser, returning the (mime_type, base64)
@@ -658,7 +666,13 @@ async fn fetch_with_proxy(
 
     let request = if let Some(proxy) = proxy_url {
         client
-            .get(format!("{}/{}", proxy, url))
+            .get(format!(
+                "{}{}",
+                proxy,
+                url.parse::<url::Url>()
+                    .map_err(|e| anyhow::anyhow!("Failed to parse URL: {}", e))?
+                    .path()
+            ))
             .header("baml-original-url", url)
     } else {
         client.get(url)
