@@ -98,74 +98,46 @@ fn log(callsite: String, msg: String, fields: serde_json::Map<String, serde_json
     }));
 }
 
-pub fn baml_trace_sync_scope<F, R>(name: impl Into<String>, f: F) -> R
-where
-    F: FnOnce() -> R,
-{
-    let verbosity = tracing_core::Level::INFO;
-    let curr_ctx = BAML_TRACE_CTX.try_with(|ctx| ctx.clone());
-
-    match curr_ctx {
-        Ok(ctx) => {
-            let name = name.into();
-            let span = TraceSpanBuilder::start_span(name.clone());
-            println!(
-                "entering span: {:?} -> {:?} {}",
-                ctx.scope, span.span_id, name
-            );
-            let new_ctx = TraceContext {
-                scope: InstrumentationScope::Child {
-                    parent: span.span_id,
-                },
-                tx: ctx.tx.clone(),
-            };
-            let retval = BAML_TRACE_CTX.sync_scope(new_ctx, f);
-            let span = span.end();
-            println!(
-                "exiting span: {:?} <- {:?} {}",
-                ctx.scope, span.span_id, name
-            );
-            let _ = ctx.tx.send(TraceEvent::Span(span));
-            retval
-        }
-        // We use TraceContext to propagate the tx channel to the trace agent, so if we have
-        // no context, just run the future without tracing.
-        Err(_) => f(),
-    }
-}
-
-pub trait WithTraceContext: Sized + std::future::Future {
-    async fn baml_traced(self, name: impl Into<String>) -> <Self as std::future::Future>::Output {
-        let verbosity = tracing_core::Level::INFO;
+macro_rules! impl_trace_scope {
+    ($new_ctx:ident, $name:ident, $wrapped_fn:expr, $unwrapped_fn:expr) => {{
         let curr_ctx = BAML_TRACE_CTX.try_with(|ctx| ctx.clone());
 
         match curr_ctx {
             Ok(ctx) => {
-                let name = name.into();
+                let name = $name.into();
                 let span = TraceSpanBuilder::start_span(name.clone());
-                println!(
-                    "entering span: {:?} -> {:?} {}",
-                    ctx.scope, span.span_id, name
-                );
-                let new_ctx = TraceContext {
+                let $new_ctx = TraceContext {
                     scope: InstrumentationScope::Child {
                         parent: span.span_id,
                     },
                     tx: ctx.tx.clone(),
                 };
-                let retval = BAML_TRACE_CTX.scope(new_ctx, self).await;
+                let retval = $wrapped_fn;
                 let span = span.end();
-                println!(
-                    "exiting span: {:?} <- {:?} {}",
-                    ctx.scope, span.span_id, name
-                );
                 let _ = ctx.tx.send(TraceEvent::Span(span));
                 retval
             }
-            // We use TraceContext to propagate the tx channel to the trace agent, so if we have
-            // no context, just run the future without tracing.
-            Err(_) => self.await,
+            Err(_) => $unwrapped_fn,
         }
+    }};
+}
+
+pub fn btrace<F, R>(name: impl Into<String>, f: F) -> R
+where
+    F: FnOnce() -> R,
+{
+    impl_trace_scope!(new_ctx, name, BAML_TRACE_CTX.sync_scope(new_ctx, f), f())
+}
+
+pub trait WithTraceContext: Sized + std::future::Future {
+    #[allow(async_fn_in_trait)]
+    async fn btrace(self, name: impl Into<String>) -> <Self as std::future::Future>::Output {
+        impl_trace_scope!(
+            new_ctx,
+            name,
+            BAML_TRACE_CTX.scope(new_ctx, self).await,
+            self.await
+        )
     }
 }
 

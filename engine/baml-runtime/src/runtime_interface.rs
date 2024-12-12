@@ -10,13 +10,13 @@ use crate::internal::llm_client::llm_provider::LLMProvider;
 use crate::internal::llm_client::orchestrator::{OrchestrationScope, OrchestratorNode};
 use crate::tracing::{BamlTracer, TracingSpan};
 use crate::types::on_log_event::LogEventCallbackSync;
+use crate::{btrace, RenderCurlSettings, RuntimeContextManager};
 use crate::{
     internal::{ir_features::IrFeatures, llm_client::retry_policy::CallablePolicy},
     runtime::InternalBamlRuntime,
     types::FunctionResultStream,
     FunctionResult, RuntimeContext,
 };
-use crate::{RenderCurlSettings, RuntimeContextManager};
 
 pub(crate) trait RuntimeConstructor {
     #[cfg(not(target_arch = "wasm32"))]
@@ -45,6 +45,7 @@ pub trait RuntimeInterface {
         tracer: Arc<BamlTracer>,
         ctx: RuntimeContext,
         #[cfg(not(target_arch = "wasm32"))] tokio_runtime: Arc<tokio::runtime::Runtime>,
+        tctx: btrace::TraceContext,
     ) -> Result<FunctionResultStream>;
 }
 

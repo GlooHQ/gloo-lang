@@ -1,6 +1,7 @@
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use super::InternalBamlRuntime;
+use crate::btrace;
 use crate::internal::llm_client::traits::WithClientProperties;
 use crate::internal::llm_client::LLMResponse;
 use crate::{
@@ -393,6 +394,7 @@ impl RuntimeInterface for InternalBamlRuntime {
         tracer: Arc<BamlTracer>,
         ctx: RuntimeContext,
         #[cfg(not(target_arch = "wasm32"))] tokio_runtime: Arc<tokio::runtime::Runtime>,
+        tctx: btrace::TraceContext,
     ) -> Result<FunctionResultStream> {
         let func = self.get_function(&function_name, &ctx)?;
         let renderer = PromptRenderer::from_function(&func, self.ir(), &ctx)?;
@@ -420,6 +422,7 @@ impl RuntimeInterface for InternalBamlRuntime {
             renderer,
             #[cfg(not(target_arch = "wasm32"))]
             tokio_runtime,
+            tctx,
         })
     }
 }

@@ -994,6 +994,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tracing",
+ "tracing-core",
  "tracing-subscriber",
  "url",
  "uuid",
@@ -4305,6 +4306,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "sandbox"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "log",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-core",
+ "tracing-subscriber",
+ "uuid",
+ "web-time",
+]
+
+[[package]]
 name = "schannel"
 version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5058,9 +5075,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.32"
+version = "0.1.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
+checksum = "e672c95779cf947c5311f83787af4fa8fffd12fb27e4993211a84bdfd9610f9c"
 dependencies = [
  "once_cell",
  "valuable",

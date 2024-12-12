@@ -60,7 +60,7 @@ tokio = { version = "1", default-features = false, features = [
 tokio-stream = "0.1.15"
 # NOTE(sam): adding this caused a build error, I suspect because tower uses nightly features or something
 # tower = "0.5.0"
-uuid = { version = "1.8.0", features = ["v4", "serde"] }
+uuid.workspace = true
 web-time.workspace = true
 static_assertions.workspace = true
 mime_guess = "2.0.4"
@@ -89,7 +89,12 @@ aws-smithy-json = "0.60.7"
 pretty_assertions = "1.4.0"
 valuable = { version = "0.1.0", features = ["derive"] }
 tracing = { version = "0.1.40", features = ["valuable"] }
-tracing-subscriber = { version = "0.3.18", features = ["json", "env-filter","valuable"] }
+tracing-core = { version = "0.1.31" }
+tracing-subscriber = { version = "0.3.18", features = [
+  "json",
+  "env-filter",
+  "valuable",
+] }
 thiserror = "2.0.1"
 log-once = "0.4.1"
 
@@ -130,15 +135,13 @@ aws-sdk-bedrockruntime = "1.37.0"
 axum = "0.7.5"
 axum-extra = { version = "0.9.3", features = ["erased-json", "typed-header"] }
 hostname = "0.3.1"
-jsonwebtoken = { version="9.3.0"}
+jsonwebtoken = { version = "9.3.0" }
 notify-debouncer-full = "0.3.1"
 ring = { version = "0.17.4", features = ["std"] }
 tokio = { version = "1", features = ["full"] }
 reqwest.workspace = true
 walkdir = "2.5.0"
 which = "6.0.3"
-
-
 
 
 [features]

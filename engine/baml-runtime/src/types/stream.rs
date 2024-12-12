@@ -5,6 +5,7 @@ use internal_baml_core::ir::repr::IntermediateRepr;
 use std::sync::Arc;
 
 use crate::{
+    btrace::{self, WithTraceContext},
     client_registry::ClientRegistry,
     internal::{
         llm_client::orchestrator::{orchestrate_stream, OrchestratorNodeIterator},
@@ -29,6 +30,7 @@ pub struct FunctionResultStream {
     pub(crate) tracer: Arc<BamlTracer>,
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) tokio_runtime: Arc<tokio::runtime::Runtime>,
+    pub(crate) tctx: btrace::TraceContext,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -94,17 +96,22 @@ impl FunctionResultStream {
         let rctx = ctx.create_ctx(tb, cb);
         let res = match rctx {
             Ok(rctx) => {
-                let (history, _) = orchestrate_stream(
-                    local_orchestrator,
-                    self.ir.as_ref(),
-                    &rctx,
-                    &self.renderer,
-                    &baml_types::BamlValue::Map(local_params),
-                    |content| self.renderer.parse(content, true),
-                    |content| self.renderer.parse(content, false),
-                    on_event,
-                )
-                .await;
+                let (history, _) = btrace::BAML_TRACE_CTX
+                    .scope(
+                        self.tctx.clone(),
+                        orchestrate_stream(
+                            local_orchestrator,
+                            self.ir.as_ref(),
+                            &rctx,
+                            &self.renderer,
+                            &baml_types::BamlValue::Map(local_params),
+                            |content| self.renderer.parse(content, true),
+                            |content| self.renderer.parse(content, false),
+                            on_event,
+                        )
+                        .btrace(format!("baml_stream_function::{}", self.function_name)),
+                    )
+                    .await;
 
                 FunctionResult::new_chain(history)
             }

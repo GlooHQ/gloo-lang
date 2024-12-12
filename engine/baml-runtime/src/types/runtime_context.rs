@@ -51,6 +51,7 @@ cfg_if::cfg_if!(
 pub struct RuntimeContext {
     // path to baml_src in the local filesystem
     pub baml_src: Arc<BamlSrcReader>,
+    pub tracer_tx: tokio::sync::mpsc::UnboundedSender<String>,
     env: HashMap<String, String>,
     pub tags: HashMap<String, BamlValue>,
     pub client_overrides: Option<(Option<String>, HashMap<String, Arc<LLMProvider>>)>,
@@ -79,6 +80,7 @@ impl RuntimeContext {
         class_override: IndexMap<String, RuntimeClassOverride>,
         enum_overrides: IndexMap<String, RuntimeEnumOverride>,
     ) -> RuntimeContext {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         RuntimeContext {
             baml_src,
             env,
@@ -86,6 +88,7 @@ impl RuntimeContext {
             client_overrides,
             class_override,
             enum_overrides,
+            tracer_tx: tx,
         }
     }
 

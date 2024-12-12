@@ -10,6 +10,7 @@ members = [
   "language_client_python",
   "language_client_ruby/ext/ruby_ffi",
   "language_client_typescript",
+  "sandbox",
 ]
 default-members = [
   "baml-lib/*",
@@ -85,6 +86,7 @@ strum_macros = "0.26.2"
 time = { version = "0.3.36", features = ["formatting"] }
 pin-project-lite = "0.2.14"
 url = "2.5.2"
+uuid = { version = "1.8.0", features = ["v4", "v7", "serde"] }
 walkdir = "2.5.0"
 web-time = "1.1.0"
 
