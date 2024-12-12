@@ -2709,38 +2709,6 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
-        input: Baml::Types::Foo3,
-        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
-      ).returns(Baml::Types::Foo2)
-    }
-    def RunFoo2(
-        *varargs,
-        input:,
-        baml_options: {}
-    )
-      if varargs.any?
-        
-        raise ArgumentError.new("RunFoo2 may only be called with keyword arguments")
-      end
-      if (baml_options.keys - [:client_registry, :tb]).any?
-        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
-      end
-
-      raw = @runtime.call_function(
-        "RunFoo2",
-        {
-          input: input,
-        },
-        @ctx_manager,
-        baml_options[:tb]&.instance_variable_get(:@registry),
-        baml_options[:client_registry],
-      )
-      (raw.parsed_using_types(Baml::Types))
-    end
-
-    sig {
-      params(
-        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::Types::Schema)
@@ -7059,41 +7027,6 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[Baml::PartialTypes::MalformedConstraints, Baml::Types::MalformedConstraints].new(
-        ffi_stream: raw,
-        ctx_manager: @ctx_manager
-      )
-    end
-
-    sig {
-      params(
-        varargs: T.untyped,
-        input: Baml::Types::Foo3,
-        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
-      ).returns(Baml::BamlStream[Baml::Types::Foo2])
-    }
-    def RunFoo2(
-        *varargs,
-        input:,
-        baml_options: {}
-    )
-      if varargs.any?
-        
-        raise ArgumentError.new("RunFoo2 may only be called with keyword arguments")
-      end
-      if (baml_options.keys - [:client_registry, :tb]).any?
-        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
-      end
-
-      raw = @runtime.stream_function(
-        "RunFoo2",
-        {
-          input: input,
-        },
-        @ctx_manager,
-        baml_options[:tb]&.instance_variable_get(:@registry),
-        baml_options[:client_registry],
-      )
-      Baml::BamlStream[Baml::PartialTypes::Foo2, Baml::Types::Foo2].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )

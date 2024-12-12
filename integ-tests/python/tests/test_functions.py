@@ -44,7 +44,6 @@ from ..baml_client.types import (
     ClassToRecAlias,
     NodeWithAliasIndirection,
     MergeAttrs,
-    Foo3
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -1588,8 +1587,3 @@ async def test_block_constraint_arguments():
         nested_block_constraint = NestedBlockConstraintForParam(nbcfp=block_constraint)
         await b.UseNestedBlockConstraint(nested_block_constraint)
     assert "Failed assert: hi" in str(e)
-
-@pytest.mark.asyncio
-async def test_alias_bug():
-    res = await b.RunFoo2(input=Foo3(bar=10, baz="hi", sub=None))
-    assert True

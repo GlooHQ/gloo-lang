@@ -1959,29 +1959,6 @@ class BamlAsyncClient:
       )
       return cast(types.MalformedConstraints, raw.cast_to(types, types))
     
-    async def RunFoo2(
-        self,
-        input: types.Foo3,
-        baml_options: BamlCallOptions = {},
-    ) -> types.Foo2:
-      __tb__ = baml_options.get("tb", None)
-      if __tb__ is not None:
-        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
-      else:
-        tb = None
-      __cr__ = baml_options.get("client_registry", None)
-
-      raw = await self.__runtime.call_function(
-        "RunFoo2",
-        {
-          "input": input,
-        },
-        self.__ctx_manager.get(),
-        tb,
-        __cr__,
-      )
-      return cast(types.Foo2, raw.cast_to(types, types))
-    
     async def SchemaDescriptions(
         self,
         input: str,
@@ -5497,36 +5474,6 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.MalformedConstraints, x.cast_to(types, partial_types)),
         lambda x: cast(types.MalformedConstraints, x.cast_to(types, types)),
-        self.__ctx_manager.get(),
-      )
-    
-    def RunFoo2(
-        self,
-        input: types.Foo3,
-        baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlStream[partial_types.Foo2, types.Foo2]:
-      __tb__ = baml_options.get("tb", None)
-      if __tb__ is not None:
-        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
-      else:
-        tb = None
-      __cr__ = baml_options.get("client_registry", None)
-
-      raw = self.__runtime.stream_function(
-        "RunFoo2",
-        {
-          "input": input,
-        },
-        None,
-        self.__ctx_manager.get(),
-        tb,
-        __cr__,
-      )
-
-      return baml_py.BamlStream[partial_types.Foo2, types.Foo2](
-        raw,
-        lambda x: cast(partial_types.Foo2, x.cast_to(types, partial_types)),
-        lambda x: cast(types.Foo2, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

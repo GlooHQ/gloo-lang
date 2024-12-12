@@ -170,8 +170,6 @@ module Baml
     class Event < T::Struct; end
     class FakeImage < T::Struct; end
     class FlightConfirmation < T::Struct; end
-    class Foo2 < T::Struct; end
-    class Foo3 < T::Struct; end
     class FooAny < T::Struct; end
     class Forest < T::Struct; end
     class GroceryReceipt < T::Struct; end
@@ -579,38 +577,6 @@ module Baml
           departureTime: props[:departureTime],
           arrivalTime: props[:arrivalTime],
           seatNumber: props[:seatNumber],
-        )
-
-        @props = props
-      end
-    end
-    class Foo2 < T::Struct
-      include Baml::Sorbet::Struct
-      const :bar, Integer
-      const :baz, String
-      const :sub, T.any(Baml::Types::Foo2, T.nilable(NilClass))
-
-      def initialize(props)
-        super(
-          bar: props[:bar],
-          baz: props[:baz],
-          sub: props[:sub],
-        )
-
-        @props = props
-      end
-    end
-    class Foo3 < T::Struct
-      include Baml::Sorbet::Struct
-      const :bar, Integer
-      const :baz, String
-      const :sub, T.any(Baml::Types::Foo3, T.nilable(NilClass))
-
-      def initialize(props)
-        super(
-          bar: props[:bar],
-          baz: props[:baz],
-          sub: props[:sub],
         )
 
         @props = props
