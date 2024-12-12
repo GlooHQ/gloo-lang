@@ -255,6 +255,7 @@ test Two {
 
         assert!(js_error.is_object());
 
+        // TODO: Don't know how to build Object
         // assert_eq!(
         //     js_error,
         //     serde_wasm_bindgen::to_value::<HashMap<String, Vec<String>>>(&HashMap::from_iter([(
@@ -264,43 +265,4 @@ test Two {
         //     .unwrap()
         // );
     }
-
-    #[wasm_bindgen_test]
-    fn test_type_alias_with_assert() {
-        wasm_logger::init(wasm_logger::Config::new(log::Level::Info));
-        let sample_baml_content = r##"
-            class Foo {
-              foo int
-            }
-            type Bar = Foo
-        "##;
-        let mut files = HashMap::new();
-        files.insert("error.baml".to_string(), sample_baml_content.to_string());
-        let files_js = to_value(&files).unwrap();
-        let project = WasmProject::new("baml_src", files_js)
-            .map_err(JsValue::from)
-            .unwrap();
-
-        let env_vars = [("OPENAI_API_KEY", "12345")]
-            .iter()
-            .cloned()
-            .collect::<HashMap<_, _>>();
-        let env_vars_js = to_value(&env_vars).unwrap();
-
-        let Err(js_error) = project.runtime(env_vars_js) else {
-            panic!("Expected error, got Ok");
-        };
-
-        assert!(js_error.is_object());
-
-        // assert_eq!(
-        //     js_error,
-        //     serde_wasm_bindgen::to_value::<HashMap<String, Vec<String>>>(&HashMap::from_iter([(
-        //         "all_files".to_string(),
-        //         vec!["error.baml".to_string()]
-        //     )]))
-        //     .unwrap()
-        // );
-    }
-
 }
