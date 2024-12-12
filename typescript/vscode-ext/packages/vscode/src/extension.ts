@@ -195,7 +195,7 @@ export function activate(context: vscode.ExtensionContext) {
       changeOrigin: true,
       pathRewrite: (path, req) => {
         console.log('reqmethod', req.method)
-        
+
         // Remove the path in the case of images. Since we request things differently for image GET requests, where we add the url to localhost:4500/actual-url.png
         // to prevent caching issues with Rust reqwest.
         // But for normal completion POST requests, we always call localhost:4500.
@@ -249,11 +249,9 @@ export function activate(context: vscode.ExtensionContext) {
           //   proxyReq.setHeader('origin', targetUrl.origin)
           //   proxyReq.setHeader('host', targetUrl.host)
           // }
-
         },
         proxyRes: (proxyRes, req, res) => {
           proxyRes.headers['Access-Control-Allow-Origin'] = '*'
-          
         },
         error: (error) => {
           console.error('proxy error:', error)
