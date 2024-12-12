@@ -318,6 +318,20 @@ export interface FlightConfirmation {
   
 }
 
+export interface Foo2 {
+  bar: number
+  baz: string
+  sub?: Foo2 | null | null
+  
+}
+
+export interface Foo3 {
+  bar: number
+  baz: string
+  sub?: Foo3 | null | null
+  
+}
+
 export interface FooAny {
   planetary_age: Martian | Earthling
   certainty: Checked<number,"unreasonably_certain">

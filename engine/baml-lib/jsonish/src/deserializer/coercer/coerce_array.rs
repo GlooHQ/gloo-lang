@@ -24,7 +24,7 @@ pub(super) fn coerce_array(
 
     let inner = match list_target {
         FieldType::List(inner) => inner,
-        _ => unreachable!(),
+        _ => unreachable!("coerce_array"),
     };
 
     let mut items = vec![];

@@ -141,6 +141,16 @@ class FlightConfirmation(BaseModel):
     arrivalTime: Optional[str] = None
     seatNumber: Optional[str] = None
 
+class Foo2(BaseModel):
+    bar: Optional[int] = None
+    baz: Optional[str] = None
+    sub: Optional[Union[Optional["Foo2"], Optional[None]]] = None
+
+class Foo3(BaseModel):
+    bar: Optional[int] = None
+    baz: Optional[str] = None
+    sub: Optional[Union["Foo3", Optional[None]]] = None
+
 class FooAny(BaseModel):
     planetary_age: Optional[Union["Martian", "Earthling"]] = None
     certainty: Checked[Optional[int],Literal["unreasonably_certain"]]

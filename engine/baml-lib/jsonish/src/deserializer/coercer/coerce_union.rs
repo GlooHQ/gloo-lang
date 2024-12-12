@@ -20,7 +20,7 @@ pub(super) fn coerce_union(
 
     let options = match union_target {
         FieldType::Union(options) => options,
-        _ => unreachable!(),
+        _ => unreachable!("coerce_union"),
     };
 
     let parsed = options
