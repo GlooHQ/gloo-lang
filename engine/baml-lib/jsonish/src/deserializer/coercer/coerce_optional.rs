@@ -23,7 +23,7 @@ pub(super) fn coerce_optional(
 
     let inner = match optional_target {
         FieldType::Optional(inner) => inner,
-        _ => unreachable!(),
+        _ => unreachable!("coerce_optional"),
     };
 
     let mut flags = DeserializerConditions::new();
