@@ -426,9 +426,12 @@ impl OutputFormatContent {
                 }
             },
             FieldType::Literal(v) => v.to_string(),
-            FieldType::Constrained { base, .. } => {
-                self.inner_type_render(options, base, render_state, group_hoisted_literals)?
-            }
+            FieldType::Constrained { base, .. } => self.render_possibly_recursive_type(
+                options,
+                base,
+                render_state,
+                group_hoisted_literals,
+            )?,
             FieldType::Enum(e) => {
                 let Some(enm) = self.enums.get(e) else {
                     return Err(minijinja::Error::new(
@@ -536,9 +539,14 @@ impl OutputFormatContent {
             }
             FieldType::Map(key_type, value_type) => MapRender {
                 style: &options.map_style,
-                // TODO: Key can't be recursive because we only support strings
-                // as keys. Change this if needed in the future.
-                key_type: self.inner_type_render(options, key_type, render_state, false)?,
+                // NOTE: Key can't be recursive because we only support strings
+                // as keys.
+                key_type: self.render_possibly_recursive_type(
+                    options,
+                    key_type,
+                    render_state,
+                    false,
+                )?,
                 value_type: self.render_possibly_recursive_type(
                     options,
                     value_type,
