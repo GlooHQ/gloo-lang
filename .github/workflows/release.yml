@@ -111,7 +111,7 @@ jobs:
           # This is load-bearing: it writes NODE_AUTH_TOKEN to .npmrc, which is what
           # npm publish relies on.
           # See https://github.com/npm/cli/issues/6184#issuecomment-1544496444
-          # registry-url: "https://registry.npmjs.org"
+          registry-url: "https://registry.npmjs.org"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
