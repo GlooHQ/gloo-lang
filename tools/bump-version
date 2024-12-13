@@ -22,6 +22,7 @@ Options:
     --ruby         Bump patch for ruby
     --vscode       Bump patch for vscode
     --all          Bump all versions [default]
+    --allow-dirty  Allow dirty git status
 EOF
 }
 
@@ -49,6 +50,7 @@ _python_mode=0
 _ruby_mode=0
 _vscode_mode=0
 _all_mode=0
+_allow_dirty_mode=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -74,6 +76,10 @@ while [ $# -gt 0 ]; do
             ;;
         --all)
             _all_mode=1
+            shift
+            ;;
+        --allow-dirty)
+            _allow_dirty_mode=1
             shift
             ;;
         --) # End of all options
@@ -112,14 +118,18 @@ git pull --tags
 echo "Checking git diff..."
 # # Ensure clean git status
 if ! git diff --quiet; then
-    echo "Error: Git status is not clean. Please commit or stash your changes."
-    exit 1
+    if [ "$_allow_dirty_mode" -eq 1 ]; then
+        echo "Warning: Git status is not clean. Proceeding due to --allow-dirty flag."
+    else
+        echo "Error: Git status is not clean. Please commit or stash your changes."
+        exit 1
+    fi
 fi
 
 PRE_BUMP_VERSION=$(grep "current_version =" tools/versions/engine.cfg | awk '{print $3}')
 
 echo "Checking for changes from version $PRE_BUMP_VERSION in 'engine/language_client_codegen/src'..."
-GIT_DIFF_OUTPUT=$(git diff ${PRE_BUMP_VERSION} -- 'engine/language_client_codegen/src')
+GIT_DIFF_OUTPUT=$(git diff ${PRE_BUMP_VERSION} -- 'engine/language_client_codegen/src' || true)
 
 if [ -z "$GIT_DIFF_OUTPUT" ]; then
     echo "No changes detected."
@@ -156,7 +166,11 @@ fi
 
 cd "${_repo_root}/tools"
 if [ "$_all_mode" -eq 1 ]; then
-  bump2version --config-file ./versions/engine.cfg $version_bump
+  if [ "$_allow_dirty_mode" -eq 1 ]; then
+    bump2version --config-file ./versions/engine.cfg $version_bump --allow-dirty
+  else
+    bump2version --config-file ./versions/engine.cfg $version_bump
+  fi
   bump2version --config-file ./versions/python.cfg $version_bump --allow-dirty
   bump2version --config-file ./versions/typescript.cfg $version_bump --allow-dirty
   bump2version --config-file ./versions/ruby.cfg $version_bump --allow-dirty
