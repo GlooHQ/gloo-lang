@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-## [0.70.3](https://github.com/boundaryml/baml/compare/0.70.1..0.70.3) - 2024-12-13
+## [0.70.4](https://github.com/boundaryml/baml/compare/0.70.1..0.70.4) - 2024-12-13
 
 ### Bug Fixes
 
