@@ -406,7 +406,7 @@ fn infer_const_type(v: &minijinja::value::Value) -> Type {
                                     acc.push(x);
                                     Some(Type::Union(acc))
                                 } else {
-                                    unreachable!()
+                                    unreachable!("minijinja")
                                 }
                             }
                             Some(acc) => {
