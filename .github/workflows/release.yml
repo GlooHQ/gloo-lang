@@ -132,6 +132,7 @@ jobs:
 
       - name: Publish
         run: |
+          npm adduser
           npm publish --access public
         working-directory: engine/language_client_typescript
         env:
