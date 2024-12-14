@@ -137,7 +137,7 @@ case "$_path" in
 
     if [ "$_watch_mode" -eq 1 ]; then
       npx nodemon \
-        --ext rs,hb,hbs,j2,toml,baml \
+        --ext rs,hb,hbs,j2,toml \
         --watch "${_repo_root}/engine" \
         --ignore 'target' \
         --exec "${command}"
@@ -157,7 +157,7 @@ case "$_path" in
 
     if [ "$_watch_mode" -eq 1 ]; then
       npx nodemon \
-        --ext rs,hb,hbs,j2,toml,baml \
+        --ext rs,hb,hbs,j2,toml \
         --watch "${_repo_root}/engine" \
         --ignore 'target/**' \
         --exec "${command}"

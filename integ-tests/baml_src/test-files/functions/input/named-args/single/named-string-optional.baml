@@ -1,6 +1,6 @@
 
 
- // string[]
+// string[]
 function FnNamedArgsSingleStringOptional(myString: string?) -> string {
   client GPT35
   prompt #"

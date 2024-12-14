@@ -6,9 +6,9 @@ class ReceiptItem {
 }
 
 class ReceiptInfo {
-    items ReceiptItem[]
-    total_cost float?
-    venue "barisa" | "ox_burger"
+  items ReceiptItem[]
+  total_cost float?
+  venue "barisa" | "ox_burger"
 }
 
 function ExtractReceiptInfo(email: string, reason: "curiosity" | "personal_finance") -> ReceiptInfo {

@@ -13,7 +13,6 @@ enum DynEnumTwo {
 class SomeClassNestedDynamic {
   hi string
   @@dynamic
-
 }
 
 class DynamicClassTwo {

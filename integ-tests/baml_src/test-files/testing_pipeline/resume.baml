@@ -1,18 +1,18 @@
 class Resume {
-    name string
-    email string
-    phone string
-    experience Education[]
-    education string[]
-    skills string[]
+  name string
+  email string
+  phone string
+  experience Education[]
+  education string[]
+  skills string[]
 }
 
 class Education {
-    institution string
-    location string
-    degree string
-    major string[]
-    graduation_date string?
+  institution string
+  location string
+  degree string
+  major string[]
+  graduation_date string?
 }
 
 template_string AddRole(foo: string) #"

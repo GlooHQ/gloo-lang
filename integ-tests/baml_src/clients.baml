@@ -19,7 +19,7 @@ client<llm> GPT4 {
     model gpt-4o
     api_key env.OPENAI_API_KEY
   }
-}  
+}
 
 
 client<llm> GPT4o {
@@ -28,7 +28,7 @@ client<llm> GPT4o {
     model gpt-4o
     api_key env.OPENAI_API_KEY
   }
-} 
+}
 
 
 client<llm> GPT4Turbo {
@@ -38,7 +38,7 @@ client<llm> GPT4Turbo {
     model gpt-4-turbo
     api_key env.OPENAI_API_KEY
   }
-} 
+}
 
 client<llm> GPT35 {
   provider openai
@@ -164,7 +164,7 @@ client<llm> Resilient_SimpleSyntax {
       Lottery_SimpleSyntax
     ]
   }
-} 
+}
  
 client<llm> Lottery_SimpleSyntax {
   provider baml-round-robin

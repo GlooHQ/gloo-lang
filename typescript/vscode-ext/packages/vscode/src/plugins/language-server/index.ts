@@ -382,6 +382,49 @@ const plugin: BamlVSCodePlugin = {
           }
         },
       ),
+
+      commands.registerCommand('baml.setDefaultFormatter', async () => {
+        enum AutoFormatChoice {
+          Yes = 'Yes (always)',
+          OnlyInWorkspace = 'Yes (in workspace)',
+          No = 'No',
+        }
+        const selection = await vscode.window.showInformationMessage(
+          'Would you like to auto-format BAML files on save?',
+          AutoFormatChoice.Yes,
+          AutoFormatChoice.OnlyInWorkspace,
+          AutoFormatChoice.No,
+        )
+        if (selection === AutoFormatChoice.No) {
+          return
+        }
+
+        const config = vscode.workspace.getConfiguration('editor', { languageId: 'baml' })
+
+        const configTarget =
+          selection === AutoFormatChoice.Yes ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace
+        const overrideInLanguage = true
+
+        for (const [key, value] of Object.entries({
+          defaultFormatter: 'Boundary.baml-extension',
+          formatOnSave: true,
+        })) {
+          await config.update(key, value, configTarget, overrideInLanguage)
+        }
+
+        switch (selection) {
+          case AutoFormatChoice.Yes:
+            vscode.window.showInformationMessage(
+              'BAML files will now be auto-formatted on save (updated user settings).',
+            )
+            break
+          case AutoFormatChoice.OnlyInWorkspace:
+            vscode.window.showInformationMessage(
+              'BAML files will now be auto-formatted on save (updated workspace settings).',
+            )
+            break
+        }
+      }),
     )
 
     activateClient(context, serverOptions, clientOptions)

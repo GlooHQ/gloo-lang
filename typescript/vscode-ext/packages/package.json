@@ -154,6 +154,11 @@
         "command": "baml.selectTestCase",
         "title": "Select Test Case",
         "category": "Baml"
+      },
+      {
+        "command": "baml.setDefaultFormatter",
+        "title": "Set Default Formatter",
+        "category": "Baml"
       }
     ]
   },

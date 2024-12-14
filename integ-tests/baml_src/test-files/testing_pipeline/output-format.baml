@@ -1,15 +1,16 @@
 class Recipe {
+  // what do comments
     ingredients map<string, Quantity>
-    recipe_type "breakfast" | "dinner"
+  recipe_type "breakfast" | "dinner"
 }
 
 class Quantity {
-    amount int | float
-    unit string?
+  amount int | float
+  unit string?
 }
 
 function AaaSamOutputFormat(recipe: string) -> Recipe {
-  client GPT35
+    client GPT35
   prompt #"
     Return this value back to me: {{recipe}}
 
