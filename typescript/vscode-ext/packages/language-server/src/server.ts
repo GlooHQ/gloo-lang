@@ -140,7 +140,7 @@ export function startServer(options?: LSOptions): void {
       capabilities: {
         textDocumentSync: TextDocumentSyncKind.Full,
         definitionProvider: true,
-        documentFormattingProvider: false,
+        documentFormattingProvider: true,
         completionProvider: {
           resolveProvider: false,
           triggerCharacters: ['@', '"', '.'],
@@ -524,6 +524,21 @@ export function startServer(options?: LSOptions): void {
       return undefined
     } catch (e) {
       console.error(`Error occurred while generating hover:\n${e}`)
+    }
+  })
+
+  connection.onDocumentFormatting((params: DocumentFormattingParams) => {
+    try {
+      const doc = getDocument(params.textDocument.uri)
+      if (doc) {
+        const formatted = BamlWasm.format_document(doc.uri, doc.getText())
+        if (formatted) {
+          return [TextEdit.replace(Range.create(doc.positionAt(0), doc.positionAt(doc.getText().length)), formatted)]
+        }
+      }
+      return []
+    } catch (e) {
+      console.error(`Error occurred while formatting document:\n${e}`)
     }
   })
 
