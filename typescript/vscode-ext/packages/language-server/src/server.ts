@@ -527,9 +527,7 @@ export function startServer(options?: LSOptions): void {
     }
   })
 
-  console.log('sam-baml registering onDocumentFormatting')
   connection.onDocumentFormatting((params: DocumentFormattingParams) => {
-    console.log('sam-baml attempting to format document')
     try {
       const doc = getDocument(params.textDocument.uri)
       if (doc) {

@@ -1,7 +1,10 @@
 class NamedArgsSingleClass {
   key string
   key_two bool
-  key_three int // TODO: doesn't work with keys with numbers // key2 bool // key3 int
+  key_three int
+  // TODO: doesn't work with keys with numbers
+  // key2 bool
+  // key3 int
 }
 
 function TestFnNamedArgsSingleClass(myArg: NamedArgsSingleClass) -> string {
