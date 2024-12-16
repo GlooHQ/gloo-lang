@@ -373,9 +373,9 @@ class Project {
           // though it doesn't exist anymore, and vscode has no good way of letting the user purge it from the UI
           console.log(`outputdir ${g.output_dir}`)
           console.log(`relative output dir ${g.output_dir_relative_to_baml_src}`)
-          
+
           const out_dir = path.join(this.rootPath(), g.output_dir_relative_to_baml_src)
-        
+
           const tmpDir = path.join(path.dirname(g.output_dir), path.basename(g.output_dir) + '.tmp')
           const backupDir = path.join(path.dirname(g.output_dir), path.basename(g.output_dir) + '.bak')
 
@@ -428,6 +428,7 @@ class Project {
             // if we remove this, TS will still have the old types, and nextjs will not hot-reload.
             g.files.map((f) => {
               const fpath = path.join(out_dir, f.path_in_output_dir)
+              console.log(`fpath ${fpath}`)
               const currentTime = new Date()
               const newTime = new Date(currentTime.getTime() + 100)
               utimes(fpath, newTime, newTime, (err) => {
