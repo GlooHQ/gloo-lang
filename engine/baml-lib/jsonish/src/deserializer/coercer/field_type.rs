@@ -79,7 +79,8 @@ impl TypeCoercer for FieldType {
                 FieldType::Enum(e) => IrRef::Enum(e).coerce(ctx, target, value),
                 FieldType::Literal(l) => l.coerce(ctx, target, value),
                 FieldType::Class(c) => IrRef::Class(c).coerce(ctx, target, value),
-                FieldType::Alias { resolution, .. } => resolution.coerce(ctx, target, value),
+                // TODO: How to handle this?
+                FieldType::RecursiveTypeAlias(_) => todo!("Alias with no resolution"),
                 FieldType::List(_) => coerce_array(ctx, self, value),
                 FieldType::Union(_) => coerce_union(ctx, self, value),
                 FieldType::Optional(_) => coerce_optional(ctx, self, value),
@@ -165,7 +166,7 @@ impl DefaultValue for FieldType {
             FieldType::Enum(e) => None,
             FieldType::Literal(_) => None,
             FieldType::Class(_) => None,
-            FieldType::Alias { resolution, .. } => resolution.default_value(error),
+            FieldType::RecursiveTypeAlias(_) => None,
             FieldType::List(_) => Some(BamlValueWithFlags::List(get_flags(), Vec::new())),
             FieldType::Union(items) => items.iter().find_map(|i| i.default_value(error)),
             FieldType::Primitive(TypeValue::Null) | FieldType::Optional(_) => {

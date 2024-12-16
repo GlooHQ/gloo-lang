@@ -156,9 +156,11 @@ impl WithJsonSchema for FieldType {
             FieldType::Class(name) | FieldType::Enum(name) => json!({
                 "$ref": format!("#/definitions/{}", name),
             }),
-            FieldType::Alias { resolution, .. } => resolution.json_schema(),
             FieldType::Literal(v) => json!({
                 "const": v.to_string(),
+            }),
+            FieldType::RecursiveTypeAlias(_) => json!({
+                "type": ["number", "string", "boolean", "object", "array", "null"]
             }),
             FieldType::Primitive(t) => match t {
                 TypeValue::String => json!({

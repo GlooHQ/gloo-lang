@@ -85,14 +85,7 @@ pub enum FieldType {
     Union(Vec<FieldType>),
     Tuple(Vec<FieldType>),
     Optional(Box<FieldType>),
-    Alias {
-        /// Name of the alias.
-        name: String,
-        /// Type that the alias points to.
-        target: Box<FieldType>,
-        /// Final resolved type (an alias can point to other aliases).
-        resolution: Box<FieldType>,
-    },
+    RecursiveTypeAlias(String),
     Constrained {
         base: Box<FieldType>,
         constraints: Vec<Constraint>,
@@ -103,8 +96,9 @@ pub enum FieldType {
 impl std::fmt::Display for FieldType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FieldType::Enum(name) | FieldType::Class(name) => write!(f, "{name}"),
-            FieldType::Alias { name, .. } => write!(f, "{name}"),
+            FieldType::Enum(name)
+            | FieldType::Class(name)
+            | FieldType::RecursiveTypeAlias(name) => write!(f, "{name}"),
             FieldType::Primitive(t) => write!(f, "{t}"),
             FieldType::Literal(v) => write!(f, "{v}"),
             FieldType::Union(choices) => {
@@ -187,8 +181,6 @@ impl FieldType {
         }
 
         match (self, other) {
-            (FieldType::Alias { resolution, .. }, _) => resolution.is_subtype_of(other),
-            (_, FieldType::Alias { resolution, .. }) => self.is_subtype_of(resolution),
             (FieldType::Primitive(TypeValue::Null), FieldType::Optional(_)) => true,
             (FieldType::Optional(self_item), FieldType::Optional(other_item)) => {
                 self_item.is_subtype_of(other_item)
@@ -206,6 +198,12 @@ impl FieldType {
                 other_k.is_subtype_of(self_k) && (**self_v).is_subtype_of(other_v)
             }
             (FieldType::Map(_, _), _) => false,
+
+            // TODO: is it necessary to check if the alias is part of the same
+            // cycle?
+            (FieldType::RecursiveTypeAlias(_), _) | (_, FieldType::RecursiveTypeAlias(_)) => {
+                self == other
+            }
 
             (
                 FieldType::Constrained {

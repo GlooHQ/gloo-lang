@@ -78,3 +78,16 @@ function AliasWithMultipleAttrs(money: MultipleAttrs) -> MultipleAttrs {
       {{ ctx.output_format }}
     "#
 }
+
+type RecursiveMapAlias = map<string, RecursiveMapAlias>
+
+function SimpleRecursiveMapAlias(input: RecursiveMapAlias) -> RecursiveMapAlias {
+    client "openai/gpt-4o"
+    prompt r#"
+      Return the given value:
+
+      {{ input }}
+
+      {{ ctx.output_format }}
+    "#
+}

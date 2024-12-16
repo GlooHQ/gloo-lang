@@ -18,12 +18,14 @@ pub fn render_output_format(
     ctx: &RuntimeContext,
     output: &FieldType,
 ) -> Result<OutputFormatContent> {
-    let (enums, classes, recursive_classes) = relevant_data_models(ir, output, ctx)?;
+    let (enums, classes, recursive_classes, structural_recursive_aliases) =
+        relevant_data_models(ir, output, ctx)?;
 
     Ok(OutputFormatContent::target(output.clone())
         .enums(enums)
         .classes(classes)
         .recursive_classes(recursive_classes)
+        .structural_recursive_aliases(structural_recursive_aliases)
         .build())
 }
 
@@ -210,11 +212,12 @@ fn relevant_data_models<'a>(
     ir: &'a IntermediateRepr,
     output: &'a FieldType,
     ctx: &RuntimeContext,
-) -> Result<(Vec<Enum>, Vec<Class>, IndexSet<String>)> {
+) -> Result<(Vec<Enum>, Vec<Class>, IndexSet<String>, IndexSet<String>)> {
     let mut checked_types = HashSet::new();
     let mut enums = Vec::new();
     let mut classes = Vec::new();
     let mut recursive_classes = IndexSet::new();
+    let mut structural_recursive_aliases = IndexSet::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     let eval_ctx = ctx.eval_ctx(false);
@@ -376,8 +379,14 @@ fn relevant_data_models<'a>(
                     recursive_classes.insert(cls.to_owned());
                 }
             }
-            (FieldType::Alias { resolution, .. }, _) => {
-                start.push(*resolution.clone());
+            (FieldType::RecursiveTypeAlias(name), _) => {
+                // TODO: Same O(n) problem as above.
+                // TODO: Do we need the type information or just the name?
+                for cycle in ir.structural_recursive_alias_cycles() {
+                    if cycle.contains_key(name) {
+                        structural_recursive_aliases.extend(cycle.keys().map(ToOwned::to_owned));
+                    }
+                }
             }
             (FieldType::Literal(_), _) => {}
             (FieldType::Primitive(_), _) => {}
@@ -387,7 +396,12 @@ fn relevant_data_models<'a>(
         }
     }
 
-    Ok((enums, classes, recursive_classes))
+    Ok((
+        enums,
+        classes,
+        recursive_classes,
+        structural_recursive_aliases,
+    ))
 }
 
 #[cfg(test)]

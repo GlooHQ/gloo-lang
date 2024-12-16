@@ -2143,6 +2143,31 @@ export class BamlSyncClient {
     }
   }
   
+  SimpleRecursiveMapAlias(
+      input: RecursiveMapAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): RecursiveMapAlias {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "SimpleRecursiveMapAlias",
+      {
+        "input": input
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as RecursiveMapAlias
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   StreamBigNumbers(
       digits: number,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }

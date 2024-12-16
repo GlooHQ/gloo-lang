@@ -230,7 +230,8 @@ fn relevant_data_models<'a>(
                     });
                 }
             }
-            (FieldType::Alias { resolution, .. }, _) => start.push(*resolution.to_owned()),
+            // TODO: Add structural aliases here.
+            (FieldType::RecursiveTypeAlias(_), _) => {}
             (FieldType::Literal(_), _) => {}
             (FieldType::Primitive(_), _constraints) => {}
             (FieldType::Constrained { .. }, _) => {

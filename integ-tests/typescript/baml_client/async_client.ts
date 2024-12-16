@@ -2143,6 +2143,31 @@ export class BamlAsyncClient {
     }
   }
   
+  async SimpleRecursiveMapAlias(
+      input: RecursiveMapAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<RecursiveMapAlias> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "SimpleRecursiveMapAlias",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as RecursiveMapAlias
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   async StreamBigNumbers(
       digits: number,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -5982,6 +6007,39 @@ class BamlStreamClient {
         raw,
         (a): a is RecursivePartialNull<Schema> => a,
         (a): a is Schema => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  SimpleRecursiveMapAlias(
+      input: RecursiveMapAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<RecursiveMapAlias>, RecursiveMapAlias> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "SimpleRecursiveMapAlias",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<RecursiveMapAlias>, RecursiveMapAlias>(
+        raw,
+        (a): a is RecursivePartialNull<RecursiveMapAlias> => a,
+        (a): a is RecursiveMapAlias => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )

@@ -314,6 +314,11 @@ class TestAllInputs:
         assert res.value == 123
         assert res.checks["gt_ten"].status == "succeeded"
 
+    @pytest.mark.asyncio
+    async def test_simple_recursive_map_alias(self):
+        res = await b.SimpleRecursiveMapAlias({"one": {"two": {"three": {}}}})
+        assert res == {"one": {"two": {"three": {}}}}
+
 
 class MyCustomClass(NamedArgsSingleClass):
     date: datetime.datetime

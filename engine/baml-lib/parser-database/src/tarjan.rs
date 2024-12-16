@@ -129,7 +129,8 @@ impl<'g, V: Eq + Ord + Hash + Copy> Tarjan<'g, V> {
 
         // TODO: @antoniosarosi: HashSet is random, won't always iterate in the
         // same order. Fix this with IndexSet or something, we really don't want
-        // to sort this every single time.
+        // to sort this every single time. Also order only matters for tests, we
+        // can do `if cfg!(test)` or something.
         let mut successors = Vec::from_iter(&self.graph[&node_id]);
         successors.sort();
 

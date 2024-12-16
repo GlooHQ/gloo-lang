@@ -16,7 +16,7 @@
 import baml_py
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
-from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union
+from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union, TypeAlias
 
 
 T = TypeVar('T')
@@ -478,3 +478,5 @@ class UnionTest_ReturnType(BaseModel):
 class WithReasoning(BaseModel):
     value: str
     reasoning: str
+
+RecursiveMapAlias: TypeAlias = Dict[str, "RecursiveMapAlias"]

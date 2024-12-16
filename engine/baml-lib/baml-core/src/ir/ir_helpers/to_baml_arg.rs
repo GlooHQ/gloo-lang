@@ -263,8 +263,24 @@ impl ArgCoercer {
                     Err(())
                 }
             },
-            (FieldType::Alias { resolution, .. }, _) => {
-                self.coerce_arg(ir, &resolution, value, scope)
+            // TODO: Is this even possible?
+            (FieldType::RecursiveTypeAlias(name), _) => {
+                let mut maybe_coerced = None;
+                // TODO: Fix this O(n)
+                for cycle in ir.structural_recursive_alias_cycles().iter() {
+                    if let Some(target) = cycle.get(name) {
+                        maybe_coerced = Some(self.coerce_arg(ir, target, value, scope)?);
+                        break;
+                    }
+                }
+
+                match maybe_coerced {
+                    Some(coerced) => Ok(coerced),
+                    None => {
+                        scope.push_error(format!("Recursive type alias {} not found", name));
+                        Err(())
+                    }
+                }
             }
             (FieldType::List(item), _) => match value {
                 BamlValue::List(arr) => {
