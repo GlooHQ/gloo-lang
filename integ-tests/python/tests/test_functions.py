@@ -319,6 +319,16 @@ class TestAllInputs:
         res = await b.SimpleRecursiveMapAlias({"one": {"two": {"three": {}}}})
         assert res == {"one": {"two": {"three": {}}}}
 
+    @pytest.mark.asyncio
+    async def test_simple_recursive_list_alias(self):
+        res = await b.SimpleRecursiveListAlias([[], [], [[]]])
+        assert res == [[], [], [[]]]
+
+    @pytest.mark.asyncio
+    async def test_recursive_alias_cycles(self):
+        res = await b.RecursiveAliasCycle([[], [], [[]]])
+        assert res == [[], [], [[]]]
+
 
 class MyCustomClass(NamedArgsSingleClass):
     date: datetime.datetime

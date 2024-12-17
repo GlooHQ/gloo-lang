@@ -91,3 +91,31 @@ function SimpleRecursiveMapAlias(input: RecursiveMapAlias) -> RecursiveMapAlias 
       {{ ctx.output_format }}
     "#
 }
+
+type RecursiveListAlias = RecursiveListAlias[]
+
+function SimpleRecursiveListAlias(input: RecursiveListAlias) -> RecursiveListAlias {
+    client "openai/gpt-4o"
+    prompt r#"
+      Return the given JSON array:
+
+      {{ input }}
+
+      {{ ctx.output_format }}
+    "#
+}
+
+type RecAliasOne = RecAliasTwo
+type RecAliasTwo = RecAliasThree
+type RecAliasThree = RecAliasOne[]
+
+function RecursiveAliasCycle(input: RecAliasOne) -> RecAliasOne {
+    client "openai/gpt-4o"
+    prompt r#"
+      Return the given JSON array:
+
+      {{ input }}
+
+      {{ ctx.output_format }}
+    "#
+}

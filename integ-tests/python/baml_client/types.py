@@ -480,3 +480,11 @@ class WithReasoning(BaseModel):
     reasoning: str
 
 RecursiveMapAlias: TypeAlias = Dict[str, "RecursiveMapAlias"]
+
+RecursiveListAlias: TypeAlias = List["RecursiveListAlias"]
+
+RecAliasOne: TypeAlias = "RecAliasTwo"
+
+RecAliasTwo: TypeAlias = "RecAliasThree"
+
+RecAliasThree: TypeAlias = List["RecAliasOne"]

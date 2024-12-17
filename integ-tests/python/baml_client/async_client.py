@@ -1867,6 +1867,29 @@ class BamlAsyncClient:
       )
       return cast(str, raw.cast_to(types, types))
     
+    async def RecursiveAliasCycle(
+        self,
+        input: types.RecAliasOne,
+        baml_options: BamlCallOptions = {},
+    ) -> types.RecAliasOne:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "RecursiveAliasCycle",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.RecAliasOne, raw.cast_to(types, types))
+    
     async def RecursiveClassWithAliasIndirection(
         self,
         cls: types.NodeWithAliasIndirection,
@@ -1981,6 +2004,29 @@ class BamlAsyncClient:
         __cr__,
       )
       return cast(types.Schema, raw.cast_to(types, types))
+    
+    async def SimpleRecursiveListAlias(
+        self,
+        input: types.RecursiveListAlias,
+        baml_options: BamlCallOptions = {},
+    ) -> types.RecursiveListAlias:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "SimpleRecursiveListAlias",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.RecursiveListAlias, raw.cast_to(types, types))
     
     async def SimpleRecursiveMapAlias(
         self,
@@ -5380,6 +5426,36 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def RecursiveAliasCycle(
+        self,
+        input: types.RecAliasOne,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[types.RecAliasOne, types.RecAliasOne]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "RecursiveAliasCycle",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[types.RecAliasOne, types.RecAliasOne](
+        raw,
+        lambda x: cast(types.RecAliasOne, x.cast_to(types, partial_types)),
+        lambda x: cast(types.RecAliasOne, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def RecursiveClassWithAliasIndirection(
         self,
         cls: types.NodeWithAliasIndirection,
@@ -5527,6 +5603,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.Schema, x.cast_to(types, partial_types)),
         lambda x: cast(types.Schema, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def SimpleRecursiveListAlias(
+        self,
+        input: types.RecursiveListAlias,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[types.RecursiveListAlias, types.RecursiveListAlias]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "SimpleRecursiveListAlias",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[types.RecursiveListAlias, types.RecursiveListAlias](
+        raw,
+        lambda x: cast(types.RecursiveListAlias, x.cast_to(types, partial_types)),
+        lambda x: cast(types.RecursiveListAlias, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
