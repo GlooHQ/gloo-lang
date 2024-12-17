@@ -10,24 +10,69 @@ from .baml_py import (
 
 
 class TypeBuilder:
+    """A builder for creating and modifying types at runtime.
+
+    hi, so this class provides a Python-friendly interface for creating and modifying BAML types dynamically.
+    it maintains sets of class and enum names, and provides a readable string representation for debugging.
+
+    the format goes like:
+    - Empty TypeBuilder: "TypeBuilder(empty)"
+    - With classes only: "TypeBuilder(Classes: ['Class1', 'Class2'])"
+    - With enums only: "TypeBuilder(Enums: ['Enum1', 'Enum2'])"
+    - With both: "TypeBuilder(Classes: ['Class1', 'Class2'], Enums: ['Enum1', 'Enum2'])"
+
+    a note from me: class and enum names are always sorted alphabetically for consistent output.
+    """
+
     def __init__(self, classes: typing.Set[str], enums: typing.Set[str]):
+        """initializingt the TypeBuilder with optional predefined classes and enums.
+
+        args:
+            classes: Set of class names to initialize with
+            enums: Set of enum names to initialize with
+        """
         self.__classes = classes
         self.__enums = enums
         self.__tb = _TypeBuilder()
 
+    def __str__(self) -> str:
+        """here, we create a human-readable string representation of the TypeBuilder as required.
+
+        what this actually returns:
+            - a string showing all currently defined classes and enums in a readable format.
+            - classes and enums are sorted alphabetically for consistent output.
+            - returns "TypeBuilder(empty)" if no types are defined.
+        """
+        parts = []
+        # add sorted class names if  exist
+        if self.__classes:
+            parts.append(f"Classes: {sorted(self.__classes)}")
+        # add sorted enum names if  exist
+        if self.__enums:
+            parts.append(f"Enums: {sorted(self.__enums)}")
+        # return special format for empty TypeBuilder
+        if not parts:
+            return "TypeBuilder(empty)"
+        return f"TypeBuilder({', '.join(parts)})"
+
+    # so what we do is make repr use the same implementation as str for consistency
+    #  which  ensures that both print(tb) and repr(tb) show the same format
+    __repr__ = __str__
+
     @property
     def _tb(self) -> _TypeBuilder:
+        """Access the underlying Rust TypeBuilder implementation."""
         return self.__tb
 
     def string(self):
         return self._tb.string()
-    
+
     def literal_string(self, value: str):
         return self._tb.literal_string(value)
-    
+
     def literal_int(self, value: int):
         return self._tb.literal_int(value)
-    
+
     def literal_bool(self, value: bool):
         return self._tb.literal_bool(value)
 
