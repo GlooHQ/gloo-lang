@@ -186,16 +186,40 @@ impl WithJsonSchema for FieldType {
                     "required": ["url"],
                 }),
             },
-            FieldType::List(item) => json!({
-                "type": "array",
-                "items": (*item).json_schema()
-            }),
-            FieldType::Map(_k, v) => json!({
-                "type": "object",
-                "additionalProperties": {
-                    "type": v.json_schema(),
+            // Handle list types (arrays) with optional support
+            // For example: string[]? generates a schema that allows both array and null
+            FieldType::List(item) => {
+                let mut schema = json!({
+                    "type": "array",
+                    "items": (*item).json_schema()
+                });
+                // If the list itself is optional (marked with ?),
+                // modify the schema to accept either an array or null
+                if self.is_optional() {
+                    schema["type"] = json!(["array", "null"]);
+                    // Add default null value for optional arrays
+                    schema["default"] = serde_json::Value::Null;
                 }
-            }),
+                schema
+            },
+            // Handle map types with optional support
+            // For example: map<string, int>? generates a schema that allows both object and null
+            FieldType::Map(_k, v) => {
+                let mut schema = json!({
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": v.json_schema(),
+                    }
+                });
+                // If the map itself is optional (marked with ?),
+                // modify the schema to accept either an object or null
+                if self.is_optional() {
+                    schema["type"] = json!(["object", "null"]);
+                    // Add default null value for optional maps
+                    schema["default"] = serde_json::Value::Null;
+                }
+                schema
+            },
             FieldType::Union(options) => json!({
                 "anyOf": options.iter().map(|t| {
                     let mut res = t.json_schema();
@@ -211,18 +235,20 @@ impl WithJsonSchema for FieldType {
                 "type": "array",
                 "prefixItems": options.iter().map(|t| t.json_schema()).collect::<Vec<_>>(),
             }),
-            // The caller object is responsible for adding the "null" type
+            // Handle optional types (marked with ?) that aren't lists or maps
             FieldType::Optional(inner) => {
                 match **inner {
+                    // For primitive types, we can simply add "null" to the allowed types
                     FieldType::Primitive(_) => {
                         let mut res = inner.json_schema();
                         res["type"] = json!([res["type"], "null"]);
                         res["default"] = serde_json::Value::Null;
                         res
                     }
+                    // For complex types, we need to use anyOf to allow either the type or null
                     _ => {
                         let mut res = inner.json_schema();
-                        // if res is a map, add a "title" field
+                        // Add a title for better schema documentation
                         if let serde_json::Value::Object(r) = &mut res {
                             r.insert("title".to_string(), json!(inner.to_string()));
                         }
