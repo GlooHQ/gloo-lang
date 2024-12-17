@@ -11,6 +11,7 @@ use super::{ParsingContext, ParsingError};
 pub(super) enum IrRef<'a> {
     Enum(&'a String),
     Class(&'a String),
+    RecursiveAlias(&'a String),
 }
 
 impl TypeCoercer for IrRef<'_> {
@@ -27,6 +28,10 @@ impl TypeCoercer for IrRef<'_> {
             },
             IrRef::Class(c) => match ctx.of.find_class(c.as_str()) {
                 Ok(c) => c.coerce(ctx, target, value),
+                Err(e) => Err(ctx.error_internal(e.to_string())),
+            },
+            IrRef::RecursiveAlias(a) => match ctx.of.find_recursive_alias_target(a.as_str()) {
+                Ok(a) => a.coerce(ctx, target, value),
                 Err(e) => Err(ctx.error_internal(e.to_string())),
             },
         }

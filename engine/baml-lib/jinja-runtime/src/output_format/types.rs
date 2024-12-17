@@ -58,7 +58,7 @@ pub struct OutputFormatContent {
     pub enums: Arc<IndexMap<String, Enum>>,
     pub classes: Arc<IndexMap<String, Class>>,
     recursive_classes: Arc<IndexSet<String>>,
-    structural_recursive_aliases: Arc<IndexSet<String>>,
+    structural_recursive_aliases: Arc<IndexMap<String, FieldType>>,
     pub target: FieldType,
 }
 
@@ -69,7 +69,7 @@ pub struct Builder {
     /// Order matters for this one.
     recursive_classes: IndexSet<String>,
     /// Recursive aliases introduced maps and lists.
-    structural_recursive_aliases: IndexSet<String>,
+    structural_recursive_aliases: IndexMap<String, FieldType>,
     target: FieldType,
 }
 
@@ -79,7 +79,7 @@ impl Builder {
             enums: vec![],
             classes: vec![],
             recursive_classes: IndexSet::new(),
-            structural_recursive_aliases: IndexSet::new(),
+            structural_recursive_aliases: IndexMap::new(),
             target,
         }
     }
@@ -101,7 +101,7 @@ impl Builder {
 
     pub fn structural_recursive_aliases(
         mut self,
-        structural_recursive_aliases: IndexSet<String>,
+        structural_recursive_aliases: IndexMap<String, FieldType>,
     ) -> Self {
         self.structural_recursive_aliases = structural_recursive_aliases;
         self
@@ -710,13 +710,19 @@ impl OutputFormatContent {
     pub fn find_enum(&self, name: &str) -> Result<&Enum> {
         self.enums
             .get(name)
-            .ok_or_else(|| anyhow::anyhow!("Enum {} not found", name))
+            .ok_or_else(|| anyhow::anyhow!("Enum {name} not found"))
     }
 
     pub fn find_class(&self, name: &str) -> Result<&Class> {
         self.classes
             .get(name)
-            .ok_or_else(|| anyhow::anyhow!("Class {} not found", name))
+            .ok_or_else(|| anyhow::anyhow!("Class {name} not found"))
+    }
+
+    pub fn find_recursive_alias_target(&self, name: &str) -> Result<&FieldType> {
+        self.structural_recursive_aliases
+            .get(name)
+            .ok_or_else(|| anyhow::anyhow!("Recursive alias {name} not found"))
     }
 }
 

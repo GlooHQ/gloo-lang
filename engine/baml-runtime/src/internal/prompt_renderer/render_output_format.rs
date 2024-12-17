@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use anyhow::Result;
 use baml_types::BamlValue;
-use indexmap::IndexSet;
+use indexmap::{IndexMap, IndexSet};
 use internal_baml_core::ir::{
     repr::IntermediateRepr, ClassWalker, EnumWalker, FieldType, IRHelper,
 };
@@ -212,12 +212,17 @@ fn relevant_data_models<'a>(
     ir: &'a IntermediateRepr,
     output: &'a FieldType,
     ctx: &RuntimeContext,
-) -> Result<(Vec<Enum>, Vec<Class>, IndexSet<String>, IndexSet<String>)> {
+) -> Result<(
+    Vec<Enum>,
+    Vec<Class>,
+    IndexSet<String>,
+    IndexMap<String, FieldType>,
+)> {
     let mut checked_types = HashSet::new();
     let mut enums = Vec::new();
     let mut classes = Vec::new();
     let mut recursive_classes = IndexSet::new();
-    let mut structural_recursive_aliases = IndexSet::new();
+    let mut structural_recursive_aliases = IndexMap::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     let eval_ctx = ctx.eval_ctx(false);
@@ -381,10 +386,11 @@ fn relevant_data_models<'a>(
             }
             (FieldType::RecursiveTypeAlias(name), _) => {
                 // TODO: Same O(n) problem as above.
-                // TODO: Do we need the type information or just the name?
                 for cycle in ir.structural_recursive_alias_cycles() {
                     if cycle.contains_key(name) {
-                        structural_recursive_aliases.extend(cycle.keys().map(ToOwned::to_owned));
+                        for (alias, target) in cycle.iter() {
+                            structural_recursive_aliases.insert(alias.to_owned(), target.clone());
+                        }
                     }
                 }
             }

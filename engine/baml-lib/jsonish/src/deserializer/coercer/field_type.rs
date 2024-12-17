@@ -79,8 +79,17 @@ impl TypeCoercer for FieldType {
                 FieldType::Enum(e) => IrRef::Enum(e).coerce(ctx, target, value),
                 FieldType::Literal(l) => l.coerce(ctx, target, value),
                 FieldType::Class(c) => IrRef::Class(c).coerce(ctx, target, value),
-                // TODO: How to handle this?
-                FieldType::RecursiveTypeAlias(_) => todo!("Alias with no resolution"),
+                // TODO: This doesn't look too good compared to the rest of
+                // match arms. Should we make use of the context like this here?
+                FieldType::RecursiveTypeAlias(name) => ctx
+                    .of
+                    .find_recursive_alias_target(name)
+                    .map_err(|e| ParsingError {
+                        reason: format!("Failed to find recursive alias target: {e}"),
+                        scope: ctx.scope.clone(),
+                        causes: Vec::new(),
+                    })?
+                    .coerce(ctx, target, value),
                 FieldType::List(_) => coerce_array(ctx, self, value),
                 FieldType::Union(_) => coerce_union(ctx, self, value),
                 FieldType::Optional(_) => coerce_optional(ctx, self, value),
@@ -90,7 +99,7 @@ impl TypeCoercer for FieldType {
                     let mut coerced_value = base.coerce(ctx, base, value)?;
                     let constraint_results = run_user_checks(&coerced_value.clone().into(), self)
                         .map_err(|e| ParsingError {
-                        reason: format!("Failed to evaluate constraints: {:?}", e),
+                        reason: format!("Failed to evaluate constraints: {e:?}"),
                         scope: ctx.scope.clone(),
                         causes: Vec::new(),
                     })?;
