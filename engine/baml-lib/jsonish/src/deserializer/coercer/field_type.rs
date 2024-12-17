@@ -14,8 +14,6 @@ use super::{
     ParsingError,
 };
 
-static mut count: u32 = 0;
-
 impl TypeCoercer for FieldType {
     fn coerce(
         &self,
@@ -23,14 +21,6 @@ impl TypeCoercer for FieldType {
         target: &FieldType,
         value: Option<&crate::jsonish::Value>,
     ) -> Result<BamlValueWithFlags, ParsingError> {
-        unsafe {
-            eprintln!("{self:?} -> {target:?} -> {value:?}");
-            count += 1;
-            if count == 20 {
-                panic!("FUCK");
-            }
-        }
-
         match value {
             Some(crate::jsonish::Value::AnyOf(candidates, primitive)) => {
                 log::debug!(
