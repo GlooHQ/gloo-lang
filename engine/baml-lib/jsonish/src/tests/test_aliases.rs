@@ -40,7 +40,7 @@ type C = A[]
 test_deserializer!(
     test_json_without_nested_objects,
     r#"
-type JsonValue = int | float | string | bool | JsonValue[] | map<string, JsonValue>
+type JsonValue = int | float | bool | string | null | JsonValue[] | map<string, JsonValue> 
     "#,
     r#"
     {
@@ -62,7 +62,7 @@ type JsonValue = int | float | string | bool | JsonValue[] | map<string, JsonVal
 test_deserializer!(
     test_json_with_nested_list,
     r#"
-type JsonValue = int | string | bool | JsonValue[] | map<string, JsonValue>
+type JsonValue = int | float | bool | string | null | JsonValue[] | map<string, JsonValue> 
     "#,
     r#"
     {
@@ -84,7 +84,7 @@ type JsonValue = int | string | bool | JsonValue[] | map<string, JsonValue>
 test_deserializer!(
     test_json_with_nested_object,
     r#"
-type JsonValue = int |  bool | string | JsonValue[] | map<string, JsonValue> 
+type JsonValue = int | float | bool | string | null | JsonValue[] | map<string, JsonValue> 
     "#,
     r#"
     {
@@ -114,7 +114,7 @@ type JsonValue = int |  bool | string | JsonValue[] | map<string, JsonValue>
 test_deserializer!(
     test_full_json_with_nested_objects,
     r#"
-type JsonValue = JsonValue[] | map<string, JsonValue> | int | bool | string
+type JsonValue = int | float | bool | string | null | JsonValue[] | map<string, JsonValue> 
     "#,
     r#"
     {
@@ -172,7 +172,7 @@ type JsonValue = JsonValue[] | map<string, JsonValue> | int | bool | string
 test_deserializer!(
     test_list_of_json_objects,
     r#"
-type JsonValue = int | string | bool | JsonValue[] | map<string, JsonValue>
+type JsonValue = int | float | bool | string | null | JsonValue[] | map<string, JsonValue> 
     "#,
     r#"
     [
@@ -210,7 +210,7 @@ type JsonValue = int | string | bool | JsonValue[] | map<string, JsonValue>
 test_deserializer!(
     test_nested_list,
     r#"
-type JsonValue = int | float | bool | string | JsonValue[] | map<string, JsonValue>
+type JsonValue = int | float | bool | string | null | JsonValue[] | map<string, JsonValue> 
     "#,
     r#"
     [[42.1]]
@@ -218,4 +218,36 @@ type JsonValue = int | float | bool | string | JsonValue[] | map<string, JsonVal
     FieldType::RecursiveTypeAlias("JsonValue".into()),
     // [[[[[[[[[[[[[[[[[[[[42]]]]]]]]]]]]]]]]]]]]
     [[42.1]]
+);
+
+test_deserializer!(
+    test_json_defined_with_cycles,
+    r#"
+type JsonValue = int | float | bool | string | null | JsonArray | JsonObject
+type JsonArray = JsonValue[]
+type JsonObject = map<string, JsonValue>
+    "#,
+    r#"
+    {
+        "number": 1,
+        "string": "test",
+        "bool": true,
+        "json": {
+            "number": 1,
+            "string": "test",
+            "bool": true
+        }
+    }
+    "#,
+    FieldType::RecursiveTypeAlias("JsonValue".into()),
+    {
+        "number": 1,
+        "string": "test",
+        "bool": true,
+        "json": {
+            "number": 1,
+            "string": "test",
+            "bool": true
+        }
+    }
 );

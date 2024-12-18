@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import * as vscode from 'vscode'
 import axios from 'axios'
 import glooLens from './LanguageToBamlCodeLensProvider'
@@ -193,11 +194,21 @@ export function activate(context: vscode.ExtensionContext) {
     createProxyMiddleware({
       changeOrigin: true,
       pathRewrite: (path, req) => {
-        // Ensure the URL does not end with a slash
+        console.log('reqmethod', req.method)
+
+        // Remove the path in the case of images. Since we request things differently for image GET requests, where we add the url to localhost:4500/actual-url.png
+        // to prevent caching issues with Rust reqwest.
+        // But for normal completion POST requests, we always call localhost:4500.
+        // The original url is always in baml-original-url header.
+
+        // Check for file extensions and set path to empty string.
+        if (/\.[a-zA-Z0-9]+$/.test(path) && req.method === 'GET') {
+          return ''
+        }
+        // Remove trailing slash
         if (path.endsWith('/')) {
           return path.slice(0, -1)
         }
-        console.log('pathRewrite', path, req)
         return path
       },
       router: (req) => {
@@ -209,11 +220,14 @@ export function activate(context: vscode.ExtensionContext) {
           delete req.headers['origin']
 
           // Ensure the URL does not end with a slash
+          console.log('originalUrl1', originalUrl)
           if (originalUrl.endsWith('/')) {
             originalUrl = originalUrl.slice(0, -1)
           }
           console.log('returning original url', originalUrl)
-          return new URL(originalUrl).origin
+          // return new URL(originalUrl).toString()
+
+          return originalUrl
         } else {
           console.log('baml-original-url header is missing or invalid')
           throw new Error('baml-original-url header is missing or invalid')
@@ -222,33 +236,19 @@ export function activate(context: vscode.ExtensionContext) {
       logger: console,
       on: {
         proxyReq: (proxyReq, req, res) => {
-          console.log('proxying request')
-
-          try {
-            const bamlOriginalUrl = req.headers['baml-original-url']
-            if (bamlOriginalUrl === undefined) {
-              return
-            }
-            const targetUrl = new URL(bamlOriginalUrl)
-            // proxyReq.path = targetUrl.pathname
-            // proxyReq.p
-            // It is very important that we ONLY resolve against API_KEY_INJECTION_ALLOWED
-            // by using the URL origin! (i.e. NOT using str.startsWith - the latter can still
-            // leak API keys to malicious subdomains e.g. https://api.openai.com.evil.com)
-            // const headers = API_KEY_INJECTION_ALLOWED[proxyOrigin]
-            // if (headers === undefined) {
-            //   return
-            // }
-            // for (const [header, value] of Object.entries(headers)) {
-            //   proxyReq.setHeader(header, value)
-            // }
-            // proxyReq.removeHeader('origin')
-            // proxyReq.setHeader('Origin', targetUrl.origin)
-            console.info('Proxying an LLM request (to bypass CORS)', { proxyReq, req, res })
-          } catch (err) {
-            // This is not console.warn because it's not important
-            console.log('baml-original-url is not parsable', err)
-          }
+          // const bamlOriginalUrl = req.headers['baml-original-url']
+          // if (typeof bamlOriginalUrl === 'string') {
+          //   const targetUrl = new URL(bamlOriginalUrl)
+          //   // Copy all original headers except those we want to modify/remove
+          //   Object.entries(req.headers).forEach(([key, value]) => {
+          //     if (key !== 'host' && key !== 'origin' && key !== 'baml-original-url') {
+          //       proxyReq.setHeader(key, value)
+          //     }
+          //   })
+          //   // Set the correct origin and host headers
+          //   proxyReq.setHeader('origin', targetUrl.origin)
+          //   proxyReq.setHeader('host', targetUrl.host)
+          // }
         },
         proxyRes: (proxyRes, req, res) => {
           proxyRes.headers['Access-Control-Allow-Origin'] = '*'
@@ -354,6 +354,12 @@ export function activate(context: vscode.ExtensionContext) {
     }
   })
 
+  const config = vscode.workspace.getConfiguration('editor', { languageId: 'baml' })
+  if (!config.get('defaultFormatter')) {
+    // TODO: once the BAML formatter is stable, we should auto-prompt people to set it as the default formatter.
+    // void vscode.commands.executeCommand('baml.setDefaultFormatter')
+  }
+
   // Listen for messages from the webview
 
   plugins.map(async (plugin) => {
@@ -394,7 +400,6 @@ export function deactivate(): void {
   }
   server?.close()
 }
-
 class DiagnosticCodeActionProvider implements vscode.CodeActionProvider {
   public provideCodeActions(
     document: vscode.TextDocument,

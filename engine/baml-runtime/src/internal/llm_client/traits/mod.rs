@@ -635,9 +635,10 @@ async fn to_base64_with_inferred_mime_type(
         Ok((base64, mime_type))
     } else {
         Err(anyhow::anyhow!(
-            "Failed to fetch media: {}, {}",
+            "Failed to fetch media: {} {}, {}",
             response.status(),
-            response.text().await.unwrap_or_default()
+            media_url.url,
+            response.text().await.unwrap_or_default(),
         ))
     }
 }
@@ -664,15 +665,14 @@ async fn fetch_with_proxy(
     let client = reqwest::Client::new();
 
     let request = if let Some(proxy) = proxy_url {
-        client
-            .get(format!(
-                "{}{}",
-                proxy,
-                url.parse::<url::Url>()
-                    .map_err(|e| anyhow::anyhow!("Failed to parse URL: {}", e))?
-                    .path()
-            ))
-            .header("baml-original-url", url)
+        let new_proxy_url = format!(
+            "{}{}",
+            proxy,
+            url.parse::<url::Url>()
+                .map_err(|e| anyhow::anyhow!("Failed to parse URL: {}", e))?
+                .path()
+        );
+        client.get(new_proxy_url).header("baml-original-url", url)
     } else {
         client.get(url)
     };

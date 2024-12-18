@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.70.5](https://github.com/boundaryml/baml/compare/0.70.1..0.70.5) - 2024-12-13
+
+### Bug Fixes
+
+- Remove log statements (#1230) - ([4bcdd19](https://github.com/boundaryml/baml/commit/4bcdd198f219cd016ee64cc6444dd62e69f796fb)) - hellovai
+- Fix playground proxy related issues (#1228, #1229, #1237) - ([7384ba8](https://github.com/boundaryml/baml/commit/7384ba8cb5d1f012c50ddfb2a44a142ec9654397)) ([7bb6df4](https://github.com/boundaryml/baml/commit/7bb6df40fe37753b946ceeec6b30c4d9cdcc4ce7)) ([16054f5](https://github.com/boundaryml/baml/commit/16054f5f858dcaf80f013d466ceb9354c6a160b7)) - aaronvg
+
+### DOCS
+
+- deno run instead of dpx (#1225) - ([7c64299](https://github.com/boundaryml/baml/commit/7c642992cd7d52b7e7cd718542dfa68c41b5aab3)) - Jeffrey Konowitch
+- Fix broken links (#1235) - ([859c699](https://github.com/boundaryml/baml/commit/859c6998cef7950d52cc3287f51d74106a58d89d)) - Samuel Lijin
+
+### Features
+
+- Support parsing primitive values from single-key objects (#1224) - ([935a190](https://github.com/boundaryml/baml/commit/935a190556d12077f961ce083723e7c1f816f387)) - revidious
+
+
 ## [0.70.1](https://github.com/boundaryml/baml/compare/0.70.0..0.70.1) - 2024-12-05
 
 ### Bug Fixes
