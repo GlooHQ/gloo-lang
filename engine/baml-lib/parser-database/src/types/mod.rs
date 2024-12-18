@@ -518,7 +518,11 @@ fn visit_type_alias<'db>(
                 };
 
                 let Some(top_id) = ctx.names.tops.get(&string_id) else {
-                    unreachable!("Alias name `{ident}` is not registered in the context");
+                    ctx.push_error(DatamodelError::new_validation_error(
+                        &format!("Type alias points to unknown identifier `{ident}`"),
+                        item.span().clone(),
+                    ));
+                    return;
                 };
 
                 // Add alias to the graph.

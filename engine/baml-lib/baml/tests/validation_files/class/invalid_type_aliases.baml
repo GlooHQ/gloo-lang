@@ -11,6 +11,9 @@ typpe Two = float
 // Unknown identifier.
 type Three = i
 
+// Unknown identifier in union.
+type Four = int | string | b
+
 // error: Error validating: Unexpected keyword used in assignment: typpe
 //   -->  class/invalid_type_aliases.baml:9
 //    | 
@@ -28,4 +31,10 @@ type Three = i
 //    | 
 // 11 | // Unknown identifier.
 // 12 | type Three = i
+//    | 
+// error: Error validating: Type alias points to unknown identifier `b`
+//   -->  class/invalid_type_aliases.baml:15
+//    | 
+// 14 | // Unknown identifier in union.
+// 15 | type Four = int | string | b
 //    | 
