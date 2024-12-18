@@ -9,10 +9,16 @@ use crate::deserializer::{
 };
 
 use super::{
-    array_helper, coerce_array::coerce_array, coerce_map::coerce_map,
-    coerce_optional::coerce_optional, coerce_union::coerce_union, ir_ref::IrRef, ParsingContext,
-    ParsingError,
+    array_helper,
+    coerce_array::coerce_array,
+    coerce_map::coerce_map,
+    coerce_optional::coerce_optional,
+    coerce_union::coerce_union,
+    ir_ref::{coerce_alias::coerce_alias, IrRef},
+    ParsingContext, ParsingError,
 };
+
+static mut LIMIT: usize = 0;
 
 impl TypeCoercer for FieldType {
     fn coerce(
@@ -21,6 +27,13 @@ impl TypeCoercer for FieldType {
         target: &FieldType,
         value: Option<&crate::jsonish::Value>,
     ) -> Result<BamlValueWithFlags, ParsingError> {
+        unsafe {
+            LIMIT += 1;
+            if LIMIT > 500 {
+                panic!("Stack Overflow Bruh {}", LIMIT);
+            }
+        }
+
         match value {
             Some(crate::jsonish::Value::AnyOf(candidates, primitive)) => {
                 log::debug!(
@@ -79,17 +92,7 @@ impl TypeCoercer for FieldType {
                 FieldType::Enum(e) => IrRef::Enum(e).coerce(ctx, target, value),
                 FieldType::Literal(l) => l.coerce(ctx, target, value),
                 FieldType::Class(c) => IrRef::Class(c).coerce(ctx, target, value),
-                // TODO: This doesn't look too good compared to the rest of
-                // match arms. Should we make use of the context like this here?
-                FieldType::RecursiveTypeAlias(name) => ctx
-                    .of
-                    .find_recursive_alias_target(name)
-                    .map_err(|e| ParsingError {
-                        reason: format!("Failed to find recursive alias target: {e}"),
-                        scope: ctx.scope.clone(),
-                        causes: Vec::new(),
-                    })?
-                    .coerce(ctx, target, value),
+                FieldType::RecursiveTypeAlias(name) => coerce_alias(ctx, self, value),
                 FieldType::List(_) => coerce_array(ctx, self, value),
                 FieldType::Union(_) => coerce_union(ctx, self, value),
                 FieldType::Optional(_) => coerce_optional(ctx, self, value),

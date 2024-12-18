@@ -1,3 +1,4 @@
+pub mod coerce_alias;
 mod coerce_class;
 pub mod coerce_enum;
 

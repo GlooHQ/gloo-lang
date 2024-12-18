@@ -1453,6 +1453,29 @@ class BamlAsyncClient:
       )
       return cast(Dict[Literal["key"], str], raw.cast_to(types, types))
     
+    async def JsonTypeAliasCycle(
+        self,
+        input: types.JsonValue,
+        baml_options: BamlCallOptions = {},
+    ) -> types.JsonValue:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "JsonTypeAliasCycle",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.JsonValue, raw.cast_to(types, types))
+    
     async def LiteralUnionsTest(
         self,
         input: str,
@@ -4885,6 +4908,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(Dict[Literal["key"], Optional[str]], x.cast_to(types, partial_types)),
         lambda x: cast(Dict[Literal["key"], str], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def JsonTypeAliasCycle(
+        self,
+        input: types.JsonValue,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[types.JsonValue, types.JsonValue]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "JsonTypeAliasCycle",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[types.JsonValue, types.JsonValue](
+        raw,
+        lambda x: cast(types.JsonValue, x.cast_to(types, partial_types)),
+        lambda x: cast(types.JsonValue, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

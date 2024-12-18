@@ -488,3 +488,9 @@ RecAliasOne: TypeAlias = "RecAliasTwo"
 RecAliasTwo: TypeAlias = "RecAliasThree"
 
 RecAliasThree: TypeAlias = List["RecAliasOne"]
+
+JsonValue: TypeAlias = Union[int, str, bool, float, "JsonObject", "JsonArray"]
+
+JsonObject: TypeAlias = Dict[str, "JsonValue"]
+
+JsonArray: TypeAlias = List["JsonValue"]

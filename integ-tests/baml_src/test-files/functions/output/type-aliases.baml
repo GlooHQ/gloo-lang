@@ -119,3 +119,18 @@ function RecursiveAliasCycle(input: RecAliasOne) -> RecAliasOne {
       {{ ctx.output_format }}
     "#
 }
+
+type JsonValue = int | string | bool | float | JsonObject | JsonArray
+type JsonObject = map<string, JsonValue>
+type JsonArray = JsonValue[]
+
+function JsonTypeAliasCycle(input: JsonValue) -> JsonValue {
+    client "openai/gpt-4o"
+    prompt r#"
+      Return the given input back:
+
+      {{ input }}
+
+      {{ ctx.output_format }}
+    "#
+}

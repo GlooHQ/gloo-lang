@@ -329,6 +329,31 @@ class TestAllInputs:
         res = await b.RecursiveAliasCycle([[], [], [[]]])
         assert res == [[], [], [[]]]
 
+    @pytest.mark.asyncio
+    async def test_json_type_alias_cycle(self):
+        data = {
+            "number": 1,
+            "string": "test",
+            "bool": True,
+            "list": [1, 2, 3],
+            "object": {"number": 1, "string": "test", "bool": True, "list": [1, 2, 3]},
+            "json": {
+                "number": 1,
+                "string": "test",
+                "bool": True,
+                "list": [1, 2, 3],
+                "object": {
+                    "number": 1,
+                    "string": "test",
+                    "bool": True,
+                    "list": [1, 2, 3],
+                },
+            },
+        }
+
+        res = await b.JsonTypeAliasCycle(data)
+        assert res == data
+
 
 class MyCustomClass(NamedArgsSingleClass):
     date: datetime.datetime

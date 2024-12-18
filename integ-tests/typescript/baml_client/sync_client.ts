@@ -1568,6 +1568,31 @@ export class BamlSyncClient {
     }
   }
   
+  JsonTypeAliasCycle(
+      input: JsonValue,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): JsonValue {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "JsonTypeAliasCycle",
+      {
+        "input": input
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as JsonValue
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   LiteralUnionsTest(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }

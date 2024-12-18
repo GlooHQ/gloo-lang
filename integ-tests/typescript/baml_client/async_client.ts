@@ -1568,6 +1568,31 @@ export class BamlAsyncClient {
     }
   }
   
+  async JsonTypeAliasCycle(
+      input: JsonValue,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<JsonValue> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "JsonTypeAliasCycle",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as JsonValue
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   async LiteralUnionsTest(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -5298,6 +5323,39 @@ class BamlStreamClient {
         raw,
         (a): a is RecursivePartialNull<Partial<Record<"key", string>>> => a,
         (a): a is Partial<Record<"key", string>> => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  JsonTypeAliasCycle(
+      input: JsonValue,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<JsonValue>, JsonValue> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "JsonTypeAliasCycle",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<JsonValue>, JsonValue>(
+        raw,
+        (a): a is RecursivePartialNull<JsonValue> => a,
+        (a): a is JsonValue => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )

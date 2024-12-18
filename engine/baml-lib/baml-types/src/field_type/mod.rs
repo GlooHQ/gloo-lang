@@ -199,12 +199,6 @@ impl FieldType {
             }
             (FieldType::Map(_, _), _) => false,
 
-            // TODO: is it necessary to check if the alias is part of the same
-            // cycle?
-            (FieldType::RecursiveTypeAlias(_), _) | (_, FieldType::RecursiveTypeAlias(_)) => {
-                self == other
-            }
-
             (
                 FieldType::Constrained {
                     base: self_base,
@@ -252,6 +246,7 @@ impl FieldType {
             (FieldType::Primitive(_), _) => false,
             (FieldType::Enum(_), _) => false,
             (FieldType::Class(_), _) => false,
+            (FieldType::RecursiveTypeAlias(_), _) => false,
         }
     }
 }
