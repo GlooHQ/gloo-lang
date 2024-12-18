@@ -573,8 +573,14 @@ impl<'ir> ToTypeReferenceInTypeDefinition<'ir> for FieldType {
                 }),
             },
             FieldType::Map(key, value) => {
-                if !matches!(**key, FieldType::Primitive(TypeValue::String)) {
-                    anyhow::bail!("BAML<->OpenAPI only supports string keys in maps")
+                if !matches!(
+                    **key,
+                    FieldType::Primitive(TypeValue::String)
+                        | FieldType::Enum(_)
+                        | FieldType::Literal(LiteralValue::String(_))
+                        | FieldType::Union(_)
+                ) {
+                    anyhow::bail!(format!("BAML<->OpenAPI only supports strings, enums and literal strings as map keys but got {key}"))
                 }
                 TypeSpecWithMeta {
                     meta: TypeMetadata {
