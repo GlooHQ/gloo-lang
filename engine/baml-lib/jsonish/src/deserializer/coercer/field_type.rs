@@ -27,13 +27,6 @@ impl TypeCoercer for FieldType {
         target: &FieldType,
         value: Option<&crate::jsonish::Value>,
     ) -> Result<BamlValueWithFlags, ParsingError> {
-        unsafe {
-            LIMIT += 1;
-            if LIMIT > 500 {
-                panic!("Stack Overflow Bruh {}", LIMIT);
-            }
-        }
-
         match value {
             Some(crate::jsonish::Value::AnyOf(candidates, primitive)) => {
                 log::debug!(
