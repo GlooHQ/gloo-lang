@@ -353,6 +353,7 @@ class TestAllInputs:
 
         res = await b.JsonTypeAliasCycle(data)
         assert res == data
+        assert res["json"]["object"]["list"] == [1, 2, 3]
 
 
 class MyCustomClass(NamedArgsSingleClass):

@@ -232,6 +232,7 @@ describe('Integ tests', () => {
       }
       const res = await b.JsonTypeAliasCycle(data)
       expect(res).toEqual(data)
+      expect(res.json.object.list).toEqual([1, 2, 3])
     })
   })
 
