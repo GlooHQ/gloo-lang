@@ -276,6 +276,13 @@ pub(super) struct Types {
     /// Merge-Find Set or something like that.
     pub(super) finite_recursive_cycles: Vec<Vec<ast::TypeExpId>>,
 
+    /// Contains recursive type aliases.
+    ///
+    /// Recursive type aliases are a little bit trickier than recursive classes
+    /// because the termination condition is tied to lists and maps only. Nulls
+    /// and unions won't allow type alias cycles to be resolved.
+    pub(super) structural_recursive_alias_cycles: Vec<Vec<ast::TypeAliasId>>,
+
     pub(super) function: HashMap<ast::ValExpId, FunctionType>,
 
     pub(super) client_properties: HashMap<ast::ValExpId, ClientProperties>,
@@ -409,8 +416,22 @@ pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldT
                     let mut resolved = match db.types.resolved_type_aliases.get(alias_id) {
                         // Check if we can avoid deeper recursion.
                         Some(already_resolved) => already_resolved.to_owned(),
-                        // No luck, recurse.
-                        None => resolve_type_alias(&db.ast[*alias_id].value, db),
+
+                        // No luck, check if the type is resolvable.
+                        None => {
+                            // TODO: O(n)
+                            if db
+                                .structural_recursive_alias_cycles()
+                                .iter()
+                                .any(|cycle| cycle.contains(alias_id))
+                            {
+                                // Not resolvable, part of a cycle.
+                                field_type.to_owned()
+                            } else {
+                                // Maybe resolvable, recurse deeper.
+                                resolve_type_alias(&db.ast[*alias_id].value, db)
+                            }
+                        }
                     };
 
                     // Sync arity. Basically stuff like:

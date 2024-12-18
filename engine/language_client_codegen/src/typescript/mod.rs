@@ -267,7 +267,7 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 }
             }
             FieldType::Class(name) => name.to_string(),
-            FieldType::Alias { resolution, .. } => resolution.to_type_ref(ir),
+            FieldType::RecursiveTypeAlias(name) => name.to_owned(),
             FieldType::List(inner) => match inner.as_ref() {
                 FieldType::Union(_) | FieldType::Optional(_) => {
                     format!("({})[]", inner.to_type_ref(ir))

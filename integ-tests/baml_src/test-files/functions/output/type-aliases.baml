@@ -78,3 +78,59 @@ function AliasWithMultipleAttrs(money: MultipleAttrs) -> MultipleAttrs {
       {{ ctx.output_format }}
     "#
 }
+
+type RecursiveMapAlias = map<string, RecursiveMapAlias>
+
+function SimpleRecursiveMapAlias(input: RecursiveMapAlias) -> RecursiveMapAlias {
+    client "openai/gpt-4o"
+    prompt r#"
+      Return the given value:
+
+      {{ input }}
+
+      {{ ctx.output_format }}
+    "#
+}
+
+type RecursiveListAlias = RecursiveListAlias[]
+
+function SimpleRecursiveListAlias(input: RecursiveListAlias) -> RecursiveListAlias {
+    client "openai/gpt-4o"
+    prompt r#"
+      Return the given JSON array:
+
+      {{ input }}
+
+      {{ ctx.output_format }}
+    "#
+}
+
+type RecAliasOne = RecAliasTwo
+type RecAliasTwo = RecAliasThree
+type RecAliasThree = RecAliasOne[]
+
+function RecursiveAliasCycle(input: RecAliasOne) -> RecAliasOne {
+    client "openai/gpt-4o"
+    prompt r#"
+      Return the given JSON array:
+
+      {{ input }}
+
+      {{ ctx.output_format }}
+    "#
+}
+
+type JsonValue = int | string | bool | float | JsonObject | JsonArray
+type JsonObject = map<string, JsonValue>
+type JsonArray = JsonValue[]
+
+function JsonTypeAliasCycle(input: JsonValue) -> JsonValue {
+    client "openai/gpt-4o"
+    prompt r#"
+      Return the given input back:
+
+      {{ input }}
+
+      {{ ctx.output_format }}
+    "#
+}

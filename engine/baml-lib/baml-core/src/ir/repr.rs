@@ -35,6 +35,9 @@ pub struct IntermediateRepr {
     /// Strongly connected components of the dependency graph (finite cycles).
     finite_recursive_cycles: Vec<IndexSet<String>>,
 
+    /// Type alias cycles introduced by lists and maps.
+    structural_recursive_alias_cycles: Vec<IndexMap<String, FieldType>>,
+
     configuration: Configuration,
 }
 
@@ -53,6 +56,7 @@ impl IntermediateRepr {
             enums: vec![],
             classes: vec![],
             finite_recursive_cycles: vec![],
+            structural_recursive_alias_cycles: vec![],
             functions: vec![],
             clients: vec![],
             retry_policies: vec![],
@@ -98,12 +102,24 @@ impl IntermediateRepr {
         &self.finite_recursive_cycles
     }
 
+    pub fn structural_recursive_alias_cycles(&self) -> &[IndexMap<String, FieldType>] {
+        &self.structural_recursive_alias_cycles
+    }
+
     pub fn walk_enums(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<Enum>>> {
         self.enums.iter().map(|e| Walker { db: self, item: e })
     }
 
     pub fn walk_classes(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<Class>>> {
         self.classes.iter().map(|e| Walker { db: self, item: e })
+    }
+
+    // TODO: Exact size Iterator + Node<>?
+    pub fn walk_alias_cycles(&self) -> impl Iterator<Item = Walker<'_, (&String, &FieldType)>> {
+        self.structural_recursive_alias_cycles
+            .iter()
+            .flatten()
+            .map(|e| Walker { db: self, item: e })
     }
 
     pub fn function_names(&self) -> impl ExactSizeIterator<Item = &str> {
@@ -168,6 +184,18 @@ impl IntermediateRepr {
                         .collect()
                 })
                 .collect(),
+            structural_recursive_alias_cycles: {
+                let mut recursive_aliases = vec![];
+                for cycle in db.structural_recursive_alias_cycles() {
+                    let mut component = IndexMap::new();
+                    for id in cycle {
+                        let alias = &db.ast()[*id];
+                        component.insert(alias.name().to_string(), alias.value.repr(db)?);
+                    }
+                    recursive_aliases.push(component);
+                }
+                recursive_aliases
+            },
             functions: db
                 .walk_functions()
                 .map(|e| e.node(db))
@@ -419,11 +447,18 @@ impl WithRepr<FieldType> for ast::FieldType {
                             _ => base_type,
                         }
                     }
-                    Some(TypeWalker::TypeAlias(alias_walker)) => FieldType::Alias {
-                        name: alias_walker.name().to_owned(),
-                        target: Box::new(alias_walker.target().repr(db)?),
-                        resolution: Box::new(alias_walker.resolved().repr(db)?),
-                    },
+                    Some(TypeWalker::TypeAlias(alias_walker)) => {
+                        if db
+                            .structural_recursive_alias_cycles()
+                            .iter()
+                            .any(|cycle| cycle.contains(&alias_walker.id))
+                        {
+                            FieldType::RecursiveTypeAlias(alias_walker.name().to_string())
+                        } else {
+                            alias_walker.resolved().to_owned().repr(db)?
+                        }
+                    }
+
                     None => return Err(anyhow!("Field type uses unresolvable local identifier")),
                 },
                 arity,
@@ -1224,11 +1259,7 @@ mod tests {
         let class = ir.find_class("Test").unwrap();
         let alias = class.find_field("field").unwrap();
 
-        let FieldType::Alias { resolution, .. } = alias.r#type() else {
-            panic!("expected alias type, found {:?}", alias.r#type());
-        };
-
-        assert_eq!(**resolution, FieldType::Primitive(TypeValue::Int));
+        assert_eq!(*alias.r#type(), FieldType::Primitive(TypeValue::Int));
     }
 
     #[test]
@@ -1249,12 +1280,11 @@ mod tests {
         let class = ir.find_class("Test").unwrap();
         let alias = class.find_field("field").unwrap();
 
-        let FieldType::Alias { resolution, .. } = alias.r#type() else {
-            panic!("expected alias type, found {:?}", alias.r#type());
-        };
-
-        let FieldType::Constrained { base, constraints } = &**resolution else {
-            panic!("expected resolved constrained type, found {:?}", resolution);
+        let FieldType::Constrained { base, constraints } = alias.r#type() else {
+            panic!(
+                "expected resolved constrained type, found {:?}",
+                alias.r#type()
+            );
         };
 
         assert_eq!(constraints.len(), 3);

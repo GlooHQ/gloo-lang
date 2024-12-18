@@ -201,7 +201,7 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 }
             }
             FieldType::Literal(value) => to_python_literal(value),
-            FieldType::Alias { resolution, .. } => resolution.to_type_ref(ir, _with_checked),
+            FieldType::RecursiveTypeAlias(name) => format!("types.{name}"),
             FieldType::Class(name) => format!("types.{name}"),
             FieldType::List(inner) => format!("List[{}]", inner.to_type_ref(ir, _with_checked)),
             FieldType::Map(key, value) => {
@@ -256,7 +256,7 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 }
             }
             FieldType::Class(name) => format!("partial_types.{name}"),
-            FieldType::Alias { resolution, .. } => resolution.to_partial_type_ref(ir, with_checked),
+            FieldType::RecursiveTypeAlias(name) => format!("types.{name}"),
             FieldType::Literal(value) => to_python_literal(value),
             FieldType::List(inner) => {
                 format!("List[{}]", inner.to_partial_type_ref(ir, with_checked))

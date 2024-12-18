@@ -191,6 +191,14 @@ impl TopId {
         }
     }
 
+    /// Try to interpret the top as a type alias.
+    pub fn as_type_alias_id(self) -> Option<TypeAliasId> {
+        match self {
+            TopId::TypeAlias(id) => Some(id),
+            _ => None,
+        }
+    }
+
     /// Try to interpret the top as a function.
     pub fn as_function_id(self) -> Option<ValExpId> {
         match self {

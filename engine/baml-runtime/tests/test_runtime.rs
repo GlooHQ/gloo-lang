@@ -552,4 +552,52 @@ test RunFoo2Test {
 
         Ok(())
     }
+
+    #[test]
+    fn test_recursive_alias_cycle() -> anyhow::Result<()> {
+        let runtime = make_test_runtime(
+            r##"
+type RecAliasOne = RecAliasTwo
+type RecAliasTwo = RecAliasThree
+type RecAliasThree = RecAliasOne[]
+
+function RecursiveAliasCycle(input: RecAliasOne) -> RecAliasOne {
+    client "openai/gpt-4o"
+    prompt r#"
+      Return the given value:
+
+      {{ input }}
+
+      {{ ctx.output_format }}
+    "#
+}
+
+test RecursiveAliasCycle {
+  functions [RecursiveAliasCycle]
+  args {
+    input [
+      []
+      []
+      [[], []]
+    ]
+  }
+}
+        "##,
+        )?;
+
+        let ctx = runtime
+            .create_ctx_manager(BamlValue::String("test".to_string()), None)
+            .create_ctx_with_default();
+
+        let function_name = "RecursiveAliasCycle";
+        let test_name = "RecursiveAliasCycle";
+        let params = runtime.get_test_params(function_name, test_name, &ctx, true)?;
+        let render_prompt_future =
+            runtime
+                .internal()
+                .render_prompt(function_name, &ctx, &params, None);
+        let (prompt, scope, _) = runtime.async_runtime.block_on(render_prompt_future)?;
+
+        Ok(())
+    }
 }

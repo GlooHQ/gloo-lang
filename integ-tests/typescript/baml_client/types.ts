@@ -630,3 +630,19 @@ export interface WithReasoning {
   reasoning: string
   
 }
+
+type RecursiveMapAlias = Record<string, RecursiveMapAlias>
+
+type RecursiveListAlias = RecursiveListAlias[]
+
+type RecAliasOne = RecAliasTwo
+
+type RecAliasTwo = RecAliasThree
+
+type RecAliasThree = RecAliasOne[]
+
+type JsonValue = number | string | boolean | number | JsonObject | JsonArray
+
+type JsonObject = Record<string, JsonValue>
+
+type JsonArray = JsonValue[]

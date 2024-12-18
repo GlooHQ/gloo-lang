@@ -130,6 +130,11 @@ impl ParserDatabase {
     }
 
     fn finalize_dependencies(&mut self, diag: &mut Diagnostics) {
+        // Cycles left here after cycle validation are allowed. Basically lists
+        // and maps can introduce cycles.
+        self.types.structural_recursive_alias_cycles =
+            Tarjan::components(&self.types.type_alias_dependencies);
+
         // Resolve type aliases.
         // Cycles are already validated so this should not stack overflow and
         // it should find the final type.
@@ -243,17 +248,21 @@ impl ParserDatabase {
 
                 // For aliases just get the resolved identifiers and
                 // push them into the stack. If we find resolved classes we'll
-                // add their dependencies as well. Note that this is not
-                // "recursive" per se because type aliases can never "resolve"
-                // to other type aliases.
+                // add their dependencies as well.
                 Some(TypeWalker::TypeAlias(walker)) => {
-                    stack.extend(walker.resolved().flat_idns().iter().map(|ident| {
+                    stack.extend(walker.resolved().flat_idns().iter().filter_map(|ident| {
                         // Add the resolved name itself to the deps.
                         collected_deps.insert(ident.name().to_owned());
-                        // Push the resolved name into the stack in case
-                        // it's a class, we'll have to add its deps as
-                        // well.
-                        ident.name()
+                        // If the type is an alias then don't recurse.
+                        if self
+                            .structural_recursive_alias_cycles()
+                            .iter()
+                            .any(|cycle| cycle.contains(&walker.id))
+                        {
+                            None
+                        } else {
+                            Some(ident.name())
+                        }
                     }))
                 }
 
@@ -332,6 +341,26 @@ mod test {
             db.finite_recursive_cycles()
                 .iter()
                 .map(|ids| Vec::from_iter(ids.iter().map(|id| db.ast()[*id].name.to_string())))
+                .collect::<Vec<_>>(),
+            expected
+                .iter()
+                .map(|cycle| Vec::from_iter(cycle.iter().map(ToString::to_string)))
+                .collect::<Vec<_>>()
+        );
+
+        Ok(())
+    }
+
+    fn assert_structural_alias_cycles(
+        baml: &'static str,
+        expected: &[&[&str]],
+    ) -> Result<(), Diagnostics> {
+        let db = parse(baml)?;
+
+        assert_eq!(
+            db.structural_recursive_alias_cycles()
+                .iter()
+                .map(|ids| Vec::from_iter(ids.iter().map(|id| db.ast()[*id].name().to_string())))
                 .collect::<Vec<_>>(),
             expected
                 .iter()
@@ -602,6 +631,43 @@ mod test {
     }
 
     #[test]
+    fn find_basic_map_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles(
+            "type RecursiveMap = map<string, RecursiveMap>",
+            &[&["RecursiveMap"]],
+        )
+    }
+
+    #[test]
+    fn find_basic_list_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles("type A = A[]", &[&["A"]])
+    }
+
+    #[test]
+    fn find_long_list_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles(
+            r#"
+                type A = B
+                type B = C
+                type C = A[]
+            "#,
+            &[&["A", "B", "C"]],
+        )
+    }
+
+    #[test]
+    fn find_intricate_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles(
+            r#"
+                type JsonValue = string | int | float | bool | null | JsonArray | JsonObject
+                type JsonArray = JsonValue[]
+                type JsonObject = map<string, JsonValue>
+            "#,
+            &[&["JsonValue", "JsonArray", "JsonObject"]],
+        )
+    }
+
+    #[test]
     fn merged_alias_attrs() -> Result<(), Diagnostics> {
         #[rustfmt::skip]
         let db = parse(r#"
@@ -612,6 +678,32 @@ mod test {
         let resolved = db.resolved_type_alias_by_name("Two").unwrap();
 
         assert_eq!(resolved.attributes().len(), 2);
+
+        Ok(())
+    }
+
+    // Resolution of aliases here at the parser database level doesn't matter
+    // as much because there's no notion of "classes" or "enums", it's just
+    // "symbols". But the resolve type function should not stack overflow
+    // anyway.
+    #[test]
+    fn resolve_simple_structural_recursive_alias() -> Result<(), Diagnostics> {
+        #[rustfmt::skip]
+        let db = parse(r#"
+            type A = A[]
+        "#)?;
+
+        let resolved = db.resolved_type_alias_by_name("A").unwrap();
+
+        let FieldType::List(_, inner, ..) = resolved else {
+            panic!("expected a list type, got {resolved:?}");
+        };
+
+        let FieldType::Symbol(_, ident, _) = &**inner else {
+            panic!("expected a symbol type, got {inner:?}");
+        };
+
+        assert_eq!(ident.name(), "A");
 
         Ok(())
     }

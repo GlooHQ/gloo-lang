@@ -1568,6 +1568,31 @@ export class BamlAsyncClient {
     }
   }
   
+  async JsonTypeAliasCycle(
+      input: JsonValue,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<JsonValue> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "JsonTypeAliasCycle",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as JsonValue
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   async LiteralUnionsTest(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -2018,6 +2043,31 @@ export class BamlAsyncClient {
     }
   }
   
+  async RecursiveAliasCycle(
+      input: RecAliasOne,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<RecAliasOne> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "RecursiveAliasCycle",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as RecAliasOne
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   async RecursiveClassWithAliasIndirection(
       cls: NodeWithAliasIndirection,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -2133,6 +2183,56 @@ export class BamlAsyncClient {
         __baml_options__?.clientRegistry,
       )
       return raw.parsed() as Schema
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async SimpleRecursiveListAlias(
+      input: RecursiveListAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<RecursiveListAlias> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "SimpleRecursiveListAlias",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as RecursiveListAlias
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async SimpleRecursiveMapAlias(
+      input: RecursiveMapAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<RecursiveMapAlias> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "SimpleRecursiveMapAlias",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as RecursiveMapAlias
     } catch (error: any) {
       const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
@@ -5237,6 +5337,39 @@ class BamlStreamClient {
     }
   }
   
+  JsonTypeAliasCycle(
+      input: JsonValue,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<JsonValue>, JsonValue> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "JsonTypeAliasCycle",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<JsonValue>, JsonValue>(
+        raw,
+        (a): a is RecursivePartialNull<JsonValue> => a,
+        (a): a is JsonValue => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
   LiteralUnionsTest(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -5831,6 +5964,39 @@ class BamlStreamClient {
     }
   }
   
+  RecursiveAliasCycle(
+      input: RecAliasOne,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<RecAliasOne>, RecAliasOne> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "RecursiveAliasCycle",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<RecAliasOne>, RecAliasOne>(
+        raw,
+        (a): a is RecursivePartialNull<RecAliasOne> => a,
+        (a): a is RecAliasOne => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
   RecursiveClassWithAliasIndirection(
       cls: NodeWithAliasIndirection,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -5982,6 +6148,72 @@ class BamlStreamClient {
         raw,
         (a): a is RecursivePartialNull<Schema> => a,
         (a): a is Schema => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  SimpleRecursiveListAlias(
+      input: RecursiveListAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<RecursiveListAlias>, RecursiveListAlias> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "SimpleRecursiveListAlias",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<RecursiveListAlias>, RecursiveListAlias>(
+        raw,
+        (a): a is RecursivePartialNull<RecursiveListAlias> => a,
+        (a): a is RecursiveListAlias => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  SimpleRecursiveMapAlias(
+      input: RecursiveMapAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<RecursiveMapAlias>, RecursiveMapAlias> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "SimpleRecursiveMapAlias",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<RecursiveMapAlias>, RecursiveMapAlias>(
+        raw,
+        (a): a is RecursivePartialNull<RecursiveMapAlias> => a,
+        (a): a is RecursiveMapAlias => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )

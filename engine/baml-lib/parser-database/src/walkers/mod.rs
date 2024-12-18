@@ -22,7 +22,9 @@ pub use configuration::*;
 use either::Either;
 pub use field::*;
 pub use function::FunctionWalker;
-use internal_baml_schema_ast::ast::{FieldType, Identifier, TopId, TypeExpId, WithName};
+use internal_baml_schema_ast::ast::{
+    FieldType, Identifier, TopId, TypeAliasId, TypeExpId, WithName,
+};
 pub use r#class::*;
 pub use r#enum::*;
 pub use template_string::TemplateStringWalker;
@@ -142,6 +144,14 @@ impl<'db> crate::ParserDatabase {
         &self.types.finite_recursive_cycles
     }
 
+    /// Set of all aliases that are part of a structural cycle.
+    ///
+    /// A structural cycle is created through a map or list, which introduce one
+    /// level of indirection.
+    pub fn structural_recursive_alias_cycles(&self) -> &[Vec<TypeAliasId>] {
+        &self.types.structural_recursive_alias_cycles
+    }
+
     /// Returns the resolved aliases map.
     pub fn resolved_type_alias_by_name(&self, alias: &str) -> Option<&FieldType> {
         match self.find_type_by_str(alias) {
@@ -203,6 +213,17 @@ impl<'db> crate::ParserDatabase {
         self.ast()
             .iter_tops()
             .filter_map(|(top_id, _)| top_id.as_class_id())
+            .map(move |top_id| Walker {
+                db: self,
+                id: top_id,
+            })
+    }
+
+    /// Walk all the type aliases in the AST.
+    pub fn walk_type_aliases(&self) -> impl Iterator<Item = TypeAliasWalker<'_>> {
+        self.ast()
+            .iter_tops()
+            .filter_map(|(top_id, _)| top_id.as_type_alias_id())
             .map(move |top_id| Walker {
                 db: self,
                 id: top_id,
