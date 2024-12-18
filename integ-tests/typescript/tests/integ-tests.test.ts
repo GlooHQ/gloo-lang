@@ -181,6 +181,58 @@ describe('Integ tests', () => {
       const res = await b.RecursiveClassWithAliasIndirection({ value: 1, next: { value: 2, next: null } })
       expect(res).toEqual({ value: 1, next: { value: 2, next: null } })
     })
+
+    it('merge alias attributes', async () => {
+      const res = await b.MergeAliasAttributes(123)
+      expect(res.amount.value).toEqual(123)
+      expect(res.amount.checks['gt_ten'].status).toEqual('succeeded')
+    })
+
+    it('return alias with merged attrs', async () => {
+      const res = await b.ReturnAliasWithMergedAttributes(123)
+      expect(res.value).toEqual(123)
+      expect(res.checks['gt_ten'].status).toEqual('succeeded')
+    })
+
+    it('alias with multiple attrs', async () => {
+      const res = await b.AliasWithMultipleAttrs(123)
+      expect(res.value).toEqual(123)
+      expect(res.checks['gt_ten'].status).toEqual('succeeded')
+    })
+
+    it('simple recursive map alias', async () => {
+      const res = await b.SimpleRecursiveMapAlias({ one: { two: { three: {} } } })
+      expect(res).toEqual({ one: { two: { three: {} } } })
+    })
+
+    it('simple recursive map alias', async () => {
+      const res = await b.SimpleRecursiveListAlias([[], [], [[]]])
+      expect(res).toEqual([[], [], [[]]])
+    })
+
+    it('recursive alias cycles', async () => {
+      const res = await b.RecursiveAliasCycle([[], [], [[]]])
+      expect(res).toEqual([[], [], [[]]])
+    })
+
+    it('json type alias cycle', async () => {
+      const data = {
+        number: 1,
+        string: 'test',
+        bool: true,
+        list: [1, 2, 3],
+        object: { number: 1, string: 'test', bool: true, list: [1, 2, 3] },
+        json: {
+          number: 1,
+          string: 'test',
+          bool: true,
+          list: [1, 2, 3],
+          object: { number: 1, string: 'test', bool: true, list: [1, 2, 3] },
+        },
+      }
+      const res = await b.JsonTypeAliasCycle(data)
+      expect(res).toEqual(data)
+    })
   })
 
   it('should work for all outputs', async () => {
