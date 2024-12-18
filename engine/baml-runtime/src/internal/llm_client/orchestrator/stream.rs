@@ -59,11 +59,14 @@ where
         };
 
         let (system_start, instant_start) = (web_time::SystemTime::now(), web_time::Instant::now());
+        log::info!("Stream start");
         let stream_res = node.stream(ctx, &prompt).await;
+        log::info!("Stream  res");
         let final_response = match stream_res {
             Ok(response) => response
                 .map(|stream_part| {
                     if let Some(on_event) = on_event.as_ref() {
+                        log::info!("stream_part_good2: {:#?}", stream_part);
                         if let LLMResponse::Success(s) = &stream_part {
                             let parsed = partial_parse_fn(&s.content);
                             let (parsed, response_value) = match parsed {
@@ -78,6 +81,8 @@ where
                                 parsed,
                                 response_value,
                             ));
+                        } else {
+                            println!("stream_part: {:#?}", stream_part);
                         }
                     }
                     stream_part
@@ -96,7 +101,10 @@ where
                         code: crate::internal::llm_client::ErrorCode::from_u16(2),
                     })
                 }),
-            Err(response) => response,
+            Err(response) => {
+                log::error!("Stream error");
+                response
+            }
         };
 
         let parsed_response = match &final_response {
@@ -105,17 +113,22 @@ where
                     .finish_reason_filter()
                     .is_allowed(s.metadata.finish_reason.as_ref())
                 {
-                    Some(Err(anyhow::anyhow!(crate::errors::ExposedError::FinishReasonError {
-                        prompt: s.prompt.to_string(),
-                        raw_output: s.content.clone(),
-                        message: "Finish reason not allowed".to_string(),
-                        finish_reason: s.metadata.finish_reason.clone(),
-                    })))
+                    Some(Err(anyhow::anyhow!(
+                        crate::errors::ExposedError::FinishReasonError {
+                            prompt: s.prompt.to_string(),
+                            raw_output: s.content.clone(),
+                            message: "Finish reason not allowed".to_string(),
+                            finish_reason: s.metadata.finish_reason.clone(),
+                        }
+                    )))
                 } else {
                     Some(parse_fn(&s.content))
                 }
-            },
+            }
             _ => None,
+            // LLMResponse::LLMFailure(e) => Some(e),
+            // LLMResponse::InternalFailure(e) => Some(e),
+            // LLMResponse::UserFailure(e) => Some(e),
         };
         let (parsed_response, response_value) = match parsed_response {
             Some(Ok(v)) => (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v)))),

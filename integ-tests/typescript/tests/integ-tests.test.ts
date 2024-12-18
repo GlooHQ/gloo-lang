@@ -370,16 +370,30 @@ describe('Integ tests', () => {
     }).rejects.toThrow('BamlClientError')
   })
 
-  // it('should fail if azure is not configured streaming', async () => {
-  //   const stream = b.stream.TestAzureFailure('Donkey Kong')
-  //   await expect(async () => {
-  //     // this should throw an error, not only when we try to get the final response
-  //     for await (const msg of stream) {
-  //       console.log('msg', msg)
-  //     }
-  //     // await stream.getFinalResponse()
-  //   }).rejects.toThrow('BamlClientError')
-  // })
+  it('should work with azure images', async () => {
+    const res = await b.TestAzureImage(Image.fromUrl('https://upload.wikimedia.org/wikipedia/en/4/4d/Shrek_%28character%29.png'))
+    console.log('res', res)
+    expect(res).toContain('green')
+  })
+
+  it('should fail if azure is not configured streaming', async () => {
+    await expect(async () => {
+      try {
+        const stream = b.stream.TestAzureFailure('Donkey Kong')
+        // this should throw an error, not only when we try to get the final response
+        for await (const msg of stream) {
+        console.log('msg', msg)
+        }
+      } catch (e) {
+        console.log('errorrrrrr', e)
+        console.log("soeifjseof")
+        throw e
+      }
+      // await stream.getFinalResponse()
+    }).rejects.toThrow('BamlClientError')
+  })
+  // TODO test azure failing but then retrying again and succeeding.
+  
 
   it('should support vertex', async () => {
     const res = await b.TestVertex('Donkey Kong')

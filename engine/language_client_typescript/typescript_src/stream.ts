@@ -14,16 +14,23 @@ export class BamlStream<PartialOutputType, FinalOutputType> {
 
   private async driveToCompletion(): Promise<FunctionResult> {
     try {
-      this.ffiStream.onEvent((err, data) => {
+      this.ffiStream.onEvent((err: any, data: any) => {
         if (err) {
-          return
+          console.log('errorrr', err)
+          this.eventQueue.push(err)
         } else {
+          console.log('data', data)
           this.eventQueue.push(data)
         }
       })
-      const retval = await this.ffiStream.done(this.ctxManager)
-
-      return retval
+      try {
+        const retval = await this.ffiStream.done(this.ctxManager)
+        console.log('retval', retval)
+        return retval
+      } catch (err) {
+        this.eventQueue.push(err)
+        throw err
+      }
     } finally {
       this.eventQueue.push(null)
     }
@@ -38,7 +45,7 @@ export class BamlStream<PartialOutputType, FinalOutputType> {
   }
 
   async *[Symbol.asyncIterator](): AsyncIterableIterator<PartialOutputType> {
-    this.driveToCompletionInBg()
+    const backgroundTask = this.driveToCompletionInBg()
 
     while (true) {
       const event = this.eventQueue.shift()
@@ -52,10 +59,23 @@ export class BamlStream<PartialOutputType, FinalOutputType> {
         break
       }
 
-      if (event.isOk()) {
+      console.log('event', event)
+
+      if (event instanceof Error) {
+        throw event
+      } else if (event.code === "GenericFailure") {
+        console.log('event code', event.code)
+        console.log('event', event)
+        console.log('event indiex 0', event[0])
+        throw new Error(event[0])
+      } else if (event.isOk()) {
+        // event.
         yield this.partialCoerce(event.parsed())
+      } else {
+        throw new Error(event.error())
       }
     }
+    // await backgroundTask
   }
 
   async getFinalResponse(): Promise<FinalOutputType> {

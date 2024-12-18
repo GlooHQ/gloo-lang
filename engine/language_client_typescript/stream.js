@@ -18,14 +18,23 @@ class BamlStream {
         try {
             this.ffiStream.onEvent((err, data) => {
                 if (err) {
-                    return;
+                    console.log('errorrr', err);
+                    this.eventQueue.push(err);
                 }
                 else {
+                    console.log('data', data);
                     this.eventQueue.push(data);
                 }
             });
-            const retval = await this.ffiStream.done(this.ctxManager);
-            return retval;
+            try {
+                const retval = await this.ffiStream.done(this.ctxManager);
+                console.log('retval', retval);
+                return retval;
+            }
+            catch (err) {
+                this.eventQueue.push(err);
+                throw err;
+            }
         }
         finally {
             this.eventQueue.push(null);
@@ -38,7 +47,7 @@ class BamlStream {
         return this.task;
     }
     async *[Symbol.asyncIterator]() {
-        this.driveToCompletionInBg();
+        const backgroundTask = this.driveToCompletionInBg();
         while (true) {
             const event = this.eventQueue.shift();
             if (event === undefined) {
@@ -48,10 +57,24 @@ class BamlStream {
             if (event === null) {
                 break;
             }
-            if (event.isOk()) {
+            console.log('event', event);
+            if (event instanceof Error) {
+                throw event;
+            }
+            else if (event.code === "GenericFailure") {
+                console.log('event code', event.code);
+                console.log('event', event);
+                console.log('event indiex 0', event[0]);
+                throw new Error(event[0]);
+            }
+            else if (event.isOk()) {
                 yield this.partialCoerce(event.parsed());
             }
+            else {
+                throw new Error(event.error());
+            }
         }
+        // await backgroundTask
     }
     async getFinalResponse() {
         const final = await this.driveToCompletionInBg();

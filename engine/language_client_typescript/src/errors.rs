@@ -40,27 +40,30 @@ pub fn from_anyhow_error(err: anyhow::Error) -> napi::Error {
                 napi::Status::GenericFailure,
                 format!("BamlError: Unexpected error from BAML: {}", err),
             ),
-            LLMResponse::LLMFailure(failed) => match &failed.code {
-                baml_runtime::internal::llm_client::ErrorCode::Other(2) => napi::Error::new(
-                    napi::Status::GenericFailure,
-                    format!(
-                        "BamlError: BamlClientError: Something went wrong with the LLM client: {}",
-                        failed.message
-                    ),
-                ),
-                baml_runtime::internal::llm_client::ErrorCode::Other(_)
-                | baml_runtime::internal::llm_client::ErrorCode::InvalidAuthentication
-                | baml_runtime::internal::llm_client::ErrorCode::NotSupported
-                | baml_runtime::internal::llm_client::ErrorCode::RateLimited
-                | baml_runtime::internal::llm_client::ErrorCode::ServerError
-                | baml_runtime::internal::llm_client::ErrorCode::ServiceUnavailable
-                | baml_runtime::internal::llm_client::ErrorCode::UnsupportedResponse(_) => {
-                    napi::Error::new(
+            LLMResponse::LLMFailure(failed) => {
+                log::info!("LLM failure anyhow: {:?}", failed);
+                match &failed.code {
+                    baml_runtime::internal::llm_client::ErrorCode::Other(2) => napi::Error::new(
                         napi::Status::GenericFailure,
-                        format!("BamlError: BamlClientError: BamlClientHttpError: {}", err),
-                    )
+                        format!(
+                            "BamlError: BamlClientError: Something went wrong with the LLM client: {}",
+                            failed.message
+                        ),
+                    ),
+                    baml_runtime::internal::llm_client::ErrorCode::Other(_)
+                    | baml_runtime::internal::llm_client::ErrorCode::InvalidAuthentication
+                    | baml_runtime::internal::llm_client::ErrorCode::NotSupported
+                    | baml_runtime::internal::llm_client::ErrorCode::RateLimited
+                    | baml_runtime::internal::llm_client::ErrorCode::ServerError
+                    | baml_runtime::internal::llm_client::ErrorCode::ServiceUnavailable
+                    | baml_runtime::internal::llm_client::ErrorCode::UnsupportedResponse(_) => {
+                        napi::Error::new(
+                            napi::Status::GenericFailure,
+                            format!("BamlError: BamlClientError: BamlClientHttpError: {}", err),
+                        )
+                    }
                 }
-            },
+            }
             LLMResponse::UserFailure(msg) => napi::Error::new(
                 napi::Status::GenericFailure,
                 format!("BamlError: BamlInvalidArgumentError: {}", msg),
@@ -91,7 +94,12 @@ pub fn throw_baml_validation_error(prompt: &str, raw_output: &str, message: &str
     napi::Error::new(napi::Status::GenericFailure, error_json.to_string())
 }
 
-pub fn throw_baml_client_finish_reason_error(prompt: &str, raw_output: &str, message: &str, finish_reason: Option<&str>) -> napi::Error {
+pub fn throw_baml_client_finish_reason_error(
+    prompt: &str,
+    raw_output: &str,
+    message: &str,
+    finish_reason: Option<&str>,
+) -> napi::Error {
     let error_json = serde_json::json!({
         "type": "BamlClientFinishReasonError",
         "prompt": prompt,

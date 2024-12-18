@@ -84,6 +84,7 @@ impl FunctionResultStream {
 
         let fut = async move {
             let ctx_mng = ctx_mng;
+            log::info!("Running stream");
             let res = inner
                 .lock()
                 .await

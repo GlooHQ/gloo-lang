@@ -306,8 +306,12 @@ impl SseResponseTrait for OpenAIClient {
         Ok(Box::pin(
             resp.bytes_stream()
                 .eventsource()
-                .take_while(|event| {
-                    std::future::ready(event.as_ref().is_ok_and(|e| e.data != "[DONE]"))
+                .take_while(|event| match event {
+                    Ok(e) => std::future::ready(e.data != "[DONE]"),
+                    Err(_) => {
+                        log::error!("Error in stream!!!!");
+                        std::future::ready(true)
+                    }
                 })
                 .map(|event| -> Result<ChatCompletionResponseDelta> {
                     Ok(serde_json::from_str::<ChatCompletionResponseDelta>(
@@ -366,7 +370,8 @@ impl SseResponseTrait for OpenAIClient {
                             }
                             inner.model = event.model;
                             inner.metadata.finish_reason = choice.finish_reason.clone();
-                            inner.metadata.baml_is_complete = choice.finish_reason.as_ref().is_some_and(|s| s == "stop");
+                            inner.metadata.baml_is_complete =
+                                choice.finish_reason.as_ref().is_some_and(|s| s == "stop");
                         }
                         inner.latency = instant_start.elapsed();
                         if let Some(usage) = event.usage.as_ref() {
@@ -391,9 +396,21 @@ impl WithStreamChat for OpenAIClient {
         let (resp, system_start, instant_start) =
             match make_request(self, either::Either::Right(prompt), true).await {
                 Ok(v) => v,
-                Err(e) => return Err(e),
+                Err(e) => {
+                    log::error!("Error in stream2");
+                    return Err(e);
+                }
             };
-        self.response_stream(resp, prompt, system_start, instant_start)
+        if resp.status().is_success() {
+            log::info!("Stream success");
+            self.response_stream(resp, prompt, system_start, instant_start)
+        } else {
+            log::error!("Stream failureeeee");
+            Err(LLMResponse::InternalFailure(format!(
+                "Failed to stream: {:#?}",
+                resp
+            )))
+        }
     }
 }
 

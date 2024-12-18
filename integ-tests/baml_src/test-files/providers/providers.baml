@@ -41,6 +41,25 @@ function TestAzureFailure(input: string) -> string {
   "#
 }
 
+client GPT4oAzureImage {
+  provider azure-openai
+  options {
+    resource_name "west-us-azure-baml"
+    deployment_id "gpt-4o"
+    api_key env.AZURE_OPENAI_API_KEY
+    api_version "2024-11-20"
+  }
+}
+
+function TestAzureImage(input: image) -> string {
+  client GPT4oAzureImage
+  prompt #"
+    Describe the image. Mention the color
+    {{ _.role('user') }}
+    {{ input }}
+  "#
+}
+
 function TestOllama(input: string) -> string {
   client Ollama
   prompt #"

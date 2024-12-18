@@ -176,6 +176,11 @@ impl BamlRuntime {
         tb: Option<&TypeBuilder>,
         client_registry: Option<&ClientRegistry>,
     ) -> napi::Result<FunctionResultStream> {
+        let cb = match cb {
+            Some(cb) => Some(env.create_reference(cb)?),
+            None => None,
+        };
+
         let args: BamlValue = parse_ts_types::js_object_to_baml_value(env, args)?;
         if !args.is_map() {
             return Err(invalid_argument_error(&format!(
@@ -188,6 +193,7 @@ impl BamlRuntime {
         let ctx = ctx.inner.clone();
         let tb = tb.map(|tb| tb.inner.clone());
         let client_registry = client_registry.map(|cb| cb.inner.clone());
+
         let stream = self
             .inner
             .stream_function(
@@ -198,11 +204,6 @@ impl BamlRuntime {
                 client_registry.as_ref(),
             )
             .map_err(from_anyhow_error)?;
-
-        let cb = match cb {
-            Some(cb) => Some(env.create_reference(cb)?),
-            None => None,
-        };
 
         Ok(FunctionResultStream::new(stream, cb, tb, client_registry))
     }

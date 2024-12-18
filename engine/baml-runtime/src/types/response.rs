@@ -137,6 +137,10 @@ impl FunctionResult {
     }
 
     pub fn result_with_constraints_content(&self) -> Result<&ResponseBamlValue> {
+        log::info!(
+            "result_with_constraints_content: {:?}",
+            self.result_with_constraints()
+        );
         self.result_with_constraints()
             .as_ref()
             .map(|res| {
