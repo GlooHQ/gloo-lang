@@ -30,7 +30,7 @@ test_deserializer!(
     r#"
 type A = B
 type B = C
-type C = A[]  
+type C = A[]
     "#,
     "[[], [], [[]]]",
     FieldType::RecursiveTypeAlias("A".into()),
@@ -114,7 +114,7 @@ type JsonValue = int |  bool | string | JsonValue[] | map<string, JsonValue>
 test_deserializer!(
     test_full_json_with_nested_objects,
     r#"
-type JsonValue = int | bool | string JsonValue[] | map<string, JsonValue>
+type JsonValue = JsonValue[] | map<string, JsonValue> | int | bool | string
     "#,
     r#"
     {
@@ -167,4 +167,55 @@ type JsonValue = int | bool | string JsonValue[] | map<string, JsonValue>
             }
         }
     }
+);
+
+test_deserializer!(
+    test_list_of_json_objects,
+    r#"
+type JsonValue = int | string | bool | JsonValue[] | map<string, JsonValue>
+    "#,
+    r#"
+    [
+        {
+            "number": 1,
+            "string": "test",
+            "bool": true,
+            "list": [1, 2, 3]
+        },
+        {
+            "number": 1,
+            "string": "test",
+            "bool": true,
+            "list": [1, 2, 3]
+        }
+    ]
+    "#,
+    FieldType::RecursiveTypeAlias("JsonValue".into()),
+    [
+        {
+            "number": 1,
+            "string": "test",
+            "bool": true,
+            "list": [1, 2, 3]
+        },
+        {
+            "number": 1,
+            "string": "test",
+            "bool": true,
+            "list": [1, 2, 3]
+        }
+    ]
+);
+
+test_deserializer!(
+    test_nested_list,
+    r#"
+type JsonValue = int | float | bool | string | JsonValue[] | map<string, JsonValue>
+    "#,
+    r#"
+    [[42.1]]
+    "#,
+    FieldType::RecursiveTypeAlias("JsonValue".into()),
+    // [[[[[[[[[[[[[[[[[[[[42]]]]]]]]]]]]]]]]]]]]
+    [[42.1]]
 );

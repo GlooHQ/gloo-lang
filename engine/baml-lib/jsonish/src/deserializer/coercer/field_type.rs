@@ -27,7 +27,12 @@ impl TypeCoercer for FieldType {
         target: &FieldType,
         value: Option<&crate::jsonish::Value>,
     ) -> Result<BamlValueWithFlags, ParsingError> {
-        match value {
+        unsafe {
+            LIMIT += 1;
+            eprintln!("LIMIT: {}", LIMIT);
+        }
+
+        let ret_v = match value {
             Some(crate::jsonish::Value::AnyOf(candidates, primitive)) => {
                 log::debug!(
                     "scope: {scope} :: coercing to: {name} (current: {current})",
@@ -112,7 +117,15 @@ impl TypeCoercer for FieldType {
                     Ok(coerced_value)
                 }
             },
+        };
+
+        unsafe {
+            LIMIT -= 1;
         }
+
+        eprintln!("ret_v: {:?}", ret_v);
+
+        ret_v
     }
 }
 
