@@ -48,7 +48,7 @@ impl WithScore for Flag {
             Flag::StrippedNonAlphaNumeric(_) => 3,
             Flag::SubstringMatch(_) => 2,
             Flag::ImpliedKey(_) => 2,
-            Flag::JsonToString(_) => 2,
+            Flag::JsonToString(_) => 5,
             Flag::SingleToArray => 1,
             // Parsing errors are bad.
             Flag::ArrayItemParseError(x, _) => 1 + (*x as i32),
