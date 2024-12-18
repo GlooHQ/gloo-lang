@@ -60,7 +60,7 @@ type JsonValue = int | string | bool | JsonValue[] | map<string, JsonValue>
 test_deserializer!(
     test_complex_recursive_alias,
     r#"
-type JsonValue = int | string | bool | JsonValue[] | map<string, JsonValue>
+type JsonValue = int | bool | string | JsonValue[] | map<string, JsonValue>
     "#,
     r#"
     {
