@@ -35,17 +35,17 @@ pub enum BamlValueWithFlags {
 impl BamlValueWithFlags {
     pub fn is_composite(&self) -> bool {
         match self {
-            BamlValueWithFlags::String(_) => false,
-            BamlValueWithFlags::Int(_) => false,
-            BamlValueWithFlags::Float(_) => false,
-            BamlValueWithFlags::Bool(_) => false,
-            BamlValueWithFlags::Null(_) => false,
-            BamlValueWithFlags::Enum(_, value_with_flags) => false,
+            BamlValueWithFlags::String(_)
+            | BamlValueWithFlags::Int(_)
+            | BamlValueWithFlags::Float(_)
+            | BamlValueWithFlags::Bool(_)
+            | BamlValueWithFlags::Null(_)
+            | BamlValueWithFlags::Enum(_, _) => false,
 
-            BamlValueWithFlags::List(deserializer_conditions, vec) => true,
-            BamlValueWithFlags::Map(deserializer_conditions, index_map) => true,
-            BamlValueWithFlags::Class(_, deserializer_conditions, index_map) => true,
-            BamlValueWithFlags::Media(value_with_flags) => true,
+            BamlValueWithFlags::List(_, _)
+            | BamlValueWithFlags::Map(_, _)
+            | BamlValueWithFlags::Class(_, _, _)
+            | BamlValueWithFlags::Media(_) => true,
         }
     }
 
