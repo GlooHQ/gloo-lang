@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use internal_baml_core::ir::repr::IntermediateRepr;
+use serde_json::json;
 
 use std::sync::Arc;
 
@@ -96,24 +97,43 @@ impl FunctionResultStream {
         let rctx = ctx.create_ctx(tb, cb);
         let res = match rctx {
             Ok(rctx) => {
-                let (history, _) = btrace::BAML_TRACE_CTX
+                btrace::BAML_TRACE_CTX
                     .scope(
                         self.tctx.clone(),
-                        orchestrate_stream(
-                            local_orchestrator,
-                            self.ir.as_ref(),
-                            &rctx,
-                            &self.renderer,
-                            &baml_types::BamlValue::Map(local_params),
-                            |content| self.renderer.parse(content, true),
-                            |content| self.renderer.parse(content, false),
-                            on_event,
-                        )
-                        .btrace(format!("baml_stream_function::{}", self.function_name)),
+                        async {
+                            let (history, _) = orchestrate_stream(
+                                local_orchestrator,
+                                self.ir.as_ref(),
+                                &rctx,
+                                &self.renderer,
+                                &baml_types::BamlValue::Map(local_params),
+                                |content| self.renderer.parse(content, true),
+                                |content| self.renderer.parse(content, false),
+                                on_event,
+                            )
+                            .await;
+                            FunctionResult::new_chain(history)
+                        }
+                        .btrace(
+                            tracing::Level::INFO,
+                            format!("baml_stream_function::{}", self.function_name),
+                            json!({}),
+                            |result| match result {
+                                Ok(result) => match result.parsed_content() {
+                                    Ok(content) => json!({
+                                        "result": format!("TODO: actually return this as a json object: {}", content.to_string()),
+                                    }),
+                                    Err(e) => json!({
+                                        "exception": format!("parse error: {}", e)
+                                    }),
+                                },
+                                Err(e) => json!({
+                                    "exception": e.to_string()
+                                }),
+                            },
+                        ),
                     )
-                    .await;
-
-                FunctionResult::new_chain(history)
+                    .await
             }
             Err(e) => Err(e),
         };

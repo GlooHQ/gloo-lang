@@ -65,7 +65,7 @@ function TestAwsInvalidRegion(input: string) -> string {
 function TestOpenAIShorthand(input: string) -> string {
   client "openai/gpt-4o-mini"
   prompt #"
-    Write a nice short story about {{ input }}
+    Write a nice short haiku about {{ input }}
   "#
 }
 

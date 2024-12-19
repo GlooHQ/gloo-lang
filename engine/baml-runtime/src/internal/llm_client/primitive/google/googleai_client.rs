@@ -1,9 +1,10 @@
+use crate::btrace::WithTraceContext;
 use crate::client_registry::ClientProperty;
 use crate::internal::llm_client::traits::{
     ToProviderMessage, ToProviderMessageExt, WithClientProperties,
 };
 use crate::internal::llm_client::ResolveMediaUrls;
-use crate::RuntimeContext;
+use crate::{btrace, RuntimeContext};
 use crate::{
     internal::llm_client::{
         primitive::{
@@ -167,10 +168,28 @@ impl SseResponseTrait for GoogleAIClient {
                         };
 
                         if let Some(choice) = event.candidates.get(0) {
-                            if let Some(content) = choice.content.as_ref().and_then(|c| c.parts.get(0)) {
+                            if let Some(content) =
+                                choice.content.as_ref().and_then(|c| c.parts.get(0))
+                            {
+                                btrace::log(
+                                    btrace::Level::INFO,
+                                    "googleai_client".to_string(),
+                                    "event".to_string(),
+                                    json!({
+                                        "delta.content": content.text,
+                                    }),
+                                );
                                 inner.content += &content.text;
                             }
                             if let Some(FinishReason::Stop) = choice.finish_reason.as_ref() {
+                                btrace::log(
+                                    btrace::Level::INFO,
+                                    "googleai_client".to_string(),
+                                    "event".to_string(),
+                                    json!({
+                                        "finish_reason": "stop",
+                                    }),
+                                );
                                 inner.metadata.baml_is_complete = true;
                                 inner.metadata.finish_reason = Some(FinishReason::Stop.to_string());
                             }
@@ -314,6 +333,23 @@ impl WithChat for GoogleAIClient {
         //non-streaming, complete response is returned
         let (response, system_now, instant_now) =
             match make_parsed_request::<GoogleResponse>(self, either::Either::Right(prompt), false)
+                .btrace(
+                    tracing_core::Level::INFO,
+                    "googleai_chat",
+                    json!({
+                        "prompt": prompt,
+                    }),
+                    |v| match v {
+                        Ok((response, ..)) => json!({
+                            "llm.response": response,
+                        }),
+                        Err(e) => json!({
+                            "exception": {
+                                "message": format!("{:?}", e),
+                            },
+                        }),
+                    },
+                )
                 .await
             {
                 Ok(v) => v,

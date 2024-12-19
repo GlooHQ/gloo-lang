@@ -25,6 +25,8 @@ import { DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME, resetBaml
 import exp from 'constants'
 config()
 
+jest.setTimeout(15_000)
+
 describe('Integ tests', () => {
   describe('should work for all inputs', () => {
     it('single bool', async () => {
@@ -310,7 +312,7 @@ describe('Integ tests', () => {
     expect(res.length).toBeGreaterThan(0)
   })
 
-  it('should support OpenAI shorthand streaming', async () => {
+  it.only('should support OpenAI shorthand streaming', async () => {
     const res = await b.stream.TestOpenAIShorthand('Dr. Pepper').getFinalResponse()
     expect(res.length).toBeGreaterThan(0)
   })

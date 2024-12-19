@@ -38,6 +38,7 @@ use internal_baml_core::configuration::Generator;
 use internal_baml_core::configuration::GeneratorOutputType;
 use on_log_event::LogEventCallbackSync;
 use runtime::InternalBamlRuntime;
+use serde_json::json;
 use std::sync::OnceLock;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -77,7 +78,6 @@ pub struct BamlRuntime {
     #[cfg(not(target_arch = "wasm32"))]
     pub async_runtime: Arc<tokio::runtime::Runtime>,
     pub trace_agent_tx: tokio::sync::mpsc::UnboundedSender<btrace::TraceEvent>,
-    pub trace_agent_rx: tokio::sync::mpsc::UnboundedReceiver<btrace::TraceEvent>,
 }
 
 impl BamlRuntime {
@@ -140,6 +140,8 @@ impl BamlRuntime {
             .collect();
 
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        #[cfg(not(target_arch = "wasm32"))]
+        btrace::TracerThread::run(rx);
 
         Ok(BamlRuntime {
             inner: InternalBamlRuntime::from_directory(&path)?,
@@ -148,7 +150,6 @@ impl BamlRuntime {
             #[cfg(not(target_arch = "wasm32"))]
             async_runtime: Self::get_tokio_singleton()?,
             trace_agent_tx: tx,
-            trace_agent_rx: rx,
         })
     }
 
@@ -162,6 +163,8 @@ impl BamlRuntime {
             .map(|(k, v)| (k.as_ref().to_string(), v.as_ref().to_string()))
             .collect();
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        #[cfg(not(target_arch = "wasm32"))]
+        btrace::TracerThread::run(rx);
 
         Ok(BamlRuntime {
             inner: InternalBamlRuntime::from_file_content(root_path, files)?,
@@ -170,7 +173,6 @@ impl BamlRuntime {
             #[cfg(not(target_arch = "wasm32"))]
             async_runtime: Self::get_tokio_singleton()?,
             trace_agent_tx: tx,
-            trace_agent_rx: rx,
         })
     }
 
@@ -250,6 +252,7 @@ impl BamlRuntime {
                 btrace::TraceContext {
                     scope: btrace::InstrumentationScope::Root,
                     tx: self.trace_agent_tx.clone(),
+                    tags: Default::default(),
                 },
             )?;
             let (response_res, span_uuid) = stream.run(on_event, ctx, None, None).await;
@@ -333,6 +336,7 @@ impl BamlRuntime {
         let tctx = btrace::TraceContext {
             scope: btrace::InstrumentationScope::Root,
             tx: self.trace_agent_tx.clone(),
+            tags: Default::default(),
         };
         let response = match ctx.create_ctx(tb, cb) {
             Ok(rctx) => {
@@ -341,7 +345,12 @@ impl BamlRuntime {
                         tctx,
                         self.inner
                             .call_function_impl(function_name.clone(), params, rctx)
-                            .btrace(format!("baml_function::{}", function_name)),
+                            .btrace(
+                                tracing_core::Level::INFO,
+                                format!("baml_function::{}", function_name),
+                                json!({}),
+                                |_| serde_json::Value::Null,
+                            ),
                     )
                     .await
             }
@@ -382,6 +391,14 @@ impl BamlRuntime {
             btrace::TraceContext {
                 scope: btrace::InstrumentationScope::Root,
                 tx: self.trace_agent_tx.clone(),
+                tags: json!({
+                    "user.id": "123",
+                    "user.name": "John Doe",
+                    "user.email": "john.doe@example.com",
+                })
+                .as_object()
+                .unwrap()
+                .clone(),
             },
         )
     }

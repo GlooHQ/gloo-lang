@@ -1,6 +1,9 @@
-use crate::internal::llm_client::{
-    traits::{ToProviderMessage, ToProviderMessageExt, WithClientProperties},
-    ResolveMediaUrls,
+use crate::{
+    btrace::{self, WithTraceContext},
+    internal::llm_client::{
+        traits::{ToProviderMessage, ToProviderMessageExt, WithClientProperties},
+        ResolveMediaUrls,
+    },
 };
 use std::collections::HashMap;
 
@@ -124,10 +127,8 @@ impl SseResponseTrait for AnthropicClient {
 
         Ok(Box::pin(
             resp.bytes_stream()
-                .inspect(|event| log::trace!("anthropic event bytes: {:#?}", event))
                 .eventsource()
                 .map(|event| -> Result<MessageChunk> { Ok(serde_json::from_str(&event?.data)?) })
-                .inspect(|event| log::trace!("anthropic eventsource: {:#?}", event))
                 .scan(
                     Ok(LLMCompleteResponse {
                         client: client_name.clone(),
@@ -189,6 +190,14 @@ impl SseResponseTrait for AnthropicClient {
                                     Some(body.usage.input_tokens + body.usage.output_tokens);
                             }
                             MessageChunk::ContentBlockDelta(event) => {
+                                btrace::log(
+                                    tracing::Level::INFO,
+                                    "anthropic_client".to_string(),
+                                    "event".to_string(),
+                                    json!({
+                                        "delta.content": event.delta.text,
+                                    }),
+                                );
                                 inner.content += &event.delta.text;
                             }
                             MessageChunk::ContentBlockStart(_) => (),
@@ -375,6 +384,21 @@ impl WithChat for AnthropicClient {
             AnthropicMessageResponse,
         >(
             self, either::Either::Right(prompt), false
+        )
+        .btrace(
+            tracing_core::Level::INFO,
+            "anthropic_chat",
+            json!({
+                "prompt": prompt,
+            }),
+            |v| match v {
+                Ok((response, ..)) => json!({
+                    "llm.response": response,
+                }),
+                Err(e) => json!({
+                    "exception": e,
+                }),
+            },
         )
         .await
         {

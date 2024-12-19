@@ -3,9 +3,11 @@ use async_std::stream::StreamExt;
 use baml_types::BamlValue;
 use internal_baml_core::ir::repr::IntermediateRepr;
 use jsonish::BamlValueWithFlags;
+use serde_json::json;
 use web_time::Duration;
 
 use crate::{
+    btrace::{self, WithTraceContext},
     internal::{
         llm_client::{
             parsed_value_to_response,
@@ -83,6 +85,16 @@ where
                     stream_part
                 })
                 .fold(None, |_, current| Some(current))
+                .btrace(
+                    tracing::Level::INFO,
+                    format!("stream_run::{}", node.provider.name()),
+                    json!({
+                        "prompt": prompt,
+                        "params": params,
+                        "node": node.scope.name(),
+                    }),
+                    |_| serde_json::Value::Null,
+                )
                 .await
                 .unwrap_or_else(|| {
                     LLMResponse::LLMFailure(LLMErrorResponse {
@@ -105,16 +117,18 @@ where
                     .finish_reason_filter()
                     .is_allowed(s.metadata.finish_reason.as_ref())
                 {
-                    Some(Err(anyhow::anyhow!(crate::errors::ExposedError::FinishReasonError {
-                        prompt: s.prompt.to_string(),
-                        raw_output: s.content.clone(),
-                        message: "Finish reason not allowed".to_string(),
-                        finish_reason: s.metadata.finish_reason.clone(),
-                    })))
+                    Some(Err(anyhow::anyhow!(
+                        crate::errors::ExposedError::FinishReasonError {
+                            prompt: s.prompt.to_string(),
+                            raw_output: s.content.clone(),
+                            message: "Finish reason not allowed".to_string(),
+                            finish_reason: s.metadata.finish_reason.clone(),
+                        }
+                    )))
                 } else {
                     Some(parse_fn(&s.content))
                 }
-            },
+            }
             _ => None,
         };
         let (parsed_response, response_value) = match parsed_response {
@@ -123,6 +137,7 @@ where
             None => (None, None),
         };
         // parsed_response.map(|r| r.and_then(|v| parsed_value_to_response(v)));
+        let node_name = node.scope.name();
         let sleep_duration = node.error_sleep_duration().cloned();
         results.push((node.scope, final_response, parsed_response, response_value));
 
@@ -132,7 +147,18 @@ where
             .map_or(false, |(_, r, _, _)| matches!(r, LLMResponse::Success(_)))
         {
             break;
-        } else if let Some(duration) = sleep_duration {
+        }
+        btrace::log(
+            tracing_core::Level::INFO,
+            format!("baml_src::{}", node.provider.name()),
+            "Failed to start stream".to_string(),
+            json!({
+                "sleep_duration": sleep_duration,
+                "baml.llm_client": node_name,
+            }),
+        );
+
+        if let Some(duration) = sleep_duration {
             total_sleep_duration += duration;
             async_std::task::sleep(duration).await;
         }

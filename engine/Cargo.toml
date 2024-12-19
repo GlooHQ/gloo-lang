@@ -5,6 +5,7 @@ members = [
   "baml-runtime",
   "baml-schema-wasm",
   "bstd",
+  "btrace",
   "cli",
   "language_client_codegen",
   "language_client_python",
@@ -21,6 +22,7 @@ default-members = [
   # also have something to do with resolver=2 and how duplicate dep builds are handled)
   # "baml-schema-wasm",
   "bstd",
+  "btrace",
   "cli",
   "language_client_codegen",
   "language_client_python",

@@ -12,7 +12,7 @@ pub use self::{
     completion::{WithCompletion, WithNoCompletion, WithStreamCompletion},
 };
 use super::{primitive::request::RequestBuilder, LLMResponse, ModelFeatures};
-use crate::{internal::llm_client::ResolveMediaUrls, RenderCurlSettings};
+use crate::{btrace::WithTraceContext, internal::llm_client::ResolveMediaUrls, RenderCurlSettings};
 use crate::{internal::prompt_renderer::PromptRenderer, RuntimeContext};
 use baml_types::{BamlMedia, BamlMediaContent, BamlMediaType, BamlValue, MediaBase64, MediaUrl};
 use base64::{prelude::BASE64_STANDARD, Engine};

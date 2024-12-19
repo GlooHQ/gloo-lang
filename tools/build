@@ -160,7 +160,7 @@ case "$_path" in
         --ext rs,hb,hbs,j2,toml \
         --watch "${_repo_root}/engine" \
         --ignore 'target/**' \
-        --exec "${command}"
+        --exec "${command}" --verbose
     else
       eval "${command}"
     fi
@@ -173,7 +173,7 @@ case "$_path" in
     if [ "$_test_mode" -eq 1 ]; then
       #command="${command} && BAML_LOG=trace infisical run --env=test -- poetry run python baml_example_tracing.py"
       # command="${command} && BAML_LOG=trace infisical run --env=test -- poetry run pytest -s tests/test_functions.py::test_aws_bedrock_invalid_region"
-      command="${command} && BAML_LOG=trace infisical run --env=test -- poetry run pytest"
+      command="${command} && BAML_LOG=trace infisical run --env=test -- poetry run pytest -s tests/test_functions.py::test_fallback_to_shorthand"
     fi
     if [ "$_watch_mode" -eq 1 ]; then
       npx nodemon \

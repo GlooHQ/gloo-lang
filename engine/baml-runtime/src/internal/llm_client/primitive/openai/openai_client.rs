@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::btrace::WithTraceContext;
 use crate::internal::llm_client::ResolveMediaUrls;
 use anyhow::Result;
 use baml_types::{BamlMap, BamlMedia, BamlMediaContent, BamlMediaType};
@@ -30,7 +31,7 @@ use crate::internal::llm_client::{
 };
 
 use crate::request::create_client;
-use crate::RuntimeContext;
+use crate::{btrace, RuntimeContext};
 use eventsource_stream::Eventsource;
 use futures::StreamExt;
 
@@ -163,6 +164,23 @@ impl WithChat for OpenAIClient {
                 self,
                 either::Either::Right(prompt),
                 false,
+            )
+            .btrace(
+                tracing_core::Level::INFO,
+                "openai_chat",
+                json!({
+                    "prompt": prompt,
+                }),
+                |v| match v {
+                    Ok((response, ..)) => json!({
+                        "llm.response": format!("{:?}", response),
+                    }),
+                    Err(e) => json!({
+                        "exception": {
+                            "message": format!("{:?}", e),
+                        },
+                    }),
+                },
             )
             .await
             {
@@ -362,11 +380,20 @@ impl SseResponseTrait for OpenAIClient {
                         };
                         if let Some(choice) = event.choices.first() {
                             if let Some(content) = choice.delta.content.as_ref() {
+                                btrace::log(
+                                    btrace::Level::INFO,
+                                    "openai_client".to_string(),
+                                    "event".to_string(),
+                                    json!({
+                                        "delta.content": content,
+                                    }),
+                                );
                                 inner.content += content.as_str();
                             }
                             inner.model = event.model;
                             inner.metadata.finish_reason = choice.finish_reason.clone();
-                            inner.metadata.baml_is_complete = choice.finish_reason.as_ref().is_some_and(|s| s == "stop");
+                            inner.metadata.baml_is_complete =
+                                choice.finish_reason.as_ref().is_some_and(|s| s == "stop");
                         }
                         inner.latency = instant_start.elapsed();
                         if let Some(usage) = event.usage.as_ref() {

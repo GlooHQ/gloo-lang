@@ -971,6 +971,7 @@ dependencies = [
  "mime",
  "mime_guess",
  "minijinja",
+ "nonempty",
  "notify-debouncer-full",
  "pin-project-lite",
  "pretty_assertions",
@@ -1225,6 +1226,27 @@ dependencies = [
  "memchr",
  "regex-automata 0.4.7",
  "serde",
+]
+
+[[package]]
+name = "btrace"
+version = "0.70.1"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "bytes",
+ "futures-timer",
+ "hostname",
+ "js-sys",
+ "reqwest",
+ "serde_json",
+ "tokio",
+ "tracing-core",
+ "uuid",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "web-time",
 ]
 
 [[package]]
@@ -3194,6 +3216,12 @@ dependencies = [
  "memchr",
  "minimal-lexical",
 ]
+
+[[package]]
+name = "nonempty"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "549e471b99ccaf2f89101bec68f4d244457d5a95a9c3d0672e9564124397741d"
 
 [[package]]
 name = "notify"

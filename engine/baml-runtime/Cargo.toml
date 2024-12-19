@@ -45,6 +45,7 @@ internal-baml-core = { path = "../baml-lib/baml-core" }
 internal-baml-jinja = { path = "../baml-lib/jinja-runtime" }
 log.workspace = true
 minijinja.workspace = true
+nonempty = "0.11.0"
 pin-project-lite.workspace = true
 reqwest-eventsource = "0.6.0"
 scopeguard.workspace = true
