@@ -238,28 +238,30 @@ fn parse_literal_type(pair: Pair<'_>, diagnostics: &mut Diagnostics) -> Option<F
     ))
 }
 
-/// parses array type notation from input pair. handles both required and optional arrays like string[] and string[]?.
+/// Parses array type notation from input pair.
 ///
-/// arguments:
-/// pair - input pair with array notation tokens.
-/// diagnostics - mutable reference to diagnostics collector for error reporting.
+/// Handles both required and optional arrays like `string[]` and `string[]?`.
+/// Returns `Some(FieldType::List)` if the array type was successfully parsed
+/// with arity or [`None`] if parsing fails.
 ///
-/// returns:
-/// some(fieldtype::list) - successfully parsed array type with arity.
-/// none - if parsing fails.
+/// # Arguments
 ///
-/// implementation details:
-/// supports multiple dimensions like string[][].
-/// handles optional arrays with ? suffix.
-/// preserves source span info for errors.
-/// valid inputs: string[], int[]?, myclass[][]?.
-
+/// * `pair` - Input pair with array notation tokens.
+/// * `diagnostics` - Mutable reference to diagnostics collector for error
+/// reporting.
+///
+/// # Implementation Details
+///
+/// * Supports multiple dimensions like `string[][]`.
+/// * Handles optional arrays with `?` suffix.
+/// * Preserves source span info for errors.
+/// * Valid inputs: `string[]`, `int[]?`, `MyClass[][]?`.
 fn parse_array(pair: Pair<'_>, diagnostics: &mut Diagnostics) -> Option<FieldType> {
     assert_correct_parser!(pair, Rule::array_notation);
 
     let mut dims = 0_u32;
     let mut field = None;
-    // track whether this array is optional (e.g., string[]?)
+    // Track whether this array is optional (e.g., string[]?)
     // default to Required, will be updated to Optional if ? token is found
     let mut arity = FieldArity::Required;
     let span = diagnostics.span(pair.as_span());
@@ -279,32 +281,38 @@ fn parse_array(pair: Pair<'_>, diagnostics: &mut Diagnostics) -> Option<FieldTyp
 
     match field {
         Some(field) => Some(FieldType::List(
-            arity,  // Whether the array itself is optional
-            Box::new(field),  // The type of elements in the array
-            dims,   // Number of dimensions (e.g., 2 for string[][])
-            span,   // Source location for error reporting
-            None,   // No attributes initially
+            arity,           // Whether the array itself is optional
+            Box::new(field), // The type of elements in the array
+            dims,            // Number of dimensions (e.g., 2 for string[][])
+            span,            // Source location for error reporting
+            None,            // No attributes initially
         )),
         _ => unreachable!("Field must have been defined"),
     }
 }
 
-/// parses a map type notation from the input pair.
-/// handles both required and optional maps (e.g., `map<string, int>` and `map<string, int>?`).
+/// Parses a map type notation from the input pair.
 ///
-/// # arguments
-/// * `pair` - the input pair containing map notation tokens
-/// * `diagnostics` - mutable reference to the diagnostics collector for error reporting
+/// Handles both required and optional maps (e.g., `map<string, int>` and
+/// `map<string, int>?`).
 ///
-/// # returns
-/// * `some(fieldtype::map)` - successfully parsed map type with appropriate arity
-/// * `none` - if parsing fails
+/// # Arguments
 ///
-/// # implementation details
-/// - always uses string keys as per baml specification
-/// - supports optional maps with the `?` suffix
-/// - preserves source span information for error reporting
-/// - example valid inputs: `map<string, int>`, `map<string, myclass>?`
+/// * `pair` - The input pair containing map notation tokens.
+/// * `diagnostics` - Mutable reference to the diagnostics collector for error
+/// reporting.
+///
+/// # Returns
+///
+/// * `Some(FieldType::Map)` - Successfully parsed map type with appropriate
+/// arity.
+/// * [`None`] - If parsing fails.
+///
+/// # Implementation Details
+///
+/// - Supports optional maps with the `?` suffix.
+/// - Preserves source span information for error reporting.
+/// - Example valid inputs: `map<string, int>`, `map<string, myclass>?`.
 fn parse_map(pair: Pair<'_>, diagnostics: &mut Diagnostics) -> Option<FieldType> {
     assert_correct_parser!(pair, Rule::map);
 
@@ -330,13 +338,13 @@ fn parse_map(pair: Pair<'_>, diagnostics: &mut Diagnostics) -> Option<FieldType>
     }
 
     match fields.len() {
-        0 => None,  // Invalid: no types specified
-        1 => None,  // Invalid: only key type specified
+        0 => None, // Invalid: no types specified
+        1 => None, // Invalid: only key type specified
         2 => Some(FieldType::Map(
-            arity,  // Whether the map itself is optional
-            Box::new((fields[0].to_owned(), fields[1].to_owned())),  // Key and value types
-            span,   // Source location for error reporting
-            None,   // No attributes initially
+            arity,                                                  // Whether the map itself is optional
+            Box::new((fields[0].to_owned(), fields[1].to_owned())), // Key and value types
+            span, // Source location for error reporting
+            None, // No attributes initially
         )),
         _ => unreachable!("Maps must specify a key type and value type"),
     }
@@ -400,14 +408,13 @@ fn parse_tuple(pair: Pair<'_>, diagnostics: &mut Diagnostics) -> Option<FieldTyp
     }
 }
 
-/// for the last variant of a union,  here we remove the attributes from that variant
-/// and attach them to the union, unless the attribute was tagged with the
-/// `parenthesized` field.
+/// For the last variant of a [`FieldType::Union`], here we remove the
+/// attributes from that variant and attach them to the union, unless the
+/// attribute was tagged with the `parenthesized` field.
 ///
-/// this is done because `field_foo int | string @description("d")`
-/// is naturally parsed as a field with a union whose secord variant has
-/// a description. but the correct baml interpretation is a union with a
-/// description.
+/// This is done because `field_foo int | string @description("d")` is naturally
+/// parsed as a field with a union whose secord variant has a description. But
+/// the correct Baml interpretation is a union with a description.
 pub fn reassociate_union_attributes(field_type: &mut FieldType) {
     match field_type {
         FieldType::Union(_arity, ref mut variants, _, _) => {
