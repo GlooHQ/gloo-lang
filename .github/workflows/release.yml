@@ -16,7 +16,6 @@ on:
     tags:
       - "test-release/*.*"
       - "*.*"
-    branches: []
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -49,7 +48,7 @@ jobs:
       - build-vscode-release
     steps:
       - run: echo "::do-nothing::" >/dev/null
-  
+
   publish-to-pypi:
     environment: release
     needs: [all-builds]
@@ -165,6 +164,7 @@ jobs:
           done
 
   publish-to-github:
+    environment: release
     needs: [all-builds]
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
@@ -182,6 +182,7 @@ jobs:
           body: ${{steps.latest_release.outputs.changelog}}
 
   publish-to-open-vsx:
+    environment: release
     needs: [all-builds]
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.force_publish_vscode }}
@@ -203,6 +204,7 @@ jobs:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
   publish-to-vscode-marketplace:
+    environment: release
     needs: [all-builds]
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.force_publish_vscode }}
@@ -221,4 +223,4 @@ jobs:
           cd typescript/vscode-ext/packages
           pnpm vsce publish --packagePath ./out/*.vsix
         env:
-          VSCE_PAT: ${{ secrets.VSCODE_PAT }} 
+          VSCE_PAT: ${{ secrets.VSCODE_PAT }}

@@ -228,6 +228,7 @@ impl BamlRuntime {
             let rctx = ctx.create_ctx(None, None)?;
             let (params, constraints) =
                 self.get_test_params_and_constraints(function_name, test_name, &rctx, true)?;
+            log::info!("params: {:#?}", params);
             let rctx_stream = ctx.create_ctx(None, None)?;
             let mut stream = self.inner.stream_function_impl(
                 function_name.into(),
@@ -238,12 +239,14 @@ impl BamlRuntime {
                 self.async_runtime.clone(),
             )?;
             let (response_res, span_uuid) = stream.run(on_event, ctx, None, None).await;
+            log::info!("response_res: {:#?}", response_res);
             let res = response_res?;
             let (_, llm_resp, _, val) = res
                 .event_chain()
                 .iter()
                 .last()
                 .context("Expected non-empty event chain")?;
+            log::info!("llm_resp: {:#?}", llm_resp);
             let complete_resp = match llm_resp {
                 LLMResponse::Success(complete_llm_response) => Ok(complete_llm_response),
                 LLMResponse::InternalFailure(e) => Err(anyhow::anyhow!("{}", e)),

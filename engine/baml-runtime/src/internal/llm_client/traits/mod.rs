@@ -150,7 +150,6 @@ where
 {
     #[allow(async_fn_in_trait)]
     async fn single_call(&self, ctx: &RuntimeContext, prompt: &RenderedPrompt) -> LLMResponse {
-        log::warn!("debug single_call start: {:?}", prompt);
         if let RenderedPrompt::Chat(chat) = &prompt {
             match process_media_urls(
                 self.model_features().resolve_media_urls,
@@ -621,18 +620,27 @@ async fn to_base64_with_inferred_mime_type(
         Ok(response) => response,
         Err(e) => return Err(anyhow::anyhow!("Failed to fetch media: {e:?}")),
     };
-    let bytes = match response.bytes().await {
-        Ok(bytes) => bytes,
-        Err(e) => return Err(anyhow::anyhow!("Failed to fetch media bytes: {e:?}")),
-    };
-    let base64 = BASE64_STANDARD.encode(&bytes);
-    // TODO: infer based on file extension?
-    let mime_type = match infer::get(&bytes) {
-        Some(t) => t.mime_type(),
-        None => "application/octet-stream",
+    if response.status().is_success() {
+        let bytes = match response.bytes().await {
+            Ok(bytes) => bytes,
+            Err(e) => return Err(anyhow::anyhow!("Failed to fetch media bytes: {e:?}")),
+        };
+        let base64 = BASE64_STANDARD.encode(&bytes);
+        // TODO: infer based on file extension?
+        let mime_type = match infer::get(&bytes) {
+            Some(t) => t.mime_type(),
+            None => "application/octet-stream",
+        }
+        .to_string();
+        Ok((base64, mime_type))
+    } else {
+        Err(anyhow::anyhow!(
+            "Failed to fetch media: {} {}, {}",
+            response.status(),
+            media_url.url,
+            response.text().await.unwrap_or_default(),
+        ))
     }
-    .to_string();
-    Ok((base64, mime_type))
 }
 
 /// A naive implementation of the data URL parser, returning the (mime_type, base64)
@@ -655,8 +663,16 @@ async fn fetch_with_proxy(
     proxy_url: Option<&str>,
 ) -> Result<reqwest::Response, anyhow::Error> {
     let client = reqwest::Client::new();
+
     let request = if let Some(proxy) = proxy_url {
-        client.get(proxy).header("baml-original-url", url)
+        let new_proxy_url = format!(
+            "{}{}",
+            proxy,
+            url.parse::<url::Url>()
+                .map_err(|e| anyhow::anyhow!("Failed to parse URL: {}", e))?
+                .path()
+        );
+        client.get(new_proxy_url).header("baml-original-url", url)
     } else {
         client.get(url)
     };

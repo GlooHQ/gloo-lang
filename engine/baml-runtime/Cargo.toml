@@ -63,7 +63,7 @@ tokio-stream = "0.1.15"
 uuid = { version = "1.8.0", features = ["v4", "serde"] }
 web-time.workspace = true
 static_assertions.workspace = true
-mime_guess = "2.0.4"
+mime_guess = "=2.0.5"
 mime = "0.3.17"
 
 # For tracing

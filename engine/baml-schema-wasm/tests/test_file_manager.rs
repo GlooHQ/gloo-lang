@@ -1,5 +1,6 @@
 // Run from the baml-schema-wasm folder with:
 // wasm-pack test --node
+// and make sure to set rust-analyzer target in vscode settings to:   "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
 #[cfg(target_arch = "wasm32")]
 #[cfg(test)]
 mod tests {
@@ -170,6 +171,61 @@ function PredictAgeBare(inp: string @assert(big_enough, {{this|length > 1}}) ) -
         let current_runtime = project.runtime(env_vars_js).map_err(JsValue::from).unwrap();
         let diagnostics = project.diagnostics(&current_runtime);
         current_runtime.list_functions();
+
+        assert!(diagnostics.errors().is_empty());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_run_tests() {
+        wasm_logger::init(wasm_logger::Config::new(log::Level::Info));
+        let sample_baml_content = r##"
+function Func(name: string ) -> string {
+        client "openai/gpt-4o"
+        prompt #"
+        Return the name of {{name}}
+        "#
+}
+
+test One {
+    functions [Func]
+    args {
+        name "john"
+    }
+}
+
+test Two {
+    functions [Func]
+    args {
+        name "jane"
+    }
+}
+
+
+        "##;
+        let mut files = HashMap::new();
+        files.insert("error.baml".to_string(), sample_baml_content.to_string());
+        let files_js = to_value(&files).unwrap();
+        let project = WasmProject::new("baml_src", files_js)
+            .map_err(JsValue::from)
+            .unwrap();
+
+        let env_vars = [("OPENAI_API_KEY", "12345")]
+            .iter()
+            .cloned()
+            .collect::<HashMap<_, _>>();
+        let env_vars_js = to_value(&env_vars).unwrap();
+
+        let current_runtime = project.runtime(env_vars_js).map_err(JsValue::from).unwrap();
+
+        let diagnostics = project.diagnostics(&current_runtime);
+        let functions = current_runtime.list_functions();
+        functions.iter().for_each(|f| {
+            log::info!("function: {:#?}", f);
+            f.test_cases.iter().for_each(|t| {
+                log::info!("test case: {:#?}", t);
+            });
+            // f.run_test(&mut current_runtime, "One".to_string(), None, None);
+        });
 
         assert!(diagnostics.errors().is_empty());
     }
