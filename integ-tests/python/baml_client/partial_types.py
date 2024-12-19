@@ -219,6 +219,10 @@ class Node(BaseModel):
     data: Optional[int] = None
     next: Optional["Node"] = None
 
+class OptionalListAndMap(BaseModel):
+    p: List[Optional[str]]
+    q: Dict[str, Optional[str]]
+
 class OptionalTest_Prop1(BaseModel):
     omega_a: Optional[str] = None
     omega_b: Optional[int] = None

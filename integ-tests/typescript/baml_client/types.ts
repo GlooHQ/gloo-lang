@@ -438,6 +438,12 @@ export interface Node {
   
 }
 
+export interface OptionalListAndMap {
+  p?: string[] | null
+  q?: Record<string, string> | null
+  
+}
+
 export interface OptionalTest_Prop1 {
   omega_a: string
   omega_b: number

@@ -80,6 +80,22 @@ describe "ruby<->baml integration tests" do
     assert_equal res['key'], "1"
   end
 
+  it "optional map and list" do
+    res = b.AllowedOptionals(optionals: Baml::Types::OptionalListAndMap.new(
+      p: nil,
+      q: nil,
+    ))
+    assert_equal res.p, nil
+    assert_equal res.q, nil
+
+    res = b.AllowedOptionals(optionals: Baml::Types::OptionalListAndMap.new(
+      p: ["test"],
+      q: {"test" => "ok"},
+    ))
+    assert_equal res.p, ["test"]
+    assert_equal res.q, {"test" => "ok"}
+  end
+
   it "accepts subclass of baml type" do
     # no-op- T::Struct cannot be subclassed
   end

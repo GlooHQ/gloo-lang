@@ -344,6 +344,10 @@ class Node(BaseModel):
     data: int
     next: Optional["Node"] = None
 
+class OptionalListAndMap(BaseModel):
+    p: Optional[List[str]] = None
+    q: Optional[Dict[str, str]] = None
+
 class OptionalTest_Prop1(BaseModel):
     omega_a: str
     omega_b: int

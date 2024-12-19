@@ -53,13 +53,6 @@ fn validate_type_exists(ctx: &mut Context<'_>, field_type: &FieldType) -> bool {
 fn validate_type_allowed(ctx: &mut Context<'_>, field_type: &FieldType) {
     match field_type {
         FieldType::Map(arity, kv_types, ..) => {
-            if arity.is_optional() {
-                ctx.push_error(DatamodelError::new_validation_error(
-                    "Maps are not allowed to be optional",
-                    field_type.span().clone(),
-                ));
-            }
-
             match &kv_types.0 {
                 // String key.
                 FieldType::Primitive(FieldArity::Required, TypeValue::String, ..) => {}
@@ -117,15 +110,7 @@ fn validate_type_allowed(ctx: &mut Context<'_>, field_type: &FieldType) {
         FieldType::Literal(..) => {}
         FieldType::Symbol(..) => {}
 
-        FieldType::List(arity, field_type, ..) => {
-            if arity.is_optional() {
-                ctx.push_error(DatamodelError::new_validation_error(
-                    "Lists are not allowed to be optional",
-                    field_type.span().clone(),
-                ));
-            }
-            validate_type_allowed(ctx, field_type)
-        }
+        FieldType::List(arity, field_type, ..) => validate_type_allowed(ctx, field_type),
         FieldType::Tuple(_, field_types, ..) | FieldType::Union(_, field_types, ..) => {
             for field_type in field_types {
                 validate_type_allowed(ctx, field_type);

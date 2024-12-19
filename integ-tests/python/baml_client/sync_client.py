@@ -185,6 +185,29 @@ class BamlSyncClient:
       )
       return cast(str, raw.cast_to(types, types))
     
+    def AllowedOptionals(
+        self,
+        optionals: types.OptionalListAndMap,
+        baml_options: BamlCallOptions = {},
+    ) -> types.OptionalListAndMap:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "AllowedOptionals",
+        {
+          "optionals": optionals,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.OptionalListAndMap, raw.cast_to(types, types))
+    
     def AudioInput(
         self,
         aud: baml_py.Audio,
@@ -2950,6 +2973,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
         lambda x: cast(str, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def AllowedOptionals(
+        self,
+        optionals: types.OptionalListAndMap,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.OptionalListAndMap, types.OptionalListAndMap]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "AllowedOptionals",
+        {
+          "optionals": optionals,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[partial_types.OptionalListAndMap, types.OptionalListAndMap](
+        raw,
+        lambda x: cast(partial_types.OptionalListAndMap, x.cast_to(types, partial_types)),
+        lambda x: cast(types.OptionalListAndMap, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
