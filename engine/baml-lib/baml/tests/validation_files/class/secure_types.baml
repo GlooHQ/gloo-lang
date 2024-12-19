@@ -271,15 +271,3 @@ class ComplexTypes {
 // 16 |   n map<complex_key_type[], map<another_key, (int | string[])>>
 // 17 |   o (((int | string) | bool[]), (float, double) | long_long_identifier_123)
 //    | 
-// error: Error validating: Lists are not allowed to be optional
-//   -->  class/secure_types.baml:18
-//    | 
-// 17 |   o (((int | string) | bool[]), (float, double) | long_long_identifier_123)
-// 18 |   p string[]?
-//    | 
-// error: Error validating: Maps are not allowed to be optional
-//   -->  class/secure_types.baml:19
-//    | 
-// 18 |   p string[]?
-// 19 |   q map<string, string>?
-//    | 
