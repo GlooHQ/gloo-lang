@@ -6,7 +6,6 @@ use serde_json::json;
 use std::sync::Arc;
 
 use crate::{
-    btrace::{self, WithTraceContext},
     client_registry::ClientRegistry,
     internal::{
         llm_client::orchestrator::{orchestrate_stream, OrchestratorNodeIterator},
@@ -16,6 +15,7 @@ use crate::{
     type_builder::TypeBuilder,
     FunctionResult, RuntimeContextManager,
 };
+use btrace::WithTraceContext;
 
 /// Wrapper that holds a stream of responses from a BAML function call.
 ///

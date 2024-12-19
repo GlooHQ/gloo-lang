@@ -1,5 +1,3 @@
-use crate::btrace::InstrumentationScope;
-
 use super::TraceEvent;
 pub struct TracerThread {
     rx: tokio::sync::mpsc::UnboundedReceiver<TraceEvent>,

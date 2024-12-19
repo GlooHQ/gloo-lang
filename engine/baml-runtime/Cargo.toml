@@ -20,6 +20,7 @@ unused_variables = "allow"
 [dependencies]
 anyhow.workspace = true
 base64.workspace = true
+btrace.workspace = true
 bytes.workspace = true
 cfg-if.workspace = true
 clap.workspace = true
@@ -37,15 +38,14 @@ indexmap.workspace = true
 indoc.workspace = true
 # instant = "0.1"  # do not use this or wasm-timer - use web-time instead
 json_comments = "0.2.2"
-jsonish = { path = "../baml-lib/jsonish" }
+jsonish.workspace = true
 internal-baml-codegen.workspace = true
-baml-types = { path = "../baml-lib/baml-types" }
-internal-llm-client = { path = "../baml-lib/llm-client" }
-internal-baml-core = { path = "../baml-lib/baml-core" }
-internal-baml-jinja = { path = "../baml-lib/jinja-runtime" }
+baml-types.workspace = true
+internal-llm-client.workspace = true
+internal-baml-core.workspace = true
+internal-baml-jinja.workspace = true
 log.workspace = true
 minijinja.workspace = true
-nonempty = "0.11.0"
 pin-project-lite.workspace = true
 reqwest-eventsource = "0.6.0"
 scopeguard.workspace = true

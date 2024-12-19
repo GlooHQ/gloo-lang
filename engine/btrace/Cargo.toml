@@ -13,7 +13,7 @@ crate-type = ["cdylib", "rlib"]
 RSTEST_TIMEOUT = "10"
 
 [lints.rust]
-dead_code = "deny"
+dead_code = "warn"
 unused_imports = "deny"
 unused_variables = "deny"
 

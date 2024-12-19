@@ -1,4 +1,3 @@
-use crate::btrace::WithTraceContext;
 use crate::client_registry::ClientProperty;
 use crate::internal::llm_client::traits::{
     ToProviderMessage, ToProviderMessageExt, WithClientProperties,
@@ -6,7 +5,7 @@ use crate::internal::llm_client::traits::{
 use crate::internal::llm_client::ResolveMediaUrls;
 #[cfg(target_arch = "wasm32")]
 use crate::internal::wasm_jwt::{encode_jwt, JwtError};
-use crate::{btrace, RuntimeContext};
+use crate::RuntimeContext;
 use crate::{
     internal::llm_client::{
         primitive::{
@@ -23,6 +22,7 @@ use crate::{
     request::create_client,
 };
 use anyhow::{Context, Result};
+use btrace::WithTraceContext;
 use chrono::{Duration, Utc};
 use futures::StreamExt;
 use internal_llm_client::vertex::{ResolvedServiceAccountDetails, ResolvedVertex, ServiceAccount};

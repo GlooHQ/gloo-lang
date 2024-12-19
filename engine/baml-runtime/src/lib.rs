@@ -5,7 +5,6 @@ pub mod internal;
 #[cfg(not(feature = "internal"))]
 pub(crate) mod internal;
 
-pub mod btrace;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod cli;
 pub mod client_registry;

@@ -4,7 +4,7 @@ mod stream;
 use serde_json::json;
 use web_time::Duration; // Add this line
 
-use crate::btrace::WithTraceContext;
+use btrace::WithTraceContext;
 use crate::RenderCurlSettings;
 use crate::{
     internal::prompt_renderer::PromptRenderer, runtime_interface::InternalClientLookup,

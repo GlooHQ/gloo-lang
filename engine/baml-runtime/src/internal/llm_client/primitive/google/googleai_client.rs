@@ -1,10 +1,9 @@
-use crate::btrace::WithTraceContext;
 use crate::client_registry::ClientProperty;
 use crate::internal::llm_client::traits::{
     ToProviderMessage, ToProviderMessageExt, WithClientProperties,
 };
 use crate::internal::llm_client::ResolveMediaUrls;
-use crate::{btrace, RuntimeContext};
+use crate::RuntimeContext;
 use crate::{
     internal::llm_client::{
         primitive::{
@@ -22,6 +21,7 @@ use crate::{
 };
 use anyhow::{Context, Result};
 use baml_types::{BamlMap, BamlMedia, BamlMediaContent};
+use btrace::WithTraceContext;
 use eventsource_stream::Eventsource;
 use futures::StreamExt;
 use http::header;

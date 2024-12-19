@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use crate::btrace::WithTraceContext;
 use crate::internal::llm_client::ResolveMediaUrls;
 use anyhow::Result;
 use baml_types::{BamlMap, BamlMedia, BamlMediaContent, BamlMediaType};
+use btrace::WithTraceContext;
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{ChatMessagePart, RenderContext_Client, RenderedChatMessage};
 use internal_llm_client::openai::ResolvedOpenAI;
@@ -31,7 +31,7 @@ use crate::internal::llm_client::{
 };
 
 use crate::request::create_client;
-use crate::{btrace, RuntimeContext};
+use crate::RuntimeContext;
 use eventsource_stream::Eventsource;
 use futures::StreamExt;
 

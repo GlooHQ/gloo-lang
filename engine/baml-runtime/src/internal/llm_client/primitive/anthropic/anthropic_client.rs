@@ -1,10 +1,8 @@
-use crate::{
-    btrace::{self, WithTraceContext},
-    internal::llm_client::{
-        traits::{ToProviderMessage, ToProviderMessageExt, WithClientProperties},
-        ResolveMediaUrls,
-    },
+use crate::internal::llm_client::{
+    traits::{ToProviderMessage, ToProviderMessageExt, WithClientProperties},
+    ResolveMediaUrls,
 };
+use btrace::WithTraceContext;
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};

@@ -23,7 +23,6 @@ use serde_json::{json, Map};
 use web_time::Instant;
 use web_time::SystemTime;
 
-use crate::btrace::WithTraceContext;
 use crate::client_registry::ClientProperty;
 use crate::internal::llm_client::traits::{ToProviderMessageExt, WithClientProperties};
 use crate::internal::llm_client::{
@@ -35,8 +34,9 @@ use crate::internal::llm_client::{
     ErrorCode, LLMCompleteResponse, LLMCompleteResponseMetadata, LLMErrorResponse, LLMResponse,
     ModelFeatures, ResolveMediaUrls,
 };
+use btrace::WithTraceContext;
 
-use crate::{btrace, RenderCurlSettings, RuntimeContext};
+use crate::{RenderCurlSettings, RuntimeContext};
 
 // represents client that interacts with the Anthropic API
 pub struct AwsClient {

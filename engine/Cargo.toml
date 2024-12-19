@@ -35,8 +35,10 @@ anyhow = "1.0"
 array-macro = "2"
 askama = "0.12.1"
 baml-cli = { path = "cli" }
+baml-types = { path = "baml-lib/baml-types" }
 base64 = "0.22.1"
 bstd = { path = "bstd" }
+btrace = { path = "btrace" }
 bytes = "1.6.0"
 cfg-if = "1.0.0"
 clap = { version = "4.4.6", features = ["cargo", "derive"] }
@@ -50,6 +52,12 @@ http = "1.1.0"
 http-body = "1.0.0"
 indexmap = { version = "2.1.0", features = ["serde"] }
 indoc = "2.0.5"
+jsonish = { path = "baml-lib/jsonish" }
+internal-baml-codegen = { path = "language_client_codegen" }
+internal-baml-core = { path = "baml-lib/baml-core" }
+internal-baml-jinja = { path = "baml-lib/jinja-runtime" }
+internal-baml-schema-ast = { path = "baml-lib/schema-ast" }
+internal-llm-client = { path = "baml-lib/llm-client" }
 log = "0.4.20"
 # TODO: disable imports, etc
 minijinja = { version = "1.0.16", default-features = false, features = [
@@ -92,11 +100,6 @@ uuid = { version = "1.8.0", features = ["v4", "v7", "serde"] }
 walkdir = "2.5.0"
 web-time = "1.1.0"
 
-baml-types = { path = "baml-lib/baml-types" }
-internal-baml-codegen = { path = "language_client_codegen" }
-internal-baml-core = { path = "baml-lib/baml-core" }
-internal-baml-jinja = { path = "baml-lib/jinja" }
-internal-baml-schema-ast = { path = "baml-lib/schema-ast" }
 
 [workspace.package]
 version = "0.70.1"
