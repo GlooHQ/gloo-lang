@@ -202,7 +202,7 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                 </div>
                 <div className='flex h-full'>
                   <Link
-                    href='https://docs.boundaryml.com/v3/home/installation'
+                    href='https://docs.boundaryml.com/guide/installation-editors/vs-code-extension'
                     className='h-full pt-0 w-fit text-zinc-300 hover:text-zinc-50'
                   >
                     <div className='flex flex-row items-center text-xs 2xl:text-sm gap-x-4 grayscale hover:grayscale-0'>
