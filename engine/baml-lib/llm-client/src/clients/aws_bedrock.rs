@@ -11,8 +11,10 @@ use super::helpers::{Error, PropertyHandler};
 pub struct UnresolvedAwsBedrock {
     model: Option<StringOr>,
     region: StringOr,
-    access_key_id: StringOr,
-    secret_access_key: StringOr,
+    access_key_id: Option<StringOr>,
+    secret_access_key: Option<StringOr>,
+    session_token: Option<StringOr>,
+    profile: Option<StringOr>,
     role_selection: UnresolvedRolesSelection,
     allowed_role_metadata: UnresolvedAllowedRoleMetadata,
     supported_request_modes: SupportedRequestModes,
@@ -63,6 +65,8 @@ pub struct ResolvedAwsBedrock {
     pub region: Option<String>,
     pub access_key_id: Option<String>,
     pub secret_access_key: Option<String>,
+    pub session_token: Option<String>,
+    pub profile: Option<String>,
     pub inference_config: Option<InferenceConfiguration>,
     role_selection: RolesSelection,
     pub allowed_role_metadata: AllowedRoleMetadata,
@@ -97,8 +101,9 @@ impl UnresolvedAwsBedrock {
             env_vars.extend(m.required_env_vars())
         }
         env_vars.extend(self.region.required_env_vars());
-        env_vars.extend(self.access_key_id.required_env_vars());
-        env_vars.extend(self.secret_access_key.required_env_vars());
+        env_vars.extend(self.access_key_id.as_ref().map(|s| s.required_env_vars()).unwrap_or_default());
+        env_vars.extend(self.secret_access_key.as_ref().map(|s| s.required_env_vars()).unwrap_or_default());
+        env_vars.extend(self.session_token.as_ref().map(|s| s.required_env_vars()).unwrap_or_default());
         env_vars.extend(self.role_selection.required_env_vars());
         env_vars.extend(self.allowed_role_metadata.required_env_vars());
         env_vars.extend(self.supported_request_modes.required_env_vars());
@@ -118,8 +123,10 @@ impl UnresolvedAwsBedrock {
         Ok(ResolvedAwsBedrock {
             model: model.resolve(ctx)?,
             region: self.region.resolve(ctx).ok(),
-            access_key_id: self.access_key_id.resolve(ctx).ok(),
-            secret_access_key: self.secret_access_key.resolve(ctx).ok(),
+            access_key_id: self.access_key_id.as_ref().map(|s| s.resolve(ctx)).transpose().ok().flatten(),
+            secret_access_key: self.secret_access_key.as_ref().map(|s| s.resolve(ctx)).transpose().ok().flatten(),
+            session_token: self.session_token.as_ref().map(|s| s.resolve(ctx)).transpose().ok().flatten(),
+            profile: self.profile.as_ref().map(|s| s.resolve(ctx)).transpose().ok().flatten(),
             role_selection,
             allowed_role_metadata: self.allowed_role_metadata.resolve(ctx)?,
             supported_request_modes: self.supported_request_modes.clone(),
@@ -164,12 +171,16 @@ impl UnresolvedAwsBedrock {
             .unwrap_or_else(|| baml_types::StringOr::EnvVar("AWS_REGION".to_string()));
         let access_key_id = properties
             .ensure_string("access_key_id", false)
-            .map(|(_, v, _)| v.clone())
-            .unwrap_or_else(|| baml_types::StringOr::EnvVar("AWS_ACCESS_KEY_ID".to_string()));
+            .map(|(_, v, _)| v.clone());
         let secret_access_key = properties
             .ensure_string("secret_access_key", false)
-            .map(|(_, v, _)| v.clone())
-            .unwrap_or_else(|| baml_types::StringOr::EnvVar("AWS_SECRET_ACCESS_KEY".to_string()));
+            .map(|(_, v, _)| v.clone());
+        let session_token = properties
+            .ensure_string("session_token", false)
+            .map(|(_, v, _)| v.clone());
+        let profile = properties
+            .ensure_string("profile", false)
+            .map(|(_, v, _)| v.clone());
 
         let role_selection = properties.ensure_roles_selection();
         let allowed_metadata = properties.ensure_allowed_metadata();
@@ -245,6 +256,8 @@ impl UnresolvedAwsBedrock {
             region,
             access_key_id,
             secret_access_key,
+            session_token,
+            profile,
             role_selection,
             allowed_role_metadata: allowed_metadata,
             supported_request_modes,

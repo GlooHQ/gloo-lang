@@ -128,29 +128,39 @@ impl AwsClient {
         #[cfg(not(target_arch = "wasm32"))]
         let mut loader = aws_config::defaults(BehaviorVersion::latest());
 
+        // Set profile first if specified
+        if let Some(profile) = self.properties.profile.as_ref() {
+            loader = loader.profile_name(profile);
+        }
+
+        // Set region if specified
         if let Some(aws_region) = self.properties.region.as_ref() {
             loader = loader.region(Region::new(aws_region.clone()));
         }
 
-        if let (Some(aws_access_key_id), Some(aws_secret_access_key)) = (
+        // Set credentials provider
+        let loader = if let (Some(aws_access_key_id), Some(aws_secret_access_key)) = (
             self.properties.access_key_id.as_ref(),
             self.properties.secret_access_key.as_ref(),
         ) {
-            loader = loader.credentials_provider(Credentials::new(
+            let aws_session_token = self.properties.session_token.clone();
+            loader.credentials_provider(Credentials::new(
                 aws_access_key_id.clone(),
                 aws_secret_access_key.clone(),
-                None,
+                aws_session_token,
                 None,
                 "baml-runtime",
-            ));
-        }
+            ))
+        } else {
+            // Use default provider chain which includes SSO, profile, environment variables, etc.
+            loader.credentials_provider(
+                aws_config::default_provider::credentials::DefaultCredentialsChain::builder()
+                    .build()
+                    .await
+            )
+        };
 
-        let config = loader
-            .retry_config(RetryConfig::disabled())
-            .identity_cache(IdentityCache::no_cache())
-            .load()
-            .await;
-
+        let config = loader.load().await;
         Ok(bedrock::Client::new(&config))
     }
 
