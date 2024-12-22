@@ -21,5 +21,10 @@
       "@gloo-ai/baml-schema-wasm-web/*": ["../../../baml-schema-wasm-web/dist/*"]
     }
   },
-  "include": ["./src", "../../../common/src/parser_db.ts", "../../../baml-schema-wasm-web/dist"]
+  "include": [
+    "./src",
+    "../../../common/src/parser_db.ts",
+    "../../../baml-schema-wasm-web/dist",
+    "../../../playground-common/src/baml-project-panel/vscode.ts"
+  ]
 }

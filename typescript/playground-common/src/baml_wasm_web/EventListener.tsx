@@ -18,7 +18,7 @@ import {
   type WasmRuntime,
   type WasmScope,
 } from '@gloo-ai/baml-schema-wasm-web/baml_schema_build'
-import { vscode } from '../utils/vscode'
+import { vscode } from '../../../../../playground-common/src/baml-project-panel/vscode'
 import { useRunHooks } from './test_uis/testHooks'
 // const wasm = await import("@gloo-ai/baml-schema-wasm-web/baml_schema_build");
 // const { WasmProject, WasmRuntime, WasmRuntimeContext, version: RuntimeVersion } = wasm;
@@ -27,53 +27,11 @@ const postMessageToExtension = (message: any) => {
   vscode.postMessage(message)
 }
 
-const wasmAtomAsync = atom(async () => {
-  const wasm = await import('@gloo-ai/baml-schema-wasm-web/baml_schema_build')
-  return wasm
-})
 
-const vscodeSettingsAtom = unwrap(
-  atom(async () => {
-    try {
-      const res = await vscode.getIsProxyEnabled()
-      return {
-        enablePlaygroundProxy: res,
-      }
-    } catch (e) {
-      console.error(`Error occurred while getting vscode settings:\n${e}`)
-      return {
-        enablePlaygroundProxy: true,
-      }
-    }
-  }),
-)
-
-export const wasmAtom = unwrap(wasmAtomAsync)
-
-const defaultEnvKeyValues: [string, string][] = (() => {
-  if ((window as any).next?.version) {
-    console.log('Running in nextjs')
-
-    const domain = window?.location?.origin || ''
-    if (domain.includes('localhost')) {
-      // we can do somehting fancier here later if we want to test locally.
-      return [['BOUNDARY_PROXY_URL', 'https://fiddle-proxy.fly.dev']]
-    }
-    return [['BOUNDARY_PROXY_URL', 'https://fiddle-proxy.fly.dev']]
-  } else {
-    console.log('Not running in a Next.js environment, set default value')
-    // Not running in a Next.js environment, set default value
-    return [['BOUNDARY_PROXY_URL', 'http://localhost:0000']]
-  }
-})()
 
 const selectedProjectStorageAtom = atomWithStorage<string | null>('selected-project', null, sessionStore)
 const selectedFunctionStorageAtom = atom<string | null>(null)
-const envKeyValueStorage = atomWithStorage<[string, string][]>(
-  'env-key-values',
-  defaultEnvKeyValues,
-  vscodeLocalStorageStore,
-)
+
 export const hasClosedEnvVarsDialogAtom = atomWithStorage<boolean>(
   'has-closed-env-vars-dialog',
   false,
@@ -88,45 +46,6 @@ export const hasClosedIntroToChecksDialogAtom = atomWithStorage<boolean>(
   vscodeLocalStorageStore,
 )
 
-export const resetEnvKeyValuesAtom = atom(null, (get, set) => {
-  set(envKeyValueStorage, [])
-})
-export const envKeyValuesAtom = atom(
-  (get) => {
-    return get(envKeyValueStorage).map(([k, v], idx): [string, string, number] => [k, v, idx])
-  },
-  (
-    get,
-    set,
-    update: // Update value
-      | { itemIndex: number; value: string }
-      // Update key
-      | { itemIndex: number; newKey: string }
-      // Remove key
-      | { itemIndex: number; remove: true }
-      // Insert key
-      | {
-          itemIndex: null
-          key: string
-          value?: string
-        },
-  ) => {
-    if (update.itemIndex !== null) {
-      const keyValues = [...get(envKeyValueStorage)]
-      if ('value' in update) {
-        keyValues[update.itemIndex][1] = update.value
-      } else if ('newKey' in update) {
-        keyValues[update.itemIndex][0] = update.newKey
-      } else if ('remove' in update) {
-        keyValues.splice(update.itemIndex, 1)
-      }
-      console.log('Setting env key values', keyValues)
-      set(envKeyValueStorage, keyValues)
-    } else {
-      set(envKeyValueStorage, (prev) => [...prev, [update.key, update.value ?? '']])
-    }
-  },
-)
 
 type Selection = {
   project?: string
@@ -134,23 +53,7 @@ type Selection = {
   testCase?: string
 }
 
-export const envVarsAtom = atom((get) => {
-  if ((window as any).next?.version) {
-    // NextJS environment doesnt have vscode settings, and proxy is always enabled
-    return Object.fromEntries(defaultEnvKeyValues.map(([k, v]) => [k, v]))
-  } else {
-    const vscodeSettings = get(vscodeSettingsAtom)
-    console.log('vscodeSettings', vscodeSettings)
-    if (vscodeSettings?.enablePlaygroundProxy !== undefined && !vscodeSettings?.enablePlaygroundProxy) {
-      // filter it out
-      const envKeyValues = get(envKeyValuesAtom)
-      return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]).filter(([k]) => k !== 'BOUNDARY_PROXY_URL'))
-    }
 
-    const envKeyValues = get(envKeyValuesAtom)
-    return Object.fromEntries(envKeyValues.map(([k, v]) => [k, v]))
-  }
-})
 
 const selectedProjectAtom = atom(
   (get) => {

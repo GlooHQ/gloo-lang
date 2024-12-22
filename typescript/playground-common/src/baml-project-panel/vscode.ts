@@ -4,7 +4,7 @@ import {
   GetVSCodeSettingsResponse,
   GetWebviewUriRequest,
   GetWebviewUriResponse,
-} from '../baml_wasm_web/rpc'
+} from '../../../vscode-ext/packages/web-panel/src/baml_wasm_web/rpc'
 import type { WebviewApi } from 'vscode-webview'
 
 const RPC_TIMEOUT_MS = 5000

@@ -1,7 +1,7 @@
 import type { StringSpan } from '@baml/common'
 import { VSCodeLink } from '@vscode/webview-ui-toolkit/react'
 import { cn } from '../lib/utils'
-import { vscode } from '../utils/vscode'
+import { vscode } from '../../../../../playground-common/src/baml-project-panel/vscode'
 import { File } from 'lucide-react'
 
 const Link: React.FC<{ item: StringSpan; display?: string; className?: string }> = ({ item, display, className }) => (
