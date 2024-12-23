@@ -37,21 +37,22 @@ pub fn parsed_value_to_response(
     let baml_value_with_meta: BamlValueWithMeta<Vec<(String, JinjaExpression, bool)>> =
         baml_value.clone().into();
 
-    let value_with_response_checks: BamlValueWithMeta<Vec<ResponseCheck>> = baml_value_with_meta.map_meta(|cs| {
-        cs.iter()
-            .map(|(label, expr, result)| {
-                let status = (if *result { "succeeded" } else { "failed" }).to_string();
-                ResponseCheck {
-                    name: label.clone(),
-                    expression: expr.0.clone(),
-                    status,
-                }
-            })
-            .collect()
-    });
+    let value_with_response_checks: BamlValueWithMeta<Vec<ResponseCheck>> = baml_value_with_meta
+        .map_meta(|cs| {
+            cs.iter()
+                .map(|(label, expr, result)| {
+                    let status = (if *result { "succeeded" } else { "failed" }).to_string();
+                    ResponseCheck {
+                        name: label.clone(),
+                        expression: expr.0.clone(),
+                        status,
+                    }
+                })
+                .collect()
+        });
 
-    let baml_value_with_streaming =
-        validate_streaming_state(ir, &baml_value, field_type).map_err(|s| anyhow::anyhow!("{s:?}"))?;
+    let baml_value_with_streaming = validate_streaming_state(ir, &baml_value, field_type)
+        .map_err(|s| anyhow::anyhow!("{s:?}"))?;
     let response_value = baml_value_with_streaming
         .zip_meta(value_with_response_checks)?
         .zip_meta(meta_flags)?
@@ -359,5 +360,43 @@ impl crate::tracing::Visualize for LLMErrorResponse {
             crate::tracing::truncate_string(&self.message, max_chunk_size).red()
         ));
         s.join("\n")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use baml_types::{BamlValueWithMeta, FieldType};
+    use internal_baml_core::ir::repr::{make_test_ir, IntermediateRepr};
+    use jsonish::{deserializer::{deserialize_flags::DeserializerConditions, types::ValueWithFlags}, BamlValueWithFlags, parsed_value_to_response};
+
+    fn mk_ir() -> IntermediateRepr {
+        make_test_ir(
+            r##"
+        class Foo {
+          i int
+          s string @stream.done
+        }
+        "##,
+        )
+        .expect("Source is valid")
+    }
+
+    #[test]
+    fn to_response() {
+        let ir = mk_ir();
+        let val = BamlValueWithFlags::Class(
+            "Foo".to_string(),
+            DeserializerConditions { flags: vec![
+                Flag::Incomplete
+            ] },
+            vec![
+                ("i".to_string(), BamlValueWithFlags::Int(ValueWithFlags {value: 1, flags: DeserializerConditions { flags: Vec::new()}})),
+                ("s".to_string(), BamlValueWithFlags::String(ValueWithFlags {value: "H".to_string(), flags: DeserializerConditions { flags: vec![Flag::Incomplete]}}))
+            ].into_iter().collect(),
+        );
+        let response = parsed_value_to_response(&ir, &val, &FieldType::class("Foo"));
+        dbg!(response);
+        assert!(false);
     }
 }

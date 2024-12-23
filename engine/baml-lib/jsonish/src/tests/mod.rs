@@ -248,7 +248,7 @@ fn relevant_data_models<'a>(
     Ok((enums, classes, recursive_classes))
 }
 
-fn parsed_value_to_response(
+pub fn parsed_value_to_response(
     ir: &IntermediateRepr,
     baml_value: &BamlValueWithFlags,
     field_type: &FieldType,
@@ -278,8 +278,10 @@ fn parsed_value_to_response(
       .zip_meta(value_with_response_checks)?
       .zip_meta(meta_flags)?
       .map_meta(|((x,y),z)| (z.clone(), y.clone(), x.clone()));
+    panic!("jsonish panic: {:?}", response_value);
     Ok(ResponseBamlValue(response_value))
 }
+
 const EMPTY_FILE: &str = r#"
 "#;
 

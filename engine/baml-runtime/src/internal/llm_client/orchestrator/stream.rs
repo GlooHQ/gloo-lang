@@ -2,13 +2,13 @@ use anyhow::Result;
 use async_std::stream::StreamExt;
 use baml_types::BamlValue;
 use internal_baml_core::ir::repr::IntermediateRepr;
-use jsonish::BamlValueWithFlags;
+use jsonish::{BamlValueWithFlags,
+            parsed_value_to_response};
 use web_time::Duration;
 
 use crate::{
     internal::{
         llm_client::{
-            parsed_value_to_response,
             traits::{WithPrompt, WithStreamable},
             LLMErrorResponse, LLMResponse, ResponseBamlValue,
         },
