@@ -1342,7 +1342,11 @@ async def test_no_stream_big_integer():
     msgs: List[int | None] = []
     async for msg in stream:
         msgs.append(msg)
+    print("msgs:")
+    print(msgs)
     res = await stream.get_final_response()
+    print("res:")
+    print(res)
     for msg in msgs:
         assert True if msg is None else msg == res
 

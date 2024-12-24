@@ -1,7 +1,7 @@
 use anyhow::Result;
 use baml_types::BamlValue;
 use internal_baml_core::ir::repr::IntermediateRepr;
-use jsonish::{BamlValueWithFlags, ResponseBamlValue, parsed_value_to_response};
+use jsonish::{BamlValueWithFlags, ResponseBamlValue};
 use web_time::Duration;
 
 use crate::{

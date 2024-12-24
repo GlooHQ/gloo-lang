@@ -63,7 +63,7 @@ impl PromptRenderer {
             raw_string,
             allow_partials,
         )?;
-        parsed_value_to_response(ir, &parsed, &self.output_type)
+        parsed_value_to_response(ir, &parsed, &self.output_type, allow_partials)
     }
 
     pub fn render_prompt(

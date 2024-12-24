@@ -25,6 +25,7 @@ pub fn validate_streaming_state(
     ir: &IntermediateRepr,
     baml_value: &BamlValueWithFlags,
     field_type: &FieldType,
+    allow_partials: bool,
 ) -> Result<BamlValueWithMeta<Option<CompletionState>>, StreamingError> {
     let baml_value_with_meta_flags: BamlValueWithMeta<Vec<Flag>> = baml_value.clone().into();
     let typed_baml_value: BamlValueWithMeta<(Vec<Flag>, FieldType)> = ir
@@ -33,7 +34,7 @@ pub fn validate_streaming_state(
     let baml_value_with_streaming_state_and_behavior =
         typed_baml_value.map_meta(|(flags, r#type)| (completion_state(&flags), r#type));
 
-    process_node(ir, baml_value_with_streaming_state_and_behavior)
+    process_node(ir, baml_value_with_streaming_state_and_behavior, allow_partials)
 }
 
 /// Consider a node's type, streaming state, and streaming behavior annotations. Return
@@ -45,11 +46,12 @@ pub fn validate_streaming_state(
 fn process_node(
     ir: &IntermediateRepr,
     value: BamlValueWithMeta<(CompletionState, &FieldType)>,
+    allow_partials: bool,
 ) -> Result<BamlValueWithMeta<Option<CompletionState>>, StreamingError> {
     let (completion_state, field_type) = value.meta();
     let (base_type, (_, streaming_behavior)) = ir.distribute_metadata(field_type);
 
-    let must_be_done = required_done(ir, field_type);
+    let must_be_done = required_done(ir, field_type) && allow_partials;
 
     // eprintln!("Working on {value:?}");
     // eprintln!("  completion: {completion_state:?}");
@@ -78,16 +80,16 @@ fn process_node(
         BamlValueWithMeta::List(items, _) => Ok(BamlValueWithMeta::List(
             items
                 .into_iter()
-                .filter_map(|item| process_node(ir, item).ok())
+                .filter_map(|item| process_node(ir, item, allow_partials).ok())
                 .collect(),
             new_meta,
         )),
         BamlValueWithMeta::Class(ref class_name, ref fields, _) => {
-            let needed_fields: HashSet<String> = needed_fields(ir, field_type)?;
+            let needed_fields: HashSet<String> = needed_fields(ir, field_type, allow_partials)?;
             let mut new_fields = fields
                 .clone()
                 .into_iter()
-                .filter_map(|(field_name, field_value)| process_node(ir, field_value).ok().map(|v| (field_name, v)))
+                .filter_map(|(field_name, field_value)| process_node(ir, field_value, allow_partials).ok().map(|v| (field_name, v)))
                 .collect::<IndexMap<String,BamlValueWithMeta<_>>>();
             let new_field_names = new_fields.iter().filter_map(|(field_name, field_value)|
                 match field_value {
@@ -119,7 +121,7 @@ fn process_node(
         }
         BamlValueWithMeta::Enum(name, value, _) => Ok(BamlValueWithMeta::Enum(name, value, new_meta)),
         BamlValueWithMeta::Map(kvs, _) => {
-            let new_kvs = kvs.into_iter().filter_map(|(k,v)| process_node(ir, v).ok().map(|v| (k,v))).collect();
+            let new_kvs = kvs.into_iter().filter_map(|(k,v)| process_node(ir, v, allow_partials).ok().map(|v| (k,v))).collect();
             Ok(BamlValueWithMeta::Map(new_kvs, new_meta))
         }
     };
@@ -134,10 +136,19 @@ fn process_node(
 /// class that were marked `@stream.not_null`.
 /// The parameter must have already been passed through `distribute_metadata`,
 /// it's an error to call this function with undistributed metadata.
+///
+/// When allow_partials==false, we are in a context where we are done with
+/// streaming, so we override the normal implemenation of this function
+/// and return an empty set (because we are ignoring the "needed" property,
+/// which only applies to mid-stream messages).
 fn needed_fields(
     ir: &IntermediateRepr,
     field_type: &FieldType,
+    allow_partials: bool,
 ) -> Result<HashSet<String>, StreamingError> {
+    if allow_partials == false {
+        return Ok(HashSet::new());
+    }
     match field_type {
         FieldType::Class(class_name) => {
             let class = ir
