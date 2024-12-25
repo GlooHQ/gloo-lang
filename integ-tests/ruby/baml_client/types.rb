@@ -193,6 +193,7 @@ module Baml
     class NestedBlockConstraintForParam < T::Struct; end
     class Node < T::Struct; end
     class NodeWithAliasIndirection < T::Struct; end
+    class OptionalListAndMap < T::Struct; end
     class OptionalTest_Prop1 < T::Struct; end
     class OptionalTest_ReturnType < T::Struct; end
     class OrderInfo < T::Struct; end
@@ -895,6 +896,20 @@ module Baml
         super(
           value: props[:value],
           next: props[:next],
+        )
+
+        @props = props
+      end
+    end
+    class OptionalListAndMap < T::Struct
+      include Baml::Sorbet::Struct
+      const :p, T.nilable(T::Array[String])
+      const :q, T.nilable(T::Hash[String, String])
+
+      def initialize(props)
+        super(
+          p: props[:p],
+          q: props[:q],
         )
 
         @props = props

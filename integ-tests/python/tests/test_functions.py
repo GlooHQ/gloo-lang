@@ -40,10 +40,14 @@ from ..baml_client.types import (
     BlockConstraintForParam,
     NestedBlockConstraintForParam,
     MapKey,
+<<<<<<< HEAD
     LinkedListAliasNode,
     ClassToRecAlias,
     NodeWithAliasIndirection,
     MergeAttrs,
+=======
+    OptionalListAndMap,
+>>>>>>> canary
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -118,6 +122,14 @@ class TestAllInputs:
     async def test_return_literal_union(self):
         res = await b.LiteralUnionsTest("a")
         assert res == 1 or res == True or res == "string output"
+
+    @pytest.mark.asyncio
+    async def test_optional_list_and_map(self):
+        res = await b.AllowedOptionals(OptionalListAndMap(p=None, q=None))
+        assert res == OptionalListAndMap(p=None, q=None)
+
+        res = await b.AllowedOptionals(OptionalListAndMap(p=["test"], q={"test": "ok"}))
+        assert res == OptionalListAndMap(p=["test"], q={"test": "ok"})
 
     @pytest.mark.asyncio
     async def test_constraints(self):

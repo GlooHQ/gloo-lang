@@ -47,6 +47,14 @@ describe('Integ tests', () => {
       expect(res == 1 || res == true || res == 'string output').toBeTruthy()
     })
 
+    it('optional list and map', async () => {
+      let res = await b.AllowedOptionals({ p: null, q: null })
+      expect(res).toEqual({ p: null, q: null })
+
+      res = await b.AllowedOptionals({ p: ['test'], q: { test: 'ok' } })
+      expect(res).toEqual({ p: ['test'], q: { test: 'ok' } })
+    })
+
     it('single class', async () => {
       console.log('calling with class')
       const res = await b.TestFnNamedArgsSingleClass({
