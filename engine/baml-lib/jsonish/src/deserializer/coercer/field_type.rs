@@ -18,8 +18,6 @@ use super::{
     ParsingContext, ParsingError,
 };
 
-static mut LIMIT: usize = 0;
-
 impl TypeCoercer for FieldType {
     fn coerce(
         &self,
@@ -27,12 +25,7 @@ impl TypeCoercer for FieldType {
         target: &FieldType,
         value: Option<&crate::jsonish::Value>,
     ) -> Result<BamlValueWithFlags, ParsingError> {
-        unsafe {
-            LIMIT += 1;
-            eprintln!("LIMIT: {}", LIMIT);
-        }
-
-        let ret_v = match value {
+        match value {
             Some(crate::jsonish::Value::AnyOf(candidates, primitive)) => {
                 log::debug!(
                     "scope: {scope} :: coercing to: {name} (current: {current})",
@@ -117,15 +110,7 @@ impl TypeCoercer for FieldType {
                     Ok(coerced_value)
                 }
             },
-        };
-
-        unsafe {
-            LIMIT -= 1;
         }
-
-        eprintln!("ret_v: {:?}", ret_v);
-
-        ret_v
     }
 }
 

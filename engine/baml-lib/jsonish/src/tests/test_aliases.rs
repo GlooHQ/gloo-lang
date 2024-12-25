@@ -251,3 +251,63 @@ type JsonObject = map<string, JsonValue>
         }
     }
 );
+
+test_deserializer!(
+    test_ambiguous_int_string_json_type,
+    r#"
+type JsonValue = int | float | bool | string | null | JsonValue[] | map<string, JsonValue> 
+    "#,
+    r#"
+    {
+        "recipe": {
+            "name": "Chocolate Chip Cookies",
+            "servings": 24,
+            "ingredients": [
+                "2 1/4 cups all-purpose flour", "1/2 teaspoon baking soda",
+                "1 cup unsalted butter, room temperature",
+                "1/2 cup granulated sugar",
+                "1 cup packed light-brown sugar",
+                "1 teaspoon salt", "2 teaspoons pure vanilla extract",
+                "2 large eggs", "2 cups semisweet and/or milk chocolate chips"
+            ],
+            "instructions": [
+                "Preheat oven to 350°F (180°C).",
+                "In a small bowl, whisk together flour and baking soda; set aside.",
+                "In a large bowl, cream butter and sugars until light and fluffy.",
+                "Add salt, vanilla, and eggs; mix well.",
+                "Gradually stir in flour mixture.",
+                "Fold in chocolate chips.",
+                "Drop by rounded tablespoons onto ungreased baking sheets.",
+                "Bake for 10-12 minutes or until golden brown.",
+                "Cool on wire racks."
+            ]
+        }
+    }
+    "#,
+    FieldType::RecursiveTypeAlias("JsonValue".into()),
+    {
+        "recipe": {
+            "name": "Chocolate Chip Cookies",
+            "servings": 24,
+            "ingredients": [
+                "2 1/4 cups all-purpose flour", "1/2 teaspoon baking soda",
+                "1 cup unsalted butter, room temperature",
+                "1/2 cup granulated sugar",
+                "1 cup packed light-brown sugar",
+                "1 teaspoon salt", "2 teaspoons pure vanilla extract",
+                "2 large eggs", "2 cups semisweet and/or milk chocolate chips"
+            ],
+            "instructions": [
+                "Preheat oven to 350°F (180°C).",
+                "In a small bowl, whisk together flour and baking soda; set aside.",
+                "In a large bowl, cream butter and sugars until light and fluffy.",
+                "Add salt, vanilla, and eggs; mix well.",
+                "Gradually stir in flour mixture.",
+                "Fold in chocolate chips.",
+                "Drop by rounded tablespoons onto ungreased baking sheets.",
+                "Bake for 10-12 minutes or until golden brown.",
+                "Cool on wire racks."
+            ]
+        }
+    }
+);
