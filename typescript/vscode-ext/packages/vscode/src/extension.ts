@@ -182,6 +182,7 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showErrorMessage(
         'Failed to start BAML extension server. Please try reloading the window, or restarting VSCode.',
       )
+      console.error('Failed to start BAML extension server. Please try reloading the window, or restarting VSCode.')
       return 0
     }
     if (typeof addr === 'string') {

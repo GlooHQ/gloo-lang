@@ -4,15 +4,15 @@ import { BAML_DIR } from '@/lib/constants'
 import type { BAMLProject } from '@/lib/exampleProjects'
 import { BAML, theme } from '@boundaryml/baml-lezer'
 import type { ParserDatabase } from '@baml/common'
-import {
-  availableFunctionsAtom,
-  diagnositicsAtom,
-  numErrorsAtom,
-  selectedFunctionAtom,
-  updateFileAtom,
-} from '@baml/playground-common/baml_wasm_web/EventListener'
+// import {
+//   availableFunctionsAtom,
+//   diagnositicsAtom,
+//   numErrorsAtom,
+//   selectedFunctionAtom,
+//   updateFileAtom,
+// } from '@baml/playground-common/baml_wasm_web/EventListener'
 import { atomStore } from '@baml/playground-common/baml_wasm_web/JotaiProvider'
-import { projectFamilyAtom, runtimeFamilyAtom } from '@baml/playground-common/baml_wasm_web/baseAtoms'
+// import { projectFamilyAtom, runtimeFamilyAtom } from '@baml/playground-common/baml_wasm_web/baseAtoms'
 import { Button } from '@baml/playground-common/components/ui/button'
 import { Language, LanguageSupport } from '@codemirror/language'
 import { type Diagnostic, forceLinting, linter, openLintPanel } from '@codemirror/lint'
@@ -99,45 +99,45 @@ const wasmModuleCache: any = null
 //   return allDiagnostics.filter((d) => d.source === atomStore.get(activeFileAtom)?.path)
 // }
 
-function makeLinter() {
-  return linter(
-    (_view) => {
-      console.log('running linter')
-      const diagnosticErrors = atomStore.get(diagnositicsAtom)
-      const currentFile = atomStore.get(activeFileNameAtom)
-      if (!currentFile) {
-        return []
-      }
+// function makeLinter() {
+//   return linter(
+//     (_view) => {
+//       console.log('running linter')
+//       const diagnosticErrors = atomStore.get(diagnositicsAtom)
+//       const currentFile = atomStore.get(activeFileNameAtom)
+//       if (!currentFile) {
+//         return []
+//       }
 
-      console.log('diagnosticErrors', diagnosticErrors)
+//       console.log('diagnosticErrors', diagnosticErrors)
 
-      return (
-        diagnosticErrors
-          .filter((err) => err.file_path == currentFile)
-          .map((err): Diagnostic => {
-            return {
-              from: err.start_ch,
-              to: err.start_ch === err.end_ch ? err.end_ch + 1 : err.end_ch,
-              message: err.message,
-              severity: err.type === 'warning' ? 'warning' : 'error',
-              source: 'baml',
-              markClass: err.type === 'error' ? 'decoration-wavy decoration-red-500 text-red-450 stroke-blue-500' : '',
-            }
-          }) ?? []
-      )
-    },
-    { delay: 200 },
-  )
-}
+//       return (
+//         diagnosticErrors
+//           .filter((err) => err.file_path == currentFile)
+//           .map((err): Diagnostic => {
+//             return {
+//               from: err.start_ch,
+//               to: err.start_ch === err.end_ch ? err.end_ch + 1 : err.end_ch,
+//               message: err.message,
+//               severity: err.type === 'warning' ? 'warning' : 'error',
+//               source: 'baml',
+//               markClass: err.type === 'error' ? 'decoration-wavy decoration-red-500 text-red-450 stroke-blue-500' : '',
+//             }
+//           }) ?? []
+//       )
+//     },
+//     { delay: 200 },
+//   )
+// }
 
 const comparment = new Compartment()
-const extensions: Extension[] = [BAML(), EditorView.lineWrapping, comparment.of(makeLinter()), hyperLink]
+// const extensions: Extension[] = [BAML(), EditorView.lineWrapping, comparment.of(makeLinter()), hyperLink]
 
 const extensionMap = {
   ts: [langs.tsx(), EditorView.lineWrapping],
   py: [langs.python(), EditorView.lineWrapping],
   json: [langs.json(), EditorView.lineWrapping],
-  baml: [extensions],
+  // baml: [extensions],
 }
 const getLanguage = (filePath: string | null): Extension[] => {
   const extension = filePath?.split('.').pop()
@@ -147,10 +147,10 @@ export const CodeMirrorEditor = ({ project }: { project: BAMLProject }) => {
   const [editorFiles, setEditorFiles] = useAtom(currentEditorFilesAtom)
   const [activeFile, setActiveFile] = useAtom(activeFileNameAtom)
   const activeFileContent = useAtomValue(activeFileContentAtom)
-  const updateFile = useSetAtom(updateFileAtom)
+  // const updateFile = useSetAtom(updateFileAtom)
 
-  const availableFunctions = useAtomValue(availableFunctionsAtom)
-  const setSelectedFunction = useSetAtom(selectedFunctionAtom)
+  // const availableFunctions = useAtomValue(availableFunctionsAtom)
+  // const setSelectedFunction = useSetAtom(selectedFunctionAtom)
 
   const ref = useRef<ReactCodeMirrorRef>({})
 
@@ -159,22 +159,22 @@ export const CodeMirrorEditor = ({ project }: { project: BAMLProject }) => {
     if (ref.current?.view) {
       const view = ref.current.view
       view.dispatch({
-        effects: comparment.reconfigure([makeLinter()]),
+        // effects: comparment.reconfigure([makeLinter()]),
       })
     }
   }, [JSON.stringify(editorFiles)])
 
-  useEffect(() => {
-    const func = availableFunctions.find((f) => f.span.file_path === activeFile)
-    if (func) {
-      setSelectedFunction(func.name)
-    }
-  }, [JSON.stringify(editorFiles.map((f) => f.path)), activeFile, availableFunctions])
+  // useEffect(() => {
+  //   const func = availableFunctions.find((f) => f.span.file_path === activeFile)
+  //   if (func) {
+  //     setSelectedFunction(func.name)
+  //   }
+  // }, [JSON.stringify(editorFiles.map((f) => f.path)), activeFile, availableFunctions])
 
   const setUnsavedChanges = useSetAtom(unsavedChangesAtom)
 
   const langExtensions = getLanguage(activeFile)
-  const numErrors = useAtomValue(numErrorsAtom)
+  // const numErrors = useAtomValue(numErrorsAtom)
 
   return (
     <div className='w-full'>
@@ -205,7 +205,7 @@ export const CodeMirrorEditor = ({ project }: { project: BAMLProject }) => {
           height: 'calc(100% - 64px)',
         }}
       >
-        <CodeMirror
+        {/* <CodeMirror
           ref={ref}
           // key={editorFiles.map((f) => f.path).join('')}
           value={activeFileContent}
@@ -235,13 +235,13 @@ export const CodeMirrorEditor = ({ project }: { project: BAMLProject }) => {
             window.history.replaceState(null, '', '/')
             setUnsavedChanges(true)
           }}
-        />
+        /> */}
         <div className='absolute bottom-3 pl-8  inset-x-0 right-[10px] h-[20px] p-2'>
-          {numErrors.errors > 0 && (
+          {/* {numErrors.errors > 0 && (
             <div className='p-1 px-5 w-full text-xs text-white bg-red-500 rounded-md'>
               {numErrors.errors} {numErrors.errors === 1 ? 'error' : 'errors'}
             </div>
-          )}
+          )} */}
         </div>
         <div className='absolute -top-8 right-0 h-[20px] p-2'>
           {!activeFile?.endsWith('.baml') && (

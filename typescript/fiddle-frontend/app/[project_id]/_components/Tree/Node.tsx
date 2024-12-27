@@ -1,6 +1,6 @@
 import { EditorFile } from '@/app/actions'
-import { diagnositicsAtom, updateFileAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
-import { runtimeFamilyAtom } from '@baml/playground-common/baml_wasm_web/baseAtoms'
+// import { diagnositicsAtom, updateFileAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
+// import { runtimeFamilyAtom } from '@baml/playground-common/baml_wasm_web/baseAtoms'
 import clsx from 'clsx'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useAtomCallback } from 'jotai/utils'
@@ -38,29 +38,29 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
   const iconColor = node.data.iconColor
   const editorFiles = useAtomValue(currentEditorFilesAtom)
   const setActiveFile = useSetAtom(activeFileNameAtom)
-  const updateFile = useSetAtom(updateFileAtom)
+  // const updateFile = useSetAtom(updateFileAtom)
 
   const hasErrorInChildren = useAtomCallback<boolean, string[]>(
     useCallback(
       (get, set, nodeId: string) => {
         const nodes = [tree.get(nodeId)] // Start with the current node
 
-        const diagnosticErrors = get(diagnositicsAtom)
-        const errors = diagnosticErrors.filter((d) => d.type === 'error')
-        while (nodes.length > 0) {
-          const currentNode = nodes.pop()
-          if (currentNode?.children) {
-            currentNode.children.forEach((child) => {
-              nodes.push(tree.get(child.id))
-            })
-          }
-          if (errors.some((d) => d.file_path === currentNode?.id)) {
-            return true
-          }
-        }
+        // const diagnosticErrors = get(diagnositicsAtom)
+        // const errors = diagnosticErrors.filter((d) => d.type === 'error')
+        // while (nodes.length > 0) {
+        //   const currentNode = nodes.pop()
+        //   if (currentNode?.children) {
+        //     currentNode.children.forEach((child) => {
+        //       nodes.push(tree.get(child.id))
+        //     })
+        //   }
+        //   if (errors.some((d) => d.file_path === currentNode?.id)) {
+        //     return true
+        //   }
+        // }
         return false
       },
-      [diagnositicsAtom, tree],
+      [tree],
     ),
   )
 
@@ -86,7 +86,7 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
       style={style}
       ref={dragHandle}
     >
-      <div className='flex flex-row items-center w-full justify-start' onClick={() => node.isInternal && node.toggle()}>
+      <div className='flex flex-row justify-start items-center w-full' onClick={() => node.isInternal && node.toggle()}>
         {node.isLeaf ? (
           <>
             <span className=''></span>
@@ -116,15 +116,15 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
                   node.submit(e.currentTarget.value)
                   const filePathWithNoFilename = node.id.split('/').slice(0, -1).join('/')
                   const fileName = `${filePathWithNoFilename}/${e.currentTarget.value}`
-                  updateFile({
-                    reason: 'rename_file',
-                    root_path: PROJECT_ROOT,
-                    files: [],
-                    renames: [{ from: node.id, to: fileName }],
-                  })
+                  // updateFile({
+                  //   reason: 'rename_file',
+                  //   root_path: PROJECT_ROOT,
+                  //   files: [],
+                  //   renames: [{ from: node.id, to: fileName }],
+                  // })
 
                   setEmptyDirs((prev) => {
-                    prev = prev as string[]
+                    prev = prev
                     return prev.map((d) => {
                       d = d.slice(0, -1)
                       if (d === node.id) {
@@ -152,10 +152,10 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
       </div>
 
       {node.id !== 'baml_src' && (
-        <div className='absolute top-0 right-0 hidden rounded-md group-hover:flex bg-zinc-800'>
+        <div className='hidden absolute top-0 right-0 rounded-md group-hover:flex bg-zinc-800'>
           <div className='flex flex-row items-center'>
             <button
-              className='p-1 hover:opacity-100 opacity-70'
+              className='p-1 opacity-70 hover:opacity-100'
               onClick={(e) => {
                 e.stopPropagation()
                 node.edit()
@@ -165,22 +165,22 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
               <Edit2 size={11} />
             </button>
             <button
-              className='p-1 hover:opacity-100 opacity-60'
+              className='p-1 opacity-60 hover:opacity-100'
               onClick={() => {
                 tree.delete(node.id)
 
-                updateFile({
-                  reason: 'delete_file',
-                  root_path: PROJECT_ROOT,
-                  files: [
-                    {
-                      name: node.id,
-                      content: undefined,
-                    },
-                  ],
-                })
+                // updateFile({
+                //   reason: 'delete_file',
+                //   root_path: PROJECT_ROOT,
+                //   files: [
+                //     {
+                //       name: node.id,
+                //       content: undefined,
+                //     },
+                //   ],
+                // })
                 setEmptyDirs((prev) => {
-                  prev = prev as string[]
+                  prev = prev
                   return prev.filter((d) => d.slice(0, -1) !== node.id)
                 })
               }}

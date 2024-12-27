@@ -3,12 +3,12 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import JotaiProvider from '@baml/playground-common/baml_wasm_web/JotaiProvider'
+import { PromptPreview } from '@baml/playground-common'
 import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
 import { BrowseSheet } from './_components/BrowseSheet'
 import { PHProvider, RB2BElement } from './_components/PosthogProvider'
 import { ThemeProvider } from './_components/ThemeProvider'
-import { AppStateProvider } from '@baml/playground-common/shared/AppStateContext'
 
 const PostHogPageView = dynamic(() => import('./PostHogPageView'), {
   ssr: false,
@@ -38,6 +38,7 @@ export default function RootLayout({
               {/* <div className='fixed left-0 bottom-1/2 w-[12%] px-1 items-center justify-center flex'>
                 <BrowseSheet />
               </div> */}
+              <PromptPreview />
             </JotaiProvider>
             <Toaster />
           </ThemeProvider>

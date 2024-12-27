@@ -11,10 +11,10 @@ import type { BAMLProject } from '@/lib/exampleProjects'
 import {
   CustomErrorBoundary,
   EventListener,
-  FunctionPanel,
+  // FunctionPanel,
   //useSelections,
 } from '@baml/playground-common'
-import { updateFileAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
+// import { updateFileAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
 import { Separator } from '@baml/playground-common/components/ui/separator'
 import clsx from 'clsx'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
@@ -41,16 +41,16 @@ import { CodeMirrorEditor } from './CodeMirrorEditor'
 
 import { GithubStars } from './GithubStars'
 import { InitialTour, PostTestRunTour } from './Tour'
-import SettingsDialog, { ShowSettingsButton } from '@baml/playground-common/shared/SettingsDialog'
+// import SettingsDialog, { ShowSettingsButton } from '@baml/playground-common/shared/SettingsDialog'
 
 import FileViewer from './Tree/FileViewer'
-import { AppStateProvider } from '@baml/playground-common/shared/AppStateContext' // Import the AppStateProvider
-import { ViewSelector } from '@baml/playground-common/shared/Selectors'
+// import { AppStateProvider } from '@baml/playground-common/shared/AppStateContext' // Import the AppStateProvider
+// import { ViewSelector } from '@baml/playground-common/shared/Selectors'
 import { useFeedbackWidget } from '@baml/playground-common/lib/feedback_widget'
 
 const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   useFeedbackWidget()
-  const setEditorFiles = useSetAtom(updateFileAtom)
+  // const setEditorFiles = useSetAtom(updateFileAtom)
   useKeybindingOverrides()
   // Tried to use url pathnames for this but nextjs hijacks the pathname state (even the window.location) so we have to manually track unsaved changes in the app.
   const [unsavedChanges, setUnsavedChanges] = useAtom(unsavedChangesAtom)
@@ -59,17 +59,17 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
     if (project) {
       console.log('Updating files due: project', project.id)
       setUnsavedChanges(false)
-      setEditorFiles({
-        reason: 'project_reload',
-        replace_all: true,
-        root_path: PROJECT_ROOT,
-        files: project.files.map((f) => {
-          return {
-            name: f.path,
-            content: f.content,
-          }
-        }),
-      })
+      // setEditorFiles({
+      //   reason: 'project_reload',
+      //   replace_all: true,
+      //   root_path: PROJECT_ROOT,
+      //   files: project.files.map((f) => {
+      //     return {
+      //       name: f.path,
+      //       content: f.content,
+      //     }
+      //   }),
+      // })
       // TODO: @hellovai use this to set the test run output
       // project.testRunOutput
     }
@@ -82,7 +82,7 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
 
   return (
     // firefox wont apply the background color for some reason so we forcefully set it.
-    <div className='relative flex flex-row w-full h-full bg-gray-800 main-panel overflow-x-clip overflow-y-clip'>
+    <div className='flex relative flex-row w-full h-full bg-gray-800 main-panel overflow-x-clip overflow-y-clip'>
       {isMobile && (
         <div className='absolute bottom-0 left-0 right-0 text-zinc-900 font-semibold bg-zinc-400 border-t-zinc-600 border-t-[1px] w-full h-[100px] z-50 text-center p-8'>
           Visit PromptFiddle on Desktop to get the best experience
@@ -91,33 +91,33 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
       <ResizablePanelGroup className='w-full h-full overflow-clip' direction='horizontal'>
         {!isMobile && (
           <ResizablePanel defaultSize={12} className='h-full bg-zinc-900'>
-            <div className='flex flex-row items-center justify-center w-full pt-2'>
+            <div className='flex flex-row justify-center items-center pt-2 w-full'>
               <a href={'/'} className='flex text-lg italic font-bold text-center w-fit'>
                 Prompt Fiddle
               </a>
             </div>
 
-            <ResizablePanelGroup className='h-full pb-4' direction='vertical'>
-              <ResizablePanel defaultSize={100} className='h-full '>
-                <div className='w-full px-2 pt-4 text-sm font-semibold text-center uppercase text-white/90'>
+            <ResizablePanelGroup className='pb-4 h-full' direction='vertical'>
+              <ResizablePanel defaultSize={100} className='h-full'>
+                <div className='px-2 pt-4 w-full text-sm font-semibold text-center uppercase text-white/90'>
                   project files
                 </div>
-                <div className='flex flex-col w-full h-full pb-8 tour-file-view'>
+                <div className='flex flex-col pb-8 w-full h-full tour-file-view'>
                   <FileViewer />
                 </div>
               </ResizablePanel>
 
               {/* <ResizableHandle className='bg-white/10' />
-              <ResizablePanel className='flex flex-col items-center w-full pt-2 tour-templates'></ResizablePanel> */}
+              <ResizablePanel className='flex flex-col items-center pt-2 w-full tour-templates'></ResizablePanel> */}
             </ResizablePanelGroup>
           </ResizablePanel>
         )}
 
-        <ResizableHandle className=' bg-vscode-contrastActiveBorder border-vscode-contrastActiveBorder' />
+        <ResizableHandle className='bg-vscode-contrastActiveBorder border-vscode-contrastActiveBorder' />
         <ResizablePanel defaultSize={88}>
           <div className='flex-col w-full h-full font-sans bg-background dark:bg-vscode-panel-background'>
             <div className='flex flex-row items-center gap-x-12 border-b-[1px] border-vscode-panel-border min-h-[40px]'>
-              <div className='flex flex-col items-center h-full py-1 tour-title whitespace-nowrap'>
+              <div className='flex flex-col items-center py-1 h-full whitespace-nowrap tour-title'>
                 <Editable
                   text={projectName}
                   placeholder='Write a task name'
@@ -135,38 +135,38 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                   />
                 </Editable>
               </div>
-              <div className='flex flex-row items-center gap-x-2'>
+              <div className='flex flex-row gap-x-2 items-center'>
                 <ShareButton project={project} projectName={projectName} />
               </div>
 
               <div className='flex items-center justify-start h-full pt-0.5 '>
-                <Button asChild variant={'ghost'} className='h-full py-1 gap-x-1 hover:bg-indigo-600'>
+                <Button asChild variant={'ghost'} className='gap-x-1 py-1 h-full hover:bg-indigo-600'>
                   <Link
                     href='https://boundaryml.com'
                     target='_blank'
-                    className='text-sm hover:text-foreground text-foreground '
+                    className='text-sm hover:text-foreground text-foreground'
                   >
                     What is BAML?
                   </Link>
                 </Button>
               </div>
               {project.id !== 'all-projects' && project.id !== null ? (
-                <div className='flex flex-col items-center justify-center h-full'>
+                <div className='flex flex-col justify-center items-center h-full'>
                   <Link
                     href={`/all-projects`}
                     target='_blank'
-                    className='flex flex-row items-center px-2 py-1 text-sm whitespace-pre-wrap bg-indigo-600 rounded-sm hover:bg-indigo-500 h-fit gap-x-2 text-vscode-button-foreground'
+                    className='flex flex-row gap-x-2 items-center px-2 py-1 text-sm whitespace-pre-wrap bg-indigo-600 rounded-sm hover:bg-indigo-500 h-fit text-vscode-button-foreground'
                   >
                     <Compass size={16} strokeWidth={2} />
                     <span className='whitespace-nowrap'>Explore Examples</span>
                   </Link>
                 </div>
               ) : null}
-              <div className='flex flex-col items-center justify-center h-full '>
+              <div className='flex flex-col justify-center items-center h-full'>
                 <Link
                   href={`/new-project`}
                   target='_blank'
-                  className='flex flex-row items-center px-2 py-1 text-sm whitespace-pre-wrap bg-indigo-600 rounded-sm hover:bg-indigo-500 h-fit gap-x-2 text-vscode-button-foreground'
+                  className='flex flex-row gap-x-2 items-center px-2 py-1 text-sm whitespace-pre-wrap bg-indigo-600 rounded-sm hover:bg-indigo-500 h-fit text-vscode-button-foreground'
                 >
                   <File size={16} strokeWidth={2} />
                   <span className='whitespace-nowrap'>New project</span>
@@ -174,7 +174,7 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
               </div>
               {unsavedChanges ? (
                 <div className='flex flex-row items-center whitespace-nowrap text-muted-foreground'>
-                  <Badge variant='outline' className='font-light text-yellow-400 gap-x-2'>
+                  <Badge variant='outline' className='gap-x-2 font-light text-yellow-400'>
                     <AlertTriangleIcon size={14} />
                     <span>Unsaved changes</span>
                   </Badge>
@@ -183,16 +183,16 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                 <></>
               )}
 
-              <div className='flex flex-row items-center justify-end w-full pr-4 gap-x-8'>
+              <div className='flex flex-row gap-x-8 justify-end items-center pr-4 w-full'>
                 <div className='flex h-full'>
                   <Link
                     href='https://discord.gg/BTNBeXGuaS'
-                    className='h-full pt-0 w-fit text-zinc-300 hover:text-zinc-50'
+                    className='pt-0 h-full w-fit text-zinc-300 hover:text-zinc-50'
                   >
-                    <div className='flex flex-row items-center text-sm gap-x-4'>
+                    <div className='flex flex-row gap-x-4 items-center text-sm'>
                       <Image
                         src='/discord-icon.svg'
-                        className='hover:opacity-100 opacity-60'
+                        className='opacity-60 hover:opacity-100'
                         width={24}
                         height={24}
                         alt='Discord'
@@ -202,10 +202,15 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                 </div>
                 <div className='flex h-full'>
                   <Link
+<<<<<<< HEAD
                     href='https://docs.boundaryml.com/guide/installation-editors/vs-code-extension'
                     className='h-full pt-0 w-fit text-zinc-300 hover:text-zinc-50'
+=======
+                    href='https://docs.boundaryml.com/v3/home/installation'
+                    className='pt-0 h-full w-fit text-zinc-300 hover:text-zinc-50'
+>>>>>>> 064dba892 (more fixes)
                   >
-                    <div className='flex flex-row items-center text-xs 2xl:text-sm gap-x-4 grayscale hover:grayscale-0'>
+                    <div className='flex flex-row gap-x-4 items-center text-xs grayscale 2xl:text-sm hover:grayscale-0'>
                       <Image src='/vscode_logo.svg' width={18} height={18} alt='VSCode extension' />
                     </div>
                   </Link>
@@ -224,13 +229,13 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
             >
               <ResizablePanelGroup className='min-h-[200px] w-full rounded-lg overflow-clip' direction='horizontal'>
                 <ResizablePanel defaultSize={50}>
-                  <div className='flex flex-col w-full py-1 pl-2 text-xs border-none items-left h-fit whitespace-nowrap'>
+                  <div className='flex flex-col py-1 pl-2 w-full text-xs whitespace-nowrap border-none items-left h-fit'>
                     <Editable
                       text={description}
                       placeholder='Write a task name'
                       type='input'
                       childRef={descriptionInputRef}
-                      className='w-full px-2 text-sm font-light text-left border-none text-card-foreground/80'
+                      className='px-2 w-full text-sm font-light text-left border-none text-card-foreground/80'
                     >
                       <textarea
                         className='w-[95%] ml-2 px-2 text-sm border-none text-vscode-descriptionForeground'
@@ -281,7 +286,7 @@ const ShareButton = ({ project, projectName }: { project: BAMLProject; projectNa
   return (
     <Button
       variant={'default'}
-      className='h-full py-1 bg-transparent shadow-md gap-x-1 text-vscode-button-foreground hover:bg-indigo-600 w-fit whitespace-nowrap'
+      className='gap-x-1 py-1 h-full whitespace-nowrap bg-transparent shadow-md text-vscode-button-foreground hover:bg-indigo-600 w-fit'
       disabled={loading}
       onClick={async () => {
         setLoading(true)
@@ -329,27 +334,27 @@ const DummyHydrate = ({ files }: { files: EditorFile[] }) => {
 const PlaygroundView = () => {
   return (
     <>
-      <AppStateProvider>
+      {/* <AppStateProvider> */}
         <CustomErrorBoundary message='Error loading playground'>
           <Suspense fallback={<div>Loading...</div>}>
             <EventListener>
-              <SettingsDialog />
-              <div className='relative flex flex-col w-full gap-2 pr-0'>
-                <div className='relative flex flex-row gap-2'>
-                  <div className='flex flex-row items-start justify-start gap-2 pr-1 grow'>
-                    <ViewSelector />
+              {/* <SettingsDialog /> */}
+              <div className='flex relative flex-col gap-2 pr-0 w-full'>
+                <div className='flex relative flex-row gap-2'>
+                  <div className='flex flex-row gap-2 justify-start items-start pr-1 grow'>
+                    {/* <ViewSelector /> */}
                   </div>
-                  <div className='relative flex flex-row items-center justify-end gap-2 pr-1 grow'></div>
+                  <div className='flex relative flex-row gap-2 justify-end items-center pr-1 grow'></div>
                 </div>
                 {/* <Separator className="bg-vscode-textSeparator-foreground" /> */}
-                <FunctionPanel />
+                {/* <FunctionPanel /> */}
               </div>
-              <InitialTour />
-              <PostTestRunTour />
+              {/* <InitialTour /> */}
+              {/* <PostTestRunTour /> */}
             </EventListener>
           </Suspense>
         </CustomErrorBoundary>
-      </AppStateProvider>
+      {/* </AppStateProvider> */}
     </>
   )
 }

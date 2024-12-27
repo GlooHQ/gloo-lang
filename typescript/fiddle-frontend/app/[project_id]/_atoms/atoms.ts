@@ -1,18 +1,19 @@
 import type { EditorFile } from '@/app/actions'
 // import { ParserDBFunctionTestModel } from "@/lib/exampleProjects"
 import { TestState } from '@baml/common'
-import { availableFunctionsAtom, selectedFunctionAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
+// import { availableFunctionsAtom, selectedFunctionAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
 import { sessionStore } from '@baml/playground-common/baml_wasm_web/JotaiProvider'
-import { projectFilesAtom } from '@baml/playground-common/baml_wasm_web/baseAtoms'
+// import { projectFilesAtom } from '@baml/playground-common/baml_wasm_web/baseAtoms'
 import { Diagnostic } from '@codemirror/lint'
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 
 export const PROJECT_ROOT = 'baml_src'
-export const currentEditorFilesAtom = atom((get) => {
-  return Object.entries(get(projectFilesAtom(PROJECT_ROOT))).map(([path, content]): EditorFile => {
-    return { path, content }
-  })
+export const currentEditorFilesAtom = atom<EditorFile[]>((get) => {
+  // return Object.entries(get(projectFilesAtom(PROJECT_ROOT))).map(([path, content]): EditorFile => {
+  //   return { path, content }
+  // })
+  return []
 })
 
 // export const functionsAndTestsAtom = atomWithStorage<ParserDBFunctionTestModel[]>(
