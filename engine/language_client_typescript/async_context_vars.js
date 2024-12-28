@@ -51,7 +51,7 @@ class BamlCtxManager {
             return;
         }
         try {
-            span.finish(response, manager);
+            span.finish(response === undefined ? {} : response, manager);
         }
         catch (e) {
             console.error('BAML internal error', e);
