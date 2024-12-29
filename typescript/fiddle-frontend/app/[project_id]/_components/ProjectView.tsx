@@ -10,7 +10,6 @@ import { BAML_DIR } from '@/lib/constants'
 import type { BAMLProject } from '@/lib/exampleProjects'
 import {
   CustomErrorBoundary,
-  EventListener,
   // FunctionPanel,
   //useSelections,
 } from '@baml/playground-common'
@@ -202,13 +201,8 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                 </div>
                 <div className='flex h-full'>
                   <Link
-<<<<<<< HEAD
                     href='https://docs.boundaryml.com/guide/installation-editors/vs-code-extension'
-                    className='h-full pt-0 w-fit text-zinc-300 hover:text-zinc-50'
-=======
-                    href='https://docs.boundaryml.com/v3/home/installation'
                     className='pt-0 h-full w-fit text-zinc-300 hover:text-zinc-50'
->>>>>>> 064dba892 (more fixes)
                   >
                     <div className='flex flex-row gap-x-4 items-center text-xs grayscale 2xl:text-sm hover:grayscale-0'>
                       <Image src='/vscode_logo.svg' width={18} height={18} alt='VSCode extension' />
@@ -248,7 +242,7 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                     </Editable>
                   </div>
                   <div className='flex w-full h-full tour-editor'>
-                    <CodeMirrorEditor project={project} />
+                    {/* <CodeMirrorEditor project={project} /> */}
                   </div>
                 </ResizablePanel>
                 <ResizableHandle className='bg-vscode-tab-activeBackground' />
@@ -331,13 +325,16 @@ const DummyHydrate = ({ files }: { files: EditorFile[] }) => {
   return <></>
 }
 
+// import dynamic from 'next/dynamic'
+// const EventListener = dynamic(() => import('@baml/playground-common/baml_wasm_web/EventListener').then(mod => mod.EventListener), { ssr: false })
+
 const PlaygroundView = () => {
   return (
     <>
       {/* <AppStateProvider> */}
         <CustomErrorBoundary message='Error loading playground'>
           <Suspense fallback={<div>Loading...</div>}>
-            <EventListener>
+            {/* <EventListener> */}
               {/* <SettingsDialog /> */}
               <div className='flex relative flex-col gap-2 pr-0 w-full'>
                 <div className='flex relative flex-row gap-2'>
@@ -351,7 +348,7 @@ const PlaygroundView = () => {
               </div>
               {/* <InitialTour /> */}
               {/* <PostTestRunTour /> */}
-            </EventListener>
+            {/* </EventListener> */}
           </Suspense>
         </CustomErrorBoundary>
       {/* </AppStateProvider> */}

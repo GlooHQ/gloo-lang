@@ -1,8 +1,6 @@
 'use client'
-import { EditorFile } from '@/app/actions'
 import { BAML_DIR } from '@/lib/constants'
 import type { BAMLProject } from '@/lib/exampleProjects'
-import { BAML, theme } from '@boundaryml/baml-lezer'
 import type { ParserDatabase } from '@baml/common'
 // import {
 //   availableFunctionsAtom,
@@ -11,23 +9,17 @@ import type { ParserDatabase } from '@baml/common'
 //   selectedFunctionAtom,
 //   updateFileAtom,
 // } from '@baml/playground-common/baml_wasm_web/EventListener'
-import { atomStore } from '@baml/playground-common/baml_wasm_web/JotaiProvider'
 // import { projectFamilyAtom, runtimeFamilyAtom } from '@baml/playground-common/baml_wasm_web/baseAtoms'
 import { Button } from '@baml/playground-common/components/ui/button'
-import { Language, LanguageSupport } from '@codemirror/language'
-import { type Diagnostic, forceLinting, linter, openLintPanel } from '@codemirror/lint'
 import { langs } from '@uiw/codemirror-extensions-langs'
-import CodeMirror, { Compartment, EditorView, type Extension, type ReactCodeMirrorRef } from '@uiw/react-codemirror'
+import { Compartment, EditorView, type Extension, type ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { hyperLink, hyperLinkExtension, hyperLinkStyle } from '@uiw/codemirror-extensions-hyper-link'
-import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 import {
-  PROJECT_ROOT,
   activeFileContentAtom,
   activeFileNameAtom,
   currentEditorFilesAtom,
-  unsavedChangesAtom,
+  unsavedChangesAtom
 } from '../_atoms/atoms'
 
 type LintResponse = {

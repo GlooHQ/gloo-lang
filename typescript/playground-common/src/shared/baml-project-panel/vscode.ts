@@ -47,7 +47,7 @@ class VSCodeAPIWrapper {
   constructor() {
     // Check if the acquireVsCodeApi function exists in the current development
     // context (i.e. VS Code development window or web browser)
-    if (typeof acquireVsCodeApi === 'function') {
+    if (typeof acquireVsCodeApi === 'function' && typeof window !== 'undefined') {
       this.vsCodeApi = acquireVsCodeApi()
       window.addEventListener('message', this.listenForRpcResponses.bind(this))
     }

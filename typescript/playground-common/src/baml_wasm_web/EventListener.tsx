@@ -1,41 +1,16 @@
 "use client";
-import 'react18-json-view/src/style.css'
+import 'react18-json-view/src/style.css';
 // import * as vscode from 'vscode'
 
-import { VSCodeButton } from '@vscode/webview-ui-toolkit/react'
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { atomFamily, atomWithStorage, loadable, unwrap, useAtomCallback } from 'jotai/utils'
-import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
-import { useCallback, useEffect } from 'react'
-import CustomErrorBoundary from '../utils/ErrorFallback'
-import { atomStore, sessionStore, vscodeLocalStorageStore } from './JotaiProvider'
-// import { availableProjectsAtom, projectFamilyAtom, projectFilesAtom, runtimeFamilyAtom } from './baseAtoms'
-// import { showClientGraphAtom, showTestsAtom } from './test_uis/testHooks'
-import {
-  // We _deliberately_ only import types from wasm, instead of importing the module: wasm load is async,
-  // so we can only load wasm symbols through wasmAtom, not directly by importing wasm-schema-web
-  type WasmDiagnosticError,
-  type WasmParam,
-  type WasmRuntime,
-  type WasmScope,
-} from '@gloo-ai/baml-schema-wasm-web/baml_schema_build'
-import { vscode } from '@/shared/baml-project-panel/vscode'
-// import { selectedFunctionAtom, updateCursorAtom } from '@/shared/baml-project-panel/playground-panel/atoms'
-import { envKeyValueStorage, filesAtom, wasmAtom } from '@/shared/baml-project-panel/atoms'
-import { useRunTests } from '@/shared/baml-project-panel/playground-panel/prompt-preview/test-panel/test-runner'
-import { selectedFunctionAtom, selectedTestcaseAtom } from '@/shared/baml-project-panel/playground-panel/atoms'
-import { updateCursorAtom } from '@/shared/baml-project-panel/playground-panel/atoms'
-// const wasm = await import("@gloo-ai/baml-schema-wasm-web/baml_schema_build");
-// const { WasmProject, WasmRuntime, WasmRuntimeContext, version: RuntimeVersion } = wasm;
-const postMessageToExtension = (message: any) => {
-console.log(`Sending message to extension ${message.command}`)
-  vscode.postMessage(message)
-}
-
-
-
-const selectedProjectStorageAtom = atomWithStorage<string | null>('selected-project', null, sessionStore)
-const selectedFunctionStorageAtom = atom<string | null>(null)
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
+import { useEffect } from 'react';
+import CustomErrorBoundary from '../utils/ErrorFallback';
+import { vscodeLocalStorageStore } from './JotaiProvider';
+import { vscode } from '@/shared/baml-project-panel/vscode';
+import { filesAtom, wasmAtom } from '@/shared/baml-project-panel/atoms';
+import { selectedFunctionAtom, selectedTestcaseAtom, updateCursorAtom } from '@/shared/baml-project-panel/playground-panel/atoms';
+import { useRunTests } from '@/shared/baml-project-panel/playground-panel/prompt-preview/test-panel/test-runner';
 
 export const hasClosedEnvVarsDialogAtom = atomWithStorage<boolean>(
   'has-closed-env-vars-dialog',
@@ -50,14 +25,6 @@ export const hasClosedIntroToChecksDialogAtom = atomWithStorage<boolean>(
   false,
   vscodeLocalStorageStore,
 )
-
-
-type Selection = {
-  project?: string
-  function?: string
-  testCase?: string
-}
-
 
 
 // const selectedProjectAtom = atom(
