@@ -12,7 +12,7 @@ const root = createRoot(container!) // TypeScript non-null assertion
 root.render(
   <React.StrictMode>
     {/* <AppStateProvider> */}
-      <App />
+    <App />
     {/* </AppStateProvider> */}
   </React.StrictMode>,
 )

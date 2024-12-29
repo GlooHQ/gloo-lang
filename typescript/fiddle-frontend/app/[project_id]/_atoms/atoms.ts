@@ -13,10 +13,10 @@ export const currentEditorFilesAtom = atom<EditorFile[]>((get) => {
   // return Object.entries(get(projectFilesAtom(PROJECT_ROOT))).map(([path, content]): EditorFile => {
   //   return { path, content }
   // })
-  const files = get(filesAtom);
-  console.log("files", files)
+  const files = get(filesAtom)
+  console.log('files', files)
   return Object.entries(files).map(([path, content]): EditorFile => {
-    console.log("file", path, content)
+    console.log('file', path, content)
     return { path, content }
   })
 })

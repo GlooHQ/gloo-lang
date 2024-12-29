@@ -116,29 +116,29 @@ const FileViewer = () => {
   const [term, setTerm] = useState('')
 
   const createFileFolder = (
-    <div className="flex flex-row gap-x-1 pt-3 pl-1 w-full">
+    <div className='flex flex-row gap-x-1 pt-3 pl-1 w-full'>
       <button
         onClick={async () => {
           await treeRef?.current?.createInternal()
         }}
-        title="New Folder..."
+        title='New Folder...'
       >
-        <FolderPlus size={14} className="text-zinc-500 hover:text-zinc-200" />
+        <FolderPlus size={14} className='text-zinc-500 hover:text-zinc-200' />
       </button>
       <button
         onClick={async () => {
           const leaf = await treeRef?.current?.createLeaf()
         }}
-        title="New File..."
+        title='New File...'
       >
-        <FilePlus size={14} className="text-zinc-500 hover:text-zinc-200" />
+        <FilePlus size={14} className='text-zinc-500 hover:text-zinc-200' />
       </button>
     </div>
   )
 
   return (
-    <div className="flex flex-col pl-2 w-full h-full overflow-x-clip">
-      <div className="folderFileActions">{createFileFolder}</div>
+    <div className='flex flex-col pl-2 w-full h-full overflow-x-clip'>
+      <div className='folderFileActions'>{createFileFolder}</div>
       {/* <input
         type="text"
         placeholder="Search..."
@@ -146,9 +146,9 @@ const FileViewer = () => {
         value={term}
         onChange={(e) => setTerm(e.target.value)}
       /> */}
-      <div ref={ref} className="flex flex-col h-full">
+      <div ref={ref} className='flex flex-col h-full'>
         <Tree
-          className="truncate"
+          className='truncate'
           ref={treeRef}
           openByDefault={false}
           // initialOpenState={{ baml_src: true }}

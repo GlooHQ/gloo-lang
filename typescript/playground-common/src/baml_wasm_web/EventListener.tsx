@@ -545,8 +545,8 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <>
-      <div className="flex absolute right-2 bottom-2 z-50 flex-row gap-2 text-xs bg-transparent">
-        <div className="pr-4 whitespace-nowrap">{bamlCliVersion && 'baml-cli ' + bamlCliVersion}</div>
+      <div className='flex absolute right-2 bottom-2 z-50 flex-row gap-2 text-xs bg-transparent'>
+        <div className='pr-4 whitespace-nowrap'>{bamlCliVersion && 'baml-cli ' + bamlCliVersion}</div>
         {<span>VSCode Runtime Version: {bamlCliVersion}</span>}
       </div>
       {/* {selectedProject === null ? (
@@ -569,7 +569,7 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
           </div>
         )
       ) : ( */}
-      <CustomErrorBoundary message="Error loading project">{children}</CustomErrorBoundary>
+      <CustomErrorBoundary message='Error loading project'>{children}</CustomErrorBoundary>
       {/* )} */}
     </>
   )

@@ -185,7 +185,6 @@ export class WebPanelView {
    * @param context A reference to the extension context
    */
   private _setWebviewMessageListener(webview: Webview) {
-
     const addProject = async () => {
       await requestDiagnostics()
       console.log('last opened func', openPlaygroundConfig.lastOpenedFunction)
@@ -195,7 +194,7 @@ export class WebPanelView {
       })
       this.postMessage('baml_cli_version', bamlConfig.cliVersion)
     }
-    
+
     webview.onDidReceiveMessage(
       async (
         message:
@@ -221,7 +220,7 @@ export class WebPanelView {
         if ('command' in message) {
           switch (message.command) {
             case 'add_project':
-              addProject();
+              addProject()
 
               return
             case 'jumpToFile': {
@@ -252,7 +251,7 @@ export class WebPanelView {
         }
 
         if (!('rpcId' in message)) {
-          return;
+          return
         }
 
         // console.log('message from webview, after above handlers:', message)
@@ -311,7 +310,7 @@ export class WebPanelView {
             return
           case 'INITIALIZED': // when the playground is initialized and listening for file changes, we should resend all project files.
             // request diagnostics, which updates the runtime and triggers a new project files update.
-            addProject();
+            addProject()
             console.log('initialized webview')
             this._panel.webview.postMessage({ rpcId: message.rpcId, rpcMethod: vscodeCommand, data: { ack: true } })
             return

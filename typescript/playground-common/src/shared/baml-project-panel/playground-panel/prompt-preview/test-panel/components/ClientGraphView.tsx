@@ -1,4 +1,4 @@
-import { useAtom } from "jotai"
+import { useAtom } from 'jotai'
 import {
   ReactFlow,
   addEdge,
@@ -10,9 +10,9 @@ import {
   Connection,
 } from '@xyflow/react'
 import { useAtomValue } from 'jotai'
-import { useMemo } from "react"
-import { currentClientsAtom, orchestrationNodesAtom, orchIndexAtom } from '../../../atoms-orch-graph';
-import { useEffect } from "react";
+import { useMemo } from 'react'
+import { currentClientsAtom, orchestrationNodesAtom, orchIndexAtom } from '../../../atoms-orch-graph'
+import { useEffect } from 'react'
 
 interface RenderEdge {
   id: string
@@ -28,9 +28,6 @@ interface RenderNode {
   parentId?: string
   extent?: 'parent' | undefined // Update extent type
 }
-
-
-  
 
 const ClientHeader: React.FC = () => {
   const orchIndex = useAtomValue(orchIndexAtom)
@@ -48,7 +45,6 @@ const ClientHeader: React.FC = () => {
     </div>
   )
 }
-
 
 export const ClientGraphView: React.FC = () => {
   const graph = useAtomValue(orchestrationNodesAtom)
@@ -101,7 +97,7 @@ export const ClientGraphView: React.FC = () => {
   // Set default selected node
 
   // Synchronize flowNodes and flowEdges with nodes and edges
-  useEffect (() => {
+  useEffect(() => {
     setFlowNodes(renderNodes)
     setFlowEdges(renderEdges)
   }, [renderNodes, renderEdges])

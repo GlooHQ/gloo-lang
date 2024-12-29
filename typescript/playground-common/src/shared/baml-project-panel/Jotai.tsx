@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-"use client";
+'use client'
 
-import { Provider, type createStore } from "jotai";
-import { createJSONStorage } from "jotai/utils";
-import type { SyncStorage } from "jotai/vanilla/utils/atomWithStorage";
+import { Provider, type createStore } from 'jotai'
+import { createJSONStorage } from 'jotai/utils'
+import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage'
 
 // export const atomStore = createStore();
 
@@ -17,13 +17,12 @@ import type { SyncStorage } from "jotai/vanilla/utils/atomWithStorage";
 
 export const vscodeLocalStorageStore: SyncStorage<any> = createJSONStorage(() => window.localStorage)
 
-
 export default function JotaiProvider({
   children,
   store,
 }: {
-  children: React.ReactNode;
-  store?: ReturnType<typeof createStore>;
+  children: React.ReactNode
+  store?: ReturnType<typeof createStore>
 }) {
-  return <Provider store={store}>{children}</Provider>;
+  return <Provider store={store}>{children}</Provider>
 }

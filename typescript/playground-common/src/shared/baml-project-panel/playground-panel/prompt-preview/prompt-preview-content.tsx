@@ -1,41 +1,27 @@
-import { useAtomValue } from "jotai";
-import { ctxAtom, diagnosticsAtom, runtimeAtom } from "../../atoms";
-import {
-  areTestsRunningAtom,
-  functionTestSnippetAtom,
-  selectionAtom,
-} from "../atoms";
-import type { WasmPrompt } from "@gloo-ai/baml-schema-wasm-web";
-import { Loader } from "./components";
-import { ErrorMessage } from "./components";
-import { findMediaFile } from "./media-utils";
-import { RenderPrompt } from "./render-prompt";
-import useSWR from "swr";
-import { useState } from "react";
-import { useCallback } from "react";
+import { useAtomValue } from 'jotai'
+import { ctxAtom, diagnosticsAtom, runtimeAtom } from '../../atoms'
+import { areTestsRunningAtom, functionTestSnippetAtom, selectionAtom } from '../atoms'
+import type { WasmPrompt } from '@gloo-ai/baml-schema-wasm-web'
+import { Loader } from './components'
+import { ErrorMessage } from './components'
+import { findMediaFile } from './media-utils'
+import { RenderPrompt } from './render-prompt'
+import useSWR from 'swr'
+import { useState } from 'react'
+import { useCallback } from 'react'
 
 export const PromptPreviewContent = () => {
-  const { rt } = useAtomValue(runtimeAtom);
-  const ctx = useAtomValue(ctxAtom);
-  const { selectedFn, selectedTc } = useAtomValue(selectionAtom);
-  const diagnostics = useAtomValue(diagnosticsAtom);
-  const areTestsRunning = useAtomValue(areTestsRunningAtom);
+  const { rt } = useAtomValue(runtimeAtom)
+  const ctx = useAtomValue(ctxAtom)
+  const { selectedFn, selectedTc } = useAtomValue(selectionAtom)
+  const diagnostics = useAtomValue(diagnosticsAtom)
+  const areTestsRunning = useAtomValue(areTestsRunningAtom)
   const generatePreview = async () => {
-    if (
-      rt === undefined ||
-      ctx === undefined ||
-      selectedFn === undefined ||
-      selectedTc === undefined
-    ) {
-      return;
+    if (rt === undefined || ctx === undefined || selectedFn === undefined || selectedTc === undefined) {
+      return
     }
-    return selectedFn.render_prompt_for_test(
-      rt,
-      selectedTc.name,
-      ctx,
-      findMediaFile
-    );
-  };
+    return selectedFn.render_prompt_for_test(rt, selectedTc.name, ctx, findMediaFile)
+  }
 
   const {
     data: preview,
@@ -44,80 +30,66 @@ export const PromptPreviewContent = () => {
   } = useSWR(
     // areTestsRunning is added here since generatePreview iwll fail until the tests are done running. So we want this to re-run post-test-run. It fails because of WASM async issues (can't use the runtime while it's already in use. TBD how to fix)
     [rt, ctx, selectedFn, selectedTc, areTestsRunning],
-    generatePreview
-  );
+    generatePreview,
+  )
 
   if (isLoading) {
-    return <Loader message="Loading preview..." />;
+    return <Loader message='Loading preview...' />
   }
 
   if (error) {
-    return (
-      <ErrorMessage
-        error={error instanceof Error ? error.message : "Unknown Error"}
-      />
-    );
+    return <ErrorMessage error={error instanceof Error ? error.message : 'Unknown Error'} />
   }
 
-  if (diagnostics.length > 0 && diagnostics.some((d) => d.type === "error")) {
+  if (diagnostics.length > 0 && diagnostics.some((d) => d.type === 'error')) {
     return (
-      <div className="p-3">
-        <div className="mb-2 text-sm font-medium text-red-500">
-          Syntax Error
-        </div>
-        <pre className="whitespace-pre-wrap rounded-lg px-2 py-1 font-mono text-sm text-red-500">
-          <div className="space-y-2">
-            <div>
-              {diagnostics.filter((d) => d.type === "error").length} error(s):
-            </div>
+      <div className='p-3'>
+        <div className='mb-2 text-sm font-medium text-red-500'>Syntax Error</div>
+        <pre className='whitespace-pre-wrap rounded-lg px-2 py-1 font-mono text-sm text-red-500'>
+          <div className='space-y-2'>
+            <div>{diagnostics.filter((d) => d.type === 'error').length} error(s):</div>
             {diagnostics
-              .filter((d) => d.type === "error")
+              .filter((d) => d.type === 'error')
               .map((d, i) => (
                 <div key={i}>- {d.message}</div>
               ))}
           </div>
         </pre>
       </div>
-    );
+    )
   }
   if (preview === undefined) {
-    return <NoTestsContent />;
+    return <NoTestsContent />
   }
 
-  return <RenderPrompt prompt={preview} testCase={selectedTc} />;
-};
+  return <RenderPrompt prompt={preview} testCase={selectedTc} />
+}
 
 export const NoTestsContent = () => {
-  const { selectedFn } = useAtomValue(selectionAtom);
-  const testSnippet = useAtomValue(
-    functionTestSnippetAtom(selectedFn?.name ?? "")
-  );
-  const [copied, setCopied] = useState(false);
+  const { selectedFn } = useAtomValue(selectionAtom)
+  const testSnippet = useAtomValue(functionTestSnippetAtom(selectedFn?.name ?? ''))
+  const [copied, setCopied] = useState(false)
 
   const handleCopy = useCallback(() => {
-    void navigator.clipboard.writeText(testSnippet ?? "");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [testSnippet]);
+    void navigator.clipboard.writeText(testSnippet ?? '')
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }, [testSnippet])
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="mb-4 text-sm font-medium text-muted-foreground">
-        Add a test to see the preview!
-      </div>
-      <div className="relative w-full max-w-2xl rounded-lg border border-border bg-muted">
-        <div className="absolute right-2 top-2">
+    <div className='flex flex-col items-center justify-center'>
+      <div className='mb-4 text-sm font-medium text-muted-foreground'>Add a test to see the preview!</div>
+      <div className='relative w-full max-w-2xl rounded-lg border border-border bg-muted'>
+        <div className='absolute right-2 top-2'>
           <button
             onClick={handleCopy}
-            className="rounded bg-background px-2 py-1 text-xs font-medium text-muted-foreground shadow-sm hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className='rounded bg-background px-2 py-1 text-xs font-medium text-muted-foreground shadow-sm hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
           >
-            {copied ? "Copied!" : "Copy"}
+            {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
-        <pre className="overflow-x-auto text-balance p-4 font-mono text-sm text-foreground">
-          {testSnippet}
-        </pre>
+        <pre className='overflow-x-auto text-balance p-4 font-mono text-sm text-foreground'>{testSnippet}</pre>
       </div>
     </div>
-  );
-};
+  )
+}

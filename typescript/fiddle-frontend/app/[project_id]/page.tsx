@@ -35,7 +35,6 @@ export default async function Home({
       <div className='w-screen h-screen dark:bg-black'>
         <ProjectView project={data} />
       </div>
-      
     </main>
   )
 }

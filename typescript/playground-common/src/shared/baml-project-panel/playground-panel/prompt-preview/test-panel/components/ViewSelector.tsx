@@ -1,24 +1,15 @@
-import * as React from "react";
-import { useAtom } from "jotai";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { TestPanelViewType, testPanelViewTypeAtom } from "./atoms";
+import * as React from 'react'
+import { useAtom } from 'jotai'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { TestPanelViewType, testPanelViewTypeAtom } from './atoms'
 
 export const ViewSelector = () => {
-  const [viewType, setViewType] = useAtom(testPanelViewTypeAtom);
+  const [viewType, setViewType] = useAtom(testPanelViewTypeAtom)
 
   return (
-    <Select
-      value={viewType}
-      onValueChange={(value) => setViewType(value as TestPanelViewType)}
-    >
-      <SelectTrigger className="h-8 w-fit">
-        <SelectValue placeholder="Select view" />
+    <Select value={viewType} onValueChange={(value) => setViewType(value as TestPanelViewType)}>
+      <SelectTrigger className='h-8 w-fit'>
+        <SelectValue placeholder='Select view' />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={TestPanelViewType.TABULAR}>Table</SelectItem>
@@ -29,5 +20,5 @@ export const ViewSelector = () => {
         </SelectItem> */}
       </SelectContent>
     </Select>
-  );
-};
+  )
+}

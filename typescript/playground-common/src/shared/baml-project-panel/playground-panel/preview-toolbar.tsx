@@ -1,119 +1,101 @@
-"use client";
+'use client'
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { atom, useAtom, useAtomValue } from "jotai";
-import { Braces, Bug, ChevronDown, FileJson, PlayCircle, Settings } from "lucide-react";
-import React from "react";
-import { ThemeToggle } from "../theme/ThemeToggle";
-import { areTestsRunningAtom, selectedItemAtom, showEnvDialogAtom } from "./atoms";
-import { FunctionTestName } from "./function-test-name";
-import { useRunTests } from "./prompt-preview/test-panel/test-runner";
-import { Dialog, DialogContent } from "@radix-ui/react-dialog";
-import EnvVars from "./side-bar/env-vars";
-import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { atom, useAtom, useAtomValue } from 'jotai'
+import { Braces, Bug, ChevronDown, FileJson, PlayCircle, Settings } from 'lucide-react'
+import React from 'react'
+import { ThemeToggle } from '../theme/ThemeToggle'
+import { areTestsRunningAtom, selectedItemAtom, showEnvDialogAtom } from './atoms'
+import { FunctionTestName } from './function-test-name'
+import { useRunTests } from './prompt-preview/test-panel/test-runner'
+import { Dialog, DialogContent } from '@radix-ui/react-dialog'
+import EnvVars from './side-bar/env-vars'
+import { cn } from '@/lib/utils'
 
-export const renderModeAtom = atom<"prompt" | "curl" | "tokens">("prompt");
+export const renderModeAtom = atom<'prompt' | 'curl' | 'tokens'>('prompt')
 
 const RunButton: React.FC = () => {
-  const { setRunningTests } = useRunTests();
-  const isRunning = useAtomValue(areTestsRunningAtom);
-  const selected = useAtomValue(selectedItemAtom);
+  const { setRunningTests } = useRunTests()
+  const isRunning = useAtomValue(areTestsRunningAtom)
+  const selected = useAtomValue(selectedItemAtom)
   return (
     <Button
-      variant="default"
-      size="sm"
-      className="items-center space-x-2 h-8 text-sm text-white bg-purple-500 hover:bg-purple-700 disabled:bg-muted disabled:text-muted-foreground dark:bg-purple-700 dark:text-foreground dark:hover:bg-purple-800"
+      variant='default'
+      size='sm'
+      className='items-center space-x-2 h-8 text-sm text-white bg-purple-500 hover:bg-purple-700 disabled:bg-muted disabled:text-muted-foreground dark:bg-purple-700 dark:text-foreground dark:hover:bg-purple-800'
       disabled={isRunning || selected === undefined}
       onClick={() => {
         if (selected) {
-          void setRunningTests([
-            { functionName: selected[0], testName: selected[1] },
-          ]);
+          void setRunningTests([{ functionName: selected[0], testName: selected[1] }])
         }
       }}
     >
-      <PlayCircle className="mr-0 w-4 h-4" />
-      <div>Run {selected ? selected[1] : ""}</div>
+      <PlayCircle className='mr-0 w-4 h-4' />
+      <div>Run {selected ? selected[1] : ''}</div>
     </Button>
-  );
-};
+  )
+}
 
 export default function Component() {
-  const [renderMode, setRenderMode] = useAtom(renderModeAtom);
-  const selections = useAtomValue(selectedItemAtom);
-  const [showEnvDialog, setShowEnvDialog] = useAtom(showEnvDialogAtom);
+  const [renderMode, setRenderMode] = useAtom(renderModeAtom)
+  const selections = useAtomValue(selectedItemAtom)
+  const [showEnvDialog, setShowEnvDialog] = useAtom(showEnvDialogAtom)
 
   const options: {
-    label: string;
-    icon: React.FC<React.SVGProps<SVGSVGElement>>;
-    value: "prompt" | "curl" | "tokens";
+    label: string
+    icon: React.FC<React.SVGProps<SVGSVGElement>>
+    value: 'prompt' | 'curl' | 'tokens'
   }[] = [
-    { label: "Prompt", icon: FileJson, value: "prompt" },
-    { label: "Token Visualization", icon: Braces, value: "tokens" },
-    { label: "Raw cURL", icon: Bug, value: "curl" },
-  ];
+    { label: 'Prompt', icon: FileJson, value: 'prompt' },
+    { label: 'Token Visualization', icon: Braces, value: 'tokens' },
+    { label: 'Raw cURL', icon: Bug, value: 'curl' },
+  ]
 
-  const selectedOption = options.find((opt) => opt.value === renderMode);
+  const selectedOption = options.find((opt) => opt.value === renderMode)
 
-  const SelectedIcon = selectedOption?.icon || FileJson;
+  const SelectedIcon = selectedOption?.icon || FileJson
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className={cn(
-        "flex flex-row gap-1 items-center",
-        selections === undefined ? "justify-end" : "justify-start"
-      )}>
-        {selections !== undefined && (
-          <FunctionTestName
-            functionName={selections[0]}
-            testName={selections[1]}
-          />
-        )}
+    <div className='flex flex-col gap-1'>
+      <div
+        className={cn('flex flex-row gap-1 items-center', selections === undefined ? 'justify-end' : 'justify-start')}
+      >
+        {selections !== undefined && <FunctionTestName functionName={selections[0]} testName={selections[1]} />}
         <Button
-          variant="ghost"
-          size="sm"
-          className="flex gap-2 items-center text-muted-foreground/70"
+          variant='ghost'
+          size='sm'
+          className='flex gap-2 items-center text-muted-foreground/70'
           onClick={() => setShowEnvDialog(true)}
         >
-          <Settings className="w-4 h-4 text-muted-foreground" />
+          <Settings className='w-4 h-4 text-muted-foreground' />
           <span>API Keys</span>
         </Button>
         <ThemeToggle />
       </div>
 
-     
-
-      <div className="flex items-center space-x-4 w-full">
+      <div className='flex items-center space-x-4 w-full'>
         <RunButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant="outline"
-              size="sm"
-              className="h-8 border-border bg-background hover:bg-accent hover:text-accent-foreground"
+              variant='outline'
+              size='sm'
+              className='h-8 border-border bg-background hover:bg-accent hover:text-accent-foreground'
             >
-              <SelectedIcon className="mr-2 w-4 h-4" />
+              <SelectedIcon className='mr-2 w-4 h-4' />
               {selectedOption?.label}
-              <ChevronDown className="ml-2 w-4 h-4 opacity-50" />
+              <ChevronDown className='ml-2 w-4 h-4 opacity-50' />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            className="border-border bg-background"
-          >
+          <DropdownMenuContent align='start' className='border-border bg-background'>
             {options.map((option) => (
               <DropdownMenuItem
                 key={option.label}
                 onSelect={() => setRenderMode(option.value)}
-                className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                className='hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground'
               >
-                <option.icon className="mr-2 w-4 h-4" />
+                <option.icon className='mr-2 w-4 h-4' />
                 {option.label}
               </DropdownMenuItem>
             ))}
@@ -121,5 +103,5 @@ export default function Component() {
         </DropdownMenu>
       </div>
     </div>
-  );
+  )
 }

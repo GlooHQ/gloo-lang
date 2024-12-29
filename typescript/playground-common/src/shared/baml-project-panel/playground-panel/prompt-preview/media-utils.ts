@@ -1,5 +1,4 @@
-import { vscode } from "../../vscode";
-
+import { vscode } from '../../vscode'
 
 export const findMediaFile = async (path: string): Promise<Uint8Array> => {
   // Helper to hash the path to ensure the same path generates the same data
@@ -11,8 +10,6 @@ export const findMediaFile = async (path: string): Promise<Uint8Array> => {
   //   }
   //   return Math.abs(hash);
   // };
-
-  
 
   // // Helper to generate a dummy image in JPEG/PNG format with text
   // const generateRandomImage = async (
@@ -59,4 +56,4 @@ export const findMediaFile = async (path: string): Promise<Uint8Array> => {
   return await vscode.readFile(path)
 
   // throw new Error(`Unknown file extension: ${extension}`);
-}; 
+}

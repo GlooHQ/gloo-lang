@@ -106,7 +106,7 @@ class VSCodeAPIWrapper {
     })
     return resp.port
   }
-  
+
   public async markInitialized() {
     await this.rpc<InitializedRequest, InitializedResponse>({
       vscodeCommand: 'INITIALIZED',
