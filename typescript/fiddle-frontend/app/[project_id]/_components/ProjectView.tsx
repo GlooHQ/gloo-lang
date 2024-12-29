@@ -38,7 +38,7 @@ import { useFeedbackWidget } from '@baml/playground-common/lib/feedback_widget'
 import { filesAtom } from '@/shared/baml-project-panel/atoms'
 import { TopNavbar } from './TopNavbar'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { selectedFunctionAtom } from '@/shared/baml-project-panel/playground-panel/atoms'
+import { runtimeStateAtom, selectedFunctionAtom } from '@/shared/baml-project-panel/playground-panel/atoms'
 
 const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   useFeedbackWidget()
@@ -81,6 +81,16 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   const descriptionInputRef = useRef(null)
   const setOpenExplorePanel = useSetAtom(exploreProjectsOpenAtom)
   const setSelectedFunction = useSetAtom(selectedFunctionAtom)
+  const { functions } = useAtomValue(runtimeStateAtom)
+  const editorFiles = useAtomValue(currentEditorFilesAtom)
+  const stringifiedEditorFilePaths = JSON.stringify(editorFiles.map((f) => f.path))
+
+  useEffect(() => {
+    const func = functions.find((f) => f.span.file_path === activeFileName)
+    if (func) {
+      setSelectedFunction(func.name)
+    }
+  }, [stringifiedEditorFilePaths, activeFileName, functions])
 
   useEffect(() => {
     console.log('activeFileName', activeFileName)
