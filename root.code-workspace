@@ -44,7 +44,7 @@
       "editor.defaultFormatter": "biomejs.biome"
     },
     "[typescriptreact]": {
-      "editor.defaultFormatter": "biomejs.biome"
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "files.associations": {
       "*.baml.j2": "jinja",
@@ -85,7 +85,6 @@
     },
     "biome.lspBin": "typescript/node_modules/@biomejs/biome/bin/biome",
     "terminal.integrated.scrollback": 1e6
-    
   },
   "extensions": {
     "recommendations": [

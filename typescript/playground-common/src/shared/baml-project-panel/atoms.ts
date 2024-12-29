@@ -60,10 +60,12 @@ export const projectAtom = atom((get) => {
     if (wasm === undefined) {
         return undefined
     }
+    // filter out files that are not baml files
+    const bamlFiles = Object.entries(files).filter(([path, content]) => path.endsWith('.baml'))
     // TODO: add python generator if using sandbox
     // files = files + pythonGenerator
     
-    return wasm.WasmProject.new("./", files)
+    return wasm.WasmProject.new("./", bamlFiles)
 })
 
 export const ctxAtom = atom((get) => {

@@ -11,7 +11,7 @@ import {
   GetWebviewUriResponse,
   WebviewToVscodeRpc,
   encodeBuffer,
-} from '../rpc'
+} from '../vscode-rpc'
 
 import { type Config, adjectives, animals, colors, uniqueNamesGenerator } from 'unique-names-generator'
 import { URI } from 'vscode-uri'

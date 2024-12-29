@@ -34,7 +34,10 @@ pub fn parse_schema(
 
     if !source.path().ends_with(".baml") {
         diagnostics.push_error(DatamodelError::new_validation_error(
-            "A BAML file must have the file extension `.baml`",
+            &format!(
+                "A BAML file must have the file extension `.baml`, but found: {}",
+                source.path().to_string()
+            ),
             Span::empty(source.clone()),
         ));
         return Err(diagnostics);

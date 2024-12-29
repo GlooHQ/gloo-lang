@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import JotaiProvider from '@baml/playground-common/baml_wasm_web/JotaiProvider'
-import { PromptPreview } from '@baml/playground-common'
 import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
 import { BrowseSheet } from './_components/BrowseSheet'
@@ -27,18 +26,18 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='en'>
+    <html lang="en">
       <RB2BElement />
       <PHProvider>
         <body className={inter.className}>
           <PostHogPageView />
-          <ThemeProvider attribute='class' defaultTheme='dark' enableSystem={false} disableTransitionOnChange={true}>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={true}>
             <JotaiProvider>
               <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-              {/* <div className='fixed left-0 bottom-1/2 w-[12%] px-1 items-center justify-center flex'>
+              {/* <div className="fixed left-0 bottom-1/2 w-[12%] px-1 items-center justify-center flex">
                 <BrowseSheet />
               </div> */}
-              <PromptPreview />
+              {/* <PromptPreview /> */}
             </JotaiProvider>
             <Toaster />
           </ThemeProvider>
