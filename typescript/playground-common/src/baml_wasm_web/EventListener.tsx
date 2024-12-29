@@ -1,16 +1,20 @@
-"use client";
-import 'react18-json-view/src/style.css';
+'use client'
+import 'react18-json-view/src/style.css'
 // import * as vscode from 'vscode'
 
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
-import { useEffect } from 'react';
-import CustomErrorBoundary from '../utils/ErrorFallback';
-import { vscodeLocalStorageStore } from './JotaiProvider';
-import { vscode } from '@/shared/baml-project-panel/vscode';
-import { filesAtom, wasmAtom } from '@/shared/baml-project-panel/atoms';
-import { selectedFunctionAtom, selectedTestcaseAtom, updateCursorAtom } from '@/shared/baml-project-panel/playground-panel/atoms';
-import { useRunTests } from '@/shared/baml-project-panel/playground-panel/prompt-preview/test-panel/test-runner';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
+import { useEffect } from 'react'
+import CustomErrorBoundary from '../utils/ErrorFallback'
+import { vscodeLocalStorageStore } from './JotaiProvider'
+import { vscode } from '@/shared/baml-project-panel/vscode'
+import { filesAtom, wasmAtom } from '@/shared/baml-project-panel/atoms'
+import {
+  selectedFunctionAtom,
+  selectedTestcaseAtom,
+  updateCursorAtom,
+} from '@/shared/baml-project-panel/playground-panel/atoms'
+import { useRunTests } from '@/shared/baml-project-panel/playground-panel/prompt-preview/test-panel/test-runner'
 
 export const hasClosedEnvVarsDialogAtom = atomWithStorage<boolean>(
   'has-closed-env-vars-dialog',
@@ -25,7 +29,6 @@ export const hasClosedIntroToChecksDialogAtom = atomWithStorage<boolean>(
   false,
   vscodeLocalStorageStore,
 )
-
 
 // const selectedProjectAtom = atom(
 //   (get) => {
@@ -304,7 +307,6 @@ export const hasClosedIntroToChecksDialogAtom = atomWithStorage<boolean>(
 
 // export const renderPromptAtom = unwrap(renderPromptAtomAsync)
 
-
 // export const diagnositicsAtom = atom((get) => {
 //   const diagnostics = get(selectedDiagnosticsAtom)
 //   if (!diagnostics) {
@@ -399,7 +401,11 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (wasm) {
       console.log('wasm ready!')
-      vscode.markInitialized()
+      try {
+        vscode.markInitialized()
+      } catch (e) {
+        console.error('Error marking initialized', e)
+      }
     }
   }, [wasm])
   // useEffect(() => {
@@ -539,9 +545,9 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <>
-      <div className='flex absolute right-2 bottom-2 z-50 flex-row gap-2 text-xs bg-transparent'>
-        <div className='pr-4 whitespace-nowrap'>{bamlCliVersion && 'baml-cli ' + bamlCliVersion}</div>
-        { <span>VSCode Runtime Version: {bamlCliVersion}</span>}
+      <div className="flex absolute right-2 bottom-2 z-50 flex-row gap-2 text-xs bg-transparent">
+        <div className="pr-4 whitespace-nowrap">{bamlCliVersion && 'baml-cli ' + bamlCliVersion}</div>
+        {<span>VSCode Runtime Version: {bamlCliVersion}</span>}
       </div>
       {/* {selectedProject === null ? (
         availableProjects.length === 0 ? (
@@ -563,7 +569,7 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
           </div>
         )
       ) : ( */}
-        <CustomErrorBoundary message='Error loading project'>{children}</CustomErrorBoundary>
+      <CustomErrorBoundary message="Error loading project">{children}</CustomErrorBoundary>
       {/* )} */}
     </>
   )

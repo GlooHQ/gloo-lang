@@ -19,7 +19,12 @@ import { isMobile } from 'react-device-detect'
 import { toast } from 'sonner'
 import { Editable } from '../../_components/EditableText'
 import { type EditorFile, createUrl } from '../../actions'
-import { currentEditorFilesAtom, exploreProjectsOpenAtom, unsavedChangesAtom } from '../_atoms/atoms'
+import {
+  activeFileNameAtom,
+  currentEditorFilesAtom,
+  exploreProjectsOpenAtom,
+  unsavedChangesAtom,
+} from '../_atoms/atoms'
 
 import { EventListener } from '@baml/playground-common/baml_wasm_web/EventListener'
 import { GithubStars } from './GithubStars'
@@ -31,6 +36,9 @@ import FileViewer from './Tree/FileViewer'
 // import { ViewSelector } from '@baml/playground-common/shared/Selectors'
 import { useFeedbackWidget } from '@baml/playground-common/lib/feedback_widget'
 import { filesAtom } from '@/shared/baml-project-panel/atoms'
+import { TopNavbar } from './TopNavbar'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { selectedFunctionAtom } from '@/shared/baml-project-panel/playground-panel/atoms'
 
 const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   useFeedbackWidget()
@@ -39,6 +47,7 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   // Tried to use url pathnames for this but nextjs hijacks the pathname state (even the window.location) so we have to manually track unsaved changes in the app.
   const [files, setFiles] = useAtom(filesAtom)
   const [unsavedChanges, setUnsavedChanges] = useAtom(unsavedChangesAtom)
+  const activeFileName = useAtomValue(activeFileNameAtom)
 
   useEffect(() => {
     if (project) {
@@ -71,6 +80,13 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   const [description, setDescription] = useState(project.description)
   const descriptionInputRef = useRef(null)
   const setOpenExplorePanel = useSetAtom(exploreProjectsOpenAtom)
+  const setSelectedFunction = useSetAtom(selectedFunctionAtom)
+
+  useEffect(() => {
+    console.log('activeFileName', activeFileName)
+    if (activeFileName) {
+    }
+  }, [activeFileName])
 
   return (
     // firefox wont apply the background color for some reason so we forcefully set it.
@@ -82,133 +98,18 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
           </div>
         )}
         <ResizablePanelGroup className="w-full h-full overflow-clip" direction="horizontal">
-          {!isMobile && (
-            <ResizablePanel defaultSize={12} className="h-full bg-zinc-900">
-              <div className="flex flex-row justify-center items-center pt-2 w-full">
-                <a href={'/'} className="flex text-lg italic font-bold text-center w-fit">
-                  Prompt Fiddle
-                </a>
-              </div>
-
-              <ResizablePanelGroup className="pb-4 h-full" direction="vertical">
-                <ResizablePanel defaultSize={100} className="h-full">
-                  <div className="px-2 pt-4 w-full text-sm font-semibold text-center uppercase text-white/90">
-                    project files
-                  </div>
-                  <div className="flex flex-col pb-8 w-full h-full tour-file-view">
-                    <FileViewer />
-                  </div>
-                </ResizablePanel>
-
-                {/* <ResizableHandle className='bg-white/10' />
-              <ResizablePanel className='flex flex-col items-center pt-2 w-full tour-templates'></ResizablePanel> */}
-              </ResizablePanelGroup>
-            </ResizablePanel>
-          )}
+          {!isMobile && <ProjectSidebar />}
 
           <ResizableHandle className="bg-vscode-contrastActiveBorder border-vscode-contrastActiveBorder" />
           <ResizablePanel defaultSize={88}>
             <div className="flex-col w-full h-full font-sans bg-background dark:bg-vscode-panel-background">
-              <div className="flex flex-row items-center gap-x-12 border-b-[1px] border-vscode-panel-border min-h-[40px]">
-                <div className="flex flex-col items-center py-1 h-full whitespace-nowrap tour-title">
-                  <Editable
-                    text={projectName}
-                    placeholder="Write a task name"
-                    type="input"
-                    childRef={projectNameInputRef}
-                  >
-                    <input
-                      className="px-2 text-lg border-none text-foreground"
-                      type="text"
-                      ref={projectNameInputRef}
-                      name="task"
-                      placeholder="Write a task name"
-                      value={projectName}
-                      onChange={(e) => setProjectName(e.target.value)}
-                    />
-                  </Editable>
-                </div>
-                <div className="flex flex-row gap-x-2 items-center">
-                  <ShareButton project={project} projectName={projectName} />
-                </div>
-
-                <div className="flex items-center justify-start h-full pt-0.5 ">
-                  <Button asChild variant={'ghost'} className="gap-x-1 py-1 h-full hover:bg-indigo-600">
-                    <Link
-                      href="https://boundaryml.com"
-                      target="_blank"
-                      className="text-sm hover:text-foreground text-foreground"
-                    >
-                      What is BAML?
-                    </Link>
-                  </Button>
-                </div>
-                {project.id !== 'all-projects' && project.id !== null ? (
-                  <div className="flex flex-col justify-center items-center h-full">
-                    <Link
-                      href={`/all-projects`}
-                      target="_blank"
-                      className="flex flex-row gap-x-2 items-center px-2 py-1 text-sm whitespace-pre-wrap bg-indigo-600 rounded-sm hover:bg-indigo-500 h-fit text-vscode-button-foreground"
-                    >
-                      <Compass size={16} strokeWidth={2} />
-                      <span className="whitespace-nowrap">Explore Examples</span>
-                    </Link>
-                  </div>
-                ) : null}
-                <div className="flex flex-col justify-center items-center h-full">
-                  <Link
-                    href={`/new-project`}
-                    target="_blank"
-                    className="flex flex-row gap-x-2 items-center px-2 py-1 text-sm whitespace-pre-wrap bg-indigo-600 rounded-sm hover:bg-indigo-500 h-fit text-vscode-button-foreground"
-                  >
-                    <File size={16} strokeWidth={2} />
-                    <span className="whitespace-nowrap">New project</span>
-                  </Link>
-                </div>
-                {unsavedChanges ? (
-                  <div className="flex flex-row items-center whitespace-nowrap text-muted-foreground">
-                    <Badge variant="outline" className="gap-x-2 font-light text-yellow-400">
-                      <AlertTriangleIcon size={14} />
-                      <span>Unsaved changes</span>
-                    </Badge>
-                  </div>
-                ) : (
-                  <></>
-                )}
-
-                <div className="flex flex-row gap-x-8 justify-end items-center pr-4 w-full">
-                  <div className="flex h-full">
-                    <Link
-                      href="https://discord.gg/BTNBeXGuaS"
-                      className="pt-0 h-full w-fit text-zinc-300 hover:text-zinc-50"
-                    >
-                      <div className="flex flex-row gap-x-4 items-center text-sm">
-                        <Image
-                          src="/discord-icon.svg"
-                          className="opacity-60 hover:opacity-100"
-                          width={24}
-                          height={24}
-                          alt="Discord"
-                        />
-                      </div>
-                    </Link>
-                  </div>
-                  <div className="flex h-full">
-                    <Link
-                      href="https://docs.boundaryml.com/guide/installation-editors/vs-code-extension"
-                      className="pt-0 h-full w-fit text-zinc-300 hover:text-zinc-50"
-                    >
-                      <div className="flex flex-row gap-x-4 items-center text-xs grayscale 2xl:text-sm hover:grayscale-0">
-                        <Image src="/vscode_logo.svg" width={18} height={18} alt="VSCode extension" />
-                      </div>
-                    </Link>
-                  </div>
-                  <div className="flex h-full">
-                    <GithubStars />
-                  </div>
-                </div>
-              </div>
-
+              <TopNavbar
+                project={project}
+                projectName={projectName}
+                setProjectName={setProjectName}
+                projectNameInputRef={projectNameInputRef}
+                unsavedChanges={unsavedChanges}
+              />
               <div
                 style={{
                   height: 'calc(100% - 40px)',
@@ -236,16 +137,20 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                       </Editable>
                     </div>
                     <div className="flex w-full h-full tour-editor">
-                      <CodeMirrorViewer
-                        lang="baml"
-                        fileContent={{
-                          code: project.files[0].content,
-                          language: 'baml',
-                          id: project.files[0].path,
-                        }}
-                        shouldScrollDown={true}
-                        onContentChange={() => {}}
-                      />
+                      <ScrollArea className="w-full h-full">
+                        {activeFileName && (
+                          <CodeMirrorViewer
+                            lang="baml"
+                            fileContent={{
+                              code: files[activeFileName],
+                              language: 'baml',
+                              id: activeFileName,
+                            }}
+                            shouldScrollDown={false}
+                            onContentChange={() => {}}
+                          />
+                        )}
+                      </ScrollArea>
                     </div>
                   </ResizablePanel>
                   <ResizableHandle className="bg-vscode-tab-activeBackground" />
@@ -266,61 +171,34 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   )
 }
 
+export const ProjectSidebar = () => {
+  return (
+    <ResizablePanel defaultSize={12} className="h-full bg-zinc-900">
+      <div className="flex flex-row justify-center items-center pt-2 w-full">
+        <a href={'/'} className="flex text-lg italic font-bold text-center w-fit">
+          Prompt Fiddle
+        </a>
+      </div>
+
+      <ResizablePanelGroup className="pb-4 h-full" direction="vertical">
+        <ResizablePanel defaultSize={100} className="h-full">
+          <div className="px-2 pt-4 w-full text-sm font-semibold text-center uppercase text-white/90">
+            project files
+          </div>
+          <div className="flex flex-col pb-8 w-full h-full tour-file-view">
+            <FileViewer />
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </ResizablePanel>
+  )
+}
+
 export const ProjectView = ({ project }: { project: BAMLProject }) => {
   return (
     <>
       <ProjectViewImpl project={project} />
     </>
-  )
-}
-
-const ShareButton = ({ project, projectName }: { project: BAMLProject; projectName: string }) => {
-  const [loading, setLoading] = useState(false)
-  const editorFiles = useAtomValue(currentEditorFilesAtom)
-  console.log('editorFilesss', editorFiles)
-  const pathname = usePathname()
-  const [unsavedChanges, setUnsavedChanges] = useAtom(unsavedChangesAtom)
-
-  return (
-    <Button
-      variant={'default'}
-      className="gap-x-1 py-1 h-full whitespace-nowrap bg-transparent shadow-md text-vscode-button-foreground hover:bg-indigo-600 w-fit"
-      disabled={loading}
-      onClick={async () => {
-        setLoading(true)
-        try {
-          let urlId = pathname?.split('/')[1]
-          if (!urlId) {
-            urlId = await createUrl({
-              ...project,
-              name: projectName,
-              files: editorFiles,
-              // TODO: @hellovai use runTestOutput
-              testRunOutput: undefined,
-            })
-
-            posthog.capture('share_url', { id: urlId })
-
-            const newUrl = `${window.location.origin}/${urlId}`
-            window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl)
-            setUnsavedChanges(false)
-          }
-
-          navigator.clipboard.writeText(`${window.location.origin}/${urlId}`)
-
-          toast('URL copied to clipboard')
-        } catch (e) {
-          posthog.capture('share_url_failed', { error: JSON.stringify(e) })
-          toast('Failed to generate URL')
-          console.error(e)
-        } finally {
-          setLoading(false)
-        }
-      }}
-    >
-      {unsavedChanges ? <GitForkIcon size={14} /> : <LinkIcon size={14} />}
-      <span>{unsavedChanges ? 'Fork & Share' : 'Share'}</span>
-    </Button>
   )
 }
 

@@ -2,7 +2,13 @@
 import { BAML } from '@boundaryml/baml-lezer'
 import { linter } from '@codemirror/lint'
 import { vscodeDarkInit } from '@uiw/codemirror-theme-vscode'
-import CodeMirror, { Compartment, EditorView, type Extension, type ReactCodeMirrorRef } from '@uiw/react-codemirror'
+import CodeMirror, {
+  Compartment,
+  EditorView,
+  StateEffect,
+  type Extension,
+  type ReactCodeMirrorRef,
+} from '@uiw/react-codemirror'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { inlineCopilot } from 'codemirror-copilot'
 
@@ -10,7 +16,7 @@ import { hyperLink } from '@uiw/codemirror-extensions-hyper-link'
 import { langs } from '@uiw/codemirror-extensions-langs'
 import { type ICodeBlock } from '../types'
 import { CodeMirrorDiagnosticsAtom } from './atoms'
-import { useStore } from 'jotai'
+import { useSetAtom, useStore } from 'jotai'
 
 import { tsLinter, tsHover, tsAutocomplete, tsSync, tsFacet } from '@valtown/codemirror-ts'
 import { javascript } from '@codemirror/lang-javascript'
@@ -19,6 +25,7 @@ import { autocompletion } from '@codemirror/autocomplete'
 import { createDefaultMapFromCDN, createSystem, createVirtualTypeScriptEnvironment } from '@typescript/vfs'
 import ts from 'typescript'
 import { useTheme } from 'next-themes'
+import { updateCursorAtom } from '../playground-panel/atoms'
 
 const extensionMap = {
   js: [langs.javascript()],
@@ -116,6 +123,8 @@ export const CodeMirrorViewer = ({
 
     // return () => clearInterval(interval); // Clean up the interval on component unmount
   }, [fileContent, ref, shouldScrollDown])
+
+  const setUpdateCursor = useSetAtom(updateCursorAtom)
 
   useEffect(() => {
     async function initializeExtensions() {
@@ -241,8 +250,22 @@ export const CodeMirrorViewer = ({
           ref={ref}
           key={lang}
           id={lang}
+          onStatistics={(data) => {
+            const pos = data.selectionAsSingle.from
+            const line = data.line.number
+            // Calculate column by finding the difference between cursor position and line start
+            const column = pos - data.line.from + 1
+
+            setUpdateCursor({
+              fileName: fileContent.id,
+              fileText: ref.current?.view?.state.doc.toString() || '',
+              line,
+              column,
+            })
+          }}
           value={fileContent.code}
           onChange={(value) => {
+            console.log('onChange')
             onContentChange?.(value)
           }}
           readOnly={false}
