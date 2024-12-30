@@ -8,7 +8,7 @@ const config = {
   content: ui.content.concat([
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
+    // './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ]),
   prefix: '',
@@ -77,7 +77,7 @@ const config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate'), require('@githubocto/tailwind-vscode')],
+  plugins: [require('tailwindcss-animate')],
 } satisfies Config
 
-export default config
+// export default config

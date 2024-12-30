@@ -25,6 +25,7 @@ import { selectedHistoryIndexAtom, testHistoryAtom } from '../prompt-preview/tes
 import { useRunTests } from '../prompt-preview/test-panel/test-runner'
 import { getStatus } from '../prompt-preview/test-panel/testStateUtils'
 import EnvVars from './env-vars'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface FunctionData {
   name: string
@@ -74,18 +75,18 @@ export default function CustomSidebar() {
   }
 
   return (
-    <div className='flex relative h-full'>
+    <div className="flex relative">
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        variant='ghost'
-        size='sm'
+        variant="ghost"
+        size="sm"
         className={cn(
           'absolute -left-6 top-1/2 z-10 p-0 w-8 h-12 -translate-y-1/2 hover:bg-muted',
           isOpen ? 'rounded-l' : 'rounded',
         )}
       >
         <ChevronLeft className={cn('w-4 h-4 transition-transform duration-200', isOpen ? 'rotate-180' : '')} />
-        <span className='sr-only'>Toggle sidebar</span>
+        <span className="sr-only">Toggle sidebar</span>
       </Button>
       <div
         className={cn(
@@ -93,38 +94,42 @@ export default function CustomSidebar() {
           isOpen ? 'opacity-100 w-[160px] min-w-[160px]' : 'w-8 opacity-100 min-w-8',
         )}
       >
-        <ResizablePanelGroup direction='vertical'>
-          <ResizablePanel defaultSize={75}>
-            <div className='flex h-[60px] items-center px-4 text-xs'>
-              <div className='relative w-full'>
-                <div className='absolute inset-0 -m-0.5 rounded-md transition-all' />
-                <div className='flex relative items-center'>
-                  <Search className='absolute left-2 top-1/2 w-3 h-3 text-gray-400 -translate-y-1/2' />
-                  <Input
-                    placeholder='Filter...'
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className='flex px-8 py-2 w-full h-9 text-xs rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring'
-                  />
+        <ResizablePanelGroup direction="vertical">
+          <ResizablePanel defaultSize={75} className="">
+            <ScrollArea className="flex w-full h-full" type="always">
+              <div className="flex flex-col w-full h-fit">
+                <div className="flex h-[60px] items-center px-4 text-xs">
+                  <div className="relative w-full">
+                    <div className="absolute inset-0 -m-0.5 rounded-md transition-all" />
+                    <div className="flex relative items-center">
+                      <Search className="absolute left-2 top-1/2 w-3 h-3 text-gray-400 -translate-y-1/2" />
+                      <Input
+                        placeholder="Filter..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="flex px-8 py-2 w-full h-9 text-xs rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="overflow-auto flex-1">
+                  <div className="px-2">
+                    {searchTerm && filteredFunctions.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRunFilteredTests}
+                        className="flex justify-between items-center mb-2 w-full"
+                      >
+                        <span>Run tests below</span>
+                        <Play className="ml-2 w-3 h-3" />
+                      </Button>
+                    )}
+                    <TreeView functions={filteredFunctions} searchTerm={searchTerm} />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className='overflow-auto flex-1'>
-              <div className='px-2'>
-                {searchTerm && filteredFunctions.length > 0 && (
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={handleRunFilteredTests}
-                    className='flex justify-between items-center mb-2 w-full'
-                  >
-                    <span>Run tests below</span>
-                    <Play className='ml-2 w-3 h-3' />
-                  </Button>
-                )}
-                <TreeView functions={filteredFunctions} searchTerm={searchTerm} />
-              </div>
-            </div>
+            </ScrollArea>
           </ResizablePanel>
           {/* <ResizableHandle withHandle />
           <ResizablePanel defaultSize={25}>
@@ -183,7 +188,7 @@ function FunctionItem({ label, tests, isLast = false, isSelected = false, search
       <span>
         {parts.map((part, i) =>
           part.toLowerCase() === searchTerm.toLowerCase() ? (
-            <span key={i} className='bg-yellow-200 dark:bg-yellow-900'>
+            <span key={i} className="bg-yellow-200 dark:bg-yellow-900">
               {part}
             </span>
           ) : (
@@ -208,19 +213,19 @@ function FunctionItem({ label, tests, isLast = false, isSelected = false, search
         )}
         onClick={handleClick}
       >
-        <div className='flex flex-1 items-center min-w-0'>
+        <div className="flex flex-1 items-center min-w-0">
           <motion.div
             initial={false}
             animate={{ rotate: isOpen ? 90 : 0 }}
             transition={{ duration: 0.2 }}
-            className='mr-1'
+            className="mr-1"
           >
-            <ChevronRight className='w-3 h-3' />
+            <ChevronRight className="w-3 h-3" />
           </motion.div>
-          <span className='ml-1 font-mono text-xs truncate'>{highlightText(label)}</span>
+          <span className="ml-1 font-mono text-xs truncate">{highlightText(label)}</span>
         </div>
-        <Button variant='ghost' size='sm' className='p-0 w-6 h-6' onClick={handleRunAll}>
-          <Play className='w-3 h-3' />
+        <Button variant="ghost" size="sm" className="p-0 w-6 h-6" onClick={handleRunAll}>
+          <Play className="w-3 h-3" />
         </Button>
       </div>
       <AnimatePresence initial={false}>
@@ -230,7 +235,7 @@ function FunctionItem({ label, tests, isLast = false, isSelected = false, search
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className='overflow-hidden ml-4'
+            className="overflow-hidden ml-4"
           >
             {tests.map((test, index) => (
               <TestItem
@@ -266,19 +271,19 @@ function TestItem({ label, isLast = false, isSelected = false, searchTerm = '', 
 
   // TODO: coalesce with the other status in TestStatus.tsx
   const getStatusIcon = () => {
-    if (!testResult) return <FlaskConical className='w-3 h-3' />
+    if (!testResult) return <FlaskConical className="w-3 h-3" />
 
     const status = testResult.response.status
     const finalState = getStatus(testResult.response)
 
-    if (status === 'running') return <Loader className='w-3 h-3' />
-    if (status === 'error') return <XCircle className='w-3 h-3 text-red-500' />
+    if (status === 'running') return <Loader className="w-3 h-3" />
+    if (status === 'error') return <XCircle className="w-3 h-3 text-red-500" />
     if (status === 'done') {
-      if (finalState === 'passed') return <CheckCircle2 className='w-3 h-3 text-green-500' />
-      if (finalState === 'constraints_failed') return <AlertTriangle className='w-3 h-3 text-yellow-500' />
-      return <XCircle className='w-3 h-3 text-red-500' />
+      if (finalState === 'passed') return <CheckCircle2 className="w-3 h-3 text-green-500" />
+      if (finalState === 'constraints_failed') return <AlertTriangle className="w-3 h-3 text-yellow-500" />
+      return <XCircle className="w-3 h-3 text-red-500" />
     }
-    return <FlaskConical className='w-3 h-3' />
+    return <FlaskConical className="w-3 h-3" />
   }
 
   const setSelectedItem = useSetAtom(selectedItemAtom)
@@ -301,7 +306,7 @@ function TestItem({ label, isLast = false, isSelected = false, searchTerm = '', 
       <span>
         {parts.map((part, i) =>
           part.toLowerCase() === searchTerm.toLowerCase() ? (
-            <span key={i} className='bg-yellow-200 dark:bg-yellow-900'>
+            <span key={i} className="bg-yellow-200 dark:bg-yellow-900">
               {part}
             </span>
           ) : (
@@ -318,7 +323,7 @@ function TestItem({ label, isLast = false, isSelected = false, searchTerm = '', 
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      className='ml-2'
+      className="ml-2"
     >
       <div
         className={cn(
@@ -328,17 +333,17 @@ function TestItem({ label, isLast = false, isSelected = false, searchTerm = '', 
         )}
         onClick={handleClick}
       >
-        <div className='flex flex-1 items-center min-w-0'>
+        <div className="flex flex-1 items-center min-w-0">
           {getStatusIcon()}
-          <span className='ml-1 font-mono text-xs truncate'>{highlightText(label)}</span>
+          <span className="ml-1 font-mono text-xs truncate">{highlightText(label)}</span>
         </div>
         <Button
-          variant='ghost'
-          size='sm'
-          className='p-0 w-6 h-6 opacity-0 transition-opacity group-hover:opacity-100'
+          variant="ghost"
+          size="sm"
+          className="p-0 w-6 h-6 opacity-0 transition-opacity group-hover:opacity-100"
           onClick={handleRunTest}
         >
-          <Play className='w-3 h-3' />
+          <Play className="w-3 h-3" />
         </Button>
       </div>
     </motion.div>
@@ -354,7 +359,7 @@ function TreeView({ functions, searchTerm }: TreeViewProps) {
   const selectedItem = useAtomValue(selectedItemAtom)
 
   return (
-    <div className='space-y-1'>
+    <div className="space-y-1 bg-background">
       {functions.map((func, index) => (
         <FunctionItem
           key={func.name}

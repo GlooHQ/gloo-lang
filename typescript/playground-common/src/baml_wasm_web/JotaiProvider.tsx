@@ -76,7 +76,7 @@ export const sessionStore: SyncStorage<any> = createJSONStorage(() => sessionSto
 export default function JotaiProvider({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={atomStore}>
-      <DevTools store={atomStore} />
+      {/* <DevTools store={atomStore} /> */}
       {children}
     </Provider>
   )

@@ -21,13 +21,13 @@ const renderIcon = (path: string) => {
   const icon = path.split('.').pop()
   switch (icon) {
     case 'py':
-      return <SiPython size={14} color='#6bc7f6' />
+      return <SiPython size={14} color="#6bc7f6" />
     case 'ts':
-      return <SiTypescript size={14} color='#2563eb' />
+      return <SiTypescript size={14} color="#2563eb" />
     default:
       return (
-        <span className='file-folder-icon'>
-          <File color='#6bc7f6' size={16} />
+        <span className="file-folder-icon">
+          <File className="text-secondary-foreground/50" size={16} />
         </span>
       )
   }
@@ -81,31 +81,31 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
         `group relative px-2 py-1 cursor-pointer overflow-x-clip flex-flex-col text-xs ${
           node.state.isSelected ? 'isSelected' : ''
         }`,
-        [node.state.isSelected ? 'bg-zinc-600' : ''],
+        [node.state.isSelected ? 'dark:bg-gray-800 bg-gray-200' : ''],
       )}
       style={style}
       ref={dragHandle}
     >
-      <div className='flex flex-row justify-start items-center w-full' onClick={() => node.isInternal && node.toggle()}>
+      <div className="flex flex-row justify-start items-center w-full" onClick={() => node.isInternal && node.toggle()}>
         {node.isLeaf ? (
           <>
-            <span className=''></span>
+            <span className=""></span>
             {renderIcon(node.id)}
           </>
         ) : (
           <>
-            <span className='w-fit'>
-              {node.isOpen ? <ChevronDown className='w-3 h-fit' /> : <ChevronRight size={12} />}
+            <span className="w-fit">
+              {node.isOpen ? <ChevronDown className="w-3 h-fit" /> : <ChevronRight size={12} />}
             </span>
             {/* <span className="file-folder-icon">
               <Folder color="#f6cf60" size={16} />
             </span> */}
           </>
         )}
-        <span className='node-text text-muted-foreground'>
+        <span className="node-text text-muted-foreground">
           {node.isEditing ? (
             <input
-              type='text'
+              type="text"
               defaultValue={node.data.name}
               onFocus={(e) => e.currentTarget.select()}
               onBlur={() => node.reset()}
@@ -141,7 +141,7 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
           ) : (
             <span
               className={clsx(
-                fileHasErrors ? 'text-red-500' : node.state.isSelected ? 'text-white' : '',
+                fileHasErrors ? 'text-red-500' : node.state.isSelected ? 'dark:text-secondary-foreground ' : '',
                 'text-xs pl-1',
               )}
             >
@@ -152,20 +152,20 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
       </div>
 
       {node.id !== 'baml_src' && (
-        <div className='hidden absolute top-0 right-0 rounded-md group-hover:flex bg-zinc-800'>
-          <div className='flex flex-row items-center'>
+        <div className="hidden absolute top-0 right-0 rounded-md group-hover:flex bg-muted">
+          <div className="flex flex-row items-center">
             <button
-              className='p-1 opacity-70 hover:opacity-100'
+              className="p-1 opacity-70 hover:opacity-100"
               onClick={(e) => {
                 e.stopPropagation()
                 node.edit()
               }}
-              title='Rename...'
+              title="Rename..."
             >
               <Edit2 size={11} />
             </button>
             <button
-              className='p-1 opacity-60 hover:opacity-100'
+              className="p-1 opacity-60 hover:opacity-100"
               onClick={() => {
                 tree.delete(node.id)
 
@@ -184,7 +184,7 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
                   return prev.filter((d) => d.slice(0, -1) !== node.id)
                 })
               }}
-              title='Delete'
+              title="Delete"
             >
               <X size={16} />
             </button>

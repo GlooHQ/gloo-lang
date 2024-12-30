@@ -1,24 +1,13 @@
 'use client'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { useKeybindingOverrides } from '@/hooks/command-s'
 import type { BAMLProject } from '@/lib/exampleProjects'
 import { CodeMirrorViewer, CustomErrorBoundary, PromptPreview } from '@baml/playground-common'
-// import { updateFileAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { useHydrateAtoms } from 'jotai/utils'
-import { AlertTriangleIcon, Compass, File, GitForkIcon, LinkIcon } from 'lucide-react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import posthog from 'posthog-js'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { isMobile } from 'react-device-detect'
-import { toast } from 'sonner'
 import { Editable } from '../../_components/EditableText'
-import { type EditorFile, createUrl } from '../../actions'
 import {
   activeFileNameAtom,
   currentEditorFilesAtom,
@@ -27,18 +16,12 @@ import {
 } from '../_atoms/atoms'
 
 import { EventListener } from '@baml/playground-common/baml_wasm_web/EventListener'
-import { GithubStars } from './GithubStars'
-
-// import SettingsDialog, { ShowSettingsButton } from '@baml/playground-common/shared/SettingsDialog'
-
 import FileViewer from './Tree/FileViewer'
-// import { AppStateProvider } from '@baml/playground-common/shared/AppStateContext' // Import the AppStateProvider
-// import { ViewSelector } from '@baml/playground-common/shared/Selectors'
-import { useFeedbackWidget } from '@baml/playground-common/lib/feedback_widget'
-import { filesAtom } from '@/shared/baml-project-panel/atoms'
-import { TopNavbar } from './TopNavbar'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { filesAtom } from '@/shared/baml-project-panel/atoms'
 import { runtimeStateAtom, selectedFunctionAtom } from '@/shared/baml-project-panel/playground-panel/atoms'
+import { useFeedbackWidget } from '@baml/playground-common/lib/feedback_widget'
+import { TopNavbar } from './TopNavbar'
 
 const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   useFeedbackWidget()
@@ -86,19 +69,19 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
 
   return (
     // firefox wont apply the background color for some reason so we forcefully set it.
-    <div className="flex relative flex-row w-full h-full bg-gray-800 main-panel overflow-x-clip overflow-y-clip">
+    <div className="flex relative flex-row w-full h-full main-panel overflow-x-clip overflow-y-clip">
       <EventListener>
         {isMobile && (
-          <div className="absolute bottom-0 left-0 right-0 text-zinc-900 font-semibold bg-zinc-400 border-t-zinc-600 border-t-[1px] w-full h-[100px] z-50 text-center p-8">
+          <div className="absolute bottom-0 left-0 right-0 font-semibold  border-t-[1px] w-full h-[100px] z-50 text-center p-8">
             Visit PromptFiddle on Desktop to get the best experience
           </div>
         )}
         <ResizablePanelGroup className="w-full h-full overflow-clip" direction="horizontal">
           {!isMobile && <ProjectSidebar />}
 
-          <ResizableHandle className="bg-vscode-contrastActiveBorder border-vscode-contrastActiveBorder" />
+          <ResizableHandle className="" />
           <ResizablePanel defaultSize={88}>
-            <div className="flex-col w-full h-full font-sans bg-background dark:bg-vscode-panel-background">
+            <div className="flex-col w-full h-full font-sans">
               <TopNavbar
                 project={project}
                 projectName={projectName}
@@ -108,7 +91,8 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
               />
               <div
                 style={{
-                  height: 'calc(100% - 40px)',
+                  // the size of the topnavbar
+                  height: 'calc(100% - 55px)',
                 }}
                 className="flex flex-row h-full overflow-clip"
               >
@@ -120,10 +104,10 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                         placeholder="Write a task name"
                         type="input"
                         childRef={descriptionInputRef}
-                        className="px-2 w-full text-sm font-light text-left border-none text-card-foreground/80"
+                        className="px-2 py-2 w-full text-sm font-normal text-left border-none text-foreground"
                       >
                         <textarea
-                          className="w-[95%] ml-2 px-2 text-sm border-none text-vscode-descriptionForeground"
+                          className="w-[95%] ml-2 px-2 text-sm border-none"
                           ref={descriptionInputRef}
                           name="task"
                           placeholder="Write a description"
@@ -132,7 +116,7 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                         />
                       </Editable>
                     </div>
-                    <div className="flex w-full h-full tour-editor">
+                    <div className="flex pl-1 w-full h-full tour-editor dark:bg-muted/80">
                       <ScrollArea className="w-full h-full">
                         {activeFileName && (
                           <CodeMirrorViewer
@@ -156,10 +140,10 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                       </ScrollArea>
                     </div>
                   </ResizablePanel>
-                  <ResizableHandle className="bg-vscode-tab-activeBackground" />
+                  <ResizableHandle className="" />
                   {!isMobile && (
                     <ResizablePanel defaultSize={50} className="tour-playground">
-                      <div className="flex flex-row h-full bg-vscode-panel-background">
+                      <div className="flex flex-row h-full">
                         <PlaygroundView />
                       </div>
                     </ResizablePanel>
@@ -176,16 +160,16 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
 
 export const ProjectSidebar = () => {
   return (
-    <ResizablePanel defaultSize={12} className="h-full bg-zinc-900">
-      <div className="flex flex-row justify-center items-center pt-2 w-full">
-        <a href={'/'} className="flex text-lg italic font-bold text-center w-fit">
+    <ResizablePanel defaultSize={16} className="px-2 h-full">
+      <div className="flex flex-row justify-center items-center pt-4 w-full">
+        <a href={'/'} className="flex text-lg font-semibold text-center w-fit text-foreground">
           Prompt Fiddle
         </a>
       </div>
 
       <ResizablePanelGroup className="pb-4 h-full" direction="vertical">
         <ResizablePanel defaultSize={100} className="h-full">
-          <div className="px-2 pt-4 w-full text-sm font-semibold text-center uppercase text-white/90">
+          <div className="px-2 pt-4 w-full text-xs font-normal text-center uppercase text-muted-foreground">
             project files
           </div>
           <div className="flex flex-col pb-8 w-full h-full tour-file-view">

@@ -1,7 +1,7 @@
 'use client'
 import { BAML } from '@boundaryml/baml-lezer'
 import { linter } from '@codemirror/lint'
-import { vscodeDarkInit } from '@uiw/codemirror-theme-vscode'
+import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode'
 import CodeMirror, {
   Compartment,
   EditorView,
@@ -200,17 +200,30 @@ export const CodeMirrorViewer = ({
 
   const { theme } = useTheme()
 
-  const editorTheme = vscodeDarkInit({
-    settings: {
-      fontSize: '11px',
-      // this must be a transparent color or selection will be invisible
-      lineHighlight: theme === 'light' ? '#c7c7c730' : '#a1a1a730',
-      gutterBackground: theme === 'light' ? '#fff' : 'transparent',
-      gutterForeground: '#808080',
-      gutterActiveForeground: '#808080',
-      gutterBorder: theme === 'light' ? '#fff' : 'transparent',
-    },
-  })
+  const editorTheme =
+    theme === 'dark'
+      ? vscodeDarkInit({
+          settings: {
+            fontSize: '11px',
+            // this must be a transparent color or selection will be invisible
+            lineHighlight: '#a1a1a730',
+            gutterBackground: 'transparent',
+            gutterForeground: '#808080',
+            gutterActiveForeground: '#808080',
+            gutterBorder: 'transparent',
+          },
+        })
+      : vscodeLightInit({
+          settings: {
+            fontSize: '11px',
+            // this must be a transparent color or selection will be invisible
+            lineHighlight: theme === 'light' ? '#c7c7c730' : '#a1a1a730',
+            gutterBackground: theme === 'light' ? '#fff' : 'transparent',
+            gutterForeground: '#808080',
+            gutterActiveForeground: '#808080',
+            gutterBorder: theme === 'light' ? '#fff' : 'transparent',
+          },
+        })
 
   useEffect(() => {
     onContentChange?.(fileContent.code)
@@ -237,9 +250,9 @@ export const CodeMirrorViewer = ({
   }
 
   return (
-    <div className='w-full h-fit'>
+    <div className="w-full h-fit">
       <div
-        className='w-full h-full'
+        className="w-full h-full"
         onKeyDown={(e) => {
           if ((e.metaKey || e.ctrlKey) && e.key === 's') {
             e.preventDefault()
@@ -271,9 +284,9 @@ export const CodeMirrorViewer = ({
           readOnly={false}
           extensions={[...extensions, ...inlineCopilotExtension]}
           theme={editorTheme}
-          className='text-xs border-none'
-          height='100%'
-          width='100%'
+          className="text-xs border-none"
+          height="100%"
+          width="100%"
           style={{ width: '100%', height: '100%' }}
         />
         {/* {modified && (
