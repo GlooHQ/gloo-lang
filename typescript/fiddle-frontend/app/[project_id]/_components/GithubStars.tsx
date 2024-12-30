@@ -28,7 +28,7 @@ export const GithubStars = () => {
       >
         <Image
           src="/github-mark.svg"
-          className="invert dark:invert-0 dark:fill-white"
+          className="opacity-60 invert hover:opacity-100 dark:invert-0 dark:fill-white"
           width={18}
           height={18}
           alt="Github"

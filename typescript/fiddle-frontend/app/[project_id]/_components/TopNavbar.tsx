@@ -138,7 +138,7 @@ export const TopNavbar = ({
         <Link
           href={`/new-project`}
           target="_blank"
-          className="flex flex-row gap-x-2 items-center px-2 py-1 text-sm text-white whitespace-pre-wrap bg-purple-500 rounded-sm dark:bg-purple-600 hover:bg-purple-300 dark:hover:bg-purple-700 h-fit"
+          className="flex flex-row gap-x-2 items-center px-2 py-1 text-sm text-white whitespace-pre-wrap bg-purple-500 rounded-sm dark:bg-purple-600 hover:bg-purple-600 dark:hover:bg-purple-700 h-fit"
         >
           <File size={16} strokeWidth={2} />
           <span className="whitespace-nowrap">New project</span>
@@ -158,9 +158,9 @@ export const TopNavbar = ({
 
       <div className="flex flex-row gap-x-8 justify-end items-center pr-4 w-full">
         <div className="flex h-full">
-          <Link href="https://discord.gg/BTNBeXGuaS" className="pt-0 h-full w-fit hover:text-zinc-50">
+          <Link href="https://discord.gg/BTNBeXGuaS" className="pt-0 h-full w-fit">
             <div className="flex flex-row gap-x-4 items-center text-sm">
-              <SiDiscord size={24} className="opacity-40" />
+              <SiDiscord size={24} className="opacity-40 hover:opacity-100" />
               {/* <Image
                 src="/discord-icon.svg"
                 className="text-blue-600 fill-black hover:opacity-100"
@@ -174,7 +174,7 @@ export const TopNavbar = ({
         <div className="flex h-full">
           <Link
             href="https://docs.boundaryml.com/guide/installation-editors/vs-code-extension"
-            className="pt-0 h-full w-fit text-zinc-500 dark:text-zinc-300 dark:hover:text-zinc-50 hover:text-zinc-600"
+            className="pt-0 h-full w-fit text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-50 hover:text-zinc-600"
           >
             <div className="flex flex-row gap-x-4 items-center text-xs grayscale 2xl:text-sm hover:grayscale-0">
               <Image src="/vscode_logo.svg" width={18} height={18} alt="VSCode extension" />
