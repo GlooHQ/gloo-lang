@@ -16,6 +16,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import posthog from 'posthog-js'
 import { toast } from '@/hooks/use-toast'
+import { SiDiscord } from 'react-icons/si'
 
 const ShareButton = ({ project, projectName }: { project: BAMLProject; projectName: string }) => {
   const [loading, setLoading] = useState(false)
@@ -27,7 +28,7 @@ const ShareButton = ({ project, projectName }: { project: BAMLProject; projectNa
   return (
     <Button
       variant={'default'}
-      className="gap-x-1 py-1 h-full whitespace-nowrap bg-transparent text-secondary-foreground hover:bg-purple-600 w-fit"
+      className="gap-x-2 py-1 h-full whitespace-nowrap bg-transparent text-secondary-foreground hover:bg-purple-600 w-fit"
       disabled={loading}
       onClick={async () => {
         setLoading(true)
@@ -89,7 +90,7 @@ export const TopNavbar = ({
   unsavedChanges,
 }: ProjectHeaderProps) => {
   return (
-    <div className="flex flex-row items-center gap-x-12 border-b-[1px] min-h-[55px]">
+    <div className="flex flex-row items-center gap-x-12 border-b-[0px] min-h-[55px]">
       <div className="flex flex-col items-center py-1 h-full whitespace-nowrap lg:pr-12 tour-title">
         <Editable text={projectName} placeholder="Write a task name" type="input" childRef={projectNameInputRef}>
           <input
@@ -146,7 +147,7 @@ export const TopNavbar = ({
 
       {unsavedChanges ? (
         <div className="flex flex-row items-center whitespace-nowrap text-muted-foreground">
-          <Badge variant="outline" className="gap-x-2 font-light text-yellow-400">
+          <Badge variant="outline" className="gap-x-2 font-light text-yellow-600 dark:text-yellow-500">
             <AlertTriangleIcon size={14} />
             <span>Unsaved changes</span>
           </Badge>
@@ -157,22 +158,23 @@ export const TopNavbar = ({
 
       <div className="flex flex-row gap-x-8 justify-end items-center pr-4 w-full">
         <div className="flex h-full">
-          <Link href="https://discord.gg/BTNBeXGuaS" className="pt-0 h-full w-fit text-zinc-300 hover:text-zinc-50">
+          <Link href="https://discord.gg/BTNBeXGuaS" className="pt-0 h-full w-fit hover:text-zinc-50">
             <div className="flex flex-row gap-x-4 items-center text-sm">
-              <Image
+              <SiDiscord size={24} className="opacity-40" />
+              {/* <Image
                 src="/discord-icon.svg"
-                className="opacity-60 hover:opacity-100"
+                className="text-blue-600 fill-black hover:opacity-100"
                 width={24}
                 height={24}
                 alt="Discord"
-              />
+              /> */}
             </div>
           </Link>
         </div>
         <div className="flex h-full">
           <Link
             href="https://docs.boundaryml.com/guide/installation-editors/vs-code-extension"
-            className="pt-0 h-full w-fit text-zinc-300 hover:text-zinc-50"
+            className="pt-0 h-full w-fit text-zinc-500 dark:text-zinc-300 dark:hover:text-zinc-50 hover:text-zinc-600"
           >
             <div className="flex flex-row gap-x-4 items-center text-xs grayscale 2xl:text-sm hover:grayscale-0">
               <Image src="/vscode_logo.svg" width={18} height={18} alt="VSCode extension" />

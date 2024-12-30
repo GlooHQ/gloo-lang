@@ -116,7 +116,7 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                         />
                       </Editable>
                     </div>
-                    <div className="flex pl-1 w-full h-full tour-editor dark:bg-muted/80">
+                    <div className="flex pl-1 w-full h-full tour-editor dark:bg-muted/70">
                       <ScrollArea className="w-full h-full">
                         {activeFileName && (
                           <CodeMirrorViewer
@@ -160,7 +160,7 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
 
 export const ProjectSidebar = () => {
   return (
-    <ResizablePanel defaultSize={16} className="px-2 h-full">
+    <ResizablePanel defaultSize={16} className="px-2 h-full dark:bg-[#020309]">
       <div className="flex flex-row justify-center items-center pt-4 w-full">
         <a href={'/'} className="flex text-lg font-semibold text-center w-fit text-foreground">
           Prompt Fiddle
