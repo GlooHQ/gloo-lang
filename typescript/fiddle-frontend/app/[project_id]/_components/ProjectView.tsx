@@ -160,7 +160,7 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
 
 export const ProjectSidebar = () => {
   return (
-    <ResizablePanel defaultSize={16} className="px-2 h-full dark:bg-[#020309]">
+    <ResizablePanel defaultSize={16} className=" h-full dark:bg-[#020309] bg-muted">
       <div className="flex flex-row justify-center items-center pt-4 w-full">
         <a href={'/'} className="flex text-lg font-semibold text-center w-fit text-foreground">
           Prompt Fiddle

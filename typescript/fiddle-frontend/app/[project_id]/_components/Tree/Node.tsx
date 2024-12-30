@@ -102,7 +102,7 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
             </span> */}
           </>
         )}
-        <span className="node-text text-muted-foreground">
+        <span className="node-text text-muted-foreground hover:text-foreground">
           {node.isEditing ? (
             <input
               type="text"
