@@ -354,7 +354,7 @@ impl WithChat for GoogleAIClient {
         LLMResponse::Success(LLMCompleteResponse {
             client: self.context.name.to_string(),
             prompt: internal_baml_jinja::RenderedPrompt::Chat(prompt.to_vec()),
-            content: content.parts[0].text.clone(),
+            content: content.parts[part_index].text.clone(),
             start_time: system_now,
             latency: instant_now.elapsed(),
             request_options: self.properties.properties.clone(),
