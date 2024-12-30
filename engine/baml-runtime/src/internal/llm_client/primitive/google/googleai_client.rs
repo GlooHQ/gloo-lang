@@ -455,9 +455,14 @@ impl ToProviderMessage for GoogleAIClient {
     }
 }
 
-/// The Google Gemini 2 model returns `candidates` with 2 parts each.
+/// The Google Gemini 2 model has an experimental feature
+/// called Flash Thinking Mode, which is turned on in a particular
+/// named model: gemini-2.0-flash-thinking-exp-1219
+/// 
+/// When run in this mode, Gemini returns `candidates` with 2 parts each.
 /// Part 0 is the chain of thought, part 1 is the actual output.
 /// Other Gemini models put the output data in part 0.
+/// 
 /// TODO: Explicitly represent Flash Thinking Mode response and
 /// do more thorough checking for the content part.
 /// For examples of how to introspect the response more safely, see:
