@@ -6,12 +6,14 @@
 use std::{
     cmp,
     collections::{HashMap, HashSet},
+    fmt::Debug,
+    hash::Hash,
 };
 
 use internal_baml_schema_ast::ast::TypeExpId;
 
 /// Dependency graph represented as an adjacency list.
-type Graph = HashMap<TypeExpId, HashSet<TypeExpId>>;
+type Graph<V> = HashMap<V, HashSet<V>>;
 
 /// State of each node for Tarjan's algorithm.
 #[derive(Clone, Copy)]
@@ -35,20 +37,24 @@ struct NodeState {
 /// This struct is simply bookkeeping for the algorithm, it can be implemented
 /// with just function calls but the recursive one would need 6 parameters which
 /// is pretty ugly.
-pub struct Tarjan<'g> {
+pub struct Tarjan<'g, V> {
     /// Ref to the depdenency graph.
-    graph: &'g Graph,
+    graph: &'g Graph<V>,
     /// Node number counter.
     index: usize,
     /// Nodes are placed on a stack in the order in which they are visited.
-    stack: Vec<TypeExpId>,
+    stack: Vec<V>,
     /// State of each node.
-    state: HashMap<TypeExpId, NodeState>,
+    state: HashMap<V, NodeState>,
     /// Strongly connected components.
-    components: Vec<Vec<TypeExpId>>,
+    components: Vec<Vec<V>>,
 }
 
-impl<'g> Tarjan<'g> {
+// V is Copy because we mostly use opaque identifiers for class or alias IDs.
+// In practice V ends up being a u32, but if for some reason this needs to
+// be used with strings then we can make V Clone instead of Copy and refactor
+// the code below.
+impl<'g, V: Eq + Ord + Hash + Copy> Tarjan<'g, V> {
     /// Unvisited node marker.
     ///
     /// Technically we should use [`Option<usize>`] and [`None`] for
@@ -63,7 +69,7 @@ impl<'g> Tarjan<'g> {
     /// Loops through all the nodes in the graph and visits them if they haven't
     /// been visited already. When the algorithm is done, [`Self::components`]
     /// will contain all the cycles in the graph.
-    pub fn components(graph: &'g Graph) -> Vec<Vec<TypeExpId>> {
+    pub fn components(graph: &'g Graph<V>) -> Vec<Vec<V>> {
         let mut tarjans = Self {
             graph,
             index: 0,
@@ -105,7 +111,7 @@ impl<'g> Tarjan<'g> {
     ///
     /// This is where the "algorithm" runs. Could be implemented iteratively if
     /// needed at some point.
-    fn strong_connect(&mut self, node_id: TypeExpId) {
+    fn strong_connect(&mut self, node_id: V) {
         // Initialize node state. This node has not yet been visited so we don't
         // have to grab the state from the hash map. And if we did, then we'd
         // have to fight the borrow checker by taking mut refs and read-only
@@ -121,8 +127,15 @@ impl<'g> Tarjan<'g> {
         self.index += 1;
         self.stack.push(node_id);
 
+        // TODO: @antoniosarosi: HashSet is random, won't always iterate in the
+        // same order. Fix this with IndexSet or something, we really don't want
+        // to sort this every single time. Also order only matters for tests, we
+        // can do `if cfg!(test)` or something.
+        let mut successors = Vec::from_iter(&self.graph[&node_id]);
+        successors.sort();
+
         // Visit neighbors to find strongly connected components.
-        for successor_id in &self.graph[&node_id] {
+        for successor_id in successors {
             // Grab owned state to circumvent borrow checker.
             let mut successor = self.state[successor_id];
             if successor.index == Self::UNVISITED {

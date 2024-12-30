@@ -263,6 +263,24 @@ impl ArgCoercer {
                     Err(())
                 }
             },
+            (FieldType::RecursiveTypeAlias(name), _) => {
+                let mut maybe_coerced = None;
+                // TODO: Fix this O(n)
+                for cycle in ir.structural_recursive_alias_cycles() {
+                    if let Some(target) = cycle.get(name) {
+                        maybe_coerced = Some(self.coerce_arg(ir, target, value, scope)?);
+                        break;
+                    }
+                }
+
+                match maybe_coerced {
+                    Some(coerced) => Ok(coerced),
+                    None => {
+                        scope.push_error(format!("Recursive type alias {} not found", name));
+                        Err(())
+                    }
+                }
+            }
             (FieldType::List(item), _) => match value {
                 BamlValue::List(arr) => {
                     let mut items = Vec::new();
@@ -438,5 +456,37 @@ mod tests {
         };
         let res = arg_coercer.coerce_arg(&ir, &type_, &value, &mut ScopeStack::new());
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_mutually_recursive_aliases() {
+        let ir = make_test_ir(
+            r##"
+type JsonValue = int | bool | float | string | JsonArray | JsonObject
+type JsonObject = map<string, JsonValue>
+type JsonArray = JsonValue[]
+            "##,
+        )
+        .unwrap();
+
+        let arg_coercer = ArgCoercer {
+            span_path: None,
+            allow_implicit_cast_to_string: true,
+        };
+
+        let json = BamlValue::Map(BamlMap::from([
+            ("number".to_string(), BamlValue::Int(1)),
+            ("string".to_string(), BamlValue::String("test".to_string())),
+            ("bool".to_string(), BamlValue::Bool(true)),
+        ]));
+
+        let res = arg_coercer.coerce_arg(
+            &ir,
+            &FieldType::RecursiveTypeAlias("JsonValue".to_string()),
+            &json,
+            &mut ScopeStack::new(),
+        );
+
+        assert_eq!(res, Ok(json));
     }
 }

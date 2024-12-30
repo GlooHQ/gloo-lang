@@ -207,6 +207,11 @@ export interface ClassOptionalOutput2 {
   
 }
 
+export interface ClassToRecAlias {
+  list: LinkedListAliasNode
+  
+}
+
 export interface ClassWithImage {
   myImage: Image
   param2: string
@@ -364,6 +369,12 @@ export interface LinkedList {
   
 }
 
+export interface LinkedListAliasNode {
+  value: number
+  next?: LinkedListAliasNode | null
+  
+}
+
 export interface LiteralClassHello {
   prop: "hello"
   
@@ -402,6 +413,11 @@ export interface Martian {
   
 }
 
+export interface MergeAttrs {
+  amount: Checked<number,"gt_ten">
+  
+}
+
 export interface NamedArgsSingleClass {
   key: string
   key_two: boolean
@@ -435,6 +451,12 @@ export interface NestedBlockConstraintForParam {
 export interface Node {
   data: number
   next?: Node | null
+  
+}
+
+export interface NodeWithAliasIndirection {
+  value: number
+  next?: NodeWithAliasIndirection | null
   
 }
 
@@ -614,3 +636,19 @@ export interface WithReasoning {
   reasoning: string
   
 }
+
+type RecursiveMapAlias = Record<string, RecursiveMapAlias>
+
+type RecursiveListAlias = RecursiveListAlias[]
+
+type RecAliasOne = RecAliasTwo
+
+type RecAliasTwo = RecAliasThree
+
+type RecAliasThree = RecAliasOne[]
+
+type JsonValue = number | string | boolean | number | JsonObject | JsonArray
+
+type JsonObject = Record<string, JsonValue>
+
+type JsonArray = JsonValue[]

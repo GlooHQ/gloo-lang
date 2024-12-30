@@ -64,6 +64,7 @@ impl WithScore for Flag {
             Flag::StringToBool(_) => 1,
             Flag::StringToNull(_) => 1,
             Flag::StringToChar(_) => 1,
+            Flag::StringToFloat(_) => 1,
             Flag::FloatToInt(_) => 1,
             Flag::NoFields(_) => 1,
             // No scores for contraints

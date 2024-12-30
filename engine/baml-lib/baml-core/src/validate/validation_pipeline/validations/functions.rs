@@ -2,9 +2,9 @@ use std::collections::HashSet;
 
 use crate::validate::validation_pipeline::context::Context;
 
-use either::Either;
 use internal_baml_diagnostics::{DatamodelError, DatamodelWarning, Span};
 
+use internal_baml_parser_database::TypeWalker;
 use internal_baml_schema_ast::ast::{FieldType, TypeExpId, WithIdentifier, WithName, WithSpan};
 
 use super::types::validate_type;
@@ -247,7 +247,7 @@ impl<'c> NestedChecks<'c> {
 
         match field_type {
             FieldType::Symbol(_, id, ..) => match self.ctx.db.find_type(id) {
-                Some(Either::Left(class_walker)) => {
+                Some(TypeWalker::Class(class_walker)) => {
                     // Stop recursion when dealing with recursive types.
                     if !self.visited.insert(class_walker.id) {
                         return false;

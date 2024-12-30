@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use anyhow::Result;
 use baml_types::BamlValue;
-use indexmap::IndexSet;
+use indexmap::{IndexMap, IndexSet};
 use internal_baml_core::ir::{
     repr::IntermediateRepr, ClassWalker, EnumWalker, FieldType, IRHelper,
 };
@@ -18,12 +18,14 @@ pub fn render_output_format(
     ctx: &RuntimeContext,
     output: &FieldType,
 ) -> Result<OutputFormatContent> {
-    let (enums, classes, recursive_classes) = relevant_data_models(ir, output, ctx)?;
+    let (enums, classes, recursive_classes, structural_recursive_aliases) =
+        relevant_data_models(ir, output, ctx)?;
 
     Ok(OutputFormatContent::target(output.clone())
         .enums(enums)
         .classes(classes)
         .recursive_classes(recursive_classes)
+        .structural_recursive_aliases(structural_recursive_aliases)
         .build())
 }
 
@@ -210,11 +212,17 @@ fn relevant_data_models<'a>(
     ir: &'a IntermediateRepr,
     output: &'a FieldType,
     ctx: &RuntimeContext,
-) -> Result<(Vec<Enum>, Vec<Class>, IndexSet<String>)> {
+) -> Result<(
+    Vec<Enum>,
+    Vec<Class>,
+    IndexSet<String>,
+    IndexMap<String, FieldType>,
+)> {
     let mut checked_types = HashSet::new();
     let mut enums = Vec::new();
     let mut classes = Vec::new();
     let mut recursive_classes = IndexSet::new();
+    let mut structural_recursive_aliases = IndexMap::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     let eval_ctx = ctx.eval_ctx(false);
@@ -365,7 +373,25 @@ fn relevant_data_models<'a>(
                         constraints,
                     });
                 } else {
+                    // TODO: @antonio This one was nasty! If aliases are not
+                    // resolved in the `ir.finite_recursive_cycles()` function
+                    // then an alias that points to a recursive class will get
+                    // resolved below and then this code will run, introducing
+                    // a recursive class in the relevant data models that does
+                    // not exist in the IR although it should!. Now it's been
+                    // fixed so this should be safe to remove, it wasn't even
+                    // a bug it was "why is this working when IT SHOULD NOT".
                     recursive_classes.insert(cls.to_owned());
+                }
+            }
+            (FieldType::RecursiveTypeAlias(name), _) => {
+                // TODO: Same O(n) problem as above.
+                for cycle in ir.structural_recursive_alias_cycles() {
+                    if cycle.contains_key(name) {
+                        for (alias, target) in cycle.iter() {
+                            structural_recursive_aliases.insert(alias.to_owned(), target.clone());
+                        }
+                    }
                 }
             }
             (FieldType::Literal(_), _) => {}
@@ -376,7 +402,12 @@ fn relevant_data_models<'a>(
         }
     }
 
-    Ok((enums, classes, recursive_classes))
+    Ok((
+        enums,
+        classes,
+        recursive_classes,
+        structural_recursive_aliases,
+    ))
 }
 
 #[cfg(test)]

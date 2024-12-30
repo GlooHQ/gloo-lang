@@ -277,3 +277,25 @@ test_deserializer!(
   FieldType::Class("ContactInfo".to_string()),
   {"primary": {"value": "help@boundaryml.com"}}
 );
+
+test_deserializer!(
+    test_ignore_float_in_string_if_string_in_union,
+    "",
+    "1 cup unsalted butter, room temperature",
+    FieldType::Union(vec![
+        FieldType::Primitive(TypeValue::Float),
+        FieldType::Primitive(TypeValue::String),
+    ]),
+    "1 cup unsalted butter, room temperature"
+);
+
+test_deserializer!(
+    test_ignore_int_if_string_in_union,
+    "",
+    "1 cup unsalted butter, room temperature",
+    FieldType::Union(vec![
+        FieldType::Primitive(TypeValue::Int),
+        FieldType::Primitive(TypeValue::String),
+    ]),
+    "1 cup unsalted butter, room temperature"
+);

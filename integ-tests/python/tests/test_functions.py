@@ -40,7 +40,14 @@ from ..baml_client.types import (
     BlockConstraintForParam,
     NestedBlockConstraintForParam,
     MapKey,
+<<<<<<< HEAD
+    LinkedListAliasNode,
+    ClassToRecAlias,
+    NodeWithAliasIndirection,
+    MergeAttrs,
+=======
     OptionalListAndMap,
+>>>>>>> canary
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -257,6 +264,108 @@ class TestAllInputs:
     async def test_single_literal_string_key_in_map(self):
         res = await b.InOutSingleLiteralStringMapKey({"key": "1"})
         assert res["key"] == "1"
+
+    @pytest.mark.asyncio
+    async def test_primitive_union_alias(self):
+        res = await b.PrimitiveAlias("test")
+        assert res == "test"
+
+    @pytest.mark.asyncio
+    async def test_map_alias(self):
+        res = await b.MapAlias({"A": ["B", "C"], "B": [], "C": []})
+        assert res == {"A": ["B", "C"], "B": [], "C": []}
+
+    @pytest.mark.asyncio
+    async def test_alias_union(self):
+        res = await b.NestedAlias("test")
+        assert res == "test"
+
+        res = await b.NestedAlias({"A": ["B", "C"], "B": [], "C": []})
+        assert res == {"A": ["B", "C"], "B": [], "C": []}
+
+    @pytest.mark.asyncio
+    async def test_alias_pointing_to_recursive_class(self):
+        res = await b.AliasThatPointsToRecursiveType(
+            LinkedListAliasNode(value=1, next=None)
+        )
+        assert res == LinkedListAliasNode(value=1, next=None)
+
+    @pytest.mark.asyncio
+    async def test_class_pointing_to_alias_that_points_to_recursive_class(self):
+        res = await b.ClassThatPointsToRecursiveClassThroughAlias(
+            ClassToRecAlias(list=LinkedListAliasNode(value=1, next=None))
+        )
+        assert res == ClassToRecAlias(list=LinkedListAliasNode(value=1, next=None))
+
+    @pytest.mark.asyncio
+    async def test_recursive_class_with_alias_indirection(self):
+        res = await b.RecursiveClassWithAliasIndirection(
+            NodeWithAliasIndirection(
+                value=1, next=NodeWithAliasIndirection(value=2, next=None)
+            )
+        )
+        assert res == NodeWithAliasIndirection(
+            value=1, next=NodeWithAliasIndirection(value=2, next=None)
+        )
+
+    @pytest.mark.asyncio
+    async def test_merge_alias_attributes(self):
+        res = await b.MergeAliasAttributes(123)
+        assert res.amount.value == 123
+        assert res.amount.checks["gt_ten"].status == "succeeded"
+
+    @pytest.mark.asyncio
+    async def test_return_alias_with_merged_attrs(self):
+        res = await b.ReturnAliasWithMergedAttributes(123)
+        assert res.value == 123
+        assert res.checks["gt_ten"].status == "succeeded"
+
+    @pytest.mark.asyncio
+    async def test_alias_with_multiple_attrs(self):
+        res = await b.AliasWithMultipleAttrs(123)
+        assert res.value == 123
+        assert res.checks["gt_ten"].status == "succeeded"
+
+    @pytest.mark.asyncio
+    async def test_simple_recursive_map_alias(self):
+        res = await b.SimpleRecursiveMapAlias({"one": {"two": {"three": {}}}})
+        assert res == {"one": {"two": {"three": {}}}}
+
+    @pytest.mark.asyncio
+    async def test_simple_recursive_list_alias(self):
+        res = await b.SimpleRecursiveListAlias([[], [], [[]]])
+        assert res == [[], [], [[]]]
+
+    @pytest.mark.asyncio
+    async def test_recursive_alias_cycles(self):
+        res = await b.RecursiveAliasCycle([[], [], [[]]])
+        assert res == [[], [], [[]]]
+
+    @pytest.mark.asyncio
+    async def test_json_type_alias_cycle(self):
+        data = {
+            "number": 1,
+            "string": "test",
+            "bool": True,
+            "list": [1, 2, 3],
+            "object": {"number": 1, "string": "test", "bool": True, "list": [1, 2, 3]},
+            "json": {
+                "number": 1,
+                "string": "test",
+                "bool": True,
+                "list": [1, 2, 3],
+                "object": {
+                    "number": 1,
+                    "string": "test",
+                    "bool": True,
+                    "list": [1, 2, 3],
+                },
+            },
+        }
+
+        res = await b.JsonTypeAliasCycle(data)
+        assert res == data
+        assert res["json"]["object"]["list"] == [1, 2, 3]
 
 
 class MyCustomClass(NamedArgsSingleClass):

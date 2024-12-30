@@ -168,6 +168,8 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
         match self {
             FieldType::Class(name) => format!("Baml::PartialTypes::{}", name.clone()),
             FieldType::Enum(name) => format!("T.nilable(Baml::Types::{})", name.clone()),
+            // TODO: Can we define recursive aliases in Ruby with Sorbet?
+            FieldType::RecursiveTypeAlias(_name) => "T.anything".to_string(),
             // TODO: Temporary solution until we figure out Ruby literals.
             FieldType::Literal(value) => value.literal_base_type().to_partial_type_ref(),
             // https://sorbet.org/docs/stdlib-generics

@@ -7,7 +7,7 @@ use crate::{field_type_attributes, type_check_attributes, TypeCheckAttributes};
 
 use super::python_language_features::ToPython;
 use internal_baml_core::ir::{
-    repr::{Docstring, IntermediateRepr},
+    repr::{Docstring, IntermediateRepr, Walker},
     ClassWalker, EnumWalker, FieldType, IRHelper,
 };
 
@@ -16,6 +16,7 @@ use internal_baml_core::ir::{
 pub(crate) struct PythonTypes<'ir> {
     enums: Vec<PythonEnum<'ir>>,
     classes: Vec<PythonClass<'ir>>,
+    structural_recursive_alias_cycles: Vec<PythonTypeAlias<'ir>>,
 }
 
 #[derive(askama::Template)]
@@ -39,6 +40,11 @@ struct PythonClass<'ir> {
     // the name, type and docstring of the field.
     fields: Vec<(Cow<'ir, str>, String, Option<String>)>,
     dynamic: bool,
+}
+
+struct PythonTypeAlias<'ir> {
+    name: Cow<'ir, str>,
+    target: String,
 }
 
 #[derive(askama::Template)]
@@ -66,6 +72,10 @@ impl<'ir> TryFrom<(&'ir IntermediateRepr, &'_ crate::GeneratorArgs)> for PythonT
         Ok(PythonTypes {
             enums: ir.walk_enums().map(PythonEnum::from).collect::<Vec<_>>(),
             classes: ir.walk_classes().map(PythonClass::from).collect::<Vec<_>>(),
+            structural_recursive_alias_cycles: ir
+                .walk_alias_cycles()
+                .map(PythonTypeAlias::from)
+                .collect::<Vec<_>>(),
         })
     }
 }
@@ -122,6 +132,21 @@ impl<'ir> From<ClassWalker<'ir>> for PythonClass<'ir> {
                 })
                 .collect(),
             docstring: c.item.elem.docstring.as_ref().map(render_docstring),
+        }
+    }
+}
+
+// TODO: Define AliasWalker to simplify type.
+impl<'ir> From<Walker<'ir, (&'ir String, &'ir FieldType)>> for PythonTypeAlias<'ir> {
+    fn from(
+        Walker {
+            db,
+            item: (name, target),
+        }: Walker<(&'ir String, &'ir FieldType)>,
+    ) -> Self {
+        PythonTypeAlias {
+            name: Cow::Borrowed(name),
+            target: target.to_type_ref(db),
         }
     }
 }
@@ -219,6 +244,7 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
                     format!("\"{name}\"")
                 }
             }
+            FieldType::RecursiveTypeAlias(name) => format!("\"{name}\""),
             FieldType::Literal(value) => to_python_literal(value),
             FieldType::Class(name) => format!("\"{name}\""),
             FieldType::List(inner) => format!("List[{}]", inner.to_type_ref(ir)),
@@ -272,6 +298,13 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
                     format!("Optional[Union[types.{name}, str]]")
                 } else {
                     format!("Optional[types.{name}]")
+                }
+            }
+            FieldType::RecursiveTypeAlias(name) => {
+                if wrapped {
+                    format!("\"{name}\"")
+                } else {
+                    format!("Optional[\"{name}\"]")
                 }
             }
             FieldType::Literal(value) => to_python_literal(value),

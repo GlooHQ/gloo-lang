@@ -9,6 +9,9 @@ impl ToRuby for FieldType {
         match self {
             FieldType::Class(name) => format!("Baml::Types::{}", name.clone()),
             FieldType::Enum(name) => format!("T.any(Baml::Types::{}, String)", name.clone()),
+            // Sorbet does not support recursive type aliases.
+            // https://sorbet.org/docs/type-aliases
+            FieldType::RecursiveTypeAlias(_name) => "T.anything".to_string(),
             // TODO: Temporary solution until we figure out Ruby literals.
             FieldType::Literal(value) => value.literal_base_type().to_ruby(),
             // https://sorbet.org/docs/stdlib-generics

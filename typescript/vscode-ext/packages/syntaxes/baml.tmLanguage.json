@@ -720,12 +720,24 @@
       "name": "constant.numeric"
     },
     "type_alias": {
-      "begin": "(type)\\s+(\\w+)",
+      "begin": "(type)\\s+(\\w+)\\s*(=)",
       "beginCaptures": {
         "1": { "name": "storage.type.declaration" },
-        "2": { "name": "entity.name.type" }
+        "2": { "name": "entity.name.type" },
+        "3": { "name": "keyword.operator.assignment" }
       },
-      "patterns": [{ "include": "#comment" }]
+      "end": "(?=$|\\n)",
+      "patterns": [
+        { "include": "#comment" },
+        { 
+          "begin": "(?<=\\=)\\s*",
+          "end": "(?=//|$|\\n)",
+          "patterns": [
+            { "include": "#type_definition" },
+            { "include": "#block_attribute" }
+          ]
+        }
+      ]
     },
     "invalid_assignment": {
       "name": "invalid.illegal",

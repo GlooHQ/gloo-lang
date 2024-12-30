@@ -64,6 +64,9 @@ class ClassOptionalOutput2(BaseModel):
     prop2: Optional[str] = None
     prop3: Optional["Blah"] = None
 
+class ClassToRecAlias(BaseModel):
+    list: Optional["LinkedListAliasNode"] = None
+
 class ClassWithImage(BaseModel):
     myImage: Optional[baml_py.Image] = None
     param2: Optional[str] = None
@@ -173,6 +176,10 @@ class LinkedList(BaseModel):
     head: Optional["Node"] = None
     len: Optional[int] = None
 
+class LinkedListAliasNode(BaseModel):
+    value: Optional[int] = None
+    next: Optional["LinkedListAliasNode"] = None
+
 class LiteralClassHello(BaseModel):
     prop: Literal["hello"]
 
@@ -194,6 +201,9 @@ class Martian(BaseModel):
     age: Checked[Optional[int],Literal["young_enough"]]
     """The age of the Martian in Mars years.
     So many Mars years."""
+
+class MergeAttrs(BaseModel):
+    amount: Checked[Optional[int],Literal["gt_ten"]]
 
 class NamedArgsSingleClass(BaseModel):
     key: Optional[str] = None
@@ -218,6 +228,10 @@ class NestedBlockConstraintForParam(BaseModel):
 class Node(BaseModel):
     data: Optional[int] = None
     next: Optional["Node"] = None
+
+class NodeWithAliasIndirection(BaseModel):
+    value: Optional[int] = None
+    next: Optional["NodeWithAliasIndirection"] = None
 
 class OptionalListAndMap(BaseModel):
     p: List[Optional[str]]

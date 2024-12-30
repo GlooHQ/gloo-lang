@@ -1,10 +1,10 @@
 use ouroboros::self_referencing;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::Hash;
 use std::ops::Deref;
 
-use crate::coerce;
 use crate::types::configurations::visit_test_case;
+use crate::{coerce, ParserDatabase};
 use crate::{context::Context, DatamodelError};
 
 use baml_types::Constraint;
@@ -13,7 +13,7 @@ use indexmap::IndexMap;
 use internal_baml_diagnostics::{Diagnostics, Span};
 use internal_baml_prompt_parser::ast::{ChatBlock, PrinterBlock, Variable};
 use internal_baml_schema_ast::ast::{
-    self, Expression, FieldId, RawString, ValExpId, WithIdentifier, WithName, WithSpan,
+    self, Expression, FieldId, FieldType, RawString, ValExpId, WithIdentifier, WithName, WithSpan,
 };
 use internal_llm_client::{ClientProvider, PropertyHandler, UnresolvedClientProperty};
 
@@ -37,6 +37,12 @@ pub(super) fn resolve_types(ctx: &mut Context<'_>) {
                 visit_class(idx, model, ctx);
             }
             (_, ast::Top::Class(_)) => unreachable!("Class misconfigured"),
+
+            (ast::TopId::TypeAlias(idx), ast::Top::TypeAlias(assignment)) => {
+                visit_type_alias(idx, assignment, ctx);
+            }
+            (_, ast::Top::TypeAlias(assignment)) => unreachable!("Type alias misconfigured"),
+
             (ast::TopId::TemplateString(idx), ast::Top::TemplateString(template_string)) => {
                 visit_template_string(idx, template_string, ctx)
             }
@@ -235,6 +241,29 @@ pub(super) struct Types {
     pub(super) class_dependencies: HashMap<ast::TypeExpId, HashSet<String>>,
     pub(super) enum_dependencies: HashMap<ast::TypeExpId, HashSet<String>>,
 
+    /// Graph of type aliases.
+    ///
+    /// This graph is only used to detect infinite cycles in type aliases.
+    pub(crate) type_alias_dependencies: HashMap<ast::TypeAliasId, HashSet<ast::TypeAliasId>>,
+
+    /// Fully resolved type aliases.
+    ///
+    /// A type alias con point to one or many other type aliases.
+    ///
+    /// ```ignore
+    /// type AliasOne = SomeClass
+    /// type AliasTwo = AnotherClass
+    /// type AliasThree = AliasTwo
+    /// type AliasFour = AliasOne | AliasTwo
+    /// ```
+    ///
+    /// In the above example, `AliasFour` would be resolved to the type
+    /// `SomeClass | AnotherClass`, which does not even exist in the AST. That's
+    /// why we need to store the resolution here.
+    ///
+    /// Contents would be `AliasThree -> SomeClass`.
+    pub(super) resolved_type_aliases: HashMap<ast::TypeAliasId, FieldType>,
+
     /// Strongly connected components of the dependency graph.
     ///
     /// Basically contains all the different cycles. This allows us to find a
@@ -246,6 +275,13 @@ pub(super) struct Types {
     /// get us a class with its dependencies faster than O(n), maybe a
     /// Merge-Find Set or something like that.
     pub(super) finite_recursive_cycles: Vec<Vec<ast::TypeExpId>>,
+
+    /// Contains recursive type aliases.
+    ///
+    /// Recursive type aliases are a little bit trickier than recursive classes
+    /// because the termination condition is tied to lists and maps only. Nulls
+    /// and unions won't allow type alias cycles to be resolved.
+    pub(super) structural_recursive_alias_cycles: Vec<Vec<ast::TypeAliasId>>,
 
     pub(super) function: HashMap<ast::ValExpId, FunctionType>,
 
@@ -344,6 +380,174 @@ fn visit_class<'db>(
         used_types.extend(input_deps.iter().map(|id| id.name().to_string()));
         used_types
     });
+}
+
+/// Returns a "virtual" type that represents the fully resolved alias.
+///
+/// We call it "virtual" because it might not exist in the AST. Basic example:
+///
+/// ```ignore
+/// type AliasOne = SomeClass
+/// type AliasTwo = AnotherClass
+/// type AliasThree = AliasOne | AliasTwo | int
+/// ```
+///
+/// The type would resolve to `SomeClass | AnotherClass | int`, which is not
+/// stored in the AST.
+///
+/// **Important**: This function can only be called once infinite cycles have
+/// been detected! Otherwise it'll stack overflow.
+pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldType {
+    match field_type {
+        // For symbols we need to check if we're dealing with aliases.
+        FieldType::Symbol(arity, ident, attrs) => {
+            let Some(string_id) = db.interner.lookup(ident.name()) else {
+                unreachable!(
+                    "Attempting to resolve alias `{ident}` that does not exist in the interner"
+                );
+            };
+
+            let Some(top_id) = db.names.tops.get(&string_id) else {
+                unreachable!("Alias name `{ident}` is not registered in the context");
+            };
+
+            match top_id {
+                ast::TopId::TypeAlias(alias_id) => {
+                    let mut resolved = match db.types.resolved_type_aliases.get(alias_id) {
+                        // Check if we can avoid deeper recursion.
+                        Some(already_resolved) => already_resolved.to_owned(),
+
+                        // No luck, check if the type is resolvable.
+                        None => {
+                            // TODO: O(n)
+                            if db
+                                .structural_recursive_alias_cycles()
+                                .iter()
+                                .any(|cycle| cycle.contains(alias_id))
+                            {
+                                // Not resolvable, part of a cycle.
+                                field_type.to_owned()
+                            } else {
+                                // Maybe resolvable, recurse deeper.
+                                resolve_type_alias(&db.ast[*alias_id].value, db)
+                            }
+                        }
+                    };
+
+                    // Sync arity. Basically stuff like:
+                    //
+                    // type AliasOne = SomeClass?
+                    // type AliasTwo = AliasOne
+                    //
+                    // AliasTwo resolves to an "optional" type.
+                    //
+                    // TODO: Add a `set_arity` function or something and avoid
+                    // this clone.
+                    resolved = if resolved.is_optional() || arity.is_optional() {
+                        resolved.to_nullable()
+                    } else {
+                        resolved
+                    };
+
+                    // Merge attributes.
+                    resolved.set_attributes({
+                        let mut merged_attrs = Vec::from(field_type.attributes());
+                        merged_attrs.extend(resolved.attributes().to_owned());
+
+                        merged_attrs
+                    });
+
+                    resolved
+                }
+
+                // Class or enum. Already "resolved", pop off the stack.
+                _ => field_type.to_owned(),
+            }
+        }
+
+        // Recurse and resolve each type individually.
+        FieldType::Union(arity, items, span, attrs)
+        | FieldType::Tuple(arity, items, span, attrs) => {
+            let resolved = items
+                .iter()
+                .map(|item| resolve_type_alias(item, db))
+                .collect();
+
+            match field_type {
+                FieldType::Union(..) => {
+                    FieldType::Union(*arity, resolved, span.clone(), attrs.clone())
+                }
+                FieldType::Tuple(..) => {
+                    FieldType::Tuple(*arity, resolved, span.clone(), attrs.clone())
+                }
+                _ => unreachable!("should only match tuples and unions"),
+            }
+        }
+
+        // Base case, primitives or other types that are not aliases. No more
+        // "pointers" and graphs here.
+        _ => field_type.to_owned(),
+    }
+}
+
+fn visit_type_alias<'db>(
+    alias_id: ast::TypeAliasId,
+    assignment: &'db ast::Assignment,
+    ctx: &mut Context<'db>,
+) {
+    // Insert the entry as soon as we get here then if we find something we'll
+    // add edges to the graph. Otherwise no edges but we still need the Vertex
+    // in order for the cycles algorithm to work.
+    let alias_refs = ctx
+        .types
+        .type_alias_dependencies
+        .entry(alias_id)
+        .or_default();
+
+    let mut stack = vec![&assignment.value];
+
+    while let Some(item) = stack.pop() {
+        match item {
+            FieldType::Symbol(_, ident, _) => {
+                let Some(string_id) = ctx.interner.lookup(ident.name()) else {
+                    ctx.push_error(DatamodelError::new_validation_error(
+                        &format!("Type alias points to unknown identifier `{ident}`"),
+                        item.span().clone(),
+                    ));
+                    return;
+                };
+
+                let Some(top_id) = ctx.names.tops.get(&string_id) else {
+                    ctx.push_error(DatamodelError::new_validation_error(
+                        &format!("Type alias points to unknown identifier `{ident}`"),
+                        item.span().clone(),
+                    ));
+                    return;
+                };
+
+                // Add alias to the graph.
+                if let ast::TopId::TypeAlias(nested_alias_id) = top_id {
+                    alias_refs.insert(*nested_alias_id);
+                }
+            }
+
+            FieldType::Union(_, items, ..) | FieldType::Tuple(_, items, ..) => {
+                stack.extend(items.iter());
+            }
+
+            FieldType::List(_, nested, ..) => {
+                stack.push(nested);
+            }
+
+            FieldType::Map(_, nested, ..) => {
+                let (key, value) = nested.as_ref();
+                stack.push(key);
+                stack.push(value);
+            }
+
+            _ => {}
+        }
+    }
 }
 
 fn visit_function<'db>(idx: ValExpId, function: &'db ast::ValueExprBlock, ctx: &mut Context<'db>) {

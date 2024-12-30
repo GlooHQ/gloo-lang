@@ -44,6 +44,10 @@ pub(crate) fn validate_class_name(
     validate_name("class", ast_class.identifier(), diagnostics, true);
 }
 
+pub(crate) fn validate_type_alias_name(ast_class: &ast::Assignment, diagnostics: &mut Diagnostics) {
+    validate_name("type alias", ast_class.identifier(), diagnostics, true);
+}
+
 pub(crate) fn validate_class_field_name<T>(
     ast_class_field: &ast::Field<T>,
     diagnostics: &mut Diagnostics,

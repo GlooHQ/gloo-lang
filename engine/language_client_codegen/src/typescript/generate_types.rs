@@ -4,8 +4,8 @@ use anyhow::Result;
 use itertools::Itertools;
 
 use internal_baml_core::ir::{
-    repr::{Docstring, IntermediateRepr},
-    ClassWalker, EnumWalker,
+    repr::{Docstring, IntermediateRepr, Walker},
+    ClassWalker, EnumWalker, FieldType,
 };
 
 use crate::{type_check_attributes, GeneratorArgs, TypeCheckAttributes};
@@ -24,6 +24,7 @@ pub(crate) struct TypeBuilder<'ir> {
 pub(crate) struct TypescriptTypes<'ir> {
     enums: Vec<TypescriptEnum<'ir>>,
     classes: Vec<TypescriptClass<'ir>>,
+    structural_recursive_alias_cycles: Vec<TypescriptTypeAlias<'ir>>,
 }
 
 struct TypescriptEnum<'ir> {
@@ -40,6 +41,11 @@ pub struct TypescriptClass<'ir> {
     pub docstring: Option<String>,
 }
 
+struct TypescriptTypeAlias<'ir> {
+    name: Cow<'ir, str>,
+    target: String,
+}
+
 impl<'ir> TryFrom<(&'ir IntermediateRepr, &'ir GeneratorArgs)> for TypescriptTypes<'ir> {
     type Error = anyhow::Error;
 
@@ -54,6 +60,10 @@ impl<'ir> TryFrom<(&'ir IntermediateRepr, &'ir GeneratorArgs)> for TypescriptTyp
             classes: ir
                 .walk_classes()
                 .map(|e| Into::<TypescriptClass>::into(&e))
+                .collect::<Vec<_>>(),
+            structural_recursive_alias_cycles: ir
+                .walk_alias_cycles()
+                .map(TypescriptTypeAlias::from)
                 .collect::<Vec<_>>(),
         })
     }
@@ -128,6 +138,21 @@ impl<'ir> From<&ClassWalker<'ir>> for TypescriptClass<'ir> {
                 .docstring
                 .as_ref()
                 .map(|d| render_docstring(d, false)),
+        }
+    }
+}
+
+// TODO: Define AliasWalker to simplify type.
+impl<'ir> From<Walker<'ir, (&'ir String, &'ir FieldType)>> for TypescriptTypeAlias<'ir> {
+    fn from(
+        Walker {
+            db,
+            item: (name, target),
+        }: Walker<(&'ir String, &'ir FieldType)>,
+    ) -> Self {
+        Self {
+            name: Cow::Borrowed(name),
+            target: target.to_type_ref(db),
         }
     }
 }

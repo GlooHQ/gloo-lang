@@ -85,6 +85,70 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        list: Baml::Types::LinkedListAliasNode,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::LinkedListAliasNode)
+    }
+    def AliasThatPointsToRecursiveType(
+        *varargs,
+        list:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("AliasThatPointsToRecursiveType may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "AliasThatPointsToRecursiveType",
+        {
+          list: list,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        money: Baml::Checked[Integer],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Checked[Integer])
+    }
+    def AliasWithMultipleAttrs(
+        *varargs,
+        money:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("AliasWithMultipleAttrs may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "AliasWithMultipleAttrs",
+        {
+          money: money,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: Baml::Types::InputClass,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(String)
@@ -362,6 +426,38 @@ module Baml
         "BuildTree",
         {
           input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        cls: Baml::Types::ClassToRecAlias,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::ClassToRecAlias)
+    }
+    def ClassThatPointsToRecursiveClassThroughAlias(
+        *varargs,
+        cls:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ClassThatPointsToRecursiveClassThroughAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "ClassThatPointsToRecursiveClassThroughAlias",
+        {
+          cls: cls,
         },
         @ctx_manager,
         baml_options[:tb]&.instance_variable_get(:@registry),
@@ -1941,6 +2037,38 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        input: T.anything,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T.anything)
+    }
+    def JsonTypeAliasCycle(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("JsonTypeAliasCycle may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "JsonTypeAliasCycle",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(T.any(Integer, T::Boolean, String))
@@ -2037,6 +2165,70 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        m: T::Hash[String, T::Array[String]],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T::Hash[String, T::Array[String]])
+    }
+    def MapAlias(
+        *varargs,
+        m:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("MapAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "MapAlias",
+        {
+          m: m,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        money: Integer,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::MergeAttrs)
+    }
+    def MergeAliasAttributes(
+        *varargs,
+        money:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("MergeAliasAttributes may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "MergeAliasAttributes",
+        {
+          money: money,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::Types::DynamicOutput)
@@ -2058,6 +2250,38 @@ module Baml
         "MyFunc",
         {
           input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        c: T.any(T.any(Integer, String, T::Boolean, Float), T::Array[String], T::Hash[String, T::Array[String]]),
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T.any(T.any(Integer, String, T::Boolean, Float), T::Array[String], T::Hash[String, T::Array[String]]))
+    }
+    def NestedAlias(
+        *varargs,
+        c:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("NestedAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "NestedAlias",
+        {
+          c: c,
         },
         @ctx_manager,
         baml_options[:tb]&.instance_variable_get(:@registry),
@@ -2154,6 +2378,38 @@ module Baml
         "PredictAgeBare",
         {
           inp: inp,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        p: T.any(Integer, String, T::Boolean, Float),
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T.any(Integer, String, T::Boolean, Float))
+    }
+    def PrimitiveAlias(
+        *varargs,
+        p:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("PrimitiveAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "PrimitiveAlias",
+        {
+          p: p,
         },
         @ctx_manager,
         baml_options[:tb]&.instance_variable_get(:@registry),
@@ -2389,6 +2645,102 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        input: T.anything,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T.anything)
+    }
+    def RecursiveAliasCycle(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("RecursiveAliasCycle may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "RecursiveAliasCycle",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        cls: Baml::Types::NodeWithAliasIndirection,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Types::NodeWithAliasIndirection)
+    }
+    def RecursiveClassWithAliasIndirection(
+        *varargs,
+        cls:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("RecursiveClassWithAliasIndirection may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "RecursiveClassWithAliasIndirection",
+        {
+          cls: cls,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        money: Baml::Checked[Integer],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::Checked[Integer])
+    }
+    def ReturnAliasWithMergedAttributes(
+        *varargs,
+        money:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ReturnAliasWithMergedAttributes may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "ReturnAliasWithMergedAttributes",
+        {
+          money: money,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         inp: Integer,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Integer)
@@ -2472,6 +2824,70 @@ module Baml
 
       raw = @runtime.call_function(
         "SchemaDescriptions",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: T.anything,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T.anything)
+    }
+    def SimpleRecursiveListAlias(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("SimpleRecursiveListAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "SimpleRecursiveListAlias",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      (raw.parsed_using_types(Baml::Types))
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: T.anything,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(T.anything)
+    }
+    def SimpleRecursiveMapAlias(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("SimpleRecursiveMapAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.call_function(
+        "SimpleRecursiveMapAlias",
         {
           input: input,
         },
@@ -3941,6 +4357,76 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        list: Baml::Types::LinkedListAliasNode,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::LinkedListAliasNode])
+    }
+    def AliasThatPointsToRecursiveType(
+        *varargs,
+        list:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("AliasThatPointsToRecursiveType may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "AliasThatPointsToRecursiveType",
+        {
+          list: list,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::LinkedListAliasNode, Baml::Types::LinkedListAliasNode].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        money: Baml::Checked[Integer],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Checked[Integer]])
+    }
+    def AliasWithMultipleAttrs(
+        *varargs,
+        money:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("AliasWithMultipleAttrs may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "AliasWithMultipleAttrs",
+        {
+          money: money,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::Checked[T.nilable(Integer)], Baml::Checked[Integer]].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: Baml::Types::InputClass,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[String])
@@ -4248,6 +4734,41 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[Baml::PartialTypes::Tree, Baml::Types::Tree].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        cls: Baml::Types::ClassToRecAlias,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::ClassToRecAlias])
+    }
+    def ClassThatPointsToRecursiveClassThroughAlias(
+        *varargs,
+        cls:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ClassThatPointsToRecursiveClassThroughAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "ClassThatPointsToRecursiveClassThroughAlias",
+        {
+          cls: cls,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::ClassToRecAlias, Baml::Types::ClassToRecAlias].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
@@ -5971,6 +6492,41 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        input: T.anything,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T.anything])
+    }
+    def JsonTypeAliasCycle(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("JsonTypeAliasCycle may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "JsonTypeAliasCycle",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.anything, T.anything].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[T.any(Integer, T::Boolean, String)])
@@ -6076,6 +6632,76 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        m: T::Hash[String, T::Array[String]],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T::Hash[String, T::Array[String]]])
+    }
+    def MapAlias(
+        *varargs,
+        m:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("MapAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "MapAlias",
+        {
+          m: m,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T::Hash[String, T::Array[T.nilable(String)]], T::Hash[String, T::Array[String]]].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        money: Integer,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::MergeAttrs])
+    }
+    def MergeAliasAttributes(
+        *varargs,
+        money:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("MergeAliasAttributes may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "MergeAliasAttributes",
+        {
+          money: money,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::MergeAttrs, Baml::Types::MergeAttrs].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         input: String,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[Baml::Types::DynamicOutput])
@@ -6103,6 +6729,41 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[Baml::PartialTypes::DynamicOutput, Baml::Types::DynamicOutput].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        c: T.any(T.any(Integer, String, T::Boolean, Float), T::Array[String], T::Hash[String, T::Array[String]]),
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T.any(T.any(Integer, String, T::Boolean, Float), T::Array[String], T::Hash[String, T::Array[String]])])
+    }
+    def NestedAlias(
+        *varargs,
+        c:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("NestedAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "NestedAlias",
+        {
+          c: c,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(T.any(T.nilable(T.any(T.nilable(Integer), T.nilable(String), T.nilable(T::Boolean), T.nilable(Float))), T::Array[T.nilable(String)], T::Hash[String, T::Array[T.nilable(String)]])), T.any(T.any(Integer, String, T::Boolean, Float), T::Array[String], T::Hash[String, T::Array[String]])].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
@@ -6208,6 +6869,41 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[Baml::Checked[T.nilable(Integer)], Baml::Checked[Integer]].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        p: T.any(Integer, String, T::Boolean, Float),
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T.any(Integer, String, T::Boolean, Float)])
+    }
+    def PrimitiveAlias(
+        *varargs,
+        p:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("PrimitiveAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "PrimitiveAlias",
+        {
+          p: p,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.nilable(T.any(T.nilable(Integer), T.nilable(String), T.nilable(T::Boolean), T.nilable(Float))), T.any(Integer, String, T::Boolean, Float)].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
@@ -6461,6 +7157,111 @@ module Baml
     sig {
       params(
         varargs: T.untyped,
+        input: T.anything,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T.anything])
+    }
+    def RecursiveAliasCycle(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("RecursiveAliasCycle may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "RecursiveAliasCycle",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.anything, T.anything].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        cls: Baml::Types::NodeWithAliasIndirection,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Types::NodeWithAliasIndirection])
+    }
+    def RecursiveClassWithAliasIndirection(
+        *varargs,
+        cls:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("RecursiveClassWithAliasIndirection may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "RecursiveClassWithAliasIndirection",
+        {
+          cls: cls,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::PartialTypes::NodeWithAliasIndirection, Baml::Types::NodeWithAliasIndirection].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        money: Baml::Checked[Integer],
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[Baml::Checked[Integer]])
+    }
+    def ReturnAliasWithMergedAttributes(
+        *varargs,
+        money:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("ReturnAliasWithMergedAttributes may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "ReturnAliasWithMergedAttributes",
+        {
+          money: money,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[Baml::Checked[T.nilable(Integer)], Baml::Checked[Integer]].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
         inp: Integer,
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[Integer])
@@ -6558,6 +7359,76 @@ module Baml
         baml_options[:client_registry],
       )
       Baml::BamlStream[Baml::PartialTypes::Schema, Baml::Types::Schema].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: T.anything,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T.anything])
+    }
+    def SimpleRecursiveListAlias(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("SimpleRecursiveListAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "SimpleRecursiveListAlias",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.anything, T.anything].new(
+        ffi_stream: raw,
+        ctx_manager: @ctx_manager
+      )
+    end
+
+    sig {
+      params(
+        varargs: T.untyped,
+        input: T.anything,
+        baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
+      ).returns(Baml::BamlStream[T.anything])
+    }
+    def SimpleRecursiveMapAlias(
+        *varargs,
+        input:,
+        baml_options: {}
+    )
+      if varargs.any?
+        
+        raise ArgumentError.new("SimpleRecursiveMapAlias may only be called with keyword arguments")
+      end
+      if (baml_options.keys - [:client_registry, :tb]).any?
+        raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
+      end
+
+      raw = @runtime.stream_function(
+        "SimpleRecursiveMapAlias",
+        {
+          input: input,
+        },
+        @ctx_manager,
+        baml_options[:tb]&.instance_variable_get(:@registry),
+        baml_options[:client_registry],
+      )
+      Baml::BamlStream[T.anything, T.anything].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )
