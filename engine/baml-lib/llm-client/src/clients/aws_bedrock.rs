@@ -196,18 +196,14 @@ impl UnresolvedAwsBedrock {
         let session_token = match self.session_token.as_ref() {
             Some(session_token) => {
                 let token = session_token.resolve(ctx)?;
-                if !token.is_empty() && !token.starts_with('$') {
+                if !token.is_empty() {
                     Some(token)
                 } else {
                     None
                 }
             }
             None => match ctx.get_env_var("AWS_SESSION_TOKEN") {
-                Ok(session_token)
-                    if !session_token.is_empty() && !session_token.starts_with('$') =>
-                {
-                    Some(session_token)
-                }
+                Ok(session_token) if !session_token.is_empty() => Some(session_token),
                 _ => None,
             },
         };
