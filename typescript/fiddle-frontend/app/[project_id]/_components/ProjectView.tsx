@@ -54,13 +54,10 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
       setUnsavedChanges(false)
       console.log('project.files', project.files)
       setFiles(
-        project.files.reduce(
-          (acc, f) => {
-            acc[f.path] = f.content
-            return acc
-          },
-          {} as Record<string, string>,
-        ),
+        project.files.reduce((acc, f) => {
+          acc[f.path] = f.content
+          return acc
+        }, {} as Record<string, string>),
       )
     }
   }, [project.id])
@@ -89,19 +86,19 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
 
   return (
     // firefox wont apply the background color for some reason so we forcefully set it.
-    <div className='flex relative flex-row w-full h-full bg-gray-800 main-panel overflow-x-clip overflow-y-clip'>
+    <div className="flex relative flex-row w-full h-full bg-gray-800 main-panel overflow-x-clip overflow-y-clip">
       <EventListener>
         {isMobile && (
-          <div className='absolute bottom-0 left-0 right-0 text-zinc-900 font-semibold bg-zinc-400 border-t-zinc-600 border-t-[1px] w-full h-[100px] z-50 text-center p-8'>
+          <div className="absolute bottom-0 left-0 right-0 text-zinc-900 font-semibold bg-zinc-400 border-t-zinc-600 border-t-[1px] w-full h-[100px] z-50 text-center p-8">
             Visit PromptFiddle on Desktop to get the best experience
           </div>
         )}
-        <ResizablePanelGroup className='w-full h-full overflow-clip' direction='horizontal'>
+        <ResizablePanelGroup className="w-full h-full overflow-clip" direction="horizontal">
           {!isMobile && <ProjectSidebar />}
 
-          <ResizableHandle className='bg-vscode-contrastActiveBorder border-vscode-contrastActiveBorder' />
+          <ResizableHandle className="bg-vscode-contrastActiveBorder border-vscode-contrastActiveBorder" />
           <ResizablePanel defaultSize={88}>
-            <div className='flex-col w-full h-full font-sans bg-background dark:bg-vscode-panel-background'>
+            <div className="flex-col w-full h-full font-sans bg-background dark:bg-vscode-panel-background">
               <TopNavbar
                 project={project}
                 projectName={projectName}
@@ -113,49 +110,56 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                 style={{
                   height: 'calc(100% - 40px)',
                 }}
-                className='flex flex-row h-full overflow-clip'
+                className="flex flex-row h-full overflow-clip"
               >
-                <ResizablePanelGroup className='min-h-[200px] w-full rounded-lg overflow-clip' direction='horizontal'>
+                <ResizablePanelGroup className="min-h-[200px] w-full rounded-lg overflow-clip" direction="horizontal">
                   <ResizablePanel defaultSize={50}>
-                    <div className='flex flex-col py-1 pl-2 w-full text-xs whitespace-nowrap border-none items-left h-fit'>
+                    <div className="flex flex-col py-1 pl-2 w-full text-xs whitespace-nowrap border-none items-left h-fit">
                       <Editable
                         text={description}
-                        placeholder='Write a task name'
-                        type='input'
+                        placeholder="Write a task name"
+                        type="input"
                         childRef={descriptionInputRef}
-                        className='px-2 w-full text-sm font-light text-left border-none text-card-foreground/80'
+                        className="px-2 w-full text-sm font-light text-left border-none text-card-foreground/80"
                       >
                         <textarea
-                          className='w-[95%] ml-2 px-2 text-sm border-none text-vscode-descriptionForeground'
+                          className="w-[95%] ml-2 px-2 text-sm border-none text-vscode-descriptionForeground"
                           ref={descriptionInputRef}
-                          name='task'
-                          placeholder='Write a description'
+                          name="task"
+                          placeholder="Write a description"
                           value={description}
                           onChange={(e) => setDescription(e.target.value)}
                         />
                       </Editable>
                     </div>
-                    <div className='flex w-full h-full tour-editor'>
-                      <ScrollArea className='w-full h-full'>
+                    <div className="flex w-full h-full tour-editor">
+                      <ScrollArea className="w-full h-full">
                         {activeFileName && (
                           <CodeMirrorViewer
-                            lang='baml'
+                            lang="baml"
                             fileContent={{
                               code: files[activeFileName],
                               language: 'baml',
                               id: activeFileName,
                             }}
                             shouldScrollDown={false}
-                            onContentChange={() => {}}
+                            onContentChange={(v) => {
+                              const newFiles: Record<string, string> = {}
+                              Object.entries(files).map(([key, value]) => {
+                                const newVal = key === activeFileName ? v : value
+                                newFiles[key] = newVal
+                              })
+                              setFiles(newFiles)
+                            }}
                           />
                         )}
                       </ScrollArea>
                     </div>
                   </ResizablePanel>
-                  <ResizableHandle className='bg-vscode-tab-activeBackground' />
+                  <ResizableHandle className="bg-vscode-tab-activeBackground" />
                   {!isMobile && (
-                    <ResizablePanel defaultSize={50} className='tour-playground'>
-                      <div className='flex flex-row h-full bg-vscode-panel-background'>
+                    <ResizablePanel defaultSize={50} className="tour-playground">
+                      <div className="flex flex-row h-full bg-vscode-panel-background">
                         <PlaygroundView />
                       </div>
                     </ResizablePanel>
@@ -172,19 +176,19 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
 
 export const ProjectSidebar = () => {
   return (
-    <ResizablePanel defaultSize={12} className='h-full bg-zinc-900'>
-      <div className='flex flex-row justify-center items-center pt-2 w-full'>
-        <a href={'/'} className='flex text-lg italic font-bold text-center w-fit'>
+    <ResizablePanel defaultSize={12} className="h-full bg-zinc-900">
+      <div className="flex flex-row justify-center items-center pt-2 w-full">
+        <a href={'/'} className="flex text-lg italic font-bold text-center w-fit">
           Prompt Fiddle
         </a>
       </div>
 
-      <ResizablePanelGroup className='pb-4 h-full' direction='vertical'>
-        <ResizablePanel defaultSize={100} className='h-full'>
-          <div className='px-2 pt-4 w-full text-sm font-semibold text-center uppercase text-white/90'>
+      <ResizablePanelGroup className="pb-4 h-full" direction="vertical">
+        <ResizablePanel defaultSize={100} className="h-full">
+          <div className="px-2 pt-4 w-full text-sm font-semibold text-center uppercase text-white/90">
             project files
           </div>
-          <div className='flex flex-col pb-8 w-full h-full tour-file-view'>
+          <div className="flex flex-col pb-8 w-full h-full tour-file-view">
             <FileViewer />
           </div>
         </ResizablePanel>
@@ -204,9 +208,9 @@ export const ProjectView = ({ project }: { project: BAMLProject }) => {
 const PlaygroundView = () => {
   return (
     <>
-      <CustomErrorBoundary message='Error loading playground'>
+      <CustomErrorBoundary message="Error loading playground">
         <Suspense fallback={<div>Loading...</div>}>
-          <div className='flex flex-col w-full h-full'>
+          <div className="flex flex-col w-full h-full">
             <PromptPreview />
           </div>
 
