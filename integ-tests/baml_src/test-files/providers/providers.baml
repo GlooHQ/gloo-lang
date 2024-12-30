@@ -78,10 +78,17 @@ function TestAwsInvalidRegion(input: string) -> string {
 }
 
 function TestOpenAIShorthand(input: string) -> string {
-  client "openai/gpt-4o-mini"
+  client GPT35
   prompt #"
     Write a nice short story about {{ input }}
   "#
+}
+
+test TestOpenAIShorthand {
+  functions [TestOpenAIShorthand]
+  args {
+    input "Donkey kong and peanut butter"
+  }
 }
 
 function TestAnthropicShorthand(input: string) -> string {
@@ -89,6 +96,16 @@ function TestAnthropicShorthand(input: string) -> string {
   prompt #"
     Write a nice short story about {{ input }}
   "#
+}
+
+
+test TestAWS{
+  functions [
+    TestAws
+  ]
+  args {
+    input "Donkey kong and peanut butter"
+  }
 }
 
 test TestProvider {

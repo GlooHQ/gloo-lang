@@ -19,7 +19,7 @@ client<llm> GPT4 {
     model gpt-4o
     api_key env.OPENAI_API_KEY
   }
-}  
+}
 
 
 client<llm> GPT4o {
@@ -28,7 +28,7 @@ client<llm> GPT4o {
     model gpt-4o
     api_key env.OPENAI_API_KEY
   }
-} 
+}
 
 
 client<llm> GPT4Turbo {
@@ -38,7 +38,7 @@ client<llm> GPT4Turbo {
     model gpt-4-turbo
     api_key env.OPENAI_API_KEY
   }
-} 
+}
 
 client<llm> GPT35 {
   provider openai
@@ -88,7 +88,7 @@ client<llm> Gemini {
 }
 
 client<llm> Vertex {
-  provider vertex-ai  
+  provider vertex-ai
   options {
     model gemini-1.5-pro
     location us-central1
@@ -103,6 +103,8 @@ client<llm> AwsBedrock {
     inference_configuration {
       max_tokens 100
     }
+    // session_token env.FOO
+    // region env.AWS_REGION2
     // model "anthropic.claude-3-5-sonnet-20240620-v1:0"
     // model_id "anthropic.claude-3-haiku-20240307-v1:0"
     model_id "meta.llama3-8b-instruct-v1:0"
@@ -164,8 +166,8 @@ client<llm> Resilient_SimpleSyntax {
       Lottery_SimpleSyntax
     ]
   }
-} 
- 
+}
+
 client<llm> Lottery_SimpleSyntax {
   provider baml-round-robin
   options {

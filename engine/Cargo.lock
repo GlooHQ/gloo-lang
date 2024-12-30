@@ -2786,6 +2786,7 @@ name = "internal-llm-client"
 version = "0.70.5"
 dependencies = [
  "anyhow",
+ "aws-config",
  "baml-types",
  "derive_more",
  "either",

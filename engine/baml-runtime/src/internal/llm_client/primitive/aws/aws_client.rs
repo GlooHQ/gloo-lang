@@ -135,6 +135,14 @@ impl AwsClient {
 
         // Set region if specified
         if let Some(aws_region) = self.properties.region.as_ref() {
+            #[cfg(target_arch = "wasm32")]
+            if aws_region.starts_with("$") {
+                return Err(anyhow::anyhow!(
+                    "AWS region expected, please set: env.{}",
+                    &aws_region[1..]
+                ));
+            }
+
             loader = loader.region(Region::new(aws_region.clone()));
         }
 
@@ -144,6 +152,31 @@ impl AwsClient {
             self.properties.secret_access_key.as_ref(),
         ) {
             let aws_session_token = self.properties.session_token.clone();
+
+            #[cfg(target_arch = "wasm32")]
+            if aws_access_key_id.starts_with("$") {
+                return Err(anyhow::anyhow!(
+                    "AWS access key id expected, please set: env.{}",
+                    &aws_access_key_id[1..]
+                ));
+            }
+            #[cfg(target_arch = "wasm32")]
+            if aws_secret_access_key.starts_with("$") {
+                return Err(anyhow::anyhow!(
+                    "AWS secret access key expected, please set: env.{}",
+                    &aws_secret_access_key[1..]
+                ));
+            }
+            #[cfg(target_arch = "wasm32")]
+            if let Some(aws_session_token) = aws_session_token.as_ref() {
+                if aws_session_token.starts_with("$") {
+                    return Err(anyhow::anyhow!(
+                        "AWS session token expected, please set: env.{}",
+                        &aws_session_token[1..]
+                    ));
+                }
+            }
+
             loader.credentials_provider(Credentials::new(
                 aws_access_key_id.clone(),
                 aws_secret_access_key.clone(),
@@ -156,7 +189,7 @@ impl AwsClient {
             loader.credentials_provider(
                 aws_config::default_provider::credentials::DefaultCredentialsChain::builder()
                     .build()
-                    .await
+                    .await,
             )
         };
 
