@@ -248,10 +248,14 @@ fn relevant_data_models<'a>(
     Ok((enums, classes, recursive_classes))
 }
 
+/// A copy-paste of runtime's `parsed_value_to_response` just used
+/// for testing.
+#[cfg(test)]
 pub fn parsed_value_to_response(
     ir: &IntermediateRepr,
     baml_value: &BamlValueWithFlags,
     field_type: &FieldType,
+    allow_partials: bool,
 ) -> Result<ResponseBamlValue> {
     let meta_flags: BamlValueWithMeta<Vec<Flag>> = baml_value.clone().into();
     let baml_value_with_meta: BamlValueWithMeta<Vec<(String, JinjaExpression, bool)>> =
@@ -271,14 +275,13 @@ pub fn parsed_value_to_response(
     });
 
     let baml_value_with_streaming =
-        validate_streaming_state(ir, &baml_value, field_type).map_err(|s| anyhow::anyhow!("TODO: validate_streaming_state failed {s:?}"))?;
+        validate_streaming_state(ir, &baml_value, field_type, allow_partials).map_err(|s| anyhow::anyhow!("TODO: validate_streaming_state failed {s:?}"))?;
     dbg!(&baml_value_with_streaming);
     dbg!(&value_with_response_checks);
     let response_value = baml_value_with_streaming
       .zip_meta(value_with_response_checks)?
       .zip_meta(meta_flags)?
       .map_meta(|((x,y),z)| (z.clone(), y.clone(), x.clone()));
-    panic!("jsonish panic: {:?}", response_value);
     Ok(ResponseBamlValue(response_value))
 }
 

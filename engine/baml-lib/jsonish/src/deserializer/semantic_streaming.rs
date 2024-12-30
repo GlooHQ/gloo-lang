@@ -10,13 +10,20 @@ use internal_baml_core::ir::{Field, IRHelper};
 
 use baml_types::{BamlValueWithMeta, CompletionState, FieldType, ResponseCheck, StreamingBehavior, TypeValue};
 
+use anyhow::{Context, Error};
+use thiserror;
 use std::collections::HashSet;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, thiserror::Error)]
 pub enum StreamingError {
+    #[error("Expected to encounter a class")]
     ExpectedClass,
+    #[error("Value was marked Done, but was incomplete in the stream")]
     IncompleteDoneValue,
+    #[error("Class instance did not contain fields marked as needed")]
     MissingNeededFields,
+    #[error("Failed to distribute_type_with_meta: {0}")]
+    DistributeTypeWithMetaFailure( #[from] anyhow::Error )
 }
 
 /// For a given baml value, traverse its nodes, comparing the completion state
@@ -29,8 +36,7 @@ pub fn validate_streaming_state(
 ) -> Result<BamlValueWithMeta<Option<CompletionState>>, StreamingError> {
     let baml_value_with_meta_flags: BamlValueWithMeta<Vec<Flag>> = baml_value.clone().into();
     let typed_baml_value: BamlValueWithMeta<(Vec<Flag>, FieldType)> = ir
-        .distribute_type_with_meta(baml_value_with_meta_flags, field_type.clone())
-        .unwrap();
+        .distribute_type_with_meta(baml_value_with_meta_flags, field_type.clone())?;
     let baml_value_with_streaming_state_and_behavior =
         typed_baml_value.map_meta(|(flags, r#type)| (completion_state(&flags), r#type));
 
@@ -42,7 +48,7 @@ pub fn validate_streaming_state(
 /// the streaming state to the node as metadata, if this was requested by the user
 /// vial `@stream.with_state`.
 ///
-/// This function descends into child nodes, when the argument is a compound value.
+/// This function descends into child nodes when the argument is a compound value.
 fn process_node(
     ir: &IntermediateRepr,
     value: BamlValueWithMeta<(CompletionState, &FieldType)>,

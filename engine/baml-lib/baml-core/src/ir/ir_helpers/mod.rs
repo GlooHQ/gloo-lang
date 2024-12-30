@@ -394,6 +394,8 @@ impl IRHelper for IntermediateRepr {
     /// For some `BamlValueWithMeta` with type `FieldType`, walk the structure of both the value
     /// and the type simultaneously, associating each node in the `BamlValue` with its
     /// `FieldType`.
+    /// TODO (Greg): Make this function DynamicTypes-aware. Right now it assigns default metadata
+    /// to unknown classes, which may have been created with TypeBuilder.
     fn distribute_type_with_meta<T>(
         &self,
         value: BamlValueWithMeta<T>,
