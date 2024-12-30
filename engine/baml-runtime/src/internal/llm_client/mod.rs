@@ -252,17 +252,26 @@ pub struct LLMCompleteResponseMetadata {
 }
 
 // This is how the response gets logged if you print the result to the console.
+// E.g. raw.__str__() in Python
 impl std::fmt::Display for LLMCompleteResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
             "{}",
             format!(
-                "Client: {} ({}) - {}ms. StopReason: {}",
+                "Client: {} ({}) - {}ms. StopReason: {}. Tokens(in/out): {}/{}",
                 self.client,
                 self.model,
                 self.latency.as_millis(),
-                self.metadata.finish_reason.as_deref().unwrap_or("unknown")
+                self.metadata.finish_reason.as_deref().unwrap_or("unknown"),
+                self.metadata
+                    .prompt_tokens
+                    .map(|t| t.to_string())
+                    .unwrap_or_else(|| "unknown".to_string()),
+                self.metadata
+                    .output_tokens
+                    .map(|t| t.to_string())
+                    .unwrap_or_else(|| "unknown".to_string()),
             )
             .yellow()
         )?;
