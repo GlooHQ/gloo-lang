@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.71.1](https://github.com/boundaryml/baml/compare/0.71.0..0.71.1) - 2024-12-31
+
+- Bump version to 0.71.1 - ([4ff76e8](https://github.com/boundaryml/baml/commit/4ff76e8bbd697bd48b0f9b08044b3f2d98df476c)) - Aaron Villalpando
+
 ## [0.71.0](https://github.com/boundaryml/baml/compare/0.70.5..0.71.0) - 2024-12-31
 
 ### Bug Fixes
