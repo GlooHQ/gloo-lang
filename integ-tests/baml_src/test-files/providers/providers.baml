@@ -77,6 +77,28 @@ function TestAwsInvalidRegion(input: string) -> string {
   "#
 }
 
+function TestAwsInvalidAccessKey(input: string) -> string {
+  client AwsBedrockInvalidAccessKey
+  prompt #"
+    Write a nice short story about {{ input }}
+  "#
+}
+
+function TestAwsInvalidProfile(input: string) -> string {
+  client AwsBedrockInvalidProfile
+  prompt #"
+    Write a nice short story about {{ input }}
+  "#
+}
+
+function TestAwsSessionToken(input: string) -> string {
+  client AwsBedrockSessionToken
+  prompt #"
+    Write a nice short story about {{ input }}
+  "#
+}
+
+
 function TestOpenAIShorthand(input: string) -> string {
   client GPT35
   prompt #"

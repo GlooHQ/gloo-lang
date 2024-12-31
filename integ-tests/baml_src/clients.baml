@@ -103,8 +103,6 @@ client<llm> AwsBedrock {
     inference_configuration {
       max_tokens 100
     }
-    // session_token env.FOO
-    // region env.AWS_REGION2
     // model "anthropic.claude-3-5-sonnet-20240620-v1:0"
     // model_id "anthropic.claude-3-haiku-20240307-v1:0"
     model_id "meta.llama3-8b-instruct-v1:0"
@@ -123,6 +121,58 @@ client<llm> AwsBedrockInvalidRegion {
     // model_id "anthropic.claude-3-haiku-20240307-v1:0"
     model_id "meta.llama3-8b-instruct-v1:0"
     // model_id "mistral.mistral-7b-instruct-v0:2"
+  }
+}
+
+client<llm> AwsBedrockInvalidAccessKey {
+  provider aws-bedrock
+  options {
+    model_id "meta.llama3-8b-instruct-v1:0"
+    access_key_id "AKIAINVALID12345678"
+    secret_access_key "abcdef1234567890abcdef1234567890abcdef12"
+    inference_configuration {
+      max_tokens 100
+    }
+  }
+}
+
+client<llm> AwsBedrockInvalidProfile {
+  provider aws-bedrock
+  options {
+    model_id "meta.llama3-8b-instruct-v1:0"
+    profile "invalid-profile"
+    inference_configuration {
+      max_tokens 100
+    }
+  }
+}
+
+client<llm> AwsBedrockSessionToken {
+  provider aws-bedrock
+  options {
+    model_id "meta.llama3-8b-instruct-v1:0"
+    region "us-east-1"
+    access_key_id "AKIAINVALID12345678"
+    secret_access_key "abcdef1234567890abcdef1234567890abcdef12"
+    session_token "invalid-session-token"
+    inference_configuration {
+      max_tokens 100
+    }
+  }
+}
+
+
+client<llm> Invalid{
+  provider aws-bedrock
+  options {
+    model_id "meta.llama3-8b-instruct-v1:0"
+    region "us-east-1"
+    access_key_id "AKIAINVALID12345678"
+    secret_access_key "abcdef1234567890abcdef1234567890abcdef12"
+    session_token "invalid-session-token"
+    inference_configuration {
+      max_tokens 100
+    }
   }
 }
 

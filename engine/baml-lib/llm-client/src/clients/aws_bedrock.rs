@@ -173,7 +173,10 @@ impl UnresolvedAwsBedrock {
             }
             None => match ctx.get_env_var("AWS_REGION") {
                 Ok(region) if !region.is_empty() => Some(region),
-                _ => None,
+                _ => match ctx.get_env_var("AWS_DEFAULT_REGION") {
+                    Ok(region) if !region.is_empty() => Some(region),
+                    _ => None,
+                },
             },
         };
 

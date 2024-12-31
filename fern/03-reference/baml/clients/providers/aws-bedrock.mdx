@@ -28,13 +28,39 @@ client<llm> MyClient {
 
 We use the AWS SDK under the hood, which will respect [all authentication
 mechanisms supported by the
-SDK](https://docs.rs/aws-config/latest/aws_config/index.html), including but not
-limited to:
+SDK](https://docs.rs/aws-config/latest/aws_config/index.html), including:
 
-  - loading the specified `AWS_PROFILE` from `~/.aws/config`
-  - built-in authn for services running in EC2, ECS, Lambda, etc.
-  - You can also specify the access key ID, secret access key, and region directly (see below)
+- Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`)
+- AWS SSO (Single Sign-On) credentials from `~/.aws/config`
+- IAM Role credentials for services running in AWS (EC2, ECS, Lambda)
+- AWS credentials file (`~/.aws/credentials`)
+- AWS config file profiles (`~/.aws/config`)
 
+For SSO users, ensure you've run `aws sso login` with your profile first. Then you can use the profile in your BAML configuration:
+
+```baml
+client<llm> MyClient {
+  provider aws-bedrock
+  options {
+    profile "my-sso-profile"  // Profile name from ~/.aws/config
+    model "anthropic.claude-3-sonnet-20240229-v1:0"
+  }
+}
+```
+
+You can also specify credentials directly in your BAML configuration (not recommended for production):
+
+```baml
+client<llm> MyClient {
+  provider aws-bedrock
+  options {
+    access_key_id env.AWS_ACCESS_KEY_ID
+    secret_access_key env.AWS_SECRET_ACCESS_KEY
+    region "us-east-1"
+    model "anthropic.claude-3-sonnet-20240229-v1:0"
+  }
+}
+```
 
 ## Playground setup
 Add these three environment variables to your extension variables to use the AWS Bedrock provider in the playground.
@@ -83,6 +109,32 @@ Add these three environment variables to your extension variables to use the AWS
   The AWS secret access key to use. **Default: `AWS_SECRET_ACCESS_KEY` environment variable**
 </ParamField>
 
+<ParamField
+  path="session_token"
+  type="string"
+>
+  A temporary session token for AWS authentication, typically used with temporary security credentials. **Default: `AWS_SESSION_TOKEN` environment variable**
+
+  This is commonly used when assuming IAM roles or using temporary credentials from AWS STS (Security Token Service).
+</ParamField>
+
+<ParamField
+  path="profile"
+  type="string"
+>
+  The AWS profile to use from your AWS credentials file (typically `~/.aws/credentials`). This allows you to specify different sets of credentials for different AWS accounts or roles. **Default: `AWS_PROFILE` environment variable**
+
+  Example:
+  ```baml
+  client<llm> MyClient {
+    provider aws-bedrock
+    options {
+      profile "my-aws-profile"
+      model "anthropic.claude-3-sonnet-20240229-v1:0"
+    }
+  }
+  ```
+</ParamField>
 
 ## Forwarded options
 

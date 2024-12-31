@@ -51,7 +51,17 @@ fn resolve_properties(
     properties: &UnresolvedClientProperty<()>,
     ctx: &RuntimeContext,
 ) -> Result<ResolvedAwsBedrock> {
-    let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
+    let strict = {
+        #[cfg(target_arch = "wasm32")]
+        {
+            false
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        true
+    };
+    let properties = properties.resolve(provider, &ctx.eval_ctx(strict))?;
+
     let ResolvedClientProperty::AWSBedrock(props) = properties else {
         anyhow::bail!(
             "Invalid client property. Should have been a aws-bedrock property but got: {}",
@@ -135,7 +145,6 @@ impl AwsClient {
 
         // Set region if specified
         if let Some(aws_region) = self.properties.region.as_ref() {
-            #[cfg(target_arch = "wasm32")]
             if aws_region.starts_with("$") {
                 return Err(anyhow::anyhow!(
                     "AWS region expected, please set: env.{}",
@@ -153,21 +162,18 @@ impl AwsClient {
         ) {
             let aws_session_token = self.properties.session_token.clone();
 
-            #[cfg(target_arch = "wasm32")]
             if aws_access_key_id.starts_with("$") {
                 return Err(anyhow::anyhow!(
                     "AWS access key id expected, please set: env.{}",
                     &aws_access_key_id[1..]
                 ));
             }
-            #[cfg(target_arch = "wasm32")]
             if aws_secret_access_key.starts_with("$") {
                 return Err(anyhow::anyhow!(
                     "AWS secret access key expected, please set: env.{}",
                     &aws_secret_access_key[1..]
                 ));
             }
-            #[cfg(target_arch = "wasm32")]
             if let Some(aws_session_token) = aws_session_token.as_ref() {
                 if aws_session_token.starts_with("$") {
                     return Err(anyhow::anyhow!(
@@ -704,8 +710,32 @@ impl WithChat for AwsClient {
                     request_options,
                     latency: instant_start.elapsed(),
                     message: format!("{:#?}", e),
-                    // TODO: derive this from the aws-returned error
-                    code: ErrorCode::Other(2),
+                    code: match e {
+                        SdkError::ConstructionFailure(_) => ErrorCode::Other(2),
+                        SdkError::TimeoutError(_) => ErrorCode::Other(2),
+                        SdkError::DispatchFailure(_) => ErrorCode::Other(2),
+                        SdkError::ResponseError(e) => {
+                            ErrorCode::UnsupportedResponse(e.raw().status().as_u16())
+                        }
+                        SdkError::ServiceError(e) => {
+                            let status = e.raw().status();
+                            match status.as_u16() {
+                                400 => ErrorCode::InvalidAuthentication,
+                                403 => ErrorCode::NotSupported,
+                                429 => ErrorCode::RateLimited,
+                                500 => ErrorCode::ServerError,
+                                503 => ErrorCode::ServiceUnavailable,
+                                _ => {
+                                    if status.is_server_error() {
+                                        ErrorCode::ServerError
+                                    } else {
+                                        ErrorCode::Other(status.as_u16())
+                                    }
+                                }
+                            }
+                        }
+                        _ => ErrorCode::Other(2),
+                    },
                 });
             }
         };

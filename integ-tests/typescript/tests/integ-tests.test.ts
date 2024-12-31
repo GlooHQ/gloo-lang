@@ -26,8 +26,37 @@ import exp from 'constants'
 config()
 
 describe('Integ tests', () => {
+  test('should handle invalid AWS region gracefully', async () => {
+    const response = b.TestAwsInvalidRegion('Write a nice short story about Dr. Pepper')
 
-  
+    await expect(response).rejects.toMatchObject({
+      code: 'GenericFailure',
+    })
+  })
+
+  test('should handle invalid AWS access keygracefully', async () => {
+    const response = b.TestAwsInvalidAccessKey('Write a nice short story about Dr. Pepper')
+
+    await expect(response).rejects.toMatchObject({
+      code: 'GenericFailure',
+    })
+  })
+
+  test.skip('should handle invalid AWS profile gracefully', async () => {
+    const response = b.TestAwsInvalidProfile('Write a nice short story about Dr. Pepper')
+
+    await expect(response).rejects.toMatchObject({
+      code: 'GenericFailure',
+    })
+  })
+
+  test('should handle invalid AWS session token gracefully', async () => {
+    const response = b.TestAwsSessionToken('Write a nice short story about Dr. Pepper')
+
+    await expect(response).rejects.toMatchObject({
+      code: 'GenericFailure',
+    })
+  })
 
   describe('should work for all inputs', () => {
     it('single bool', async () => {
@@ -200,13 +229,31 @@ describe('Integ tests', () => {
     })
 
     it('return alias with merged attrs', async () => {
-      const res = await b.ReturnAliasWithMergedAttributes(123)
+      const res = await b.ReturnAliasWithMergedAttributes({
+        value: 123,
+        checks: {
+          gt_ten: {
+            name: 'gt_ten',
+            expr: 'value > 10',
+            status: 'succeeded',
+          },
+        },
+      })
       expect(res.value).toEqual(123)
       expect(res.checks['gt_ten'].status).toEqual('succeeded')
     })
 
     it('alias with multiple attrs', async () => {
-      const res = await b.AliasWithMultipleAttrs(123)
+      const res = await b.AliasWithMultipleAttrs({
+        value: 123,
+        checks: {
+          gt_ten: {
+            name: 'gt_ten',
+            expr: 'value > 10',
+            status: 'succeeded',
+          },
+        },
+      })
       expect(res.value).toEqual(123)
       expect(res.checks['gt_ten'].status).toEqual('succeeded')
     })
