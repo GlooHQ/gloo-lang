@@ -1,5 +1,5 @@
 class FormatterTest0 {
-  lorem string // trailing comments should be preserved
+  lorem string  // trailing comments should be preserved
   ipsum string
 }
 
