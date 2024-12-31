@@ -1,24 +1,26 @@
 use super::{
-    traits::WithSpan, Identifier, Span, TemplateString, TypeExpressionBlock, ValueExprBlock,
-    WithIdentifier,
+    assignment::Assignment, traits::WithSpan, Identifier, Span, TemplateString,
+    TypeExpressionBlock, ValueExprBlock, WithIdentifier,
 };
 
 /// Enum for distinguishing between top-level entries
 #[derive(Debug, Clone)]
 pub enum Top {
-    /// An enum declaration
+    /// An enum declaration.
     Enum(TypeExpressionBlock),
-    // A class declaration
+    /// A class declaration.
     Class(TypeExpressionBlock),
-    // A function declaration
+    /// A function declaration.
     Function(ValueExprBlock),
+    /// Type alias expression.
+    TypeAlias(Assignment),
 
-    // Clients to run
+    /// Clients to run.
     Client(ValueExprBlock),
 
     TemplateString(TemplateString),
 
-    // Generator
+    /// Generator.
     Generator(ValueExprBlock),
 
     TestCase(ValueExprBlock),
@@ -34,6 +36,7 @@ impl Top {
             Top::Enum(_) => "enum",
             Top::Class(_) => "class",
             Top::Function(_) => "function",
+            Top::TypeAlias(_) => "type_alias",
             Top::Client(_) => "client<llm>",
             Top::TemplateString(_) => "template_string",
             Top::Generator(_) => "generator",
@@ -62,6 +65,13 @@ impl Top {
         }
     }
 
+    pub fn as_type_alias_assignment(&self) -> Option<&Assignment> {
+        match self {
+            Top::TypeAlias(assignment) => Some(assignment),
+            _ => None,
+        }
+    }
+
     pub fn as_template_string(&self) -> Option<&TemplateString> {
         match self {
             Top::TemplateString(t) => Some(t),
@@ -78,6 +88,7 @@ impl WithIdentifier for Top {
             Top::Enum(x) => x.identifier(),
             Top::Class(x) => x.identifier(),
             Top::Function(x) => x.identifier(),
+            Top::TypeAlias(x) => x.identifier(),
             Top::Client(x) => x.identifier(),
             Top::TemplateString(x) => x.identifier(),
             Top::Generator(x) => x.identifier(),
@@ -93,6 +104,7 @@ impl WithSpan for Top {
             Top::Enum(en) => en.span(),
             Top::Class(class) => class.span(),
             Top::Function(func) => func.span(),
+            Top::TypeAlias(alias) => alias.span(),
             Top::TemplateString(template) => template.span(),
             Top::Client(client) => client.span(),
             Top::Generator(gen) => gen.span(),

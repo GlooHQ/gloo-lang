@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use crate::validate::validation_pipeline::context::Context;
 
-use either::Either;
 use internal_baml_diagnostics::{DatamodelError, DatamodelWarning, Span};
 
 use internal_baml_schema_ast::ast::{FieldType, TypeExpId, WithIdentifier, WithName, WithSpan};

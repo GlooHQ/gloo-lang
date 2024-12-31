@@ -26,6 +26,38 @@ import exp from 'constants'
 config()
 
 describe('Integ tests', () => {
+  test('should handle invalid AWS region gracefully', async () => {
+    const response = b.TestAwsInvalidRegion('Write a nice short story about Dr. Pepper')
+
+    await expect(response).rejects.toMatchObject({
+      code: 'GenericFailure',
+    })
+  })
+
+  test('should handle invalid AWS access keygracefully', async () => {
+    const response = b.TestAwsInvalidAccessKey('Write a nice short story about Dr. Pepper')
+
+    await expect(response).rejects.toMatchObject({
+      code: 'GenericFailure',
+    })
+  })
+
+  test.skip('should handle invalid AWS profile gracefully', async () => {
+    const response = b.TestAwsInvalidProfile('Write a nice short story about Dr. Pepper')
+
+    await expect(response).rejects.toMatchObject({
+      code: 'GenericFailure',
+    })
+  })
+
+  test('should handle invalid AWS session token gracefully', async () => {
+    const response = b.TestAwsSessionToken('Write a nice short story about Dr. Pepper')
+
+    await expect(response).rejects.toMatchObject({
+      code: 'GenericFailure',
+    })
+  })
+
   describe('should work for all inputs', () => {
     it('single bool', async () => {
       const res = await b.TestFnNamedArgsSingleBool(true)
@@ -42,6 +74,14 @@ describe('Integ tests', () => {
     it('return literal union', async () => {
       const res = await b.LiteralUnionsTest('a')
       expect(res == 1 || res == true || res == 'string output').toBeTruthy()
+    })
+
+    it('optional list and map', async () => {
+      let res = await b.AllowedOptionals({ p: null, q: null })
+      expect(res).toEqual({ p: null, q: null })
+
+      res = await b.AllowedOptionals({ p: ['test'], q: { test: 'ok' } })
+      expect(res).toEqual({ p: ['test'], q: { test: 'ok' } })
     })
 
     it('single class', async () => {
@@ -147,6 +187,103 @@ describe('Integ tests', () => {
     it('single literal string key in map', async () => {
       const res = await b.InOutSingleLiteralStringMapKey({ key: '1' })
       expect(res).toHaveProperty('key', '1')
+    })
+
+    it('primitive union alias', async () => {
+      const res = await b.PrimitiveAlias('test')
+      expect(res).toEqual('test')
+    })
+
+    it('map alias', async () => {
+      const res = await b.MapAlias({ A: ['B', 'C'], B: [], C: [] })
+      expect(res).toEqual({ A: ['B', 'C'], B: [], C: [] })
+    })
+
+    it('alias union', async () => {
+      let res = await b.NestedAlias('test')
+      expect(res).toEqual('test')
+
+      res = await b.NestedAlias({ A: ['B', 'C'], B: [], C: [] })
+      expect(res).toEqual({ A: ['B', 'C'], B: [], C: [] })
+    })
+
+    it('alias pointing to recursive class', async () => {
+      const res = await b.AliasThatPointsToRecursiveType({ value: 1, next: null })
+      expect(res).toEqual({ value: 1, next: null })
+    })
+
+    it('class pointing to alias that points to recursive class', async () => {
+      const res = await b.ClassThatPointsToRecursiveClassThroughAlias({ list: { value: 1, next: null } })
+      expect(res).toEqual({ list: { value: 1, next: null } })
+    })
+
+    it('recursive class with alias indirection', async () => {
+      const res = await b.RecursiveClassWithAliasIndirection({ value: 1, next: { value: 2, next: null } })
+      expect(res).toEqual({ value: 1, next: { value: 2, next: null } })
+    })
+
+    it('merge alias attributes', async () => {
+      const res = await b.MergeAliasAttributes(123)
+      expect(res.amount.value).toEqual(123)
+      expect(res.amount.checks['gt_ten'].status).toEqual('succeeded')
+    })
+
+    // Inputs with checks are not supported yet
+    // it('return alias with merged attrs', async () => {
+    //   const res = await b.ReturnAliasWithMergedAttributes({
+    //     value: 123,
+    //     checks: {
+    //       gt_ten: {
+    //         name: 'gt_ten',
+    //         expr: 'value > 10',
+    //         status: 'succeeded',
+    //       },
+    //     },
+    //   })
+    //   expect(res.value).toEqual(123)
+    //   expect(res.checks['gt_ten'].status).toEqual('succeeded')
+    // })
+
+    // TODO: checks as inputs are not supported yet
+    // it('alias with multiple attrs', async () => {
+    //   const res = await b.AliasWithMultipleAttrs(123)
+    //   expect(res.value).toEqual(123)
+    //   expect(res.checks['gt_ten'].status).toEqual('succeeded')
+    // })
+
+    it('simple recursive map alias', async () => {
+      const res = await b.SimpleRecursiveMapAlias({ one: { two: { three: {} } } })
+      expect(res).toEqual({ one: { two: { three: {} } } })
+    })
+
+    it('simple recursive map alias', async () => {
+      const res = await b.SimpleRecursiveListAlias([[], [], [[]]])
+      expect(res).toEqual([[], [], [[]]])
+    })
+
+    it('recursive alias cycles', async () => {
+      const res = await b.RecursiveAliasCycle([[], [], [[]]])
+      expect(res).toEqual([[], [], [[]]])
+    })
+
+    it('json type alias cycle', async () => {
+      const data = {
+        number: 1,
+        string: 'test',
+        bool: true,
+        list: [1, 2, 3],
+        object: { number: 1, string: 'test', bool: true, list: [1, 2, 3] },
+        json: {
+          number: 1,
+          string: 'test',
+          bool: true,
+          list: [1, 2, 3],
+          object: { number: 1, string: 'test', bool: true, list: [1, 2, 3] },
+        },
+      }
+      const res = await b.JsonTypeAliasCycle(data)
+      expect(res).toEqual(data)
+      expect(res.json.object.list).toEqual([1, 2, 3])
     })
   })
 
@@ -345,6 +482,38 @@ describe('Integ tests', () => {
     }
     expect(msgs.at(-1)).toEqual(final)
   })
+
+  it('should support azure', async () => {
+    const res = await b.TestAzure('Donkey Kong')
+    expect(res.toLowerCase()).toContain('donkey')
+  })
+
+  it('should support azure streaming', async () => {
+    const stream = b.stream.TestAzure('Donkey Kong')
+    const msgs: string[] = []
+    for await (const msg of stream) {
+      msgs.push(msg ?? '')
+    }
+    const final = await stream.getFinalResponse()
+    expect(final.length).toBeGreaterThan(0)
+  })
+
+  it('should fail if azure is not configured', async () => {
+    await expect(async () => {
+      await b.TestAzureFailure('Donkey Kong')
+    }).rejects.toThrow('BamlClientError')
+  })
+
+  // it('should fail if azure is not configured streaming', async () => {
+  //   const stream = b.stream.TestAzureFailure('Donkey Kong')
+  //   await expect(async () => {
+  //     // this should throw an error, not only when we try to get the final response
+  //     for await (const msg of stream) {
+  //       console.log('msg', msg)
+  //     }
+  //     // await stream.getFinalResponse()
+  //   }).rejects.toThrow('BamlClientError')
+  // })
 
   it('should support vertex', async () => {
     const res = await b.TestVertex('Donkey Kong')
@@ -735,7 +904,7 @@ describe('Integ tests', () => {
 
   it('should use aliases when serializing, but still have original keys in jinja', async () => {
     const res = await b.AliasedInputClass2({ key: 'tiger', key2: 'world' })
-    expect(res).toContain('tiger')
+    expect(res.toLowerCase()).toContain('tiger')
 
     const res2 = await b.AliasedInputClassNested({
       key: 'hello',
@@ -747,13 +916,13 @@ describe('Integ tests', () => {
   // TODO: Enum aliases are not supported
   it('should use aliases when serializing input objects - enums', async () => {
     const res = await b.AliasedInputEnum(AliasedEnum.KEY_ONE)
-    expect(res).not.toContain('tiger')
+    expect(res.toLowerCase()).not.toContain('tiger')
   })
 
   // TODO: enum aliases are not supported
   it('should use aliases when serializing input objects - lists', async () => {
     const res = await b.AliasedInputList([AliasedEnum.KEY_ONE, AliasedEnum.KEY_TWO])
-    expect(res).not.toContain('tiger')
+    expect(res.toLowerCase()).not.toContain('tiger')
   })
 
   it('constraints: should handle checks in return types', async () => {

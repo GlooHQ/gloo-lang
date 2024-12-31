@@ -229,4 +229,112 @@ test Two {
 
         assert!(diagnostics.errors().is_empty());
     }
+
+    #[wasm_bindgen_test]
+    fn test_type_alias_pointing_to_unknown_identifier() {
+        wasm_logger::init(wasm_logger::Config::new(log::Level::Info));
+        let sample_baml_content = r##"
+            type Foo = i
+        "##;
+        let mut files = HashMap::new();
+        files.insert("error.baml".to_string(), sample_baml_content.to_string());
+        let files_js = to_value(&files).unwrap();
+        let project = WasmProject::new("baml_src", files_js)
+            .map_err(JsValue::from)
+            .unwrap();
+
+        let env_vars = [("OPENAI_API_KEY", "12345")]
+            .iter()
+            .cloned()
+            .collect::<HashMap<_, _>>();
+        let env_vars_js = to_value(&env_vars).unwrap();
+
+        let Err(js_error) = project.runtime(env_vars_js) else {
+            panic!("Expected error, got Ok");
+        };
+
+        assert!(js_error.is_object());
+
+        // TODO: Don't know how to build Object
+        // assert_eq!(
+        //     js_error,
+        //     serde_wasm_bindgen::to_value::<HashMap<String, Vec<String>>>(&HashMap::from_iter([(
+        //         "all_files".to_string(),
+        //         vec!["error.baml".to_string()]
+        //     )]))
+        //     .unwrap()
+        // );
+    }
+
+    #[wasm_bindgen_test]
+    fn test_type_alias_pointing_to_union_with_unknown_identifier() {
+        wasm_logger::init(wasm_logger::Config::new(log::Level::Info));
+        let sample_baml_content = r##"
+            type Foo = int | i
+        "##;
+        let mut files = HashMap::new();
+        files.insert("error.baml".to_string(), sample_baml_content.to_string());
+        let files_js = to_value(&files).unwrap();
+        let project = WasmProject::new("baml_src", files_js)
+            .map_err(JsValue::from)
+            .unwrap();
+
+        let env_vars = [("OPENAI_API_KEY", "12345")]
+            .iter()
+            .cloned()
+            .collect::<HashMap<_, _>>();
+        let env_vars_js = to_value(&env_vars).unwrap();
+
+        let Err(js_error) = project.runtime(env_vars_js) else {
+            panic!("Expected error, got Ok");
+        };
+
+        assert!(js_error.is_object());
+
+        // TODO: Don't know how to build Object
+        // assert_eq!(
+        //     js_error,
+        //     serde_wasm_bindgen::to_value::<HashMap<String, Vec<String>>>(&HashMap::from_iter([(
+        //         "all_files".to_string(),
+        //         vec!["error.baml".to_string()]
+        //     )]))
+        //     .unwrap()
+        // );
+    }
+
+    #[wasm_bindgen_test]
+    fn test_type_alias_pointing_to_union_with_unknown_identifier_in_union() {
+        wasm_logger::init(wasm_logger::Config::new(log::Level::Info));
+        let sample_baml_content = r##"
+            type Four = int | string | b
+        "##;
+        let mut files = HashMap::new();
+        files.insert("error.baml".to_string(), sample_baml_content.to_string());
+        let files_js = to_value(&files).unwrap();
+        let project = WasmProject::new("baml_src", files_js)
+            .map_err(JsValue::from)
+            .unwrap();
+
+        let env_vars = [("OPENAI_API_KEY", "12345")]
+            .iter()
+            .cloned()
+            .collect::<HashMap<_, _>>();
+        let env_vars_js = to_value(&env_vars).unwrap();
+
+        let Err(js_error) = project.runtime(env_vars_js) else {
+            panic!("Expected error, got Ok");
+        };
+
+        assert!(js_error.is_object());
+
+        // TODO: Don't know how to build Object
+        // assert_eq!(
+        //     js_error,
+        //     serde_wasm_bindgen::to_value::<HashMap<String, Vec<String>>>(&HashMap::from_iter([(
+        //         "all_files".to_string(),
+        //         vec!["error.baml".to_string()]
+        //     )]))
+        //     .unwrap()
+        // );
+    }
 }

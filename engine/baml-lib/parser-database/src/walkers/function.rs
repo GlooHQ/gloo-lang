@@ -8,7 +8,7 @@ use crate::{
     types::FunctionType,
 };
 
-use super::{ClassWalker, ConfigurationWalker, EnumWalker, Walker};
+use super::{ClassWalker, ConfigurationWalker, EnumWalker, TypeWalker, Walker};
 
 use std::iter::ExactSizeIterator;
 
@@ -221,9 +221,8 @@ impl<'db> ArgWalker<'db> {
         if self.id.1 { input } else { output }
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(_cls)) => None,
-                Some(Either::Right(walker)) => Some(walker),
-                None => None,
+                Some(TypeWalker::Enum(walker)) => Some(walker),
+                _ => None,
             })
     }
 
@@ -233,9 +232,8 @@ impl<'db> ArgWalker<'db> {
         if self.id.1 { input } else { output }
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(walker)) => Some(walker),
-                Some(Either::Right(_enm)) => None,
-                None => None,
+                Some(TypeWalker::Class(walker)) => Some(walker),
+                _ => None,
             })
     }
 }

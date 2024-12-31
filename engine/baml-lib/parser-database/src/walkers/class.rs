@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use super::TypeWalker;
 use super::{field::FieldWalker, EnumWalker};
 use crate::types::Attributes;
 use baml_types::Constraint;
@@ -9,7 +10,7 @@ use internal_baml_schema_ast::ast::SubType;
 use internal_baml_schema_ast::ast::{self, ArgumentId, WithIdentifier, WithName, WithSpan};
 use std::collections::HashMap;
 
-/// A `class` declaration in the Prisma schema.
+/// Class walker with some helper methods to extract info from the parser DB.
 pub type ClassWalker<'db> = super::Walker<'db, ast::TypeExpId>;
 
 impl<'db> ClassWalker<'db> {
@@ -42,9 +43,8 @@ impl<'db> ClassWalker<'db> {
         self.db.types.class_dependencies[&self.class_id()]
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(_cls)) => None,
-                Some(Either::Right(walker)) => Some(walker),
-                None => None,
+                Some(TypeWalker::Enum(walker)) => Some(walker),
+                _ => None,
             })
     }
 
@@ -53,9 +53,8 @@ impl<'db> ClassWalker<'db> {
         self.db.types.class_dependencies[&self.class_id()]
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(walker)) => Some(walker),
-                Some(Either::Right(_enm)) => None,
-                None => None,
+                Some(TypeWalker::Class(walker)) => Some(walker),
+                _ => None,
             })
     }
 
@@ -175,9 +174,8 @@ impl<'db> ArgWalker<'db> {
         input
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(_cls)) => None,
-                Some(Either::Right(walker)) => Some(walker),
-                None => None,
+                Some(TypeWalker::Enum(walker)) => Some(walker),
+                _ => None,
             })
     }
 
@@ -187,9 +185,8 @@ impl<'db> ArgWalker<'db> {
         input
             .iter()
             .filter_map(|f| match self.db.find_type_by_str(f) {
-                Some(Either::Left(walker)) => Some(walker),
-                Some(Either::Right(_enm)) => None,
-                None => None,
+                Some(TypeWalker::Class(walker)) => Some(walker),
+                _ => None,
             })
     }
 }

@@ -14,7 +14,13 @@ pub fn coerce_array_to_singular(
 ) -> Result<BamlValueWithFlags, ParsingError> {
     let parsed = items.iter().map(|item| coercion(item)).collect::<Vec<_>>();
 
-    pick_best(ctx, target, &parsed)
+    let mut best = pick_best(ctx, target, &parsed);
+
+    if let Ok(ref mut f) = best {
+        f.add_flag(Flag::FirstMatch(0, parsed.to_vec()))
+    }
+
+    best
 }
 
 pub(super) fn pick_best(
@@ -177,6 +183,29 @@ pub(super) fn pick_best(
                     // Return A
                     (false, true) => return std::cmp::Ordering::Less,
                     _ => {}
+                }
+            }
+
+            // Devalue strings that were cast from objects.
+            if !a_val.is_composite() && b_val.is_composite() {
+                if a_val
+                    .conditions()
+                    .flags()
+                    .iter()
+                    .any(|f| matches!(f, Flag::JsonToString(..) | Flag::FirstMatch(_, _)))
+                {
+                    return std::cmp::Ordering::Greater;
+                }
+            }
+
+            if a_val.is_composite() && !b_val.is_composite() {
+                if b_val
+                    .conditions()
+                    .flags()
+                    .iter()
+                    .any(|f| matches!(f, Flag::JsonToString(..) | Flag::FirstMatch(_, _)))
+                {
+                    return std::cmp::Ordering::Less;
                 }
             }
 

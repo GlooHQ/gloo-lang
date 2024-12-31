@@ -38,6 +38,7 @@ pub enum Flag {
     StringToBool(String),
     StringToNull(String),
     StringToChar(String),
+    StringToFloat(String),
 
     // Number -> X convertions.
     FloatToInt(f64),
@@ -91,6 +92,7 @@ impl DeserializerConditions {
                 Flag::StringToBool(_) => None,
                 Flag::StringToNull(_) => None,
                 Flag::StringToChar(_) => None,
+                Flag::StringToFloat(_) => None,
                 Flag::FloatToInt(_) => None,
                 Flag::NoFields(_) => None,
                 Flag::UnionMatch(_idx, _) => None,
@@ -234,6 +236,9 @@ impl std::fmt::Display for Flag {
             }
             Flag::StringToChar(value) => {
                 write!(f, "String to char: {}", value)?;
+            }
+            Flag::StringToFloat(value) => {
+                write!(f, "String to float: {}", value)?;
             }
             Flag::FloatToInt(value) => {
                 write!(f, "Float to int: {}", value)?;

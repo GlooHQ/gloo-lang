@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use super::{
-    parse_template_string::parse_template_string,
+    parse_assignment::parse_assignment, parse_template_string::parse_template_string,
     parse_type_expression_block::parse_type_expression_block,
     parse_value_expression_block::parse_value_expression_block, BAMLParser, Rule,
 };
@@ -77,19 +77,19 @@ pub fn parse_schema(
                             &mut diagnostics,
                         );
                         match val_expr {
-                            Ok(val) => {
-                                if let Some(top) = match val.block_type {
-                                    ValueExprBlockType::Function => Some(Top::Function(val)),
-                                    ValueExprBlockType::Test => Some(Top::TestCase(val)),
-                                    ValueExprBlockType::Client => Some(Top::Client(val)),
-                                    ValueExprBlockType::RetryPolicy => Some(Top::RetryPolicy(val)),
-                                    ValueExprBlockType::Generator => Some(Top::Generator(val)),
-                                } {
-                                    top_level_definitions.push(top);
-                                }
-                            }
+                            Ok(val) => top_level_definitions.push(match val.block_type {
+                                ValueExprBlockType::Function => Top::Function(val),
+                                ValueExprBlockType::Test => Top::TestCase(val),
+                                ValueExprBlockType::Client => Top::Client(val),
+                                ValueExprBlockType::RetryPolicy => Top::RetryPolicy(val),
+                                ValueExprBlockType::Generator => Top::Generator(val),
+                            }),
                             Err(e) => diagnostics.push_error(e),
                         }
+                    }
+                    Rule::type_alias => {
+                        let assignment = parse_assignment(current, &mut diagnostics);
+                        top_level_definitions.push(Top::TypeAlias(assignment));
                     }
 
                     Rule::template_declaration => {
@@ -184,7 +184,9 @@ mod tests {
     use std::path::Path;
 
     use super::parse_schema;
-    use crate::ast::*; // Add this line to import the ast module
+    use crate::ast::*;
+    use baml_types::TypeValue;
+    // Add this line to import the ast module
     use internal_baml_diagnostics::SourceFile;
 
     #[test]
@@ -355,5 +357,41 @@ mod tests {
                 panic!("Expected enum. got {e_top:?}")
             }
         }
+    }
+
+    #[test]
+    fn test_push_type_aliases() {
+        let input = "type One = int\ntype Two = string | One";
+
+        let path = "example_file.baml";
+        let source = SourceFile::new_static(path.into(), input);
+
+        let (ast, _) = parse_schema(&Path::new(path), &source).unwrap();
+
+        let [Top::TypeAlias(one), Top::TypeAlias(two)] = ast.tops.as_slice() else {
+            panic!(
+                "Expected two type aliases (type One, type Two), got: {:?}",
+                ast.tops
+            );
+        };
+
+        assert_eq!(one.identifier.to_string(), "One");
+        assert!(matches!(
+            one.value,
+            FieldType::Primitive(_, TypeValue::Int, _, _)
+        ));
+
+        assert_eq!(two.identifier.to_string(), "Two");
+        let FieldType::Union(_, elements, _, _) = &two.value else {
+            panic!("Expected union type (string | One), got: {:?}", two.value);
+        };
+
+        let [FieldType::Primitive(_, TypeValue::String, _, _), FieldType::Symbol(_, alias, _)] =
+            elements.as_slice()
+        else {
+            panic!("Expected union type (string | One), got: {:?}", two.value);
+        };
+
+        assert_eq!(alias.to_string(), "One");
     }
 }

@@ -356,6 +356,22 @@ map<"A" | "B" | "C", string>
 
 - Not yet supported. Use a `class` instead.
 
+## Type Aliases
+
+A _type alias_ is an alternative name for an existing type. It can be used to
+simplify complex types or to give a more descriptive name to a type. Type
+aliases are defined using the `type` keyword:
+
+```baml
+type Graph = map<string, string[]>
+```
+
+Type aliases can point to other aliases:
+
+```baml
+type DataStructure = string[] | Graph
+```
+
 ## Examples and Equivalents
 
 Here are some examples and what their equivalents are in different languages.

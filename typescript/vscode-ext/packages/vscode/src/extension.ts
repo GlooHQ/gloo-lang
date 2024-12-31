@@ -354,6 +354,12 @@ export function activate(context: vscode.ExtensionContext) {
     }
   })
 
+  const config = vscode.workspace.getConfiguration('editor', { languageId: 'baml' })
+  if (!config.get('defaultFormatter')) {
+    // TODO: once the BAML formatter is stable, we should auto-prompt people to set it as the default formatter.
+    // void vscode.commands.executeCommand('baml.setDefaultFormatter')
+  }
+
   // Listen for messages from the webview
 
   plugins.map(async (plugin) => {
@@ -394,7 +400,6 @@ export function deactivate(): void {
   }
   server?.close()
 }
-
 class DiagnosticCodeActionProvider implements vscode.CodeActionProvider {
   public provideCodeActions(
     document: vscode.TextDocument,

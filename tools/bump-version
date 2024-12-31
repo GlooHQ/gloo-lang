@@ -233,6 +233,7 @@ pnpm build
 pnpm generate
 
 cd "${_repo_root}/integ-tests/python"
+poetry install
 env -u CONDA_PREFIX poetry run maturin develop --manifest-path ${_repo_root}/engine/language_client_python/Cargo.toml
 poetry run baml-cli generate --from ../baml_src
 

@@ -33,6 +33,22 @@ pub enum BamlValueWithFlags {
 }
 
 impl BamlValueWithFlags {
+    pub fn is_composite(&self) -> bool {
+        match self {
+            BamlValueWithFlags::String(_)
+            | BamlValueWithFlags::Int(_)
+            | BamlValueWithFlags::Float(_)
+            | BamlValueWithFlags::Bool(_)
+            | BamlValueWithFlags::Null(_)
+            | BamlValueWithFlags::Enum(_, _) => false,
+
+            BamlValueWithFlags::List(_, _)
+            | BamlValueWithFlags::Map(_, _)
+            | BamlValueWithFlags::Class(_, _, _)
+            | BamlValueWithFlags::Media(_) => true,
+        }
+    }
+
     pub fn score(&self) -> i32 {
         match self {
             BamlValueWithFlags::String(f) => f.score(),

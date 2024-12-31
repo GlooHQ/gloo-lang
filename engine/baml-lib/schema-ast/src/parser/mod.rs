@@ -1,5 +1,6 @@
 mod helpers;
 mod parse_arguments;
+mod parse_assignment;
 mod parse_attribute;
 mod parse_comments;
 mod parse_expression;

@@ -1,4 +1,5 @@
 mod argument;
+mod assignment;
 mod attribute;
 
 mod comment;
@@ -19,6 +20,7 @@ mod value_expression_block;
 pub(crate) use self::comment::Comment;
 
 pub use argument::{Argument, ArgumentId, ArgumentsList};
+pub use assignment::Assignment;
 pub use attribute::{Attribute, AttributeContainer, AttributeId};
 pub use config::ConfigBlockProperty;
 pub use expression::{Expression, RawString};
@@ -35,13 +37,14 @@ pub use value_expression_block::{BlockArg, BlockArgs, ValueExprBlock, ValueExprB
 
 /// AST representation of a prisma schema.
 ///
-/// This module is used internally to represent an AST. The AST's nodes can be used
-/// during validation of a schema, especially when implementing custom attributes.
+/// This module is used internally to represent an AST. The AST's nodes can be
+/// used during validation of a schema, especially when implementing custom
+/// attributes.
 ///
-/// The AST is not validated, also fields and attributes are not resolved. Every node is
-/// annotated with its location in the text representation.
-/// Basically, the AST is an object oriented representation of the datamodel's text.
-/// Schema = Datamodel + Generators + Datasources
+/// The AST is not validated, also fields and attributes are not resolved. Every
+/// node is annotated with its location in the text representation.
+/// Basically, the AST is an object oriented representation of the datamodel's
+/// text. Schema = Datamodel + Generators + Datasources
 #[derive(Debug)]
 pub struct SchemaAst {
     /// All models, enums, composite types, datasources, generators and type aliases.
@@ -99,6 +102,20 @@ impl std::ops::Index<TypeExpId> for SchemaAst {
     }
 }
 
+/// An opaque identifier for a type alias in a schema AST.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TypeAliasId(u32);
+
+impl std::ops::Index<TypeAliasId> for SchemaAst {
+    type Output = Assignment;
+
+    fn index(&self, index: TypeAliasId) -> &Self::Output {
+        self.tops[index.0 as usize]
+            .as_type_alias_assignment()
+            .expect("expected type expression")
+    }
+}
+
 /// An opaque identifier for a model in a schema AST. Use the
 /// `schema[model_id]` syntax to resolve the id to an `ast::Model`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -130,25 +147,28 @@ impl std::ops::Index<TemplateStringId> for SchemaAst {
 /// syntax to resolve the id to an `ast::Top`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TopId {
-    /// An enum declaration
+    /// An enum declaration.
     Enum(TypeExpId),
 
-    // A class declaration
+    /// A class declaration.
     Class(TypeExpId),
 
-    // A function declaration
+    /// A function declaration.
     Function(ValExpId),
 
-    // A client declaration
+    /// A type alias declaration.
+    TypeAlias(TypeAliasId),
+
+    /// A client declaration.
     Client(ValExpId),
 
-    // A generator declaration
+    /// A generator declaration.
     Generator(ValExpId),
 
-    // Template Strings
+    /// Template Strings.
     TemplateString(TemplateStringId),
 
-    // A config block
+    /// A config block.
     TestCase(ValExpId),
 
     RetryPolicy(ValExpId),
@@ -167,6 +187,14 @@ impl TopId {
     pub fn as_class_id(self) -> Option<TypeExpId> {
         match self {
             TopId::Class(id) => Some(id),
+            _ => None,
+        }
+    }
+
+    /// Try to interpret the top as a type alias.
+    pub fn as_type_alias_id(self) -> Option<TypeAliasId> {
+        match self {
+            TopId::TypeAlias(id) => Some(id),
             _ => None,
         }
     }
@@ -215,6 +243,7 @@ impl std::ops::Index<TopId> for SchemaAst {
         let idx = match index {
             TopId::Enum(TypeExpId(idx)) => idx,
             TopId::Class(TypeExpId(idx)) => idx,
+            TopId::TypeAlias(TypeAliasId(idx)) => idx,
             TopId::Function(ValExpId(idx)) => idx,
             TopId::TemplateString(TemplateStringId(idx)) => idx,
             TopId::Client(ValExpId(idx)) => idx,
@@ -232,6 +261,7 @@ fn top_idx_to_top_id(top_idx: usize, top: &Top) -> TopId {
         Top::Enum(_) => TopId::Enum(TypeExpId(top_idx as u32)),
         Top::Class(_) => TopId::Class(TypeExpId(top_idx as u32)),
         Top::Function(_) => TopId::Function(ValExpId(top_idx as u32)),
+        Top::TypeAlias(_) => TopId::TypeAlias(TypeAliasId(top_idx as u32)),
         Top::Client(_) => TopId::Client(ValExpId(top_idx as u32)),
         Top::TemplateString(_) => TopId::TemplateString(TemplateStringId(top_idx as u32)),
         Top::Generator(_) => TopId::Generator(ValExpId(top_idx as u32)),

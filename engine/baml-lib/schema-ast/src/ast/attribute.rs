@@ -65,6 +65,7 @@ pub enum AttributeContainer {
     ClassField(super::TypeExpId, super::FieldId),
     Enum(super::TypeExpId),
     EnumValue(super::TypeExpId, super::FieldId),
+    TypeAlias(super::TypeAliasId),
 }
 
 impl From<super::TypeExpId> for AttributeContainer {
@@ -76,6 +77,12 @@ impl From<super::TypeExpId> for AttributeContainer {
 impl From<(super::TypeExpId, super::FieldId)> for AttributeContainer {
     fn from((enm, val): (super::TypeExpId, super::FieldId)) -> Self {
         Self::EnumValue(enm, val)
+    }
+}
+
+impl From<super::TypeAliasId> for AttributeContainer {
+    fn from(v: super::TypeAliasId) -> Self {
+        Self::TypeAlias(v)
     }
 }
 
@@ -102,6 +109,7 @@ impl Index<AttributeContainer> for super::SchemaAst {
             AttributeContainer::EnumValue(enum_id, value_idx) => {
                 &self[enum_id][value_idx].attributes
             }
+            AttributeContainer::TypeAlias(alias_id) => &self[alias_id].value.attributes(),
         }
     }
 }
