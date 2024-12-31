@@ -162,7 +162,7 @@ doc_content      = @{ (!NEWLINE ~ ANY)* }
 // Shared Building Blocks and Comments
 // ######################################
 WHITESPACE  = _{ " " | "\t" }
-NEWLINE     = _{ "\n" | "\r\n" | "\r" }
+NEWLINE     = { "\n" | "\r\n" | "\r" }
 empty_lines = @{ (WHITESPACE* ~ NEWLINE)+ }
 
 // ######################################

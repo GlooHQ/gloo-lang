@@ -78,6 +78,16 @@ struct Formatter {
 }
 
 impl Formatter {
+    /// The number of spaces to add before an inline trailing comment.
+    /// Here, "trailing comment" does not refer to the trailing_comment Pest rule, but rather just
+    /// a comment in this style:
+    ///    
+    ///   class Foo {
+    ///       field string   // comment
+    ///                   ^^^------------ This is what will get replaced with SPACES_BEFORE_TRAILING_COMMENT
+    ///   }
+    const SPACES_BEFORE_TRAILING_COMMENT: &'static str = "  ";
+
     fn schema_to_doc<'a>(&self, mut pairs: Pairs<'a, Rule>) -> Result<RcDoc<'a, ()>> {
         let mut doc = RcDoc::nil();
 
@@ -167,8 +177,17 @@ impl Formatter {
 
         let mut doc = RcDoc::nil()
             .append(pair_to_doc_text(ident))
-            .append(RcDoc::space())
-            .append(self.field_type_chain_to_doc(field_type_chain.into_inner())?);
+            .append(RcDoc::space());
+
+        // Since our compiler currently doesn't allow newlines in type expressions, we can't
+        // put comments in the middle of a type expression, so we can rely on this hack to
+        // cascade comments all the way out of a type expression.
+        let (field_type_chain_doc, field_type_chain_comments) =
+            self.field_type_chain_to_doc(field_type_chain.into_inner())?;
+        doc = doc.append(field_type_chain_doc);
+        if let Some(field_type_chain_comments) = field_type_chain_comments {
+            doc = doc.append(field_type_chain_comments);
+        }
 
         for pair in pairs {
             match pair.as_rule() {
@@ -190,13 +209,22 @@ impl Formatter {
         Ok(doc)
     }
 
-    fn field_type_chain_to_doc<'a>(&self, pairs: Pairs<'a, Rule>) -> Result<RcDoc<'a, ()>> {
+    fn field_type_chain_to_doc<'a>(
+        &self,
+        pairs: Pairs<'a, Rule>,
+    ) -> Result<(RcDoc<'a, ()>, Option<RcDoc<'a, ()>>)> {
         let mut docs = vec![];
+        let mut comments = vec![];
 
         for pair in pairs {
             match pair.as_rule() {
                 Rule::field_type_with_attr => {
-                    docs.push(self.field_type_with_attr_to_doc(pair.into_inner())?);
+                    let (field_type_doc, field_type_comments) =
+                        self.field_type_with_attr_to_doc(pair.into_inner())?;
+                    docs.push(field_type_doc);
+                    if let Some(field_type_comments) = field_type_comments {
+                        comments.push(field_type_comments);
+                    }
                 }
                 Rule::field_operator => {
                     docs.push(RcDoc::text("|"));
@@ -207,31 +235,71 @@ impl Formatter {
             }
         }
 
-        Ok(RcDoc::intersperse(docs, RcDoc::space())
-            .nest(self.indent_width)
-            .group())
+        Ok((
+            RcDoc::intersperse(docs, RcDoc::space())
+                .nest(self.indent_width)
+                .group(),
+            if comments.is_empty() {
+                None
+            } else {
+                Some(RcDoc::concat(comments).group())
+            },
+        ))
     }
 
-    fn field_type_with_attr_to_doc<'a>(&self, mut pairs: Pairs<'a, Rule>) -> Result<RcDoc<'a, ()>> {
+    fn field_type_with_attr_to_doc<'a>(
+        &self,
+        mut pairs: Pairs<'a, Rule>,
+    ) -> Result<(RcDoc<'a, ()>, Option<RcDoc<'a, ()>>)> {
         let mut docs = vec![];
+        // This is a hack: we cascade comments all the way out of a type
+        // expression, relying on the (current) limitation that our users can't
+        // have newlines in a type expression today.
+        //
+        // The correct way to handle this is to either (1) make our lexer understand that
+        // trailing comments are not actually a part of a type expression or (2) teach the
+        // formatter how to push comments to the correct context.
+        //
+        // Arguably we're currently using (2), and just implementing it in a naive way,
+        // because we just push all comments to the context of the type expression, rather
+        // than, say, an operand of the type expression.
+        let mut comments = vec![];
 
         for pair in &mut pairs {
             match pair.as_rule() {
                 Rule::field_type => {
                     docs.push(self.field_type_to_doc(pair.into_inner())?);
                 }
-                Rule::field_attribute | Rule::trailing_comment => {
+                Rule::field_attribute => {
                     docs.push(pair_to_doc_text(pair));
+                }
+                Rule::trailing_comment => {
+                    if comments.is_empty() {
+                        comments.push(RcDoc::text(Self::SPACES_BEFORE_TRAILING_COMMENT));
+                    }
+                    comments.push(pair_to_doc_text(pair));
+                }
+                Rule::NEWLINE => {
+                    comments.push(RcDoc::hardline());
                 }
                 _ => {
                     docs.push(self.unhandled_rule_to_doc(pair)?);
                 }
             }
         }
+        log::info!("docs: {:?}", docs);
+        log::info!("comments: {:?}", comments);
 
-        Ok(RcDoc::intersperse(docs, RcDoc::space())
-            .nest(self.indent_width)
-            .group())
+        Ok((
+            RcDoc::intersperse(docs, RcDoc::space())
+                .nest(self.indent_width)
+                .group(),
+            if comments.is_empty() {
+                None
+            } else {
+                Some(RcDoc::concat(comments).group())
+            },
+        ))
     }
 
     fn field_type_to_doc<'a>(&self, pairs: Pairs<'a, Rule>) -> Result<RcDoc<'a, ()>> {
@@ -351,6 +419,32 @@ mod tests {
                 }
             "#,
         )?;
+
+        let comments_test = r#"class FormatterTest0 {
+  lorem string  // trailing comments should be preserved
+  ipsum string
+}
+class FormatterTest1 {
+  lorem string
+  ipsum string
+  // dolor string
+}
+class FormatterTest2 {
+  // "lorem" is a latin word
+  lorem string
+  // "ipsum" is a latin word
+  ipsum string
+}
+class FormatterTest3 {
+  lorem string
+  ipsum string
+  // Lorem ipsum dolor sit amet
+  // Consectetur adipiscing elit
+  // Sed do eiusmod tempor incididunt
+  // Ut labore et dolore magna aliqua
+  // Ut enim ad minim veniam
+}"#;
+        assert_format_eq(comments_test, comments_test)?;
 
         Ok(())
     }

@@ -274,6 +274,22 @@ class FooAny(BaseModel):
 class Forest(BaseModel):
     trees: List["Tree"]
 
+class FormatterTest0(BaseModel):
+    lorem: str
+    ipsum: str
+
+class FormatterTest1(BaseModel):
+    lorem: str
+    ipsum: str
+
+class FormatterTest2(BaseModel):
+    lorem: str
+    ipsum: str
+
+class FormatterTest3(BaseModel):
+    lorem: str
+    ipsum: str
+
 class GroceryReceipt(BaseModel):
     receiptId: str
     storeName: str

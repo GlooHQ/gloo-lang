@@ -330,6 +330,30 @@ export interface Forest {
   
 }
 
+export interface FormatterTest0 {
+  lorem: string
+  ipsum: string
+  
+}
+
+export interface FormatterTest1 {
+  lorem: string
+  ipsum: string
+  
+}
+
+export interface FormatterTest2 {
+  lorem: string
+  ipsum: string
+  
+}
+
+export interface FormatterTest3 {
+  lorem: string
+  ipsum: string
+  
+}
+
 export interface GroceryReceipt {
   receiptId: string
   storeName: string

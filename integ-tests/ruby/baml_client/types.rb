@@ -172,6 +172,10 @@ module Baml
     class FlightConfirmation < T::Struct; end
     class FooAny < T::Struct; end
     class Forest < T::Struct; end
+    class FormatterTest0 < T::Struct; end
+    class FormatterTest1 < T::Struct; end
+    class FormatterTest2 < T::Struct; end
+    class FormatterTest3 < T::Struct; end
     class GroceryReceipt < T::Struct; end
     class InnerClass < T::Struct; end
     class InnerClass2 < T::Struct; end
@@ -606,6 +610,62 @@ module Baml
       def initialize(props)
         super(
           trees: props[:trees],
+        )
+
+        @props = props
+      end
+    end
+    class FormatterTest0 < T::Struct
+      include Baml::Sorbet::Struct
+      const :lorem, String
+      const :ipsum, String
+
+      def initialize(props)
+        super(
+          lorem: props[:lorem],
+          ipsum: props[:ipsum],
+        )
+
+        @props = props
+      end
+    end
+    class FormatterTest1 < T::Struct
+      include Baml::Sorbet::Struct
+      const :lorem, String
+      const :ipsum, String
+
+      def initialize(props)
+        super(
+          lorem: props[:lorem],
+          ipsum: props[:ipsum],
+        )
+
+        @props = props
+      end
+    end
+    class FormatterTest2 < T::Struct
+      include Baml::Sorbet::Struct
+      const :lorem, String
+      const :ipsum, String
+
+      def initialize(props)
+        super(
+          lorem: props[:lorem],
+          ipsum: props[:ipsum],
+        )
+
+        @props = props
+      end
+    end
+    class FormatterTest3 < T::Struct
+      include Baml::Sorbet::Struct
+      const :lorem, String
+      const :ipsum, String
+
+      def initialize(props)
+        super(
+          lorem: props[:lorem],
+          ipsum: props[:ipsum],
         )
 
         @props = props

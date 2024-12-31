@@ -149,6 +149,22 @@ class FooAny(BaseModel):
 class Forest(BaseModel):
     trees: List["Tree"]
 
+class FormatterTest0(BaseModel):
+    lorem: Optional[str] = None
+    ipsum: Optional[str] = None
+
+class FormatterTest1(BaseModel):
+    lorem: Optional[str] = None
+    ipsum: Optional[str] = None
+
+class FormatterTest2(BaseModel):
+    lorem: Optional[str] = None
+    ipsum: Optional[str] = None
+
+class FormatterTest3(BaseModel):
+    lorem: Optional[str] = None
+    ipsum: Optional[str] = None
+
 class GroceryReceipt(BaseModel):
     receiptId: Optional[str] = None
     storeName: Optional[str] = None
