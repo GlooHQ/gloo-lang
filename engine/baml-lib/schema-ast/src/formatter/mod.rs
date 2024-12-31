@@ -287,8 +287,6 @@ impl Formatter {
                 }
             }
         }
-        log::info!("docs: {:?}", docs);
-        log::info!("comments: {:?}", comments);
 
         Ok((
             RcDoc::intersperse(docs, RcDoc::space())
