@@ -15,7 +15,7 @@ class InnerClass2 {
 }
 
 function FnOutputClassNested(input: string) -> TestClassNested {
-  client Ollama
+  client GPT35
   prompt #"
     Return a made up json blob that matches this schema:
     {{ctx.output_format}}
