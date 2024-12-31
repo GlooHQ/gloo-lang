@@ -40,14 +40,11 @@ from ..baml_client.types import (
     BlockConstraintForParam,
     NestedBlockConstraintForParam,
     MapKey,
-<<<<<<< HEAD
     LinkedListAliasNode,
     ClassToRecAlias,
     NodeWithAliasIndirection,
     MergeAttrs,
-=======
     OptionalListAndMap,
->>>>>>> canary
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
