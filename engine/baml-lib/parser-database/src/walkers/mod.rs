@@ -144,12 +144,9 @@ impl<'db> crate::ParserDatabase {
         &self.types.finite_recursive_cycles
     }
 
-    /// Set of all aliases that are part of a structural cycle.
-    ///
-    /// A structural cycle is created through a map or list, which introduce one
-    /// level of indirection.
-    pub fn structural_recursive_alias_cycles(&self) -> &[Vec<TypeAliasId>] {
-        &self.types.structural_recursive_alias_cycles
+    /// Set of all aliases that are part of a cycle.
+    pub fn recursive_alias_cycles(&self) -> &[Vec<TypeAliasId>] {
+        &self.types.recursive_alias_cycles
     }
 
     /// Returns the resolved aliases map.
@@ -289,13 +286,27 @@ impl<'db> crate::ParserDatabase {
     pub fn to_jinja_type(&self, ft: &FieldType) -> internal_baml_jinja_types::Type {
         use internal_baml_jinja_types::Type;
 
-        let r = match ft {
+        match ft {
             FieldType::Symbol(arity, idn, ..) => {
                 let mut t = match self.find_type(idn) {
                     None => Type::Undefined,
                     Some(TypeWalker::Class(_)) => Type::ClassRef(idn.to_string()),
                     Some(TypeWalker::Enum(_)) => Type::String,
-                    Some(TypeWalker::TypeAlias(_)) => Type::String,
+                    Some(TypeWalker::TypeAlias(alias)) => {
+                        if self
+                            .recursive_alias_cycles()
+                            .iter()
+                            .any(|cycle| cycle.contains(&alias.id))
+                        {
+                            Type::RecursiveTypeAlias(alias.name().to_string())
+                        } else {
+                            Type::Alias {
+                                name: alias.name().to_string(),
+                                target: Box::new(self.to_jinja_type(alias.target())),
+                                resolved: Box::new(self.to_jinja_type(alias.resolved())),
+                            }
+                        }
+                    }
                 };
                 if arity.is_optional() {
                     t = Type::None | t;
@@ -357,8 +368,6 @@ impl<'db> crate::ParserDatabase {
                 }
                 t
             }
-        };
-
-        r
+        }
     }
 }

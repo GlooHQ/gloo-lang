@@ -36,6 +36,9 @@ pub struct IntermediateRepr {
     finite_recursive_cycles: Vec<IndexSet<String>>,
 
     /// Type alias cycles introduced by lists and maps.
+    ///
+    /// These are the only allowed cycles, because lists and maps introduce a
+    /// level of indirection that makes the cycle finite.
     structural_recursive_alias_cycles: Vec<IndexMap<String, FieldType>>,
 
     configuration: Configuration,
@@ -186,7 +189,7 @@ impl IntermediateRepr {
                 .collect(),
             structural_recursive_alias_cycles: {
                 let mut recursive_aliases = vec![];
-                for cycle in db.structural_recursive_alias_cycles() {
+                for cycle in db.recursive_alias_cycles() {
                     let mut component = IndexMap::new();
                     for id in cycle {
                         let alias = &db.ast()[*id];
@@ -449,7 +452,7 @@ impl WithRepr<FieldType> for ast::FieldType {
                     }
                     Some(TypeWalker::TypeAlias(alias_walker)) => {
                         if db
-                            .structural_recursive_alias_cycles()
+                            .recursive_alias_cycles()
                             .iter()
                             .any(|cycle| cycle.contains(&alias_walker.id))
                         {

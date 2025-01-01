@@ -17,7 +17,7 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
     // We'll check type alias cycles first. Just like Typescript, cycles are
     // allowed only for maps and lists. We'll call such cycles "structural
     // recursion". Anything else like nulls or unions won't terminate a cycle.
-    let structural_type_aliases = HashMap::from_iter(ctx.db.walk_type_aliases().map(|alias| {
+    let non_structural_type_aliases = HashMap::from_iter(ctx.db.walk_type_aliases().map(|alias| {
         let mut dependencies = HashSet::new();
         insert_required_alias_deps(alias.target(), ctx, &mut dependencies);
 
@@ -27,7 +27,7 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
     // Based on the graph we've built with does not include the edges created
     // by maps and lists, check the cycles and report them.
     report_infinite_cycles(
-        &structural_type_aliases,
+        &non_structural_type_aliases,
         ctx,
         "These aliases form a dependency cycle",
     );
@@ -35,7 +35,9 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
     // In order to avoid infinite recursion when resolving types for class
     // dependencies below, we'll compute the cycles of aliases including maps
     // and lists so that the recursion can be stopped before entering a cycle.
-    let complete_alias_cycles = Tarjan::components(ctx.db.type_alias_dependencies())
+    let complete_alias_cycles = ctx
+        .db
+        .recursive_alias_cycles()
         .iter()
         .flatten()
         .copied()
@@ -139,29 +141,9 @@ fn insert_required_class_deps(
                     deps.insert(class.id);
                 }
                 Some(TypeWalker::TypeAlias(alias)) => {
-                    // TODO: By the time this code runs we would ideally want
-                    // type aliases to be resolved but we can't do that because
-                    // type alias cycles are not validated yet, we have to
-                    // do that in this file. Take a look at the `validate`
-                    // function at `baml-lib/baml-core/src/lib.rs`.
-                    //
-                    // First we run the `ParserDatabase::validate` function
-                    // which creates the alias graph by visiting all aliases.
-                    // Then we run the `validate::validate` which ends up
-                    // running this code here. Finally we run the
-                    // `ParserDatabase::finalize` which is the place where we
-                    // can resolve type aliases since we've already validated
-                    // that there are no cycles so we won't run into infinite
-                    // recursion. Ideally we want this:
-                    //
-                    // insert_required_deps(id, alias.resolved(), ctx, deps);
-
-                    // But we'll run this instead which will follow all the
-                    // alias pointers again until it finds the resolved type.
-                    // We also have to stop recursion if we know the alias is
-                    // part of a cycle.
+                    // This code runs after aliases are already resolved.
                     if !alias_cycles.contains(&alias.id) {
-                        insert_required_class_deps(id, alias.target(), ctx, deps, alias_cycles)
+                        insert_required_class_deps(id, alias.resolved(), ctx, deps, alias_cycles)
                     }
                 }
                 _ => {}

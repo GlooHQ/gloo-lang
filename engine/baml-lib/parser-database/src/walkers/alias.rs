@@ -23,4 +23,9 @@ impl<'db> TypeAliasWalker<'db> {
     pub fn resolved(&self) -> &'db FieldType {
         &self.db.types.resolved_type_aliases[&self.id]
     }
+
+    /// Add to Jinja types.
+    pub fn add_to_types(self, types: &mut internal_baml_jinja_types::PredefinedTypes) {
+        types.add_alias(self.name(), self.db.to_jinja_type(&self.target()))
+    }
 }
