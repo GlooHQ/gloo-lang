@@ -11,7 +11,7 @@ use std::collections::{HashMap, HashSet};
 use super::{
     repr::{self, FunctionConfig, WithRepr},
     Class, Client, Enum, EnumValue, Field, FunctionNode, IRHelper, Impl, RetryPolicy,
-    TemplateString, TestCase, Walker,
+    TemplateString, TestCase, TypeAlias, Walker,
 };
 use crate::ir::jinja_helpers::render_expression;
 
@@ -300,6 +300,20 @@ impl<'a> Walker<'a, &'a Class> {
 
     pub fn inputs(&self) -> &'a Vec<(String, baml_types::FieldType)> {
         self.elem().inputs()
+    }
+}
+
+impl<'a> Walker<'a, &'a TypeAlias> {
+    pub fn elem(&self) -> &'a repr::TypeAlias {
+        &self.item.elem
+    }
+
+    pub fn name(&self) -> &'a str {
+        &self.elem().name
+    }
+
+    pub fn span(&self) -> Option<&crate::Span> {
+        self.item.attributes.span.as_ref()
     }
 }
 

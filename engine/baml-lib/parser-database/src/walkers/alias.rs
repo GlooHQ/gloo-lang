@@ -1,14 +1,21 @@
 use std::collections::HashSet;
 
 use super::TypeWalker;
-use internal_baml_schema_ast::ast::{self, FieldType, Identifier, WithName};
+use internal_baml_diagnostics::Span;
+use internal_baml_schema_ast::ast::{self, FieldType, Identifier, WithName, WithSpan};
 
+/// Type alias walker
 pub type TypeAliasWalker<'db> = super::Walker<'db, ast::TypeAliasId>;
 
 impl<'db> TypeAliasWalker<'db> {
     /// Name of the type alias.
     pub fn name(&self) -> &str {
         &self.db.ast[self.id].identifier.name()
+    }
+
+    /// Identifier span.
+    pub fn span(&self) -> &Span {
+        self.db.ast[self.id].identifier.span()
     }
 
     /// Returns the field type that the alias points to.

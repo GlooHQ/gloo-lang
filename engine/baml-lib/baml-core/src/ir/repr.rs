@@ -8,7 +8,7 @@ use indexmap::{IndexMap, IndexSet};
 use internal_baml_parser_database::{
     walkers::{
         ClassWalker, ClientWalker, ConfigurationWalker, EnumValueWalker, EnumWalker, FieldWalker,
-        FunctionWalker, TemplateStringWalker, Walker as AstWalker,
+        FunctionWalker, TemplateStringWalker, TypeAliasWalker, Walker as AstWalker,
     },
     Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy, TypeWalker,
 };
@@ -27,6 +27,7 @@ use crate::Configuration;
 pub struct IntermediateRepr {
     enums: Vec<Node<Enum>>,
     classes: Vec<Node<Class>>,
+    type_aliases: Vec<Node<TypeAlias>>,
     functions: Vec<Node<Function>>,
     clients: Vec<Node<Client>>,
     retry_policies: Vec<Node<RetryPolicy>>,
@@ -58,6 +59,7 @@ impl IntermediateRepr {
         IntermediateRepr {
             enums: vec![],
             classes: vec![],
+            type_aliases: vec![],
             finite_recursive_cycles: vec![],
             structural_recursive_alias_cycles: vec![],
             functions: vec![],
@@ -115,6 +117,12 @@ impl IntermediateRepr {
 
     pub fn walk_classes(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<Class>>> {
         self.classes.iter().map(|e| Walker { db: self, item: e })
+    }
+
+    pub fn walk_type_aliases(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<TypeAlias>>> {
+        self.type_aliases
+            .iter()
+            .map(|e| Walker { db: self, item: e })
     }
 
     // TODO: Exact size Iterator + Node<>?
@@ -176,6 +184,10 @@ impl IntermediateRepr {
                 .collect::<Result<Vec<_>>>()?,
             classes: db
                 .walk_classes()
+                .map(|e| e.node(db))
+                .collect::<Result<Vec<_>>>()?,
+            type_aliases: db
+                .walk_type_aliases()
                 .map(|e| e.node(db))
                 .collect::<Result<Vec<_>>>()?,
             finite_recursive_cycles: db
@@ -737,6 +749,31 @@ impl Class {
         &self.inputs
     }
 }
+
+#[derive(Debug)]
+pub struct TypeAlias {
+    pub name: String,
+    pub r#type: Node<FieldType>,
+    pub docstring: Option<Docstring>,
+}
+
+impl WithRepr<TypeAlias> for TypeAliasWalker<'_> {
+    fn attributes(&self, _: &ParserDatabase) -> NodeAttributes {
+        NodeAttributes {
+            span: Some(self.span().clone()),
+            ..Default::default() // TODO: Rest of attributes.
+        }
+    }
+
+    fn repr(&self, db: &ParserDatabase) -> Result<TypeAlias> {
+        Ok(TypeAlias {
+            name: self.name().to_string(),
+            r#type: self.target().node(db)?,
+            docstring: None, // TODO: Type alias docstring
+        })
+    }
+}
+
 #[derive(serde::Serialize, Debug)]
 pub enum OracleType {
     LLM,

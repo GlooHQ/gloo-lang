@@ -15,7 +15,7 @@ mod field;
 mod function;
 mod template_string;
 
-use alias::TypeAliasWalker;
+pub use alias::TypeAliasWalker;
 use baml_types::TypeValue;
 pub use client::*;
 pub use configuration::*;
