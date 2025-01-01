@@ -51,7 +51,17 @@ fn resolve_properties(
     properties: &UnresolvedClientProperty<()>,
     ctx: &RuntimeContext,
 ) -> Result<ResolvedAwsBedrock> {
-    let properties = properties.resolve(provider, &ctx.eval_ctx(false))?;
+    let strict = {
+        #[cfg(target_arch = "wasm32")]
+        {
+            false
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        true
+    };
+    let properties = properties.resolve(provider, &ctx.eval_ctx(strict))?;
+
     let ResolvedClientProperty::AWSBedrock(props) = properties else {
         anyhow::bail!(
             "Invalid client property. Should have been a aws-bedrock property but got: {}",
@@ -128,29 +138,68 @@ impl AwsClient {
         #[cfg(not(target_arch = "wasm32"))]
         let mut loader = aws_config::defaults(BehaviorVersion::latest());
 
+        // Set profile first if specified
+        if let Some(profile) = self.properties.profile.as_ref() {
+            loader = loader.profile_name(profile);
+        }
+
+        // Set region if specified
         if let Some(aws_region) = self.properties.region.as_ref() {
+            if aws_region.starts_with("$") {
+                return Err(anyhow::anyhow!(
+                    "AWS region expected, please set: env.{}",
+                    &aws_region[1..]
+                ));
+            }
+
             loader = loader.region(Region::new(aws_region.clone()));
         }
 
-        if let (Some(aws_access_key_id), Some(aws_secret_access_key)) = (
+        // Set credentials provider
+        let loader = if let (Some(aws_access_key_id), Some(aws_secret_access_key)) = (
             self.properties.access_key_id.as_ref(),
             self.properties.secret_access_key.as_ref(),
         ) {
-            loader = loader.credentials_provider(Credentials::new(
+            let aws_session_token = self.properties.session_token.clone();
+
+            if aws_access_key_id.starts_with("$") {
+                return Err(anyhow::anyhow!(
+                    "AWS access key id expected, please set: env.{}",
+                    &aws_access_key_id[1..]
+                ));
+            }
+            if aws_secret_access_key.starts_with("$") {
+                return Err(anyhow::anyhow!(
+                    "AWS secret access key expected, please set: env.{}",
+                    &aws_secret_access_key[1..]
+                ));
+            }
+            if let Some(aws_session_token) = aws_session_token.as_ref() {
+                if aws_session_token.starts_with("$") {
+                    return Err(anyhow::anyhow!(
+                        "AWS session token expected, please set: env.{}",
+                        &aws_session_token[1..]
+                    ));
+                }
+            }
+
+            loader.credentials_provider(Credentials::new(
                 aws_access_key_id.clone(),
                 aws_secret_access_key.clone(),
-                None,
+                aws_session_token,
                 None,
                 "baml-runtime",
-            ));
-        }
+            ))
+        } else {
+            // Use default provider chain which includes SSO, profile, environment variables, etc.
+            loader.credentials_provider(
+                aws_config::default_provider::credentials::DefaultCredentialsChain::builder()
+                    .build()
+                    .await,
+            )
+        };
 
-        let config = loader
-            .retry_config(RetryConfig::disabled())
-            .identity_cache(IdentityCache::no_cache())
-            .load()
-            .await;
-
+        let config = loader.load().await;
         Ok(bedrock::Client::new(&config))
     }
 
@@ -661,8 +710,32 @@ impl WithChat for AwsClient {
                     request_options,
                     latency: instant_start.elapsed(),
                     message: format!("{:#?}", e),
-                    // TODO: derive this from the aws-returned error
-                    code: ErrorCode::Other(2),
+                    code: match e {
+                        SdkError::ConstructionFailure(_) => ErrorCode::Other(2),
+                        SdkError::TimeoutError(_) => ErrorCode::Other(2),
+                        SdkError::DispatchFailure(_) => ErrorCode::Other(2),
+                        SdkError::ResponseError(e) => {
+                            ErrorCode::UnsupportedResponse(e.raw().status().as_u16())
+                        }
+                        SdkError::ServiceError(e) => {
+                            let status = e.raw().status();
+                            match status.as_u16() {
+                                400 => ErrorCode::InvalidAuthentication,
+                                403 => ErrorCode::NotSupported,
+                                429 => ErrorCode::RateLimited,
+                                500 => ErrorCode::ServerError,
+                                503 => ErrorCode::ServiceUnavailable,
+                                _ => {
+                                    if status.is_server_error() {
+                                        ErrorCode::ServerError
+                                    } else {
+                                        ErrorCode::Other(status.as_u16())
+                                    }
+                                }
+                            }
+                        }
+                        _ => ErrorCode::Other(2),
+                    },
                 });
             }
         };

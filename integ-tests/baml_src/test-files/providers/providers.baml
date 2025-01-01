@@ -77,11 +77,40 @@ function TestAwsInvalidRegion(input: string) -> string {
   "#
 }
 
-function TestOpenAIShorthand(input: string) -> string {
-  client "openai/gpt-4o-mini"
+function TestAwsInvalidAccessKey(input: string) -> string {
+  client AwsBedrockInvalidAccessKey
   prompt #"
     Write a nice short story about {{ input }}
   "#
+}
+
+function TestAwsInvalidProfile(input: string) -> string {
+  client AwsBedrockInvalidProfile
+  prompt #"
+    Write a nice short story about {{ input }}
+  "#
+}
+
+function TestAwsSessionToken(input: string) -> string {
+  client AwsBedrockSessionToken
+  prompt #"
+    Write a nice short story about {{ input }}
+  "#
+}
+
+
+function TestOpenAIShorthand(input: string) -> string {
+  client GPT35
+  prompt #"
+    Write a nice short story about {{ input }}
+  "#
+}
+
+test TestOpenAIShorthand {
+  functions [TestOpenAIShorthand]
+  args {
+    input "Donkey kong and peanut butter"
+  }
 }
 
 function TestAnthropicShorthand(input: string) -> string {
@@ -89,6 +118,16 @@ function TestAnthropicShorthand(input: string) -> string {
   prompt #"
     Write a nice short story about {{ input }}
   "#
+}
+
+
+test TestAWS{
+  functions [
+    TestAws
+  ]
+  args {
+    input "Donkey kong and peanut butter"
+  }
 }
 
 test TestProvider {
