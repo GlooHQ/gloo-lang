@@ -451,11 +451,7 @@ impl WithRepr<FieldType> for ast::FieldType {
                         }
                     }
                     Some(TypeWalker::TypeAlias(alias_walker)) => {
-                        if db
-                            .recursive_alias_cycles()
-                            .iter()
-                            .any(|cycle| cycle.contains(&alias_walker.id))
-                        {
+                        if db.is_recursive_type_alias(&alias_walker.id) {
                             FieldType::RecursiveTypeAlias(alias_walker.name().to_string())
                         } else {
                             alias_walker.resolved().to_owned().repr(db)?

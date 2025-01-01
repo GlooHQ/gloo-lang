@@ -149,6 +149,15 @@ impl<'db> crate::ParserDatabase {
         &self.types.recursive_alias_cycles
     }
 
+    /// Returns `true` if the alias is part of a cycle.
+    pub fn is_recursive_type_alias(&self, alias: &TypeAliasId) -> bool {
+        // TODO: O(n)
+        // We need an additional hashmap or a Merge-Find Set or something.
+        self.recursive_alias_cycles()
+            .iter()
+            .any(|cycle| cycle.contains(alias))
+    }
+
     /// Returns the resolved aliases map.
     pub fn resolved_type_alias_by_name(&self, alias: &str) -> Option<&FieldType> {
         match self.find_type_by_str(alias) {
@@ -293,11 +302,7 @@ impl<'db> crate::ParserDatabase {
                     Some(TypeWalker::Class(_)) => Type::ClassRef(idn.to_string()),
                     Some(TypeWalker::Enum(_)) => Type::String,
                     Some(TypeWalker::TypeAlias(alias)) => {
-                        if self
-                            .recursive_alias_cycles()
-                            .iter()
-                            .any(|cycle| cycle.contains(&alias.id))
-                        {
+                        if self.is_recursive_type_alias(&alias.id) {
                             Type::RecursiveTypeAlias(alias.name().to_string())
                         } else {
                             Type::Alias {

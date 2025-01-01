@@ -244,11 +244,7 @@ impl ParserDatabase {
                         // Add the resolved name itself to the deps.
                         collected_deps.insert(ident.name().to_owned());
                         // If the type is an alias then don't recurse.
-                        if self
-                            .recursive_alias_cycles()
-                            .iter()
-                            .any(|cycle| cycle.contains(&walker.id))
-                        {
+                        if self.is_recursive_type_alias(&walker.id) {
                             None
                         } else {
                             Some(ident.name())
