@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::{
     borrow::BorrowMut,
     cell::{RefCell, RefMut},
@@ -12,6 +15,7 @@ use pest::{
     Parser,
 };
 use pretty::RcDoc;
+use regex::Regex;
 
 pub struct FormatOptions {
     pub indent_width: isize,
@@ -19,6 +23,11 @@ pub struct FormatOptions {
 }
 
 pub fn format_schema(source: &str, format_options: FormatOptions) -> Result<String> {
+    let ignore_directive_regex = Regex::new(r"(?i)baml-format\s*:\s*ignore")?;
+    if ignore_directive_regex.is_match(source) {
+        return Ok(source.to_string());
+    }
+
     let mut schema = BAMLParser::parse(Rule::schema, source)?;
     let schema_pair = schema.next().ok_or(anyhow!("Expected a schema"))?;
     if schema_pair.as_rule() != Rule::schema {
@@ -94,10 +103,16 @@ impl Formatter {
         for pair in &mut pairs {
             match pair.as_rule() {
                 Rule::type_expression_block => {
-                    doc = doc.append(self.type_expression_block_to_doc(pair.into_inner())?);
+                    doc = doc.append(
+                        self.type_expression_block_to_doc(pair.into_inner())?
+                            .group(),
+                    );
                 }
                 Rule::EOI => {
                     // skip
+                }
+                Rule::empty_lines => {
+                    doc = doc.append(RcDoc::text(pair.as_str()));
                 }
                 _ => {
                     doc = doc.append(self.unhandled_rule_to_doc(pair)?);
@@ -348,102 +363,4 @@ impl Formatter {
 
 fn pair_to_doc_text<'a>(pair: Pair<'a, Rule>) -> RcDoc<'a, ()> {
     RcDoc::text(pair.as_str().trim())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use unindent::Unindent as _;
-
-    #[track_caller]
-    fn assert_format_eq(schema: &str, expected: &str) -> Result<()> {
-        let formatted = format_schema(
-            &schema.unindent().trim_end(),
-            FormatOptions {
-                indent_width: 4,
-                fail_on_unhandled_rule: true,
-            },
-        )?;
-        assert_eq!(expected.unindent().trim_end(), formatted);
-        Ok(())
-    }
-
-    #[test]
-    fn test_format_schema() -> anyhow::Result<()> {
-        assert_format_eq(
-            r#"
-                class Foo {
-                }
-            "#,
-            r#"
-                class Foo {}
-            "#,
-        )?;
-
-        assert_format_eq(
-            r#"
-                class Foo { field1 string }
-            "#,
-            r#"
-                class Foo {
-                    field1 string
-                }
-            "#,
-        )?;
-
-        assert_format_eq(
-            r#"
-                class Foo {
-
-                    field1 string
-                }
-            "#,
-            r#"
-                class Foo {
-                    field1 string
-                }
-            "#,
-        )?;
-
-        assert_format_eq(
-            r#"
-                class Foo {
-                    field1   string|int
-                }
-            "#,
-            r#"
-                class Foo {
-                    field1 string | int
-                }
-            "#,
-        )?;
-
-        let comments_test = r#"class FormatterTest0 {
-  lorem string  // trailing comments should be preserved
-  ipsum string
-}
-class FormatterTest1 {
-  lorem string
-  ipsum string
-  // dolor string
-}
-class FormatterTest2 {
-  // "lorem" is a latin word
-  lorem string
-  // "ipsum" is a latin word
-  ipsum string
-}
-class FormatterTest3 {
-  lorem string
-  ipsum string
-  // Lorem ipsum dolor sit amet
-  // Consectetur adipiscing elit
-  // Sed do eiusmod tempor incididunt
-  // Ut labore et dolore magna aliqua
-  // Ut enim ad minim veniam
-}"#;
-        assert_format_eq(comments_test, comments_test)?;
-
-        Ok(())
-    }
 }

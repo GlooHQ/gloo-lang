@@ -25,8 +25,10 @@ pest_derive = "2.1.0"
 either = "1.8.1"
 test-log = "0.2.16"
 pretty = "0.12.3"
+regex.workspace = true
 
 [dev-dependencies]
+pretty_assertions.workspace = true
 unindent = "0.2.3"
 
 [features]
