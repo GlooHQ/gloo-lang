@@ -54,7 +54,7 @@ impl FormatArgs {
                     }
                 }
                 Err(e) => {
-                    log::error!("Failed to format {}: {}", path.display(), e);
+                    log::error!("Failed to format {}: {:?}", path.display(), e);
                 }
             }
         }

@@ -9,7 +9,7 @@ use std::{
 };
 
 use crate::parser::{BAMLParser, Rule};
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use pest::{
     iterators::{Pair, Pairs},
     Parser,
@@ -48,22 +48,28 @@ pub fn format_schema(source: &str, format_options: FormatOptions) -> Result<Stri
 
 macro_rules! next_pair {
     ($pairs:ident, $rule:expr) => {{
-        match $pairs.peek() {
-            Some(pair) => {
-                if pair.as_rule() != $rule {
-                    Err(anyhow!(
-                        "Expected a {:?}, got a {:?} ({}:{})",
-                        $rule,
-                        pair.as_rule(),
-                        file!(),
-                        line!()
-                    ))
-                } else {
-                    $pairs.next();
-                    Ok(pair)
+        loop {
+            match $pairs.peek() {
+                Some(pair) => {
+                    if pair.as_rule() == Rule::NEWLINE {
+                        $pairs.next();
+                        continue;
+                    }
+                    if pair.as_rule() != $rule {
+                        break Err(anyhow!(
+                            "Expected a {:?}, got a {:?} ({}:{})",
+                            $rule,
+                            pair.as_rule(),
+                            file!(),
+                            line!()
+                        ));
+                    } else {
+                        $pairs.next();
+                        break Ok(pair);
+                    }
                 }
+                None => break Err(anyhow!("Expected a {}", stringify!($rule))),
             }
-            None => Err(anyhow!("Expected a {}", stringify!($rule))),
         }
     }};
 
@@ -79,6 +85,34 @@ macro_rules! next_pair {
             None => None,
         }
     }};
+}
+
+trait ToDoc {
+    type DocType;
+
+    fn to_doc(&self) -> Self::DocType;
+}
+
+impl<'a> ToDoc for Pair<'a, Rule> {
+    type DocType = RcDoc<'a, ()>;
+
+    /// Embed the exact contents of the corresponding source in the output.
+    ///
+    /// This is our formatting "bail-out" effectively, where if we don't know
+    /// how to format something, we just emit the original source.
+    ///
+    /// NB: according to the `RcDoc::text` docs, this is an API violation,
+    /// because we call `to_doc()` on many Pest pairs that contain newlines
+    /// within them. I suspect that this is less of a "the 'pretty' crate will
+    /// break catastrophically in unexpected ways if text symbols contain
+    /// newlines" problem, and more of a "having newlines in text symbols may
+    /// produce surprising formatting" issue. It would be pretty bizarre for
+    /// the 'pretty' crate to inspect tokens for newlines (but not unreasonable!)
+    /// given how Wadler pretty prints work, but we need to rely on this
+    /// property to be able to incrementally implement our formatter.
+    fn to_doc(&self) -> Self::DocType {
+        RcDoc::text(self.as_str())
+    }
 }
 
 struct Formatter {
@@ -103,16 +137,21 @@ impl Formatter {
         for pair in &mut pairs {
             match pair.as_rule() {
                 Rule::type_expression_block => {
-                    doc = doc.append(
-                        self.type_expression_block_to_doc(pair.into_inner())?
-                            .group(),
-                    );
+                    match self.type_expression_block_to_doc(pair.clone().into_inner()) {
+                        Ok(pair_doc) => {
+                            doc = doc.append(pair_doc.group());
+                        }
+                        Err(e) => {
+                            log::debug!("Error formatting type_expression_block: {:#?}", e);
+                            doc = doc.append(pair.to_doc());
+                        }
+                    }
                 }
                 Rule::EOI => {
                     // skip
                 }
-                Rule::empty_lines => {
-                    doc = doc.append(RcDoc::text(pair.as_str()));
+                Rule::value_expression_block | Rule::empty_lines => {
+                    doc = doc.append(pair.to_doc());
                 }
                 _ => {
                     doc = doc.append(self.unhandled_rule_to_doc(pair)?);
@@ -154,9 +193,13 @@ impl Formatter {
         let mut content_docs = vec![];
 
         for pair in &mut pairs {
+            let error_context = format!("type_expression: {:#?}", pair);
             match pair.as_rule() {
                 Rule::type_expression => {
-                    content_docs.push(self.type_expression_to_doc(pair.into_inner())?);
+                    content_docs.push(
+                        self.type_expression_to_doc(pair.into_inner())
+                            .context(error_context)?,
+                    );
                 }
                 Rule::block_attribute => {
                     content_docs.push(pair_to_doc_text(pair));

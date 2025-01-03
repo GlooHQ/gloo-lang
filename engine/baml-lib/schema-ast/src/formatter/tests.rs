@@ -70,7 +70,7 @@ fn class_containing_whitespace() -> anyhow::Result<()> {
 }
 
 #[test]
-fn assorted_comment_styles() -> anyhow::Result<()> {
+fn class_with_assorted_comment_styles() -> anyhow::Result<()> {
     let actual = r#"
     class Foo0 {
       lorem string    // trailing comments should be separated by two spaces
@@ -144,6 +144,80 @@ fn assorted_comment_styles() -> anyhow::Result<()> {
     assert_format_eq(&expected, &expected)
 }
 
+#[test]
+fn baml_format_escape_directive_works() -> anyhow::Result<()> {
+    let expected = r#"
+    // baml-format: ignore
+    class BadlyFormatted0 {
+        lorem string    // trailing comments should be separated by two spaces
+  ipsum string
+    }
+
+    class BadlyFormatted1 {
+      lorem string
+      ipsum string
+                    // Lorem ipsum dolor sit amet
+      // Consectetur adipiscing elit
+            // Sed do eiusmod tempor incididunt
+      // Ut labore et dolore magna aliqua
+        // Ut enim ad minim veniam
+    }
+        "#
+    .unindent()
+    .trim_end()
+    .to_string();
+
+    assert_format_eq(&expected, &expected)
+}
+
+/// We have not yet implemented formatting for functions or enums,
+/// so those should be preserved as-is.
+#[test]
+fn class_formatting_is_resilient_to_unhandled_rules() -> anyhow::Result<()> {
+    let actual = r##"
+    function      LlmConvert(input: string) -> string {
+    client    "openai/gpt-4o"
+            prompt #"
+              Extract this info from the email in JSON format:
+              {{ ctx.output_format }}
+            "#
+    }
+
+    enum Latin {
+                    Lorem
+    Ipsum
+    }
+
+    class Foo {
+          lorem     "alpha" | "bravo"
+    ipsum "charlie"|"delta"
+    }
+    "##;
+    let expected = r##"
+    function      LlmConvert(input: string) -> string {
+    client    "openai/gpt-4o"
+            prompt #"
+              Extract this info from the email in JSON format:
+              {{ ctx.output_format }}
+            "#
+    }
+
+    enum Latin {
+                    Lorem
+    Ipsum
+    }
+
+    class Foo {
+      lorem "alpha" | "bravo"
+      ipsum "charlie" | "delta"
+    }
+        "##
+    .unindent()
+    .trim_end()
+    .to_string();
+
+    assert_format_eq(&actual, &expected)
+}
+
 // TODO: add tests for
-// baml-format escape
-// function prompts are NOT formatted
+// Rule::empty_lines needs to get newlines interspersed with spaces stripped down to JUST newlines
