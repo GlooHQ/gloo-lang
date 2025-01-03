@@ -15,32 +15,6 @@ use super::{
 };
 use crate::ir::jinja_helpers::render_expression;
 
-fn provider_to_env_vars(
-    provider: &str,
-) -> impl IntoIterator<Item = (Option<&'static str>, &'static str)> {
-    match provider {
-        "aws-bedrock" => vec![
-            (None, "AWS_ACCESS_KEY_ID"),
-            (None, "AWS_SECRET_ACCESS_KEY"),
-            (Some("region"), "AWS_REGION"),
-        ],
-        "openai" => vec![(Some("api_key"), "OPENAI_API_KEY")],
-        "anthropic" => vec![(Some("api_key"), "ANTHROPIC_API_KEY")],
-        "google-ai" => vec![(Some("api_key"), "GOOGLE_API_KEY")],
-        "vertex-ai" => vec![
-            (Some("credentials"), "GOOGLE_APPLICATION_CREDENTIALS"),
-            (
-                Some("credentials_content"),
-                "GOOGLE_APPLICATION_CREDENTIALS_CONTENT",
-            ),
-        ],
-        "azure-openai" => vec![(Some("api_key"), "AZURE_OPENAI_API_KEY")],
-        "openai-generic" => vec![(Some("api_key"), "OPENAI_API_KEY")],
-        "ollama" => vec![],
-        other => vec![],
-    }
-}
-
 impl<'a> Walker<'a, &'a FunctionNode> {
     pub fn name(&self) -> &'a str {
         self.elem().name()
