@@ -5,22 +5,13 @@ use unindent::Unindent as _;
 #[track_caller]
 fn assert_format_eq(schema: &str, expected: &str) -> Result<()> {
     let formatted = format_schema(
-        &schema.unindent().trim_end(),
+        &schema,
         FormatOptions {
             indent_width: 2,
             fail_on_unhandled_rule: true,
         },
     )?;
-    assert_eq!(expected.unindent().trim_end(), formatted);
-
-    let formatted = format_schema(
-        &formatted.unindent().trim_end(),
-        FormatOptions {
-            indent_width: 2,
-            fail_on_unhandled_rule: true,
-        },
-    )?;
-    assert_eq!(formatted.unindent().trim_end(), formatted);
+    assert_eq!(formatted, expected);
 
     Ok(())
 }
@@ -192,7 +183,10 @@ fn class_formatting_is_resilient_to_unhandled_rules() -> anyhow::Result<()> {
           lorem     "alpha" | "bravo"
     ipsum "charlie"|"delta"
     }
-    "##;
+    "##
+    .unindent()
+    .trim_end()
+    .to_string();
     let expected = r##"
     function      LlmConvert(input: string) -> string {
     client    "openai/gpt-4o"
@@ -219,5 +213,10 @@ fn class_formatting_is_resilient_to_unhandled_rules() -> anyhow::Result<()> {
     assert_format_eq(&actual, &expected)
 }
 
-// TODO: add tests for
-// Rule::empty_lines needs to get newlines interspersed with spaces stripped down to JUST newlines
+#[test]
+fn newlines_with_only_spaces_are_stripped() -> anyhow::Result<()> {
+    let actual = "class Foo {}\n     \n     \nclass Bar {}\n";
+    let expected = "class Foo {}\n\n\nclass Bar {}\n";
+
+    assert_format_eq(&actual, &expected)
+}

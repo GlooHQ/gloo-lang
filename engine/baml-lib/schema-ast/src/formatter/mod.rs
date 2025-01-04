@@ -111,6 +111,11 @@ impl<'a> ToDoc for Pair<'a, Rule> {
     /// given how Wadler pretty prints work, but we need to rely on this
     /// property to be able to incrementally implement our formatter.
     fn to_doc(&self) -> Self::DocType {
+        if self.as_rule() == Rule::empty_lines {
+            // If we're formatting empty lines, superfluous whitespace should get stripped.
+            let newline_count = self.as_str().matches('\n').count();
+            return RcDoc::concat(std::iter::repeat(RcDoc::hardline()).take(newline_count));
+        }
         RcDoc::text(self.as_str())
     }
 }
