@@ -33,6 +33,21 @@ pub enum Type {
     Both(Box<Type>, Box<Type>),
     ClassRef(String),
     FunctionRef(String),
+    /// TODO: This should be `AliasRef(String)` but functions like
+    /// [`Self::is_subtype_of`] or [`Self::bitor`] don't have access to the
+    /// [`PredefinedTypes`] instance, so we can't grab type resolutions from
+    /// there.
+    ///
+    /// We'll just store all the necessary information in the type itself for
+    /// now.
+    Alias {
+        name: String,
+        target: Box<Type>,
+        resolved: Box<Type>,
+    },
+    /// TODO: This one could store the target so that we can report what it
+    /// points to instead of just the name.
+    RecursiveTypeAlias(String),
     Image,
     Audio,
 }
@@ -92,6 +107,8 @@ impl Type {
 
             (Type::ClassRef(_), _) => false,
             (Type::FunctionRef(_), _) => false,
+            (Type::Alias { resolved, .. }, _) => resolved.is_subtype_of(other),
+            (Type::RecursiveTypeAlias(_), _) => false,
             (Type::Image, _) => false,
             (Type::Audio, _) => false,
             (Type::String, _) => false,
@@ -147,6 +164,10 @@ impl Type {
             Type::Both(l, r) => format!("{} & {}", l.name(), r.name()),
             Type::ClassRef(name) => format!("class {name}"),
             Type::FunctionRef(name) => format!("function {name}"),
+            Type::Alias { name, resolved, .. } => {
+                format!("type alias {name} (resolves to {})", resolved.name())
+            }
+            Type::RecursiveTypeAlias(name) => format!("recursive type alias {name}"),
             Type::Image => "image".into(),
             Type::Audio => "audio".into(),
         }
@@ -219,6 +240,10 @@ enum Scope {
 pub struct PredefinedTypes {
     functions: HashMap<String, (Type, Vec<(String, Type)>)>,
     classes: HashMap<String, HashMap<String, Type>>,
+    /// TODO: See the comment for [`Type::AliasRef`].
+    ///
+    /// We should use this but we can't without a significant refactor.
+    aliases: HashMap<String, Type>,
     // Variable name <--> Definition
     variables: HashMap<String, Type>,
     scopes: Vec<Scope>,
@@ -336,6 +361,7 @@ impl PredefinedTypes {
                 ]),
                 JinjaContext::Parsing => Default::default(),
             },
+            aliases: HashMap::new(),
             scopes: Vec::new(),
             errors: Vec::new(),
         }
@@ -447,6 +473,10 @@ impl PredefinedTypes {
 
     pub fn add_class(&mut self, name: &str, fields: HashMap<String, Type>) {
         self.classes.insert(name.to_string(), fields);
+    }
+
+    pub fn add_alias(&mut self, name: &str, target: Type) {
+        self.aliases.insert(name.to_string(), target);
     }
 
     pub fn add_variable(&mut self, name: &str, t: Type) {

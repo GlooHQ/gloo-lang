@@ -4,7 +4,7 @@ use std::hash::Hash;
 use std::ops::Deref;
 
 use crate::types::configurations::visit_test_case;
-use crate::{coerce, ParserDatabase};
+use crate::{coerce, ParserDatabase, Tarjan};
 use crate::{context::Context, DatamodelError};
 
 use baml_types::Constraint;
@@ -13,7 +13,8 @@ use indexmap::IndexMap;
 use internal_baml_diagnostics::{Diagnostics, Span};
 use internal_baml_prompt_parser::ast::{ChatBlock, PrinterBlock, Variable};
 use internal_baml_schema_ast::ast::{
-    self, Expression, FieldId, FieldType, RawString, ValExpId, WithIdentifier, WithName, WithSpan,
+    self, Expression, FieldId, FieldType, RawString, TypeAliasId, ValExpId, WithIdentifier,
+    WithName, WithSpan,
 };
 use internal_llm_client::{ClientProvider, PropertyHandler, UnresolvedClientProperty};
 
@@ -70,6 +71,27 @@ pub(super) fn resolve_types(ctx: &mut Context<'_>) {
         }
     }
 }
+
+pub(super) fn resolve_type_aliases(ctx: &mut Context<'_>) {
+    // Since Jinja needs this information before we can run the cycles
+    // validation code, we'll temporarily store invalid cycles here. They will
+    // be reported later in the cycle validation.
+    //
+    // TODO: Find a way to disambiguate between structural and non-structural
+    // cycles so that Jinja validation can report usage of infinite cycles.
+    ctx.types.recursive_alias_cycles = Tarjan::components(&ctx.types.type_alias_dependencies);
+
+    // Resolve type aliases.
+    // Cycles are already computed so this should not stack overflow.
+    for alias_id in ctx.types.type_alias_dependencies.keys() {
+        // We can ignore the error here because it's already reported in the
+        // diagnostics at [`visit_type_alias`].
+        if let Ok(resolved) = resolve_type_alias(&ctx.ast[*alias_id].value, &ctx) {
+            ctx.types.resolved_type_aliases.insert(*alias_id, resolved);
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 /// Variables used inside of raw strings.
 pub enum PromptVariable {
@@ -279,9 +301,25 @@ pub(super) struct Types {
     /// Contains recursive type aliases.
     ///
     /// Recursive type aliases are a little bit trickier than recursive classes
-    /// because the termination condition is tied to lists and maps only. Nulls
-    /// and unions won't allow type alias cycles to be resolved.
-    pub(super) structural_recursive_alias_cycles: Vec<Vec<ast::TypeAliasId>>,
+    /// because the termination condition is tied to lists and maps only, which
+    /// introduce a level of indirection that can terminate a cycle:
+    ///
+    /// ```ignore
+    /// type A = A[]
+    /// type Map = map<string, Map>
+    /// ```
+    ///
+    /// The examples above are finite because an empty list or an empty map
+    /// stops the recursion. Nulls and unions won't allow type alias cycles to
+    /// be resolved so they don't count. This is implemented just like in
+    /// Typescript and we call it "structural recursion".
+    ///
+    /// However, due to how the parsing-validation pipeline is built, this
+    /// struct will temporarily store infinite cycles with no termination
+    /// condition until they are reported as an error during the cycle
+    /// validation. By the time we get to build the IR, this should only contain
+    /// valid "structural" cycles.
+    pub(super) recursive_alias_cycles: Vec<Vec<ast::TypeAliasId>>,
 
     pub(super) function: HashMap<ast::ValExpId, FunctionType>,
 
@@ -397,31 +435,34 @@ fn visit_class<'db>(
 ///
 /// **Important**: This function can only be called once infinite cycles have
 /// been detected! Otherwise it'll stack overflow.
-pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldType {
-    match field_type {
+pub fn resolve_type_alias(field_type: &FieldType, ctx: &Context<'_>) -> Result<FieldType, String> {
+    Ok(match field_type {
         // For symbols we need to check if we're dealing with aliases.
         FieldType::Symbol(arity, ident, attrs) => {
-            let Some(string_id) = db.interner.lookup(ident.name()) else {
-                unreachable!(
+            let Some(string_id) = ctx.interner.lookup(ident.name()) else {
+                return Err(format!(
                     "Attempting to resolve alias `{ident}` that does not exist in the interner"
-                );
+                ));
             };
 
-            let Some(top_id) = db.names.tops.get(&string_id) else {
-                unreachable!("Alias name `{ident}` is not registered in the context");
+            let Some(top_id) = ctx.names.tops.get(&string_id) else {
+                return Err(format!(
+                    "Alias name `{ident}` is not registered in the context"
+                ));
             };
 
             match top_id {
                 ast::TopId::TypeAlias(alias_id) => {
-                    let mut resolved = match db.types.resolved_type_aliases.get(alias_id) {
+                    let mut resolved = match ctx.types.resolved_type_aliases.get(alias_id) {
                         // Check if we can avoid deeper recursion.
                         Some(already_resolved) => already_resolved.to_owned(),
 
                         // No luck, check if the type is resolvable.
                         None => {
                             // TODO: O(n)
-                            if db
-                                .structural_recursive_alias_cycles()
+                            if ctx
+                                .types
+                                .recursive_alias_cycles
                                 .iter()
                                 .any(|cycle| cycle.contains(alias_id))
                             {
@@ -429,7 +470,7 @@ pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldT
                                 field_type.to_owned()
                             } else {
                                 // Maybe resolvable, recurse deeper.
-                                resolve_type_alias(&db.ast[*alias_id].value, db)
+                                resolve_type_alias(&ctx.ast[*alias_id].value, ctx)?
                             }
                         }
                     };
@@ -470,8 +511,8 @@ pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldT
         | FieldType::Tuple(arity, items, span, attrs) => {
             let resolved = items
                 .iter()
-                .map(|item| resolve_type_alias(item, db))
-                .collect();
+                .map(|item| resolve_type_alias(item, ctx))
+                .collect::<Result<_, _>>()?;
 
             match field_type {
                 FieldType::Union(..) => {
@@ -487,7 +528,7 @@ pub fn resolve_type_alias(field_type: &FieldType, db: &ParserDatabase) -> FieldT
         // Base case, primitives or other types that are not aliases. No more
         // "pointers" and graphs here.
         _ => field_type.to_owned(),
-    }
+    })
 }
 
 fn visit_type_alias<'db>(

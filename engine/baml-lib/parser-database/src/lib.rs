@@ -42,7 +42,6 @@ pub use coerce_expression::{coerce, coerce_array, coerce_opt};
 pub use internal_baml_schema_ast::ast;
 use internal_baml_schema_ast::ast::{FieldType, SchemaAst, WithName};
 pub use tarjan::Tarjan;
-use types::resolve_type_alias;
 pub use types::{
     Attributes, ClientProperties, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType,
     PromptAst, PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType,
@@ -117,6 +116,10 @@ impl ParserDatabase {
         // Second pass: resolve top-level items and field types.
         types::resolve_types(&mut ctx);
 
+        // Resolve type aliases now because Jinja template validation needs this
+        // information.
+        types::resolve_type_aliases(&mut ctx);
+
         // Return early on type resolution errors.
         ctx.diagnostics.to_result()?;
 
@@ -130,19 +133,6 @@ impl ParserDatabase {
     }
 
     fn finalize_dependencies(&mut self, diag: &mut Diagnostics) {
-        // Cycles left here after cycle validation are allowed. Basically lists
-        // and maps can introduce cycles.
-        self.types.structural_recursive_alias_cycles =
-            Tarjan::components(&self.types.type_alias_dependencies);
-
-        // Resolve type aliases.
-        // Cycles are already validated so this should not stack overflow and
-        // it should find the final type.
-        for alias_id in self.types.type_alias_dependencies.keys() {
-            let resolved = resolve_type_alias(&self.ast[*alias_id].value, &self);
-            self.types.resolved_type_aliases.insert(*alias_id, resolved);
-        }
-
         // NOTE: Class dependency cycles are already checked at
         // baml-lib/baml-core/src/validate/validation_pipeline/validations/cycle.rs
         //
@@ -254,11 +244,7 @@ impl ParserDatabase {
                         // Add the resolved name itself to the deps.
                         collected_deps.insert(ident.name().to_owned());
                         // If the type is an alias then don't recurse.
-                        if self
-                            .structural_recursive_alias_cycles()
-                            .iter()
-                            .any(|cycle| cycle.contains(&walker.id))
-                        {
+                        if self.is_recursive_type_alias(&walker.id) {
                             None
                         } else {
                             Some(ident.name())
@@ -358,7 +344,7 @@ mod test {
         let db = parse(baml)?;
 
         assert_eq!(
-            db.structural_recursive_alias_cycles()
+            db.recursive_alias_cycles()
                 .iter()
                 .map(|ids| Vec::from_iter(ids.iter().map(|id| db.ast()[*id].name().to_string())))
                 .collect::<Vec<_>>(),

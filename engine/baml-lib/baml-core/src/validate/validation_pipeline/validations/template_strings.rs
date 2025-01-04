@@ -18,6 +18,9 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
     ctx.db.walk_templates().for_each(|t| {
         t.add_to_types(&mut defined_types);
     });
+    ctx.db.walk_type_aliases().for_each(|t| {
+        t.add_to_types(&mut defined_types);
+    });
 
     for template in ctx.db.walk_templates() {
         for args in template.walk_input_args() {

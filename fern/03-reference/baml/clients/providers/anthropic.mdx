@@ -35,15 +35,6 @@ The options are passed through directly to the API, barring a few. Here's a shor
   The base URL for the API. **Default: `https://api.anthropic.com`**
 </ParamField>
 
-<ParamField
-  path="default_role"
-  type="string"
->
-  The default role for any prompts that don't specify a role. **Default: `system`**
-
-  We don't have any checks for this field, you can pass any string you wish.
-</ParamField>
-
 <ParamField path="headers" type="object">
   Additional headers to send with the request.
 
@@ -72,6 +63,8 @@ client<llm> MyClient {
 <Markdown src="/snippets/allowed-role-metadata.mdx" />
 
 <Markdown src="/snippets/supports-streaming.mdx" />
+
+<Markdown src="/snippets/finish-reason.mdx" />
 
 ## Forwarded options
 <ParamField

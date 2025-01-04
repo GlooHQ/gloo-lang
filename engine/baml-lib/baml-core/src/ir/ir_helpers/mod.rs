@@ -10,6 +10,7 @@ use crate::{
     ir::{
         repr::{IntermediateRepr, Walker},
         Class, Client, Enum, EnumValue, Field, FunctionNode, RetryPolicy, TemplateString, TestCase,
+        TypeAlias,
     },
 };
 use anyhow::Result;
@@ -25,6 +26,7 @@ pub type FunctionWalker<'a> = Walker<'a, &'a FunctionNode>;
 pub type EnumWalker<'a> = Walker<'a, &'a Enum>;
 pub type EnumValueWalker<'a> = Walker<'a, &'a EnumValue>;
 pub type ClassWalker<'a> = Walker<'a, &'a Class>;
+pub type TypeAliasWalker<'a> = Walker<'a, &'a TypeAlias>;
 pub type TemplateStringWalker<'a> = Walker<'a, &'a TemplateString>;
 pub type ClientWalker<'a> = Walker<'a, &'a Client>;
 pub type RetryPolicyWalker<'a> = Walker<'a, &'a RetryPolicy>;
@@ -34,6 +36,7 @@ pub type ClassFieldWalker<'a> = Walker<'a, &'a Field>;
 pub trait IRHelper {
     fn find_enum<'a>(&'a self, enum_name: &str) -> Result<EnumWalker<'a>>;
     fn find_class<'a>(&'a self, class_name: &str) -> Result<ClassWalker<'a>>;
+    fn find_type_alias<'a>(&'a self, alias_name: &str) -> Result<TypeAliasWalker<'a>>;
     fn find_function<'a>(&'a self, function_name: &str) -> Result<FunctionWalker<'a>>;
     fn find_client<'a>(&'a self, client_name: &str) -> Result<ClientWalker<'a>>;
     fn find_retry_policy<'a>(&'a self, retry_policy_name: &str) -> Result<RetryPolicyWalker<'a>>;
@@ -103,6 +106,20 @@ impl IRHelper for IntermediateRepr {
                 // Get best match.
                 let classes = self.walk_classes().map(|e| e.name()).collect::<Vec<_>>();
                 error_not_found!("class", class_name, &classes)
+            }
+        }
+    }
+
+    fn find_type_alias<'a>(&'a self, alias_name: &str) -> Result<TypeAliasWalker<'a>> {
+        match self.walk_type_aliases().find(|e| e.name() == alias_name) {
+            Some(e) => Ok(e),
+            None => {
+                // Get best match.
+                let aliases = self
+                    .walk_type_aliases()
+                    .map(|e| e.name())
+                    .collect::<Vec<_>>();
+                error_not_found!("type alias", alias_name, &aliases)
             }
         }
     }

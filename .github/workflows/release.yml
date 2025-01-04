@@ -90,8 +90,6 @@ jobs:
     needs: [all-builds]
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -108,6 +106,12 @@ jobs:
           node-version: 20
           cache: pnpm
           cache-dependency-path: engine/language_client_typescript/pnpm-lock.yaml
+          # This is load-bearing: it writes NODE_AUTH_TOKEN to .npmrc, which is what
+          # npm publish relies on.
+          # See https://github.com/npm/cli/issues/6184#issuecomment-1544496444
+          registry-url: "https://registry.npmjs.org"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install dependencies
         run: pnpm install
@@ -127,12 +131,10 @@ jobs:
         working-directory: engine/language_client_typescript
 
       - name: Publish
-        run: |
-          npm publish --access public
+        # This reads the credential from .npmrc, which is written by the setup-node step.
+        # It does not use the NODE_AUTH_TOKEN environment variable.
+        run: npm publish --access public
         working-directory: engine/language_client_typescript
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-to-rubygems:
     environment: release
@@ -165,6 +167,8 @@ jobs:
 
   publish-to-github:
     environment: release
+    permissions:
+      contents: write
     needs: [all-builds]
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest

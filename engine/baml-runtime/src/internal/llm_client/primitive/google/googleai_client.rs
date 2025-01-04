@@ -468,7 +468,7 @@ impl ToProviderMessage for GoogleAIClient {
 /// For examples of how to introspect the response more safely, see:
 /// https://github.com/GoogleCloudPlatform/generative-ai/blob/main/gemini/getting-started/intro_gemini_2_0_flash_thinking_mode.ipynb
 fn content_part(model_name: &str) -> usize {
-    if model_name == "gemini-2.0-flash-thinking-exp-1219" {
+    if model_name.contains("gemini-2.0-flash-thinking-exp-1219") {
         1
     } else {
         0

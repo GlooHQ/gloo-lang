@@ -28,7 +28,7 @@ except BamlValidationError as e:
 ```typescript TypeScript
 import { b } from './baml_client'
 // For catching parsing errors, you can import this
-import { BamlValidationError } from '@boundaryml/baml'
+import { BamlValidationError, BamlClientFinishReasonError } from '@boundaryml/baml'
 // The rest of the BAML errors contain a string that is prefixed with:
 // "BamlError:"
 // Subclasses are sequentially appended to the string.
@@ -42,7 +42,7 @@ async function example() {
   try {
     await b.CallFunctionThatRaisesError()
   } catch (e) {
-    if (e instanceof BamlValidationError) {
+    if (e instanceof BamlValidationError || e instanceof BamlClientFinishReasonError) {
       // You should be lenient to these fields missing.
       // The original prompt sent to the LLM
       console.log(e.prompt)
@@ -114,6 +114,41 @@ Common status codes are:
 - 404: Not Found
 - 429: Too Many Requests
 - 500: Internal Server Error
+</ParamField>
+
+
+#### BamlClientFinishReasonError
+
+Subclass of `BamlClientError`.
+
+Raised when the finish reason of the LLM response is not allowed.
+
+<ParamField
+  path="finish_reason"
+  type="string"
+>
+  The finish reason of the LLM response.
+</ParamField>
+
+<ParamField
+  path="message"
+  type="string"
+>
+  An error message.
+</ParamField>
+
+<ParamField
+  path="prompt"
+  type="string"
+>
+  The original prompt that was sent to the LLM, formatted as a plain string. Images sent as base64-encoded strings are not serialized into this field.
+</ParamField>
+
+<ParamField
+  path="raw_output"
+  type="string"
+>
+  The raw text from the LLM that failed to parse into the expected return type of a function.
 </ParamField>
 
 ### BamlValidationError

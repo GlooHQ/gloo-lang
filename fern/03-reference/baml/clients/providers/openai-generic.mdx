@@ -27,14 +27,6 @@ client<llm> MyClient {
   **Default: `https://api.openai.com/v1`**
 </ParamField>
 
-<ParamField path="default_role" type="string">
-  The default role for any prompts that don't specify a role.
-  
-  We don't do any validation of this field, so you can pass any string you wish.
-  
-  **Default: `system`**
-</ParamField>
-
 <ParamField path="api_key" type="string" default="<none>">
   Will be used to build the `Authorization` header, like so: `Authorization: Bearer $api_key`
   If `api_key` is not set, or is set to an empty string, the `Authorization` header will not be sent.
@@ -67,6 +59,8 @@ client<llm> MyClient {
 <Markdown src="/snippets/allowed-role-metadata-basic.mdx" />
 
 <Markdown src="/snippets/supports-streaming.mdx" />
+
+<Markdown src="/snippets/finish-reason.mdx" />
 
 ## Forwarded options
 
