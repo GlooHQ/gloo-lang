@@ -358,6 +358,10 @@ map<"A" | "B" | "C", string>
 
 ## Type Aliases
 
+<Info>
+  This feature was added in: v0.71.0.
+</Info>
+
 A _type alias_ is an alternative name for an existing type. It can be used to
 simplify complex types or to give a more descriptive name to a type. Type
 aliases are defined using the `type` keyword:
@@ -370,6 +374,28 @@ Type aliases can point to other aliases:
 
 ```baml
 type DataStructure = string[] | Graph
+```
+
+Recursive type aliases are supported only through map or list containers, just
+like in TypeScript:
+
+```baml
+type JsonValue = int | string | bool | float | JsonObject | JsonArray
+type JsonObject = map<string, JsonValue>
+type JsonArray = JsonValue[]
+```
+
+Aliases can also refer to themselves:
+
+```baml
+type JsonValue = int | float | bool | string | null | JsonValue[] | map<string, JsonValue> 
+```
+
+However, this is invalid since no value can satisfy this type:
+
+```baml
+type A = B
+type B = A
 ```
 
 ## Examples and Equivalents
