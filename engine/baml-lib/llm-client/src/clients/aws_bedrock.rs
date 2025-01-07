@@ -182,18 +182,12 @@ impl UnresolvedAwsBedrock {
 
         let access_key_id = match self.access_key_id.as_ref() {
             Some(access_key_id) => Some(access_key_id.resolve(ctx)?),
-            None => match ctx.get_env_var("AWS_ACCESS_KEY_ID") {
-                Ok(access_key_id) if !access_key_id.is_empty() => Some(access_key_id),
-                _ => None,
-            },
+            None => None,
         };
 
         let secret_access_key = match self.secret_access_key.as_ref() {
             Some(secret_access_key) => Some(secret_access_key.resolve(ctx)?),
-            None => match ctx.get_env_var("AWS_SECRET_ACCESS_KEY") {
-                Ok(secret_access_key) if !secret_access_key.is_empty() => Some(secret_access_key),
-                _ => None,
-            },
+            None => None,
         };
 
         let session_token = match self.session_token.as_ref() {
@@ -205,11 +199,32 @@ impl UnresolvedAwsBedrock {
                     None
                 }
             }
-            None => match ctx.get_env_var("AWS_SESSION_TOKEN") {
-                Ok(session_token) if !session_token.is_empty() => Some(session_token),
-                _ => None,
-            },
+            None => None,
         };
+
+        let (access_key_id, secret_access_key, session_token) =
+            match (access_key_id, secret_access_key, session_token) {
+                (None, None, None) => {
+                    // If no credentials provided, get them all from env vars
+                    let access_key_id = match ctx.get_env_var("AWS_ACCESS_KEY_ID") {
+                        Ok(key) if !key.is_empty() => Some(key),
+                        _ => None,
+                    };
+                    let secret_access_key = match ctx.get_env_var("AWS_SECRET_ACCESS_KEY") {
+                        Ok(key) if !key.is_empty() => Some(key),
+                        _ => None,
+                    };
+                    let session_token = match ctx.get_env_var("AWS_SESSION_TOKEN") {
+                        Ok(token) if !token.is_empty() => Some(token),
+                        _ => None,
+                    };
+                    (access_key_id, secret_access_key, session_token)
+                }
+                // If any credentials are explicitly provided, use those
+                (access_key_id, secret_access_key, session_token) => {
+                    (access_key_id, secret_access_key, session_token)
+                }
+            };
 
         #[cfg(not(target_arch = "wasm32"))]
         let profile = match self.profile.as_ref() {

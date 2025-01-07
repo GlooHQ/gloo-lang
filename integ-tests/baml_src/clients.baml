@@ -113,7 +113,12 @@ client<llm> AwsBedrock {
     }
     // model "anthropic.claude-3-5-sonnet-20240620-v1:0"
     // model_id "anthropic.claude-3-haiku-20240307-v1:0"
-    model_id "meta.llama3-8b-instruct-v1:0"
+    model "meta.llama3-8b-instruct-v1:0"
+    // region "us-east-1"
+    // access_key_id env.AWS_ACCESS_KEY_ID
+    // secret_access_key env.AWS_SECRET_ACCESS_KEY
+    // session_token env.AWS_SESSION_TOKEN
+    // session_token null
     // model_id "mistral.mistral-7b-instruct-v0:2"
   }
 }
@@ -155,7 +160,7 @@ client<llm> AwsBedrockInvalidProfile {
   }
 }
 
-client<llm> AwsBedrockSessionToken {
+client<llm> AwsBedrockInvalidSessionToken {
   provider aws-bedrock
   options {
     model_id "meta.llama3-8b-instruct-v1:0"

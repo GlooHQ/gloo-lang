@@ -2543,13 +2543,13 @@ export class BamlAsyncClient {
     }
   }
   
-  async TestAwsSessionToken(
+  async TestAwsInvalidSessionToken(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        "TestAwsSessionToken",
+        "TestAwsInvalidSessionToken",
         {
           "input": input
         },
@@ -6749,13 +6749,13 @@ class BamlStreamClient {
     }
   }
   
-  TestAwsSessionToken(
+  TestAwsInvalidSessionToken(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<RecursivePartialNull<string>, string> {
     try {
       const raw = this.runtime.streamFunction(
-        "TestAwsSessionToken",
+        "TestAwsInvalidSessionToken",
         {
           "input": input
         },

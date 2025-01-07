@@ -144,6 +144,59 @@ impl AwsClient {
         }
 
         // Set region if specified
+
+        // Set credentials provider
+        let mut loader = match (
+            self.properties.access_key_id.as_ref(),
+            self.properties.secret_access_key.as_ref(),
+            self.properties.session_token.as_ref(),
+        ) {
+            (None, None, None) => {
+                // If no credentials provided, get them all from env vars
+                loader.credentials_provider(
+                    aws_config::default_provider::credentials::DefaultCredentialsChain::builder()
+                        .build()
+                        .await,
+                )
+            }
+            _ => {
+                if let Some(aws_access_key_id) = self.properties.access_key_id.as_ref() {
+                    if aws_access_key_id.starts_with("$") {
+                        return Err(anyhow::anyhow!(
+                            "AWS access key id expected, please set: env.{}",
+                            &aws_access_key_id[1..]
+                        ));
+                    }
+                }
+                if let Some(aws_secret_access_key) = self.properties.secret_access_key.as_ref() {
+                    if aws_secret_access_key.starts_with("$") {
+                        return Err(anyhow::anyhow!(
+                            "AWS secret access key expected, please set: env.{}",
+                            &aws_secret_access_key[1..]
+                        ));
+                    }
+                }
+                if let Some(aws_session_token) = self.properties.session_token.as_ref() {
+                    if aws_session_token.starts_with("$") {
+                        return Err(anyhow::anyhow!(
+                            "AWS session token expected, please set: env.{}",
+                            &aws_session_token[1..]
+                        ));
+                    }
+                }
+                loader.credentials_provider(Credentials::new(
+                    self.properties.access_key_id.clone().unwrap_or("".into()),
+                    self.properties
+                        .secret_access_key
+                        .clone()
+                        .unwrap_or("".into()),
+                    self.properties.session_token.clone(),
+                    None,
+                    "baml-runtime",
+                ))
+            }
+        };
+
         if let Some(aws_region) = self.properties.region.as_ref() {
             if aws_region.starts_with("$") {
                 return Err(anyhow::anyhow!(
@@ -154,50 +207,6 @@ impl AwsClient {
 
             loader = loader.region(Region::new(aws_region.clone()));
         }
-
-        // Set credentials provider
-        let loader = if let (Some(aws_access_key_id), Some(aws_secret_access_key)) = (
-            self.properties.access_key_id.as_ref(),
-            self.properties.secret_access_key.as_ref(),
-        ) {
-            let aws_session_token = self.properties.session_token.clone();
-
-            if aws_access_key_id.starts_with("$") {
-                return Err(anyhow::anyhow!(
-                    "AWS access key id expected, please set: env.{}",
-                    &aws_access_key_id[1..]
-                ));
-            }
-            if aws_secret_access_key.starts_with("$") {
-                return Err(anyhow::anyhow!(
-                    "AWS secret access key expected, please set: env.{}",
-                    &aws_secret_access_key[1..]
-                ));
-            }
-            if let Some(aws_session_token) = aws_session_token.as_ref() {
-                if aws_session_token.starts_with("$") {
-                    return Err(anyhow::anyhow!(
-                        "AWS session token expected, please set: env.{}",
-                        &aws_session_token[1..]
-                    ));
-                }
-            }
-
-            loader.credentials_provider(Credentials::new(
-                aws_access_key_id.clone(),
-                aws_secret_access_key.clone(),
-                aws_session_token,
-                None,
-                "baml-runtime",
-            ))
-        } else {
-            // Use default provider chain which includes SSO, profile, environment variables, etc.
-            loader.credentials_provider(
-                aws_config::default_provider::credentials::DefaultCredentialsChain::builder()
-                    .build()
-                    .await,
-            )
-        };
 
         let config = loader.load().await;
         Ok(bedrock::Client::new(&config))
