@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.72.9](https://github.com/boundaryml/baml/compare/0.71.1..0.71.2) - 2025-01-07
+
+### Bug Fixes
+
+- Update gemini 2 flash thinking model name check (#1283) - ([76ceeff](https://github.com/boundaryml/baml/commit/76ceeff0f780c0ddc9b6baaa2dc786e63c5c7377)) - Gasser-Aly
+
+### Features
+
+- get baml-fmt ready for beta (#1278) - ([abb0958](https://github.com/boundaryml/baml/commit/abb0958b8ee1c5d5000a3781677ee32da03daba4)) - Samuel Lijin
+- provide saner semantics around aws_session_token (#1295) - ([98c6b99](https://github.com/boundaryml/baml/commit/98c6b999f5232c4bb6192183151ee52ce5416a0e)) - Samuel Lijin
+- Include type aliases in Jinja (#1286) - ([207eab8](https://github.com/boundaryml/baml/commit/207eab8e2591577ecc863ff57c3572f268b41773)) - Antonio Sarosi
+- Implement jump to definition for type aliases (#1287) - ([6cb5009](https://github.com/boundaryml/baml/commit/6cb50096e102f5c01f1371b616ca5bd2537610d9)) - Antonio Sarosi
+- Improved 'o1' model detection in OpenAI client and updated documentation for error handling and client setup (#1290) - ([479d06e](https://github.com/boundaryml/baml/commit/479d06e4546538b3908422801b21a50f22a3fc3f)) - hellovai
+- Add docs for recursive type aliases (#1294) - ([43a0007](https://github.com/boundaryml/baml/commit/43a0007876a04c3e71c808e377662a30a7c062b6)) - Antonio Sarosi
+
 ## [0.71.1](https://github.com/boundaryml/baml/compare/0.71.0..0.71.1) - 2024-12-31
 
 - Bump version to 0.71.1 - ([4ff76e8](https://github.com/boundaryml/baml/commit/4ff76e8bbd697bd48b0f9b08044b3f2d98df476c)) - Aaron Villalpando
