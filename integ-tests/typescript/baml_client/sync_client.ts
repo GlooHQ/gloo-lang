@@ -2543,13 +2543,13 @@ export class BamlSyncClient {
     }
   }
   
-  TestAwsInvalidSessionToken(
+  TestAwsSessionToken(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): string {
     try {
     const raw = this.runtime.callFunctionSync(
-      "TestAwsInvalidSessionToken",
+      "TestAwsSessionToken",
       {
         "input": input
       },
