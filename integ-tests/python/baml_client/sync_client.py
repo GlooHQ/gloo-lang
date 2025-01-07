@@ -2347,7 +2347,7 @@ class BamlSyncClient:
       )
       return cast(str, raw.cast_to(types, types))
     
-    def TestAwsSessionToken(
+    def TestAwsInvalidSessionToken(
         self,
         input: str,
         baml_options: BamlCallOptions = {},
@@ -2360,7 +2360,7 @@ class BamlSyncClient:
       __cr__ = baml_options.get("client_registry", None)
 
       raw = self.__runtime.call_function_sync(
-        "TestAwsSessionToken",
+        "TestAwsInvalidSessionToken",
         {
           "input": input,
         },
@@ -6194,7 +6194,7 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
-    def TestAwsSessionToken(
+    def TestAwsInvalidSessionToken(
         self,
         input: str,
         baml_options: BamlCallOptions = {},
@@ -6207,7 +6207,7 @@ class BamlStreamClient:
       __cr__ = baml_options.get("client_registry", None)
 
       raw = self.__runtime.stream_function_sync(
-        "TestAwsSessionToken",
+        "TestAwsInvalidSessionToken",
         {
           "input": input,
         },

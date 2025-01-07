@@ -3257,21 +3257,21 @@ module Baml
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(String)
     }
-    def TestAwsSessionToken(
+    def TestAwsInvalidSessionToken(
         *varargs,
         input:,
         baml_options: {}
     )
       if varargs.any?
         
-        raise ArgumentError.new("TestAwsSessionToken may only be called with keyword arguments")
+        raise ArgumentError.new("TestAwsInvalidSessionToken may only be called with keyword arguments")
       end
       if (baml_options.keys - [:client_registry, :tb]).any?
         raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
       end
 
       raw = @runtime.call_function(
-        "TestAwsSessionToken",
+        "TestAwsInvalidSessionToken",
         {
           input: input,
         },
@@ -7922,21 +7922,21 @@ module Baml
         baml_options: T::Hash[Symbol, T.any(Baml::TypeBuilder, Baml::ClientRegistry)]
       ).returns(Baml::BamlStream[String])
     }
-    def TestAwsSessionToken(
+    def TestAwsInvalidSessionToken(
         *varargs,
         input:,
         baml_options: {}
     )
       if varargs.any?
         
-        raise ArgumentError.new("TestAwsSessionToken may only be called with keyword arguments")
+        raise ArgumentError.new("TestAwsInvalidSessionToken may only be called with keyword arguments")
       end
       if (baml_options.keys - [:client_registry, :tb]).any?
         raise ArgumentError.new("Received unknown keys in baml_options (valid keys: :client_registry, :tb): #{baml_options.keys - [:client_registry, :tb]}")
       end
 
       raw = @runtime.stream_function(
-        "TestAwsSessionToken",
+        "TestAwsInvalidSessionToken",
         {
           input: input,
         },

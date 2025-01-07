@@ -88,7 +88,7 @@ client<llm> MyClient {
 
 <Tab title="AWS Services (Lambda/ECS/EC2)">
 
-When running in AWS services, credentials are automatically provided through IAM roles:
+In AWS Lambda, EC2, ECS, etc., BAML will automatically use the service's IAM role, by reading the relevant environment variables. To override this behavior, see the section on [Explicit Credentials](#explicit-credentials).```
 
 ```baml BAML
 client<llm> MyClient {
