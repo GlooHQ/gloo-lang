@@ -8,6 +8,8 @@ import { SimpleCardView } from './components/SimpleCardView'
 import { TabularView } from './components/TabularView'
 import { TestMenu } from './components/TestMenu'
 import { ClientGraphView } from './components/ClientGraphView'
+import CustomErrorBoundary from '@/utils/ErrorFallback'
+import { ErrorBoundary } from 'react-error-boundary'
 
 const TestPanel = () => {
   const [selectedHistoryIndex, setSelectedHistoryIndex] = useAtom(selectedHistoryIndexAtom)
@@ -16,7 +18,7 @@ const TestPanel = () => {
 
   // TODO: still render the client graph view even if no tests are running.
   if (testHistory.length === 0) {
-    return <div className='p-4 text-muted-foreground'>No tests running</div>
+    return <div className="p-4 text-muted-foreground">No tests running</div>
   }
 
   const currentRun = testHistory[selectedHistoryIndex]
@@ -38,15 +40,24 @@ const TestPanel = () => {
 
   return (
     <>
-      <div className='px-1 pt-2'>
+      <div className="px-1 pt-2">
         <TestMenu />
       </div>
 
-      <ScrollArea className='relative flex-1 p-0' type='always'>
+      <ScrollArea className="relative flex-1 p-0" type="always">
         {currentRun && (
-          <div className='mb-1 text-xs text-muted-foreground/50'>{new Date(currentRun.timestamp).toLocaleString()}</div>
+          <div className="mb-1 text-xs text-muted-foreground/50">{new Date(currentRun.timestamp).toLocaleString()}</div>
         )}
-        {renderView()}
+        <ErrorBoundary
+          fallback={<div>Error rendering view</div>}
+          onReset={() => {
+            // Reset any state that may have caused the error
+            window.location.reload()
+          }}
+          resetKeys={[viewType, currentRun]}
+        >
+          {renderView()}
+        </ErrorBoundary>
       </ScrollArea>
     </>
   )

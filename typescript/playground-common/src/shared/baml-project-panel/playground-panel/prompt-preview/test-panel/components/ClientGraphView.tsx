@@ -13,6 +13,7 @@ import { useAtomValue } from 'jotai'
 import { useMemo } from 'react'
 import { currentClientsAtom, orchestrationNodesAtom, orchIndexAtom } from '../../../atoms-orch-graph'
 import { useEffect } from 'react'
+import '@xyflow/react/dist/style.css'
 
 interface RenderEdge {
   id: string
@@ -35,12 +36,12 @@ const ClientHeader: React.FC = () => {
   const clientsArray = useAtomValue(currentClientsAtom)
   const currentClient = clientsArray[orchIndex]
   return (
-    <div className='flex flex-col-reverse items-start gap-0.5'>
-      <span className='pl-2 text-xs text-muted-foreground flex flex-row flex-wrap items-center gap-0.5'>
+    <div className="flex flex-col-reverse items-start gap-0.5">
+      <span className="pl-2 text-xs text-muted-foreground flex flex-row flex-wrap items-center gap-0.5">
         {clientsArray.length > 1 && `Attempt ${orchIndex} in Client Graph`}
       </span>
-      <div className='max-w-[300px] justify-start items-center flex hover:bg-vscode-button-hoverBackground h-fit rounded-md text-vscode-foreground cursor-pointer'>
-        <span className='px-2 py-1 w-full text-left truncate'>{currentClient}</span>
+      <div className="max-w-[300px] justify-start items-center flex hover:bg-vscode-button-hoverBackground h-fit rounded-md text-vscode-foreground cursor-pointer">
+        <span className="px-2 py-1 w-full text-left truncate">{currentClient}</span>
       </div>
     </div>
   )
@@ -115,21 +116,23 @@ export const ClientGraphView: React.FC = () => {
   }
 
   return (
-    <div style={{ height: '100vh', width: '100%' }}>
+    <div className="w-full h-full">
       <ClientHeader />
-      <ReactFlow
-        style={styles}
-        nodes={flowNodes}
-        edges={flowEdges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={onNodeClick}
-        fitView
-        edgesFocusable={false}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        nodesFocusable={false}
-      />
+      <div style={{ height: '100dvh', width: '100%' }} className="">
+        <ReactFlow
+          style={styles}
+          nodes={flowNodes}
+          edges={flowEdges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onNodeClick={onNodeClick}
+          fitView
+          edgesFocusable={false}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          nodesFocusable={false}
+        />
+      </div>
     </div>
   )
 }
