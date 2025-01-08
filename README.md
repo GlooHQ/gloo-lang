@@ -3,7 +3,7 @@
     <source media="(prefers-color-scheme: dark)" srcset="fern/assets/baml-lamb-white.png">
     <img src="fern/assets/baml-lamb-white.png" height="64" id="top">
   </picture>
-  
+
 </a>
 
 # BAML
@@ -14,7 +14,7 @@ An LLM function is a prompt template with some defined input variables, and a sp
 
 BAML LLM functions plug into python, TS, and other languages, which makes it easy to focus more on engineering and less on prompting.
 
-BAML outperforms all other current methods of obtaining structured data, even when using it with GPT3.5. It also outperforms models fine-tuned for tool-use using the [Berkeley Function Calling Benchmark](https://gorilla.cs.berkeley.edu/leaderboard.html). See our [interactive results](https://www.boundaryml.com/blog/sota-function-calling?q=0). [Read more on our Schema-Aligned Parser](https://www.boundaryml.com/blog/schema-aligned-parsing). 
+BAML outperforms all other current methods of obtaining structured data, even when using it with GPT3.5. It also outperforms models fine-tuned for tool-use using the [Berkeley Function Calling Benchmark](https://gorilla.cs.berkeley.edu/leaderboard.html). See our [interactive results](https://www.boundaryml.com/blog/sota-function-calling?q=0). [Read more on our Schema-Aligned Parser](https://www.boundaryml.com/blog/schema-aligned-parsing).
 
 <img src="docs/old/assets/bfcl-baml-latest.png" width="80%" alt="Boundary Studio">
 
@@ -335,6 +335,13 @@ Note that this security address should be used only for undisclosed vulnerabilit
 ## Contributing
 Checkout our [guide on getting started](/CONTRIBUTING.md)
 
+## Documentation
+
+- [Getting Started](docs/getting-started.md)
+- [Code Generation Guide](docs/code-generation.md) - Learn how BAML generates type-safe client libraries
+- [Architecture](docs/architecture.md)
+- [Contributing](CONTRIBUTING.md)
+- [API Reference](docs/api-reference.md)
 
 <hr />
 
