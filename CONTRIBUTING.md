@@ -1,161 +1,86 @@
 # Contributing to BAML
 
-Welcome to BAML! This guide will help you get started with contributing to the project. Whether you're an open source contributor or a new BAML employee, we're excited to have you on board.
+First off, thanks for your interest in contributing to BAML! We appreciate all the help we can get in making it the best way to build any AI agents or applications.
 
-## Quick Links
-- [Discord Community](https://discord.gg/BTNBeXGuaS) - Join our `#contributing` channel
-- [Documentation](https://docs.boundaryml.com)
-- [Example Projects](https://github.com/BoundaryML/baml-examples)
+## Table of Contents
 
-## Getting Started
+- [How to Contribute](#how-to-contribute)
+   - [Join our Community](#join-our-community)
+   - [Check Existing Issues](#check-existing-issues)
+   - [Creating an Issue](#creating-an-issue)
+   - [Fork the Repository](#fork-the-repository)
+   - [Submit a Pull Request (PR)](#submit-a-pull-request-pr)
+   - [Examples of Merged PRs](#examples-of-merged-prs)
+- [Setting up the BAML Compiler and Runtime](#setting-up-the-baml-compiler-and-runtime)
+   - [Compiler Architecture Overview](#compiler-architecture-overview)
+   - [Steps to Build and Test Locally](#steps-to-build-and-test-locally)
+- [Running Integration Tests](#running-integration-tests)
+   - [Python Integration Tests](#python-integration-tests)
+   - [TypeScript Integration Tests](#typescript-integration-tests)
+   - [OpenAPI Server Tests](#openapi-server-tests)
+- [Grammar Testing](#grammar-testing)
+- [VSCode Extension Testing](#vscode-extension-testing)
+- [Testing PromptFiddle.com](#testing-prompfiddlecom)
 
-1. **Join the Community**
-   - Introduce yourself in our [Discord](https://discord.gg/BTNBeXGuaS) `#contributing` channel
-   - For BAML employees: Check the internal onboarding doc (shared during onboarding)
 
-2. **Find Something to Work On**
-   - Browse [good first issues](https://github.com/BoundaryML/baml/issues?q=is:issue+is:open+label:"good+first+issue")
-   - Check [discussion board](https://github.com/BoundaryML/baml/discussions)
+## How to Contribute
 
-3. **Development Setup**
-   ```bash
-   # Clone repository
-   git clone https://github.com/boundaryml/baml.git
-   cd baml
+1. **Join our Community**:
 
-   # Install core dependencies
-   brew install mise direnv  # macOS
-   # or
-   apt install direnv       # Ubuntu
+- Please join our [Discord](https://discord.gg/BTNBeXGuaS) and introduce yourself in the `#contributing` channel. Let us know what you're interested in working on, and we can help you get started.
 
-   # Configure shell (add to ~/.zshrc or ~/.bashrc)
-   eval "$(direnv hook zsh)"
-   eval "$(mise activate zsh)"
+2. **Check Existing Issues**:
 
-   # Install language-specific tools
-   mise install            # Sets up Python, Ruby, Node.js versions
+- Look at the [issue tracker](https://github.com/BoundaryML/baml/issues) and find and issue to work on.
+Issues labeled `good first issue` are a good place to start.
 
-   #Install BAML CLI with Python
-   pip install baml-py
+3. **Creating an Issue**:
 
-   #Install BAML CLI with Ruby
-   gem install baml
+- If you find a bug or have a feature request, please tell us about in the discord channel and then open a new issue. Make sure to provide enough details and include a clear title.
 
-   #Install BAML CLI with TypeScript
-   npm install @boundaryml/baml
-   ```
+4. **Fork the Repository**:
 
-## Development Setup
+- Fork the repository and clone your fork locally. Work on your changes in a feature branch.
 
-Before you begin contributing, familiarize yourself with these key documents:
-- [Architecture Overview](docs/architecture.md)
-- [Code Generation Guide](docs/code-generation.md) - Essential for working with client libraries
-- [Coding Standards](docs/coding-standards.md)
+5. **Submit a Pull Request (PR)**:
 
-## Project Architecture
+- Submit your pull request with a clear description of the changes you've made. Make sure to reference the issue you're working on.
 
-BAML consists of several key components:
+### Examples of Merged PRs:
 
-```
-baml/
-├── engine/          # Core Rust implementation
-│   ├── baml-lib/    # Compiler and type system
-│   ├── baml-runtime/# Runtime engine
-│   └── cli/         # CLI tool
-├── integ-tests/     # Integration tests
-└── docs/           # Documentation
-```
+- **Fix parsing issues**: [PR #1031](https://github.com/BoundaryML/baml/pull/1031)
 
-See [Architecture Overview](docs/architecture.md) for details.
+- **Coerce integers properly**: [PR #1023](https://github.com/BoundaryML/baml/pull/1023)
 
-## Development Workflow
+- **Fix syntax highlighting and a grammar parser crash**: [PR #1013](https://github.com/BoundaryML/baml/pull/1013)
 
-### 1. Set Up Your Environment
-- Follow language-specific setup:
-  - [Rust Development](engine/README.md#development)
-  - [Python Client](engine/language_client_python/README.md#development)
-  - [TypeScript Client](engine/language_client_typescript/README.md#development)
-  - [Ruby Client](engine/language_client_ruby/README.md#development)
+- **Implement literal types (e.g., `sports "SOCCER" | "BASKETBALL"`)**: [PR #978](https://github.com/BoundaryML/baml/pull/978)
 
-### 2. Understanding the Codebase
-- Start with the [Engine Overview](engine/README.md)
-- Review component documentation:
-  - [Core Library](engine/baml-lib/README.md)
-  - [Runtime](engine/baml-runtime/README.md)
-  - [CLI](engine/cli/README.md)
+- **Fix issue with OpenAI provider**: [PR #896](https://github.com/BoundaryML/baml/pull/896)
 
-### 3. Making Changes
+- **Implement `map` type**: [PR #797](https://github.com/BoundaryML/baml/pull/797)
 
-#### Core Engine Changes
-1. Read [Engine Development Guide](engine/README.md#development)
-2. Make changes in relevant component
-3. Run component tests:
-   ```bash
-   cd ./engine
-   cargo test -p baml-lib
-   cargo test -p baml-runtime
-   cargo test -p baml-cli
-   ```
-4. Run integration tests:
-   ```bash
-   cd ./integ-tests
-   ./run-tests.sh
-   ```
 
-#### Language Client Changes
-1. Read relevant client guide:
-   - [Python Client Guide](engine/language_client_python/README.md)
-   - [TypeScript Client Guide](engine/language_client_typescript/README.md)
-   - [Ruby Client Guide](engine/language_client_ruby/README.md)
-2. Make changes
-3. Run language-specific tests (see client guides)
 
-### 4. Testing
-See [Testing Guide](integ-tests/README.md) for:
-- Running test suites
-- Adding new tests
-- Debugging tests
-- Common issues
+## Setting up the BAML Compiler and Runtime
 
-### 5. Documentation Changes
+#### Compiler Architecture Overview
 
-#### Updating Fern Documentation
+<TBD — we will write more details here>
 
-The BAML documentation is built using Fern. Here's how to update it:
+- `baml-cli/ VSCode` generates `baml_client`, containing all the interfaces people use to call the `baml-runtime`.
 
-1. **Setup Fern Environment**
-   ```bash
-   # Install Fern CLI globally
-   npm install -g fern-api
+- **Pest grammar -> AST (build diagnostics for linter) -> Intermediate Representation (IR)**: The runtime parses BAML files, builds and calls LLM endpoints, parses data into JSONish, and coerces that JSONish into the schema.
 
-   # Navigate to Fern directory
-   cd fern
-   ```
 
-2. **Local Development**
-   ```bash
-   # Start local development server
-   fern docs dev
+### Steps to Build and Test Locally
 
-   # View at http://localhost:3000
-   ```
+1. Install Rust
 
-3. **Documentation Structure**
-   ```
-   fern/
-   ├── pages/          # Main documentation content
-   ├── 01-guide/       # Getting started guides
-   ├── 02-examples/    # Code examples
-   ├── 03-reference/   # API reference
-   ├── assets/         # Images and other assets
-   └── snippets/       # Code snippets
-   ```
+2. Run `cargo build` in `engine/` and make sure everything builds on your machine.
 
-4. **Making Changes**
-   - Edit MDX files in respective directories
-   - Add new pages in appropriate sections
-   - Update navigation in `docs.yml`
-   - Test changes locally
+3. Run some unit tests:
+   - `cd engine/baml-lib/baml/` and run `cargo test` to execute grammar linting tests.
 
 4. Run the integration tests.
 
