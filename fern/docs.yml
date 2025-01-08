@@ -542,14 +542,18 @@ navbar-links:
     url: https://discord.gg/BTNBeXGuaS
 
 colors:
-  accentPrimary:
+  accent-primary:
     light: "#a78bfa"
+    dark: "#a78bfa"
   background:
     light: "#ffffff"
+    dark: "#000000"
   sidebar-background:
     light: "#fefefe"
+    dark: "#000000"
 logo:
   light: assets/favicon.ico
+  dark: assets/favicon.ico
   height: 40
 favicon: assets/favicon.ico
 css: assets/styles.css
