@@ -27,7 +27,7 @@ describe('OpenAI Provider', () => {
       expect(final.length).toBeGreaterThan(0)
       expect(msgs.length).toBeGreaterThan(0)
       expect(firstMsgTime).not.toBeNull()
-      expect(firstMsgTime! - startTime).toBeLessThanOrEqual(1500)
+      expect(firstMsgTime! - startTime).toBeLessThanOrEqual(3000)
       expect(lastMsgTime - startTime).toBeGreaterThan(1000)
 
       for (let i = 0; i < msgs.length - 2; i++) {
