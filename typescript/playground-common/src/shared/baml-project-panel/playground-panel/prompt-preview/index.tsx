@@ -40,27 +40,27 @@ const PromptPreview = () => {
   const [showEnvDialog, setShowEnvDialog] = useAtom(showEnvDialogAtom)
 
   return (
-    <div className='flex relative justify-between h-full bg-background text-foreground'>
+    <div className="flex relative justify-between h-full bg-background text-foreground">
       <div
-        className='flex overflow-x-auto flex-col justify-start items-start w-full h-full'
+        className="flex overflow-x-auto flex-col justify-start items-start pr-2 w-full h-full"
         style={{ minHeight: '530px' }}
       >
         <Dialog open={showEnvDialog} onOpenChange={setShowEnvDialog}>
-          <DialogContent className='mt-12 sm:max-w-[825px]'>
+          <DialogContent className="mt-12 sm:max-w-[825px]">
             <EnvVars />
           </DialogContent>
         </Dialog>
-        <ResizablePanelGroup autoSaveId={'prompt-preview'} direction='vertical' className='py-2 h-full'>
-          <ResizablePanel defaultSize={areTestsRunning ? 40 : 80} className='flex flex-col gap-4 px-4'>
+        <ResizablePanelGroup autoSaveId={'prompt-preview'} direction="vertical" className="py-2 h-full">
+          <ResizablePanel defaultSize={areTestsRunning ? 40 : 80} className="flex flex-col gap-4 px-4">
             <PreviewToolbar />
-            <ScrollArea className='w-full h-full rounded-md bg-background' type='always'>
-              <div className='w-full rounded-md border h-fit border-border/50 bg-background'>
+            <ScrollArea className="w-full h-full rounded-md bg-background" type="always">
+              <div className="w-full rounded-md border h-fit border-border/50 bg-background">
                 <PromptRenderWrapper />
               </div>
             </ScrollArea>
           </ResizablePanel>
-          <ResizableHandle withHandle className='bg-border' />
-          <ResizablePanel ref={ref} defaultSize={areTestsRunning ? 60 : 20} className='flex flex-col pl-2'>
+          <ResizableHandle withHandle className="bg-border" />
+          <ResizablePanel ref={ref} defaultSize={areTestsRunning ? 60 : 20} className="flex flex-col pl-2">
             <TestPanel />
           </ResizablePanel>
         </ResizablePanelGroup>

@@ -56,6 +56,10 @@ class VSCodeAPIWrapper {
     this.rpcId = 0
   }
 
+  public isVscode() {
+    return this.vsCodeApi !== undefined
+  }
+
   public async readFile(path: string): Promise<Uint8Array> {
     const uri = await this.readLocalFile('', path)
     console.log('read file', uri)

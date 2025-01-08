@@ -22,6 +22,7 @@ import { filesAtom } from '@/shared/baml-project-panel/atoms'
 import { runtimeStateAtom, selectedFunctionAtom } from '@/shared/baml-project-panel/playground-panel/atoms'
 import { useFeedbackWidget } from '@baml/playground-common/lib/feedback_widget'
 import { TopNavbar } from './TopNavbar'
+import Image from 'next/image'
 
 const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   useFeedbackWidget()
@@ -162,7 +163,8 @@ export const ProjectSidebar = () => {
   return (
     <ResizablePanel defaultSize={16} className=" h-full dark:bg-[#020309] bg-muted">
       <div className="flex flex-row justify-center items-center pt-4 w-full">
-        <a href={'/'} className="flex text-lg font-semibold text-center w-fit text-foreground">
+        <a href={'/'} className="flex flex-row items-center text-lg font-semibold text-center w-fit text-foreground">
+          <Image src="/baml-lamb-white.png" alt="Prompt Fiddle" width={40} height={40} />
           Prompt Fiddle
         </a>
       </div>

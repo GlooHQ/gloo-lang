@@ -118,6 +118,11 @@ export const showEnvDialogAtom = atom(
     const hasShownDialog = get(hasShownEnvDialogAtom)
     if (hasShownDialog) return envDialogOpen
 
+    // if we are in vscode, we don't want to show the dialog
+    if (!vscode.isVscode()) {
+      return false
+    }
+
     return hasMissingVars
   },
   (get, set, value: boolean) => {
@@ -128,10 +133,19 @@ export const showEnvDialogAtom = atom(
   },
 )
 
+export const areEnvVarsMissingAtom = atom((get) => {
+  const requiredVars = get(requiredEnvVarsAtom)
+  const isVscode = vscode.isVscode()
+  if (!isVscode) return false
+  const envVars = get(envVarsAtom)
+  return requiredVars.length > 0 && requiredVars.every((key) => !envVars[key])
+})
+
 // Related to test status
 import { type WasmFunctionResponse, type WasmTestResponse } from '@gloo-ai/baml-schema-wasm-web'
 import { atomFamily, atomWithStorage } from 'jotai/utils'
 import { vscodeLocalStorageStore } from '../Jotai'
+import { vscode } from '../vscode'
 
 export type TestStatusType = 'queued' | 'running' | 'done' | 'error' | 'idle'
 export type DoneTestStatusType =

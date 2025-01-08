@@ -252,7 +252,7 @@ export const CodeMirrorViewer = ({
   return (
     <div className="w-full h-fit">
       <div
-        className="w-full h-full"
+        className="pb-8 w-full h-full"
         onKeyDown={(e) => {
           if ((e.metaKey || e.ctrlKey) && e.key === 's') {
             e.preventDefault()

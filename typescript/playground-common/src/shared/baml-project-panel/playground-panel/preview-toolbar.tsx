@@ -12,7 +12,7 @@ import { useRunTests } from './prompt-preview/test-panel/test-runner'
 import { Dialog, DialogContent } from '@radix-ui/react-dialog'
 import EnvVars from './side-bar/env-vars'
 import { cn } from '@/lib/utils'
-
+import { areEnvVarsMissingAtom } from './atoms'
 export const renderModeAtom = atom<'prompt' | 'curl' | 'tokens'>('prompt')
 
 const RunButton: React.FC = () => {
@@ -47,10 +47,12 @@ export default function Component() {
     icon: React.FC<React.SVGProps<SVGSVGElement>>
     value: 'prompt' | 'curl' | 'tokens'
   }[] = [
-    { label: 'Prompt', icon: FileJson, value: 'prompt' },
+    { label: 'Prompt Preview', icon: FileJson, value: 'prompt' },
     { label: 'Token Visualization', icon: Braces, value: 'tokens' },
     { label: 'Raw cURL', icon: Bug, value: 'curl' },
   ]
+
+  const areEnvVarsMissing = useAtomValue(areEnvVarsMissingAtom)
 
   const selectedOption = options.find((opt) => opt.value === renderMode)
 
@@ -68,7 +70,10 @@ export default function Component() {
           className="flex gap-2 items-center text-muted-foreground/70"
           onClick={() => setShowEnvDialog(true)}
         >
-          <Settings className="w-4 h-4 text-muted-foreground" />
+          <div className="relative">
+            <Settings className="w-4 h-4 text-muted-foreground" />
+            {areEnvVarsMissing && <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full" />}
+          </div>
           <span>API Keys</span>
         </Button>
         <ThemeToggle />

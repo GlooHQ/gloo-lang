@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { cn } from '@/lib/utils'
 import { Dialog, DialogContent } from '@radix-ui/react-dialog'
-import { atom, useAtomValue, useSetAtom } from 'jotai'
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -26,6 +26,8 @@ import { useRunTests } from '../prompt-preview/test-panel/test-runner'
 import { getStatus } from '../prompt-preview/test-panel/testStateUtils'
 import EnvVars from './env-vars'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { atomWithStorage } from 'jotai/utils'
+import { vscode } from '../../vscode'
 
 interface FunctionData {
   name: string
@@ -47,11 +49,12 @@ const functionsAtom = atom((get) => {
   }))
 })
 
+export const isSidebarOpenAtom = atomWithStorage('isSidebarOpen', vscode.isVscode() ? true : false)
+
 export default function CustomSidebar() {
   const functions = useAtomValue(functionsAtom)
   const [searchTerm, setSearchTerm] = React.useState('')
-  const [showEnvDialog, setShowEnvDialog] = React.useState(false)
-  const [isOpen, setIsOpen] = React.useState(true)
+  const [isOpen, setIsOpen] = useAtom(isSidebarOpenAtom)
   const { setRunningTests } = useRunTests()
 
   const filteredFunctions = functions.filter(
@@ -85,7 +88,7 @@ export default function CustomSidebar() {
           isOpen ? 'rounded-l' : 'rounded',
         )}
       >
-        <ChevronLeft className={cn('w-4 h-4 transition-transform duration-200', isOpen ? 'rotate-180' : '')} />
+        <ChevronLeft className={cn('w-6 h-6 transition-transform duration-200', isOpen ? 'rotate-180' : '')} />
         <span className="sr-only">Toggle sidebar</span>
       </Button>
       <div
