@@ -11,6 +11,7 @@ import CodeMirror, {
 } from '@uiw/react-codemirror'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { inlineCopilot } from 'codemirror-copilot'
+import { classHighlighter, styleTags, tags as t, tagHighlighter } from '@lezer/highlight'
 
 import { hyperLink } from '@uiw/codemirror-extensions-hyper-link'
 import { langs } from '@uiw/codemirror-extensions-langs'
@@ -203,6 +204,24 @@ export const CodeMirrorViewer = ({
   const editorTheme =
     theme === 'dark'
       ? vscodeDarkInit({
+          styles: [
+            {
+              tag: [t.variableName],
+              color: '#dcdcaa',
+            },
+            {
+              tag: [t.brace],
+              color: '#569cd6',
+            },
+            {
+              tag: [t.variableName, t.propertyName],
+              color: '#d4d4d4',
+            },
+            {
+              tag: [t.attributeName],
+              color: '#c586c0',
+            },
+          ],
           settings: {
             fontSize: '11px',
             // this must be a transparent color or selection will be invisible
@@ -214,6 +233,12 @@ export const CodeMirrorViewer = ({
           },
         })
       : vscodeLightInit({
+          styles: [
+            {
+              tag: [t.attributeName],
+              color: '#ca8a04',
+            },
+          ],
           settings: {
             fontSize: '11px',
             // this must be a transparent color or selection will be invisible
