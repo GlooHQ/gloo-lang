@@ -217,11 +217,11 @@ export const CodeMirrorViewer = ({
           settings: {
             fontSize: '11px',
             // this must be a transparent color or selection will be invisible
-            lineHighlight: theme === 'light' ? '#c7c7c730' : '#a1a1a730',
-            gutterBackground: theme === 'light' ? '#fff' : 'transparent',
+            lineHighlight: '#c7c7c730',
+            gutterBackground: '#fff',
             gutterForeground: '#808080',
             gutterActiveForeground: '#808080',
-            gutterBorder: theme === 'light' ? '#fff' : 'transparent',
+            gutterBorder: '#fff',
           },
         })
 
@@ -278,7 +278,6 @@ export const CodeMirrorViewer = ({
           }}
           value={fileContent.code}
           onChange={(value) => {
-            console.log('onChange')
             onContentChange?.(value)
           }}
           readOnly={false}

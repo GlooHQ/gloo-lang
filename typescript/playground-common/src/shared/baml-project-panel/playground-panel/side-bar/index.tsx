@@ -104,7 +104,7 @@ export default function CustomSidebar() {
                     <div className="flex relative items-center">
                       <Search className="absolute left-2 top-1/2 w-3 h-3 text-gray-400 -translate-y-1/2" />
                       <Input
-                        placeholder="Filter..."
+                        placeholder="Filter Tests..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="flex px-8 py-2 w-full h-9 text-xs rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"

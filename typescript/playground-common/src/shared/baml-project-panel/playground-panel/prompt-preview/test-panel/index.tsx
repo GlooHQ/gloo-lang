@@ -8,7 +8,6 @@ import { SimpleCardView } from './components/SimpleCardView'
 import { TabularView } from './components/TabularView'
 import { TestMenu } from './components/TestMenu'
 import { ClientGraphView } from './components/ClientGraphView'
-import CustomErrorBoundary from '@/utils/ErrorFallback'
 import { ErrorBoundary } from 'react-error-boundary'
 
 const TestPanel = () => {
