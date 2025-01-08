@@ -70,3 +70,16 @@
 .cm-editor {
   @apply dark:bg-transparent;
 }
+
+#cw-widget-holder {
+  @apply left-0 ml-0;
+}
+
+/* Hide the chatwoot bubble for now*/
+button.woot-widget-bubble:nth-child(1) {
+  @apply scale-50 origin-bottom-right left-0 hidden;
+}
+
+button.woot-elements--right:nth-child(2) {
+  @apply scale-50 origin-bottom-right left-0;
+}
