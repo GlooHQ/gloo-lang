@@ -327,6 +327,12 @@ tb.User.add_property("middle_name", tb.string.optional)
 All types added through TypeBuilder must be connected to the return type of your BAML function. Standalone types that aren't referenced won't affect the output schema.
 </Warning>
 
+## Testing Dynamic Types
+
+See the [tests guide](/guide/baml-basics/testing-functions#dynamic-types-tests)
+for examples of testing functions that use dynamic types. See also the
+[reference](/ref/baml/test) for syntax. 
+
 ## Future Features
 
 We're working on additional features for TypeBuilder:
@@ -335,4 +341,5 @@ We're working on additional features for TypeBuilder:
 - OpenAPI schema integration  
 - Pydantic model support
 
-If you're interested in these features, please join the discussion in our GitHub issues.
+If you're interested in these features, please join the discussion in our GitHub
+issues.
