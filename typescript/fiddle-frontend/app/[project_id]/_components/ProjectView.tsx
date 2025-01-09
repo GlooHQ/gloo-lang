@@ -36,7 +36,6 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
     if (project) {
       console.log('Updating files due: project', project.id)
       setUnsavedChanges(false)
-      console.log('project.files', project.files)
       setFiles(
         project.files.reduce((acc, f) => {
           acc[f.path] = f.content

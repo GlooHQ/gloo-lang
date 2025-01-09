@@ -21,7 +21,6 @@ import { SiDiscord } from 'react-icons/si'
 const ShareButton = ({ project, projectName }: { project: BAMLProject; projectName: string }) => {
   const [loading, setLoading] = useState(false)
   const editorFiles = useAtomValue(currentEditorFilesAtom)
-  console.log('editorFilesss', editorFiles)
   const pathname = usePathname()
   const [unsavedChanges, setUnsavedChanges] = useAtom(unsavedChangesAtom)
 

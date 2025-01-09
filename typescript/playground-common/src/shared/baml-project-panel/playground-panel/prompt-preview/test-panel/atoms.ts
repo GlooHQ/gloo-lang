@@ -15,5 +15,6 @@ export interface TestHistoryRun {
   tests: TestHistoryEntry[]
 }
 
-export const testHistoryAtom = atomWithStorage<TestHistoryRun[]>('test-history', [])
+// TODO: make this persistent, but make sure to serialize the wasm objects properly
+export const testHistoryAtom = atom<TestHistoryRun[]>([])
 export const selectedHistoryIndexAtom = atom<number>(0)

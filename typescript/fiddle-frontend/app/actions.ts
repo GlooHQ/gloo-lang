@@ -25,7 +25,6 @@ export async function createUrl(project: BAMLProject): Promise<string> {
 }
 
 export async function updateUrl(urlId: string, editorFiles: EditorFile[]): Promise<void> {
-  console.log('setting files', editorFiles)
   const user = await kv.set(urlId, editorFiles)
   revalidatePath(`/`)
 }

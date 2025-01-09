@@ -14,9 +14,7 @@ export const currentEditorFilesAtom = atom<EditorFile[]>((get) => {
   //   return { path, content }
   // })
   const files = get(filesAtom)
-  console.log('files', files)
   return Object.entries(files).map(([path, content]): EditorFile => {
-    console.log('file', path, content)
     return { path, content }
   })
 })
@@ -32,7 +30,6 @@ export const activeFileNameAtom = atom(
   (get) => {
     const files = get(currentEditorFilesAtom)
     let activeFileName = get(activeFileNameAtomRaw)
-    console.log('activeFileName', activeFileName)
     // Validate the current active file or determine a new one
     if (!activeFileName || !files.some((f) => f.path === activeFileName)) {
       const defaultFile = 'baml_src/01-extract-receipt.baml'
