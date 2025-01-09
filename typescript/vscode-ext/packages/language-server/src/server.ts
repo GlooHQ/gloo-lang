@@ -659,7 +659,6 @@ export function startServer(options?: LSOptions): void {
 
   // The projectId is actually the document.uri of the file that is open
   connection.onRequest('requestDiagnostics', async ({ projectId }: { projectId: string }) => {
-    console.log('requestDiagnostics', projectId)
     await bamlProjectManager.requestDiagnostics(URI.parse(projectId))
   })
 

@@ -645,8 +645,9 @@ class BamlProjectManager {
     })
   }
 
+  // TODO: we could go back to sending all diagnostics for all projects, since
+  // the web panel filters them out and just sends the diagnostics for the current project that's opened in view.
   async requestDiagnostics(documentUri: URI) {
-    console.debug('Requesting diagnostics')
     await this.wrapAsync(async () => {
       const project = this.getProjectById(documentUri)
       if (project) {

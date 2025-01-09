@@ -245,10 +245,22 @@ const activateClient = (
     })
 
     client.onRequest('runtime_updated', (params: { root_path: string; files: Record<string, string> }) => {
-      WebPanelView.currentPanel?.postMessage('add_project', {
-        ...params,
-        root_path: URI.file(params.root_path).toString(),
-      })
+      // Only send message if current file is part of this root path
+      const activeEditor = vscode.window.activeTextEditor;
+      if (activeEditor) {
+        const currentFilePath = URI.parse(activeEditor.document.uri.toString()).fsPath
+        const rootPathUri = URI.file(params.root_path).fsPath
+        if (currentFilePath.startsWith(rootPathUri)) {
+          WebPanelView.currentPanel?.postMessage('add_project', {
+            ...params,
+            root_path: URI.file(params.root_path).toString(),
+          });
+        } else {
+          console.log("root path doesnt match current file", currentFilePath, rootPathUri)
+        }
+      } else {
+        console.log("no active editor")
+      }
     })
 
     // this will fail otherwise in dev mode if the config where the baml path is hasnt been picked up yet. TODO: pass the config to the server to avoid this.
