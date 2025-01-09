@@ -590,7 +590,7 @@ export function startServer(options?: LSOptions): void {
                   command: 'baml.runBamlTest',
                   arguments: [
                     {
-                      projectId: proj,
+                      projectId: proj.rootPath(),
                       functionName: parentFunction.name,
                       showTests: true,
                       testCaseName: testcase.name,
@@ -657,8 +657,9 @@ export function startServer(options?: LSOptions): void {
     // }
   })
 
-  connection.onRequest('requestDiagnostics', async () => {
-    await bamlProjectManager.requestDiagnostics()
+  // The projectId is actually the document.uri of the file that is open
+  connection.onRequest('requestDiagnostics', async ({ projectId }: { projectId: string }) => {
+    await bamlProjectManager.requestDiagnostics(URI.parse(projectId))
   })
 
   connection.onRequest('bamlCliVersion', async () => {
