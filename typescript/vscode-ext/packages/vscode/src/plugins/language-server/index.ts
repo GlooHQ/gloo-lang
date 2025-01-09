@@ -15,6 +15,7 @@ import { checkForMinimalColorTheme, createLanguageServer, isDebugOrTestSession, 
 import type { BamlVSCodePlugin } from '../types'
 import { URI } from 'vscode-uri'
 import StatusBarPanel from '../../panels/StatusBarPanel'
+import { getCurrentOpenedFile } from '../../helpers/get-open-file'
 
 const packageJson = require('../../../../package.json') // eslint-disable-line
 
@@ -48,7 +49,12 @@ export const generateTestRequest = async (test_request: TestRequest): Promise<st
 }
 
 export const requestDiagnostics = async () => {
-  await client?.sendRequest('requestDiagnostics')
+  const currentFile = getCurrentOpenedFile()
+  if (!currentFile) {
+    console.error('no current baml file')
+    return
+  }
+  await client?.sendRequest('requestDiagnostics', { projectId: currentFile })
 }
 
 export const requestBamlCLIVersion = async () => {

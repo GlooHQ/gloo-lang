@@ -17,6 +17,7 @@ import { type Config, adjectives, animals, colors, uniqueNamesGenerator } from '
 import { URI } from 'vscode-uri'
 import { bamlConfig, requestDiagnostics } from '../plugins/language-server'
 import TelemetryReporter from '../telemetryReporter'
+import { getCurrentOpenedFile } from '../helpers/get-open-file'
 
 const customConfig: Config = {
   dictionaries: [adjectives, colors, animals],
@@ -176,6 +177,8 @@ export class WebPanelView {
       </html>
     `
   }
+
+  
 
   /**
    * Sets up an event listener to listen for messages passed from the webview context and

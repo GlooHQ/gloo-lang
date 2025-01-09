@@ -469,6 +469,7 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
       switch (command) {
         case 'add_project':
           if (content && content.root_path) {
+            console.log('add_project', content.root_path)
             setFiles(Object.fromEntries(Object.entries(content.files).map(([name, content]) => [name, content])))
           }
           break

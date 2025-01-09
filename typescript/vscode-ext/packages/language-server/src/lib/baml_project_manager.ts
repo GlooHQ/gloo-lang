@@ -14,6 +14,7 @@ import { getWordAtPosition, trimLine } from './ast'
 import { debounce } from 'lodash'
 import semver from 'semver'
 import { bamlConfig } from '../bamlConfig'
+import { Uri } from 'vscode'
 type Notify = (
   params:
     | { type: 'error' | 'warn' | 'info'; message: string }
@@ -644,16 +645,19 @@ class BamlProjectManager {
     })
   }
 
-  async requestDiagnostics() {
+  async requestDiagnostics(documentUri: URI) {
     console.debug('Requesting diagnostics')
     await this.wrapAsync(async () => {
-      for (const project of this.projects.values()) {
+      const project = this.getProjectById(documentUri)
+      if (project) {
         project.requestDiagnostics()
         if (project.runtime()) {
           this.notifier({ type: 'runtime_updated', root_path: project.rootPath(), files: project.files() })
         } else {
           console.log('undefined runtime')
         }
+      } else {
+        console.error('project not found', documentUri)
       }
     })
   }

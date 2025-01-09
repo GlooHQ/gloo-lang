@@ -290,7 +290,7 @@ export function activate(context: vscode.ExtensionContext) {
   const bamlTestcaseCommand = vscode.commands.registerCommand(
     'baml.runBamlTest',
     (args?: {
-      projectId?: string
+      projectId: string
       functionName?: string
       implName?: string
       showTests?: boolean
@@ -339,6 +339,7 @@ export function activate(context: vscode.ExtensionContext) {
     const position = event.selections[0].active
 
     const editor = vscode.window.activeTextEditor
+    requestDiagnostics();
     if (editor) {
       const name = editor.document.fileName
       const text = editor.document.getText()
