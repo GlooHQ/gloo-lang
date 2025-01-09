@@ -7,6 +7,7 @@ use internal_baml_core::ir::FieldType;
 use crate::{
     deserializer::{
         coercer::{coerce_primitive::coerce_bool, match_string::match_string, TypeCoercer},
+        deserialize_flags::{DeserializerConditions, Flag},
         types::BamlValueWithFlags,
     },
     jsonish,
@@ -45,6 +46,22 @@ impl TypeCoercer for LiteralValue {
             }
             Some(v) => v,
         };
+
+        // If we get an object with a single key-value pair, try to extract the value
+        if let jsonish::Value::Object(obj) = value {
+            if obj.len() == 1 {
+                let (key, inner_value) = obj.iter().next().unwrap();
+                // only extract value if it's a primitive (not an object or array, hoping to god its fixed)
+                match inner_value {
+                    jsonish::Value::Number(_) | jsonish::Value::Boolean(_) | jsonish::Value::String(_) => {
+                        let mut result = self.coerce(ctx, target, Some(inner_value))?;
+                        result.add_flag(Flag::ObjectToPrimitive(jsonish::Value::Object(obj.clone())));
+                        return Ok(result);
+                    }
+                    _ => {}
+                }
+            }
+        }
 
         match literal {
             LiteralValue::Int(literal_int) => {

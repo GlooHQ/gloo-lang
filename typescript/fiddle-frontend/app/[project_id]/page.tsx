@@ -31,11 +31,10 @@ export default async function Home({
   const data: BAMLProject = await loadProject(params)
   // console.log(data)
   return (
-    <main className='flex flex-col items-center justify-between min-h-screen font-sans'>
+    <main className='flex flex-col justify-between items-center min-h-screen font-sans'>
       <div className='w-screen h-screen dark:bg-black'>
         <ProjectView project={data} />
       </div>
-      {/* </div> */}
     </main>
   )
 }

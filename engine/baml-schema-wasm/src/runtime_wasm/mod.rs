@@ -60,8 +60,8 @@ pub fn on_wasm_init() {
             const LOG_LEVEL: log::Level = log::Level::Warn;
         }
     };
-    // This line is required if we want to see normal log::info! messages in JS console logs.
-    wasm_logger::init(wasm_logger::Config::new(LOG_LEVEL));
+    // I dont think we need this line anymore -- seems to break logging if you add it.
+    //wasm_logger::init(wasm_logger::Config::new(LOG_LEVEL));
     match console_log::init_with_level(LOG_LEVEL) {
         Ok(_) => web_sys::console::log_1(
             &format!("Initialized BAML runtime logging as log::{}", LOG_LEVEL).into(),
@@ -876,6 +876,7 @@ fn get_dummy_value(
         baml_runtime::FieldType::Literal(_) => None,
         baml_runtime::FieldType::Enum(_) => None,
         baml_runtime::FieldType::Class(_) => None,
+        baml_runtime::FieldType::RecursiveTypeAlias(_) => None,
         baml_runtime::FieldType::List(item) => {
             let dummy = get_dummy_value(indent + 1, allow_multiline, item);
             // Repeat it 2 times
@@ -1200,6 +1201,19 @@ impl WasmRuntime {
             });
         }
         if let Ok(walker) = runtime.find_class(symbol) {
+            let elem = walker.span().unwrap();
+
+            let _uri_str = elem.file.path().to_string(); // Store the String in a variable
+            let ((s_line, s_character), (e_line, e_character)) = elem.line_and_column();
+            return Some(SymbolLocation {
+                uri: elem.file.path().to_string(), // Use the variable here
+                start_line: s_line,
+                start_character: s_character,
+                end_line: e_line,
+                end_character: e_character,
+            });
+        }
+        if let Ok(walker) = runtime.find_type_alias(symbol) {
             let elem = walker.span().unwrap();
 
             let _uri_str = elem.file.path().to_string(); // Store the String in a variable
@@ -1660,6 +1674,8 @@ impl WasmFunction {
         let (test_response, span) = rt
             .run_test(&function_name, &test_name, &ctx, Some(cb))
             .await;
+
+        log::info!("test_response: {:#?}", test_response);
 
         Ok(WasmTestResponse {
             test_response,

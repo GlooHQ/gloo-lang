@@ -1,18 +1,23 @@
 use std::collections::HashSet;
 
-use crate::{AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection};
+use crate::{
+    AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes,
+    UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection,
+};
 use anyhow::Result;
 
-use baml_types::{EvaluationContext, StringOr};
+use baml_types::{EvaluationContext, GetEnvVar, StringOr};
 
 use super::helpers::{Error, PropertyHandler};
 
 #[derive(Debug, Clone)]
 pub struct UnresolvedAwsBedrock {
     model: Option<StringOr>,
-    region: StringOr,
-    access_key_id: StringOr,
-    secret_access_key: StringOr,
+    region: Option<StringOr>,
+    access_key_id: Option<StringOr>,
+    secret_access_key: Option<StringOr>,
+    session_token: Option<StringOr>,
+    profile: Option<StringOr>,
     role_selection: UnresolvedRolesSelection,
     allowed_role_metadata: UnresolvedAllowedRoleMetadata,
     supported_request_modes: SupportedRequestModes,
@@ -63,6 +68,8 @@ pub struct ResolvedAwsBedrock {
     pub region: Option<String>,
     pub access_key_id: Option<String>,
     pub secret_access_key: Option<String>,
+    pub session_token: Option<String>,
+    pub profile: Option<String>,
     pub inference_config: Option<InferenceConfiguration>,
     role_selection: RolesSelection,
     pub allowed_role_metadata: AllowedRoleMetadata,
@@ -73,20 +80,26 @@ pub struct ResolvedAwsBedrock {
 impl ResolvedAwsBedrock {
     pub fn allowed_roles(&self) -> Vec<String> {
         self.role_selection.allowed_or_else(|| {
-            vec!["system".to_string(), "user".to_string(), "assistant".to_string()]
+            vec![
+                "system".to_string(),
+                "user".to_string(),
+                "assistant".to_string(),
+            ]
         })
     }
 
     pub fn default_role(&self) -> String {
-        self.role_selection
-            .default_or_else(|| {
-                let allowed_roles = self.allowed_roles();
-                if allowed_roles.contains(&"user".to_string()) {
-                    "user".to_string()
-                } else {
-                    allowed_roles.first().cloned().unwrap_or_else(|| "user".to_string())
-                }
-            })
+        self.role_selection.default_or_else(|| {
+            let allowed_roles = self.allowed_roles();
+            if allowed_roles.contains(&"user".to_string()) {
+                "user".to_string()
+            } else {
+                allowed_roles
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| "user".to_string())
+            }
+        })
     }
 }
 
@@ -96,9 +109,44 @@ impl UnresolvedAwsBedrock {
         if let Some(m) = self.model.as_ref() {
             env_vars.extend(m.required_env_vars())
         }
-        env_vars.extend(self.region.required_env_vars());
-        env_vars.extend(self.access_key_id.required_env_vars());
-        env_vars.extend(self.secret_access_key.required_env_vars());
+
+        match self.region.as_ref() {
+            Some(region) => env_vars.extend(region.required_env_vars()),
+            None => {
+                #[cfg(target_arch = "wasm32")]
+                env_vars.insert("AWS_REGION".into());
+            }
+        }
+
+        match self.access_key_id.as_ref() {
+            Some(access_key_id) => env_vars.extend(access_key_id.required_env_vars()),
+            None => {
+                #[cfg(target_arch = "wasm32")]
+                env_vars.insert("AWS_ACCESS_KEY_ID".into());
+            }
+        }
+
+        match self.secret_access_key.as_ref() {
+            Some(secret_access_key) => env_vars.extend(secret_access_key.required_env_vars()),
+            None => {
+                #[cfg(target_arch = "wasm32")]
+                env_vars.insert("AWS_SECRET_ACCESS_KEY".into());
+            }
+        }
+
+        match self.session_token.as_ref() {
+            Some(session_token) => env_vars.extend(session_token.required_env_vars()),
+            None => {
+                #[cfg(target_arch = "wasm32")]
+                env_vars.insert("AWS_SESSION_TOKEN".into());
+            }
+        }
+
+        match self.profile.as_ref() {
+            Some(profile) => env_vars.extend(profile.required_env_vars()),
+            None => {}
+        }
+
         env_vars.extend(self.role_selection.required_env_vars());
         env_vars.extend(self.allowed_role_metadata.required_env_vars());
         env_vars.extend(self.supported_request_modes.required_env_vars());
@@ -115,11 +163,101 @@ impl UnresolvedAwsBedrock {
 
         let role_selection = self.role_selection.resolve(ctx)?;
 
+        let region = match self.region.as_ref() {
+            Some(region) => {
+                let region = region.resolve(ctx)?;
+                if region.is_empty() {
+                    return Err(anyhow::anyhow!("region cannot be empty"));
+                }
+                Some(region)
+            }
+            None => match ctx.get_env_var("AWS_REGION") {
+                Ok(region) if !region.is_empty() => Some(region),
+                _ => match ctx.get_env_var("AWS_DEFAULT_REGION") {
+                    Ok(region) if !region.is_empty() => Some(region),
+                    _ => None,
+                },
+            },
+        };
+
+        let access_key_id = match self.access_key_id.as_ref() {
+            Some(access_key_id) => Some(access_key_id.resolve(ctx)?),
+            None => None,
+        };
+
+        let secret_access_key = match self.secret_access_key.as_ref() {
+            Some(secret_access_key) => Some(secret_access_key.resolve(ctx)?),
+            None => None,
+        };
+
+        let session_token = match self.session_token.as_ref() {
+            Some(session_token) => {
+                let token = session_token.resolve(ctx)?;
+                if !token.is_empty() {
+                    Some(token)
+                } else {
+                    None
+                }
+            }
+            None => None,
+        };
+
+        let (access_key_id, secret_access_key, session_token) =
+            match (access_key_id, secret_access_key, session_token) {
+                (None, None, None) => {
+                    // If no credentials provided, get them all from env vars
+                    let access_key_id = match ctx.get_env_var("AWS_ACCESS_KEY_ID") {
+                        Ok(key) if !key.is_empty() => Some(key),
+                        _ => None,
+                    };
+                    let secret_access_key = match ctx.get_env_var("AWS_SECRET_ACCESS_KEY") {
+                        Ok(key) if !key.is_empty() => Some(key),
+                        _ => None,
+                    };
+                    let session_token = match ctx.get_env_var("AWS_SESSION_TOKEN") {
+                        Ok(token) if !token.is_empty() => Some(token),
+                        _ => None,
+                    };
+                    (access_key_id, secret_access_key, session_token)
+                }
+                // If any credentials are explicitly provided, use those
+                (access_key_id, secret_access_key, session_token) => {
+                    (access_key_id, secret_access_key, session_token)
+                }
+            };
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let profile = match self.profile.as_ref() {
+            Some(profile) => Some(profile.resolve(ctx)?),
+            None => match ctx.get_env_var("AWS_PROFILE") {
+                Ok(profile) if !profile.is_empty() => Some(profile),
+                _ => None,
+            },
+        };
+        #[cfg(target_arch = "wasm32")]
+        let profile = None;
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            if region.is_none() {
+                return Err(anyhow::anyhow!("region must be provided"));
+            }
+            if access_key_id.is_none() {
+                return Err(anyhow::anyhow!("access_key_id must be provided"));
+            }
+            if secret_access_key.is_none() {
+                return Err(anyhow::anyhow!("secret_access_key must be provided"));
+            }
+            // Session token is optional, even in WASM environment
+        }
+
         Ok(ResolvedAwsBedrock {
             model: model.resolve(ctx)?,
-            region: self.region.resolve(ctx).ok(),
-            access_key_id: self.access_key_id.resolve(ctx).ok(),
-            secret_access_key: self.secret_access_key.resolve(ctx).ok(),
+            region,
+            access_key_id,
+            secret_access_key,
+            session_token,
+            profile,
             role_selection,
             allowed_role_metadata: self.allowed_role_metadata.resolve(ctx)?,
             supported_request_modes: self.supported_request_modes.clone(),
@@ -160,16 +298,20 @@ impl UnresolvedAwsBedrock {
 
         let region = properties
             .ensure_string("region", false)
-            .map(|(_, v, _)| v.clone())
-            .unwrap_or_else(|| baml_types::StringOr::EnvVar("AWS_REGION".to_string()));
+            .map(|(_, v, _)| v.clone());
         let access_key_id = properties
             .ensure_string("access_key_id", false)
-            .map(|(_, v, _)| v.clone())
-            .unwrap_or_else(|| baml_types::StringOr::EnvVar("AWS_ACCESS_KEY_ID".to_string()));
+            .map(|(_, v, _)| v.clone());
+
         let secret_access_key = properties
             .ensure_string("secret_access_key", false)
-            .map(|(_, v, _)| v.clone())
-            .unwrap_or_else(|| baml_types::StringOr::EnvVar("AWS_SECRET_ACCESS_KEY".to_string()));
+            .map(|(_, v, _)| v.clone());
+        let session_token = properties
+            .ensure_string("session_token", false)
+            .map(|(_, v, _)| v.clone());
+        let profile = properties
+            .ensure_string("profile", false)
+            .map(|(_, v, _)| v.clone());
 
         let role_selection = properties.ensure_roles_selection();
         let allowed_metadata = properties.ensure_allowed_metadata();
@@ -245,6 +387,8 @@ impl UnresolvedAwsBedrock {
             region,
             access_key_id,
             secret_access_key,
+            session_token,
+            profile,
             role_selection,
             allowed_role_metadata: allowed_metadata,
             supported_request_modes,

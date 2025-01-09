@@ -68,7 +68,12 @@ impl RuntimeCli {
                 args.from = BamlRuntime::parse_baml_src_path(&args.from)?;
                 t.block_on(async { args.run_async().await })
             }
-            Commands::Format(args) => args.run(),
+            Commands::Format(args) => {
+                // We deliberately don't apply parse_baml_src_path here
+                // see format.rs for more details
+                // args.from = BamlRuntime::parse_baml_src_path(&args.from)?;
+                args.run()
+            }
         }
     }
 }

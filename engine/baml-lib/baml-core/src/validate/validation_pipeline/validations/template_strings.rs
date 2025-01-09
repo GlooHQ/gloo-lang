@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use crate::validate::validation_pipeline::context::Context;
 
-use either::Either;
 use internal_baml_diagnostics::{DatamodelError, DatamodelWarning, Span};
 
 use internal_baml_schema_ast::ast::{FieldType, TypeExpId, WithIdentifier, WithName, WithSpan};
@@ -17,6 +16,9 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
         t.add_to_types(&mut defined_types);
     });
     ctx.db.walk_templates().for_each(|t| {
+        t.add_to_types(&mut defined_types);
+    });
+    ctx.db.walk_type_aliases().for_each(|t| {
         t.add_to_types(&mut defined_types);
     });
 

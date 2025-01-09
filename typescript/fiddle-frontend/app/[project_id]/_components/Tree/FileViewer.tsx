@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MoveHandler, RenameHandler, Tree, type TreeApi } from 'react-arborist'
 
 import { EditorFile } from '@/app/actions'
-import { updateFileAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
+// import { updateFileAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { FilePlus, FolderPlus } from 'lucide-react'
 import useResizeObserver from 'use-resize-observer'
@@ -106,7 +106,7 @@ function createTree(filePaths: string[]): TreeNode[] {
 const FileViewer = () => {
   const { width, height = 200, ref } = useResizeObserver()
   const editorFiles = useAtomValue(currentEditorFilesAtom)
-  const updateFile = useSetAtom(updateFileAtom)
+  // const updateFile = useSetAtom(updateFileAtom)
   const treeRef = useRef<TreeApi<any> | null>(null)
   const activeFile = useAtomValue(activeFileNameAtom)
   const [emptyDirs, setEmptydirs] = useAtom(emptyDirsAtom)
@@ -116,7 +116,7 @@ const FileViewer = () => {
   const [term, setTerm] = useState('')
 
   const createFileFolder = (
-    <div className='flex flex-row w-full pt-3 pl-1 gap-x-1'>
+    <div className='flex flex-row gap-x-1 pt-3 pl-1 w-full'>
       <button
         onClick={async () => {
           await treeRef?.current?.createInternal()
@@ -137,7 +137,7 @@ const FileViewer = () => {
   )
 
   return (
-    <div className='flex flex-col w-full h-full overflow-x-clip pl-2'>
+    <div className='flex flex-col pl-2 w-full h-full overflow-x-clip'>
       <div className='folderFileActions'>{createFileFolder}</div>
       {/* <input
         type="text"
@@ -155,7 +155,7 @@ const FileViewer = () => {
           data={data2}
           indent={12}
           initialOpenState={{ baml_src: true }}
-          rowHeight={24}
+          rowHeight={28}
           width={width}
           selection={activeFile ?? undefined}
           onMove={({ dragIds, parentId, index, dragNodes, parentNode }) => {
@@ -170,12 +170,12 @@ const FileViewer = () => {
                 to: `${parentId}/${id.split('/').pop() ?? ''}`,
               }))
 
-            updateFile({
-              reason: 'move_files',
-              root_path: PROJECT_ROOT,
-              files: [],
-              renames,
-            })
+            // updateFile({
+            //   reason: 'move_files',
+            //   root_path: PROJECT_ROOT,
+            //   files: [],
+            //   renames,
+            // })
           }}
           onCreate={({ parentId, parentNode, type }) => {
             if (type === 'internal') {
@@ -187,16 +187,16 @@ const FileViewer = () => {
             console.log('onCreate', parentId, parentNode)
 
             const newFileName = 'new.baml'
-            updateFile({
-              reason: 'create_file',
-              root_path: PROJECT_ROOT,
-              files: [
-                {
-                  name: `baml_src/${newFileName}`,
-                  content: '',
-                },
-              ],
-            })
+            // updateFile({
+            //   reason: 'create_file',
+            //   root_path: PROJECT_ROOT,
+            //   files: [
+            //     {
+            //       name: `baml_src/${newFileName}`,
+            //       content: '',
+            //     },
+            //   ],
+            // })
 
             return { id: `baml_src/${newFileName}`, name: newFileName }
           }}

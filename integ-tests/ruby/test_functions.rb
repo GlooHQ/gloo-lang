@@ -78,6 +78,63 @@ describe "ruby<->baml integration tests" do
 
     res = b.InOutSingleLiteralStringMapKey(m: {"key" => "1"})
     assert_equal res['key'], "1"
+
+    res = b.PrimitiveAlias(p: "test")
+    assert_equal res, "test"
+
+    res = b.MapAlias(m: {"A" => ["B", "C"], "B" => [], "C" => []})
+    assert_equal res, {"A" => ["B", "C"], "B" => [], "C" => []}
+
+    res = b.NestedAlias(c: "test")
+    assert_equal res, "test"
+
+    res = b.NestedAlias(c: {"A" => ["B", "C"], "B" => [], "C" => []})
+    assert_equal res, {"A" => ["B", "C"], "B" => [], "C" => []}
+
+    res = b.AliasThatPointsToRecursiveType(list: Baml::Types::LinkedListAliasNode.new(
+        value: 1,
+        next: nil,
+    ))
+    # TODO: Doesn't implement equality
+    # assert_equal res, Baml::Types::LinkedListAliasNode.new(
+    #   value: 1,
+    #   next: nil,
+    # )
+    
+    res = b.ClassThatPointsToRecursiveClassThroughAlias(
+        cls: Baml::Types::ClassToRecAlias.new(
+            list: Baml::Types::LinkedListAliasNode.new(
+                value: 1,
+                next: nil,
+            )
+        )
+    )
+
+    res = b.RecursiveClassWithAliasIndirection.new(
+        cls: Baml::Types::NodeWithAliasIndirection.new(
+            value: 1,
+            next: Baml::Types::NodeWithAliasIndirection.new(
+                value: 2,
+                next: nil,
+            )
+        )
+    )
+  end
+
+  it "optional map and list" do
+    res = b.AllowedOptionals(optionals: Baml::Types::OptionalListAndMap.new(
+      p: nil,
+      q: nil,
+    ))
+    assert_equal res.p, nil
+    assert_equal res.q, nil
+
+    res = b.AllowedOptionals(optionals: Baml::Types::OptionalListAndMap.new(
+      p: ["test"],
+      q: {"test" => "ok"},
+    ))
+    assert_equal res.p, ["test"]
+    assert_equal res.q, {"test" => "ok"}
   end
 
   it "accepts subclass of baml type" do

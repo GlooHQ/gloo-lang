@@ -58,6 +58,7 @@ pub struct OutputFormatContent {
     pub enums: Arc<IndexMap<String, Enum>>,
     pub classes: Arc<IndexMap<String, Class>>,
     recursive_classes: Arc<IndexSet<String>>,
+    structural_recursive_aliases: Arc<IndexMap<String, FieldType>>,
     pub target: FieldType,
 }
 
@@ -67,6 +68,8 @@ pub struct Builder {
     classes: Vec<Class>,
     /// Order matters for this one.
     recursive_classes: IndexSet<String>,
+    /// Recursive aliases introduced maps and lists.
+    structural_recursive_aliases: IndexMap<String, FieldType>,
     target: FieldType,
 }
 
@@ -76,6 +79,7 @@ impl Builder {
             enums: vec![],
             classes: vec![],
             recursive_classes: IndexSet::new(),
+            structural_recursive_aliases: IndexMap::new(),
             target,
         }
     }
@@ -92,6 +96,14 @@ impl Builder {
 
     pub fn recursive_classes(mut self, recursive_classes: IndexSet<String>) -> Self {
         self.recursive_classes = recursive_classes;
+        self
+    }
+
+    pub fn structural_recursive_aliases(
+        mut self,
+        structural_recursive_aliases: IndexMap<String, FieldType>,
+    ) -> Self {
+        self.structural_recursive_aliases = structural_recursive_aliases;
         self
     }
 
@@ -115,6 +127,9 @@ impl Builder {
                     .collect(),
             ),
             recursive_classes: Arc::new(self.recursive_classes.into_iter().collect()),
+            structural_recursive_aliases: Arc::new(
+                self.structural_recursive_aliases.into_iter().collect(),
+            ),
             target: self.target,
         }
     }
@@ -333,6 +348,14 @@ impl OutputFormatContent {
 
                     Some(format!("Answer in JSON using this {type_prefix}:{end}"))
                 }
+                FieldType::RecursiveTypeAlias(_) => {
+                    let type_prefix = match &options.hoisted_class_prefix {
+                        RenderSetting::Always(prefix) if !prefix.is_empty() => prefix,
+                        _ => RenderOptions::DEFAULT_TYPE_PREFIX_IN_RENDER_MESSAGE,
+                    };
+
+                    Some(format!("Answer in JSON using this {type_prefix}: "))
+                }
                 FieldType::List(_) => Some(String::from(
                     "Answer with a JSON Array using this schema:\n",
                 )),
@@ -423,9 +446,12 @@ impl OutputFormatContent {
                 }
             },
             FieldType::Literal(v) => v.to_string(),
-            FieldType::Constrained { base, .. } => {
-                self.inner_type_render(options, base, render_state, group_hoisted_literals)?
-            }
+            FieldType::Constrained { base, .. } => self.render_possibly_recursive_type(
+                options,
+                base,
+                render_state,
+                group_hoisted_literals,
+            )?,
             FieldType::Enum(e) => {
                 let Some(enm) = self.enums.get(e) else {
                     return Err(minijinja::Error::new(
@@ -481,9 +507,13 @@ impl OutputFormatContent {
                 }
                 .to_string()
             }
+            FieldType::RecursiveTypeAlias(name) => name.to_owned(),
             FieldType::List(inner) => {
                 let is_recursive = match inner.as_ref() {
                     FieldType::Class(nested_class) => self.recursive_classes.contains(nested_class),
+                    FieldType::RecursiveTypeAlias(name) => {
+                        self.structural_recursive_aliases.contains_key(name)
+                    }
                     _ => false,
                 };
 
@@ -527,9 +557,14 @@ impl OutputFormatContent {
             }
             FieldType::Map(key_type, value_type) => MapRender {
                 style: &options.map_style,
-                // TODO: Key can't be recursive because we only support strings
-                // as keys. Change this if needed in the future.
-                key_type: self.inner_type_render(options, key_type, render_state, false)?,
+                // NOTE: Key can't be recursive because we only support strings
+                // as keys.
+                key_type: self.render_possibly_recursive_type(
+                    options,
+                    key_type,
+                    render_state,
+                    false,
+                )?,
                 value_type: self.render_possibly_recursive_type(
                     options,
                     value_type,
@@ -580,6 +615,7 @@ impl OutputFormatContent {
         }));
 
         let mut class_definitions = Vec::new();
+        let mut type_alias_definitions = Vec::new();
 
         // Hoist recursive classes. The render_state struct doesn't need to
         // contain these classes because we already know that we're gonna hoist
@@ -601,6 +637,18 @@ impl OutputFormatContent {
             });
         }
 
+        for (alias, target) in self.structural_recursive_aliases.iter() {
+            let recursive_pointer =
+                self.inner_type_render(&options, target, &mut render_state, false)?;
+
+            type_alias_definitions.push(match &options.hoisted_class_prefix {
+                RenderSetting::Always(prefix) if !prefix.is_empty() => {
+                    format!("{prefix} {alias} = {recursive_pointer}")
+                }
+                _ => format!("{alias} = {recursive_pointer}"),
+            });
+        }
+
         let mut output = String::new();
 
         if !enum_definitions.is_empty() {
@@ -610,6 +658,11 @@ impl OutputFormatContent {
 
         if !class_definitions.is_empty() {
             output.push_str(&class_definitions.join("\n\n"));
+            output.push_str("\n\n");
+        }
+
+        if !type_alias_definitions.is_empty() {
+            output.push_str(&type_alias_definitions.join("\n"));
             output.push_str("\n\n");
         }
 
@@ -649,13 +702,19 @@ impl OutputFormatContent {
     pub fn find_enum(&self, name: &str) -> Result<&Enum> {
         self.enums
             .get(name)
-            .ok_or_else(|| anyhow::anyhow!("Enum {} not found", name))
+            .ok_or_else(|| anyhow::anyhow!("Enum {name} not found"))
     }
 
     pub fn find_class(&self, name: &str) -> Result<&Class> {
         self.classes
             .get(name)
-            .ok_or_else(|| anyhow::anyhow!("Class {} not found", name))
+            .ok_or_else(|| anyhow::anyhow!("Class {name} not found"))
+    }
+
+    pub fn find_recursive_alias_target(&self, name: &str) -> Result<&FieldType> {
+        self.structural_recursive_aliases
+            .get(name)
+            .ok_or_else(|| anyhow::anyhow!("Recursive alias {name} not found"))
     }
 }
 
@@ -2211,6 +2270,97 @@ Answer in JSON using this schema:
     data: int,
   }>,
 }"#
+            ))
+        );
+    }
+
+    #[test]
+    fn render_simple_recursive_aliases() {
+        let content = OutputFormatContent::target(FieldType::RecursiveTypeAlias(
+            "RecursiveMapAlias".to_string(),
+        ))
+        .structural_recursive_aliases(IndexMap::from([(
+            "RecursiveMapAlias".to_string(),
+            FieldType::map(
+                FieldType::string(),
+                FieldType::RecursiveTypeAlias("RecursiveMapAlias".to_string()),
+            ),
+        )]))
+        .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+        assert_eq!(
+            rendered,
+            Some(String::from(
+r#"RecursiveMapAlias = map<string, RecursiveMapAlias>
+
+Answer in JSON using this schema: RecursiveMapAlias"#
+            ))
+        );
+    }
+
+    #[test]
+    fn render_recursive_alias_cycle() {
+        let content = OutputFormatContent::target(FieldType::RecursiveTypeAlias("A".to_string()))
+            .structural_recursive_aliases(IndexMap::from([
+                (
+                    "A".to_string(),
+                    FieldType::RecursiveTypeAlias("B".to_string()),
+                ),
+                (
+                    "B".to_string(),
+                    FieldType::RecursiveTypeAlias("C".to_string()),
+                ),
+                (
+                    "C".to_string(),
+                    FieldType::list(FieldType::RecursiveTypeAlias("A".to_string())),
+                ),
+            ]))
+            .build();
+        let rendered = content.render(RenderOptions::default()).unwrap();
+        #[rustfmt::skip]
+        assert_eq!(
+            rendered,
+            Some(String::from(
+r#"A = B
+B = C
+C = A[]
+
+Answer in JSON using this schema: A"#
+            ))
+        );
+    }
+
+    #[test]
+    fn render_recursive_alias_cycle_with_hoist_prefix() {
+        let content = OutputFormatContent::target(FieldType::RecursiveTypeAlias("A".to_string()))
+            .structural_recursive_aliases(IndexMap::from([
+                (
+                    "A".to_string(),
+                    FieldType::RecursiveTypeAlias("B".to_string()),
+                ),
+                (
+                    "B".to_string(),
+                    FieldType::RecursiveTypeAlias("C".to_string()),
+                ),
+                (
+                    "C".to_string(),
+                    FieldType::list(FieldType::RecursiveTypeAlias("A".to_string())),
+                ),
+            ]))
+            .build();
+        let rendered = content
+            .render(RenderOptions::with_hoisted_class_prefix("type"))
+            .unwrap();
+        #[rustfmt::skip]
+        assert_eq!(
+            rendered,
+            Some(String::from(
+r#"type A = B
+type B = C
+type C = A[]
+
+Answer in JSON using this type: A"#
             ))
         );
     }

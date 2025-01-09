@@ -35,15 +35,6 @@ The options are passed through directly to the API, barring a few. Here's a shor
   <Tip>Note the `/v1` at the end of the URL. See [Ollama's OpenAI compatability](https://ollama.com/blog/openai-compatibility)</Tip>
 </ParamField>
 
-<ParamField
-  path="default_role"
-  type="string"
->
-  The default role for any prompts that don't specify a role. **Default: `system`**
-  
-  We don't have any checks for this field, you can pass any string you wish.
-</ParamField>
-
 <ParamField path="headers" type="object">
   Additional headers to send with the request.
 

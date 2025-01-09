@@ -15,6 +15,7 @@ import { checkForMinimalColorTheme, createLanguageServer, isDebugOrTestSession, 
 import type { BamlVSCodePlugin } from '../types'
 import { URI } from 'vscode-uri'
 import StatusBarPanel from '../../panels/StatusBarPanel'
+import { getCurrentOpenedFile } from '../../helpers/get-open-file'
 
 const packageJson = require('../../../../package.json') // eslint-disable-line
 
@@ -48,7 +49,12 @@ export const generateTestRequest = async (test_request: TestRequest): Promise<st
 }
 
 export const requestDiagnostics = async () => {
-  await client?.sendRequest('requestDiagnostics')
+  const currentFile = getCurrentOpenedFile()
+  if (!currentFile) {
+    console.error('no current baml file')
+    return
+  }
+  await client?.sendRequest('requestDiagnostics', { projectId: currentFile })
 }
 
 export const requestBamlCLIVersion = async () => {
@@ -239,10 +245,22 @@ const activateClient = (
     })
 
     client.onRequest('runtime_updated', (params: { root_path: string; files: Record<string, string> }) => {
-      WebPanelView.currentPanel?.postMessage('add_project', {
-        ...params,
-        root_path: URI.file(params.root_path).toString(),
-      })
+      // Only send message if current file is part of this root path
+      const activeEditor = vscode.window.activeTextEditor
+      if (activeEditor) {
+        const currentFilePath = URI.parse(activeEditor.document.uri.toString()).fsPath
+        const rootPathUri = URI.file(params.root_path).fsPath
+        if (currentFilePath.startsWith(rootPathUri)) {
+          WebPanelView.currentPanel?.postMessage('add_project', {
+            ...params,
+            root_path: URI.file(params.root_path).toString(),
+          })
+        } else {
+          console.log('root path doesnt match current file', currentFilePath, rootPathUri)
+        }
+      } else {
+        console.log('no active editor')
+      }
     })
 
     // this will fail otherwise in dev mode if the config where the baml path is hasnt been picked up yet. TODO: pass the config to the server to avoid this.
@@ -382,6 +400,49 @@ const plugin: BamlVSCodePlugin = {
           }
         },
       ),
+
+      commands.registerCommand('baml.setDefaultFormatter', async () => {
+        enum AutoFormatChoice {
+          Yes = 'Yes (always)',
+          OnlyInWorkspace = 'Yes (in workspace)',
+          No = 'No',
+        }
+        const selection = await vscode.window.showInformationMessage(
+          'Would you like to auto-format BAML files on save?',
+          AutoFormatChoice.Yes,
+          AutoFormatChoice.OnlyInWorkspace,
+          AutoFormatChoice.No,
+        )
+        if (selection === AutoFormatChoice.No) {
+          return
+        }
+
+        const config = vscode.workspace.getConfiguration('editor', { languageId: 'baml' })
+
+        const configTarget =
+          selection === AutoFormatChoice.Yes ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace
+        const overrideInLanguage = true
+
+        for (const [key, value] of Object.entries({
+          defaultFormatter: 'Boundary.baml-extension',
+          formatOnSave: true,
+        })) {
+          await config.update(key, value, configTarget, overrideInLanguage)
+        }
+
+        switch (selection) {
+          case AutoFormatChoice.Yes:
+            vscode.window.showInformationMessage(
+              'BAML files will now be auto-formatted on save (updated user settings).',
+            )
+            break
+          case AutoFormatChoice.OnlyInWorkspace:
+            vscode.window.showInformationMessage(
+              'BAML files will now be auto-formatted on save (updated workspace settings).',
+            )
+            break
+        }
+      }),
     )
 
     activateClient(context, serverOptions, clientOptions)

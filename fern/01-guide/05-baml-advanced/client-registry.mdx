@@ -36,11 +36,11 @@ import { ClientRegistry } from '@boundaryml/baml'
 async function run() {
     const cr = new ClientRegistry()
     // Creates a new client
-    cr.addLlmClient({ name: 'MyAmazingClient', provider: 'openai', options: {
+    cr.addLlmClient('MyAmazingClient', 'openai', {
         model: "gpt-4o",
         temperature: 0.7,
         api_key: process.env.OPENAI_API_KEY
-    }})
+    })
     // Sets MyAmazingClient as the primary client
     cr.setPrimary('MyAmazingClient')
 
@@ -60,9 +60,9 @@ def run
 
   # Creates a new client
   cr.add_llm_client(
-    name: 'MyAmazingClient',
-    provider: 'openai',
-    options: {
+    'MyAmazingClient',
+    'openai',
+    {
       model: 'gpt-4o',
       temperature: 0.7,
       api_key: ENV['OPENAI_API_KEY']

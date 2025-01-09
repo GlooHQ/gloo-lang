@@ -1,14 +1,12 @@
-import { EditorFile } from '@/app/actions'
-import { diagnositicsAtom, updateFileAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
-import { runtimeFamilyAtom } from '@baml/playground-common/baml_wasm_web/baseAtoms'
+import { diagnosticsAtom } from '@/shared/baml-project-panel/atoms'
 import clsx from 'clsx'
-import { useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import { useAtomCallback } from 'jotai/utils'
-import { ArrowDown, ArrowRight, ChevronDown, ChevronRight, Edit, Edit2, File, Folder, X } from 'lucide-react'
-import { useCallback, useEffect, useMemo } from 'react'
+import { ChevronDown, ChevronRight, Edit2, File, X } from 'lucide-react'
+import { useCallback, useEffect } from 'react'
 import type { NodeRendererProps } from 'react-arborist'
 import { SiPython, SiTypescript } from 'react-icons/si'
-import { PROJECT_ROOT, activeFileNameAtom, currentEditorFilesAtom, emptyDirsAtom } from '../../_atoms/atoms'
+import { activeFileNameAtom, currentEditorFilesAtom, emptyDirsAtom } from '../../_atoms/atoms'
 
 export type Entity = {
   id: string
@@ -27,7 +25,7 @@ const renderIcon = (path: string) => {
     default:
       return (
         <span className='file-folder-icon'>
-          <File color='#6bc7f6' size={16} />
+          <File className='text-secondary-foreground/50' size={16} />
         </span>
       )
   }
@@ -38,14 +36,13 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
   const iconColor = node.data.iconColor
   const editorFiles = useAtomValue(currentEditorFilesAtom)
   const setActiveFile = useSetAtom(activeFileNameAtom)
-  const updateFile = useSetAtom(updateFileAtom)
 
   const hasErrorInChildren = useAtomCallback<boolean, string[]>(
     useCallback(
       (get, set, nodeId: string) => {
         const nodes = [tree.get(nodeId)] // Start with the current node
 
-        const diagnosticErrors = get(diagnositicsAtom)
+        const diagnosticErrors = get(diagnosticsAtom)
         const errors = diagnosticErrors.filter((d) => d.type === 'error')
         while (nodes.length > 0) {
           const currentNode = nodes.pop()
@@ -60,7 +57,7 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
         }
         return false
       },
-      [diagnositicsAtom, tree],
+      [tree],
     ),
   )
 
@@ -81,12 +78,12 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
         `group relative px-2 py-1 cursor-pointer overflow-x-clip flex-flex-col text-xs ${
           node.state.isSelected ? 'isSelected' : ''
         }`,
-        [node.state.isSelected ? 'bg-zinc-600' : ''],
+        [node.state.isSelected ? 'dark:bg-gray-800 bg-gray-200' : ''],
       )}
       style={style}
       ref={dragHandle}
     >
-      <div className='flex flex-row items-center w-full justify-start' onClick={() => node.isInternal && node.toggle()}>
+      <div className='flex flex-row justify-start items-center w-full' onClick={() => node.isInternal && node.toggle()}>
         {node.isLeaf ? (
           <>
             <span className=''></span>
@@ -102,7 +99,7 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
             </span> */}
           </>
         )}
-        <span className='node-text text-muted-foreground'>
+        <span className='node-text text-muted-foreground hover:text-foreground'>
           {node.isEditing ? (
             <input
               type='text'
@@ -116,15 +113,15 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
                   node.submit(e.currentTarget.value)
                   const filePathWithNoFilename = node.id.split('/').slice(0, -1).join('/')
                   const fileName = `${filePathWithNoFilename}/${e.currentTarget.value}`
-                  updateFile({
-                    reason: 'rename_file',
-                    root_path: PROJECT_ROOT,
-                    files: [],
-                    renames: [{ from: node.id, to: fileName }],
-                  })
+                  // updateFile({
+                  //   reason: 'rename_file',
+                  //   root_path: PROJECT_ROOT,
+                  //   files: [],
+                  //   renames: [{ from: node.id, to: fileName }],
+                  // })
 
                   setEmptyDirs((prev) => {
-                    prev = prev as string[]
+                    prev = prev
                     return prev.map((d) => {
                       d = d.slice(0, -1)
                       if (d === node.id) {
@@ -141,7 +138,7 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
           ) : (
             <span
               className={clsx(
-                fileHasErrors ? 'text-red-500' : node.state.isSelected ? 'text-white' : '',
+                fileHasErrors ? 'text-red-500' : node.state.isSelected ? 'dark:text-secondary-foreground ' : '',
                 'text-xs pl-1',
               )}
             >
@@ -152,10 +149,10 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
       </div>
 
       {node.id !== 'baml_src' && (
-        <div className='absolute top-0 right-0 hidden rounded-md group-hover:flex bg-zinc-800'>
+        <div className='hidden absolute top-0 right-0 rounded-md group-hover:flex bg-muted'>
           <div className='flex flex-row items-center'>
             <button
-              className='p-1 hover:opacity-100 opacity-70'
+              className='p-1 opacity-70 hover:opacity-100'
               onClick={(e) => {
                 e.stopPropagation()
                 node.edit()
@@ -165,22 +162,22 @@ const Node = ({ node, style, dragHandle, tree }: NodeRendererProps<any>) => {
               <Edit2 size={11} />
             </button>
             <button
-              className='p-1 hover:opacity-100 opacity-60'
+              className='p-1 opacity-60 hover:opacity-100'
               onClick={() => {
                 tree.delete(node.id)
 
-                updateFile({
-                  reason: 'delete_file',
-                  root_path: PROJECT_ROOT,
-                  files: [
-                    {
-                      name: node.id,
-                      content: undefined,
-                    },
-                  ],
-                })
+                // updateFile({
+                //   reason: 'delete_file',
+                //   root_path: PROJECT_ROOT,
+                //   files: [
+                //     {
+                //       name: node.id,
+                //       content: undefined,
+                //     },
+                //   ],
+                // })
                 setEmptyDirs((prev) => {
-                  prev = prev as string[]
+                  prev = prev
                   return prev.filter((d) => d.slice(0, -1) !== node.id)
                 })
               }}

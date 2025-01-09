@@ -1,21 +1,55 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+    ops::Index,
+};
 
-use either::Either;
 use internal_baml_diagnostics::DatamodelError;
-use internal_baml_parser_database::Tarjan;
-use internal_baml_schema_ast::ast::{FieldType, TypeExpId, WithName, WithSpan};
+use internal_baml_parser_database::{Tarjan, TypeWalker};
+use internal_baml_schema_ast::ast::{
+    FieldType, SchemaAst, TypeAliasId, TypeExpId, WithName, WithSpan,
+};
 
 use crate::validate::validation_pipeline::context::Context;
 
 /// Validates if the dependency graph contains one or more infinite cycles.
 pub(super) fn validate(ctx: &mut Context<'_>) {
-    // First, build a graph of all the "required" dependencies represented as an
+    // We'll check type alias cycles first. Just like Typescript, cycles are
+    // allowed only for maps and lists. We'll call such cycles "structural
+    // recursion". Anything else like nulls or unions won't terminate a cycle.
+    let non_structural_type_aliases = HashMap::from_iter(ctx.db.walk_type_aliases().map(|alias| {
+        let mut dependencies = HashSet::new();
+        insert_required_alias_deps(alias.target(), ctx, &mut dependencies);
+
+        (alias.id, dependencies)
+    }));
+
+    // Based on the graph we've built with does not include the edges created
+    // by maps and lists, check the cycles and report them.
+    report_infinite_cycles(
+        &non_structural_type_aliases,
+        ctx,
+        "These aliases form a dependency cycle",
+    );
+
+    // In order to avoid infinite recursion when resolving types for class
+    // dependencies below, we'll compute the cycles of aliases including maps
+    // and lists so that the recursion can be stopped before entering a cycle.
+    let complete_alias_cycles = ctx
+        .db
+        .recursive_alias_cycles()
+        .iter()
+        .flatten()
+        .copied()
+        .collect();
+
+    // Now build a graph of all the "required" dependencies represented as an
     // adjacency list. We're only going to consider type dependencies that can
     // actually cause infinite recursion. Unions and optionals can stop the
     // recursion at any point, so they don't have to be part of the "dependency"
     // graph because technically an optional field doesn't "depend" on anything,
     // it can just be null.
-    let dependency_graph = HashMap::from_iter(ctx.db.walk_classes().map(|class| {
+    let class_dependency_graph = HashMap::from_iter(ctx.db.walk_classes().map(|class| {
         let expr_block = &ctx.db.ast()[class.id];
 
         // TODO: There's already a hash set that returns "dependencies" in
@@ -31,14 +65,44 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
 
         for field in &expr_block.fields {
             if let Some(field_type) = &field.expr {
-                insert_required_deps(class.id, field_type, ctx, &mut dependencies);
+                insert_required_class_deps(
+                    class.id,
+                    field_type,
+                    ctx,
+                    &mut dependencies,
+                    &complete_alias_cycles,
+                );
             }
         }
 
         (class.id, dependencies)
     }));
 
-    for component in Tarjan::components(&dependency_graph) {
+    report_infinite_cycles(
+        &class_dependency_graph,
+        ctx,
+        "These classes form a dependency cycle",
+    );
+}
+
+/// Finds and reports all the infinite cycles in the given graph.
+///
+/// It prints errors like this:
+///
+/// "Error validating: These classes form a dependency cycle: A -> B -> C"
+fn report_infinite_cycles<V: Ord + Eq + Hash + Copy>(
+    graph: &HashMap<V, HashSet<V>>,
+    ctx: &mut Context<'_>,
+    message: &str,
+) -> Vec<Vec<V>>
+where
+    SchemaAst: Index<V>,
+    <SchemaAst as Index<V>>::Output: WithName,
+    <SchemaAst as Index<V>>::Output: WithSpan,
+{
+    let components = Tarjan::components(graph);
+
+    for component in &components {
         let cycle = component
             .iter()
             .map(|id| ctx.db.ast()[*id].name().to_string())
@@ -48,10 +112,12 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
         // TODO: We can push an error for every sinlge class here (that's what
         // Rust does), for now it's an error for every cycle found.
         ctx.push_error(DatamodelError::new_validation_error(
-            &format!("These classes form a dependency cycle: {}", cycle),
+            &format!("{message}: {cycle}"),
             ctx.db.ast()[component[0]].span().clone(),
         ));
     }
+
+    components
 }
 
 /// Inserts all the required dependencies of a field into the given set.
@@ -59,16 +125,28 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
 /// Recursively deals with unions of unions. Can be implemented iteratively with
 /// a while loop and a stack/queue if this ends up being slow / inefficient or
 /// it reaches stack overflows with large inputs.
-fn insert_required_deps(
+///
+/// TODO: Use a struct to keep all this state. Too many parameters already.
+fn insert_required_class_deps(
     id: TypeExpId,
     field: &FieldType,
     ctx: &Context<'_>,
     deps: &mut HashSet<TypeExpId>,
+    alias_cycles: &HashSet<TypeAliasId>,
 ) {
     match field {
         FieldType::Symbol(arity, ident, _) if arity.is_required() => {
-            if let Some(Either::Left(class)) = ctx.db.find_type_by_str(ident.name()) {
-                deps.insert(class.id);
+            match ctx.db.find_type_by_str(ident.name()) {
+                Some(TypeWalker::Class(class)) => {
+                    deps.insert(class.id);
+                }
+                Some(TypeWalker::TypeAlias(alias)) => {
+                    // This code runs after aliases are already resolved.
+                    if !alias_cycles.contains(&alias.id) {
+                        insert_required_class_deps(id, alias.resolved(), ctx, deps, alias_cycles)
+                    }
+                }
+                _ => {}
             }
         }
 
@@ -82,7 +160,7 @@ fn insert_required_deps(
             let mut nested_deps = HashSet::new();
 
             for f in field_types {
-                insert_required_deps(id, f, ctx, &mut nested_deps);
+                insert_required_class_deps(id, f, ctx, &mut nested_deps, alias_cycles);
 
                 // No nested deps found on this component, this makes the
                 // union finite, so no need to go deeper.
@@ -107,6 +185,29 @@ fn insert_required_deps(
             }
 
             deps.extend(union_deps);
+        }
+
+        _ => {}
+    }
+}
+
+/// Implemented a la TS, maps and lists are not included as edges.
+fn insert_required_alias_deps(
+    field_type: &FieldType,
+    ctx: &Context<'_>,
+    required: &mut HashSet<TypeAliasId>,
+) {
+    match field_type {
+        FieldType::Symbol(_, ident, _) => {
+            if let Some(TypeWalker::TypeAlias(alias)) = ctx.db.find_type_by_str(ident.name()) {
+                required.insert(alias.id);
+            }
+        }
+
+        FieldType::Union(_, field_types, ..) | FieldType::Tuple(_, field_types, ..) => {
+            for f in field_types {
+                insert_required_alias_deps(f, ctx, required);
+            }
         }
 
         _ => {}

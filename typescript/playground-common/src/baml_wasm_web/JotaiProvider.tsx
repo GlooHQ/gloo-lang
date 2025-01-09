@@ -5,7 +5,8 @@ import { createJSONStorage } from 'jotai/utils'
 import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage'
 import { DevTools } from 'jotai-devtools'
 import 'jotai-devtools/styles.css'
-import { vscode } from '../utils/vscode'
+import { vscode } from '@/shared/baml-project-panel/vscode'
+// import { vscode } from '../../../../../playground-common/src/shared/baml-project-panel/vscode'
 
 export const atomStore = createStore()
 
@@ -75,7 +76,7 @@ export const sessionStore: SyncStorage<any> = createJSONStorage(() => sessionSto
 export default function JotaiProvider({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={atomStore}>
-      <DevTools store={atomStore} />
+      {/* <DevTools store={atomStore} /> */}
       {children}
     </Provider>
   )

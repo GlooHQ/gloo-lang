@@ -18,6 +18,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
+name = "ahash"
+version = "0.8.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e89da841a80418a9b391ebaea17f5c112ffaaa96f621d2c285b5174da76b9011"
+dependencies = [
+ "cfg-if",
+ "once_cell",
+ "version_check",
+ "zerocopy",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -31,6 +43,12 @@ name = "aliasable"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "250f629c0161ad8107cf89319e990051fae62832fd343083bea452d93e2205fd"
+
+[[package]]
+name = "allocator-api2"
+version = "0.2.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
 name = "ambassador"
@@ -785,7 +803,7 @@ dependencies = [
 
 [[package]]
 name = "baml-cli"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "ambassador",
  "anyhow",
@@ -873,7 +891,7 @@ dependencies = [
 
 [[package]]
 name = "baml-lib"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "base64 0.13.1",
  "dissimilar",
@@ -895,10 +913,12 @@ dependencies = [
  "baml-cli",
  "baml-runtime",
  "baml-types",
+ "ctrlc",
  "env_logger",
  "futures",
  "indexmap 2.2.6",
  "internal-baml-codegen",
+ "libc",
  "log",
  "pyo3",
  "pyo3-async-runtimes",
@@ -908,12 +928,13 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tokio-util",
  "tracing-subscriber",
 ]
 
 [[package]]
 name = "baml-runtime"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "ambassador",
  "anyhow",
@@ -1012,7 +1033,7 @@ dependencies = [
 
 [[package]]
 name = "baml-schema-build"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "baml-runtime",
@@ -1050,7 +1071,7 @@ dependencies = [
 
 [[package]]
 name = "baml-types"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1181,7 +1202,7 @@ dependencies = [
 
 [[package]]
 name = "bstd"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -1314,6 +1335,12 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "cfg_aliases"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
 name = "chrono"
@@ -1553,6 +1580,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctrlc"
+version = "3.4.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90eeab0aa92f3f9b4e87f258c72b139c207d251f9cbc1080a0086b86a8870dd3"
+dependencies = [
+ "nix",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "darling"
 version = "0.20.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1709,9 +1746,9 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "dunce"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56ce8c6da7551ec6c462cbaf3bfbc75131ebbfa1c944aeaa9dab51ca1c5f0c3b"
+checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 
 [[package]]
 name = "either"
@@ -2171,6 +2208,10 @@ name = "hashbrown"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
+dependencies = [
+ "ahash",
+ "allocator-api2",
+]
 
 [[package]]
 name = "headers"
@@ -2600,7 +2641,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-codegen"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2625,7 +2666,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-core"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2662,7 +2703,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-diagnostics"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "colored",
@@ -2675,7 +2716,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-jinja"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2696,7 +2737,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-jinja-types"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2715,7 +2756,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-parser-database"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2740,7 +2781,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-prompt-parser"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "internal-baml-diagnostics",
  "internal-baml-schema-ast",
@@ -2752,7 +2793,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-schema-ast"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2763,6 +2804,8 @@ dependencies = [
  "pest",
  "pest_derive",
  "pretty",
+ "pretty_assertions",
+ "regex",
  "serde",
  "serde_json",
  "test-log",
@@ -2771,9 +2814,10 @@ dependencies = [
 
 [[package]]
 name = "internal-llm-client"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
+ "aws-config",
  "baml-types",
  "derive_more",
  "either",
@@ -2869,7 +2913,7 @@ checksum = "9dbbfed4e59ba9750e15ba154fdfd9329cee16ff3df539c2666b70f58cc32105"
 
 [[package]]
 name = "jsonish"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "assert-json-diff",
@@ -3211,6 +3255,18 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
+]
+
+[[package]]
+name = "nix"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71e2746dc3a24dd78b3cfcb7be93368c6de9963d30f43a6a73998a9cf4b17b46"
+dependencies = [
+ "bitflags 2.6.0",
+ "cfg-if",
+ "cfg_aliases",
+ "libc",
 ]
 
 [[package]]
@@ -3720,9 +3776,9 @@ dependencies = [
 
 [[package]]
 name = "pretty_assertions"
-version = "1.4.0"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af7cee1a6c8a5b9208b3cb1061f10c0cb689087b3d8ce85fb9d2dd7a29b6ba66"
+checksum = "3ae130e2f271fbc2ac3a40fb1d07180839cdbbe443c7a27e1e3c13c5cac0116d"
 dependencies = [
  "diff",
  "yansi",
@@ -5028,8 +5084,12 @@ checksum = "9cf6b47b3771c49ac75ad09a6162f53ad4b8088b76ac60e8ec1455b31a189fe1"
 dependencies = [
  "bytes",
  "futures-core",
+ "futures-io",
  "futures-sink",
+ "futures-util",
+ "hashbrown 0.14.5",
  "pin-project-lite",
+ "slab",
  "tokio",
 ]
 
@@ -5780,9 +5840,9 @@ checksum = "66fee0b777b0f5ac1c69bb06d361268faafa61cd4682ae064a171c16c433e9e4"
 
 [[package]]
 name = "yansi"
-version = "0.5.1"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"
+checksum = "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049"
 
 [[package]]
 name = "zerocopy"

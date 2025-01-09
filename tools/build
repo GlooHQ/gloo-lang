@@ -137,7 +137,7 @@ case "$_path" in
 
     if [ "$_watch_mode" -eq 1 ]; then
       npx nodemon \
-        --ext rs,hb,hbs,j2,toml,baml \
+        --ext rs,hb,hbs,j2,toml \
         --watch "${_repo_root}/engine" \
         --ignore 'target' \
         --exec "${command}"
@@ -163,6 +163,26 @@ case "$_path" in
         --exec "${command}" --verbose
     else
       eval "${command}"
+    fi
+    ;;
+
+  /integ-tests/baml_src | /integ-tests/baml_src/* )
+    command="cd ${_repo_root}/engine"
+    command="${command} && git checkout -- ${_repo_root}/integ-tests/baml_src/formatter/test-comments.baml"
+    command="${command} && cargo run --bin baml-cli fmt ${_repo_root}/integ-tests/baml_src/formatter/test-comments.baml"
+    command="${command} && git difftool --extcmd icdiff -y -- ${_repo_root}/integ-tests/baml_src/formatter/test-comments.baml"
+    if [ "$_watch_mode" -eq 1 ]; then
+      npx nodemon \
+        --ext py,pyi,rs,j2,toml \
+        --watch "${_repo_root}/engine" \
+        --watch . \
+        --ignore 'baml_client/**' \
+        --ignore 'target/**' \
+        --ignore .pytest_cache \
+        --exec "${command}"
+    else
+      eval "${command}"
+      date
     fi
     ;;
 

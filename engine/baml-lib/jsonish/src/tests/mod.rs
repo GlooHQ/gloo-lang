@@ -4,6 +4,7 @@ use internal_baml_jinja::types::{Class, Enum, Name, OutputFormatContent};
 #[macro_use]
 pub mod macros;
 
+mod test_aliases;
 mod test_basics;
 mod test_class;
 mod test_class_2;
@@ -16,7 +17,7 @@ mod test_maps;
 mod test_partials;
 mod test_unions;
 
-use indexmap::IndexSet;
+use indexmap::{IndexMap, IndexSet};
 use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
@@ -24,6 +25,7 @@ use std::{
 
 use baml_types::{BamlValue, EvaluationContext};
 use internal_baml_core::{
+    ast::Field,
     internal_baml_diagnostics::SourceFile,
     ir::{repr::IntermediateRepr, ClassWalker, EnumWalker, FieldType, IRHelper, TypeValue},
     validate,
@@ -55,12 +57,14 @@ fn render_output_format(
     output: &FieldType,
     env_values: &EvaluationContext<'_>,
 ) -> Result<OutputFormatContent> {
-    let (enums, classes, recursive_classes) = relevant_data_models(ir, output, env_values)?;
+    let (enums, classes, recursive_classes, structural_recursive_aliases) =
+        relevant_data_models(ir, output, env_values)?;
 
     Ok(OutputFormatContent::target(output.clone())
         .enums(enums)
         .classes(classes)
         .recursive_classes(recursive_classes)
+        .structural_recursive_aliases(structural_recursive_aliases)
         .build())
 }
 
@@ -125,11 +129,17 @@ fn relevant_data_models<'a>(
     ir: &'a IntermediateRepr,
     output: &'a FieldType,
     env_values: &EvaluationContext<'_>,
-) -> Result<(Vec<Enum>, Vec<Class>, IndexSet<String>)> {
+) -> Result<(
+    Vec<Enum>,
+    Vec<Class>,
+    IndexSet<String>,
+    IndexMap<String, FieldType>,
+)> {
     let mut checked_types: HashSet<String> = HashSet::new();
     let mut enums = Vec::new();
     let mut classes: Vec<Class> = Vec::new();
     let mut recursive_classes = IndexSet::new();
+    let mut structural_recursive_aliases = IndexMap::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
 
     while let Some(output) = start.pop() {
@@ -229,6 +239,16 @@ fn relevant_data_models<'a>(
                     });
                 }
             }
+            (FieldType::RecursiveTypeAlias(name), _) => {
+                // TODO: Same O(n) problem as above.
+                for cycle in ir.structural_recursive_alias_cycles() {
+                    if cycle.contains_key(name) {
+                        for (alias, target) in cycle.iter() {
+                            structural_recursive_aliases.insert(alias.to_owned(), target.clone());
+                        }
+                    }
+                }
+            }
             (FieldType::Literal(_), _) => {}
             (FieldType::Primitive(_), _constraints) => {}
             (FieldType::Constrained { .. }, _) => {
@@ -237,7 +257,12 @@ fn relevant_data_models<'a>(
         }
     }
 
-    Ok((enums, classes, recursive_classes))
+    Ok((
+        enums,
+        classes,
+        recursive_classes,
+        structural_recursive_aliases,
+    ))
 }
 
 const EMPTY_FILE: &str = r#"

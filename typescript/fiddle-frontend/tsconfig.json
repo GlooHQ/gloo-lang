@@ -18,8 +18,9 @@
       }
     ],
     "paths": {
-      "@/baml_wasm_web/*": ["../baml-schema-wasm-web/dist/*"],
-      "@/*": ["./*"]
+      "@/shared/*": ["../playground-common/src/shared/*"],
+      "@/*": ["./*"],
+      "~/*": ["./*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

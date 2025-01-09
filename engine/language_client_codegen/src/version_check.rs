@@ -86,7 +86,7 @@ pub fn check_version(
                     GeneratorType::VSCode => format!("Update the 'version' in your BAML generator config to '{}' to match the VSCode extension version.", runtime_version),
                     GeneratorType::CLI | GeneratorType::VSCodeCLI => format!("Update the 'version' in your BAML generator config to '{}' to match the installed baml package version.", runtime_version),
                 },
-                "https://docs.boundaryml.com/docs/calling-baml/generate-baml-client#troubleshooting-version-conflicts"
+                "https://docs.boundaryml.com/guide/development/upgrade-baml-versions"
             )
         } else if matches!(generator_language, GeneratorOutputType::OpenApi) {
             (
@@ -98,7 +98,7 @@ pub fn check_version(
                         format!("Use BAML v{} to match the version in the BAML generator config, like so: npx @boundaryml/baml@{} generate", gen_version, gen_version)
                     },
                 },
-                "https://docs.boundaryml.com/docs/calling-baml/generate-baml-client#troubleshooting-version-conflicts"
+                "https://docs.boundaryml.com/guide/development/upgrade-baml-versions"
             )
         } else {
             let update_instruction = match generator_language {
@@ -120,7 +120,7 @@ pub fn check_version(
                         format!("Update your installed BAML CLI package to version '{}' to match the version in the BAML generator config: {}", gen_version, update_instruction)
                     },
                 },
-                "https://docs.boundaryml.com/docs/calling-baml/generate-baml-client#troubleshooting-version-conflicts"
+                "https://docs.boundaryml.com/guide/development/upgrade-baml-versions"
             )
         };
 

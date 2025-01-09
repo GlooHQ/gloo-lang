@@ -36,17 +36,17 @@ mod names;
 mod tarjan;
 mod types;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 pub use coerce_expression::{coerce, coerce_array, coerce_opt};
-use either::Either;
 pub use internal_baml_schema_ast::ast;
-use internal_baml_schema_ast::ast::SchemaAst;
+use internal_baml_schema_ast::ast::{FieldType, SchemaAst, WithName};
 pub use tarjan::Tarjan;
 pub use types::{
     Attributes, ClientProperties, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType,
     PromptAst, PromptVariable, RetryPolicy, RetryPolicyStrategy, StaticType,
 };
+pub use walkers::TypeWalker;
 
 use self::{context::Context, interner::StringId, types::Types};
 use internal_baml_diagnostics::{DatamodelError, Diagnostics};
@@ -113,10 +113,12 @@ impl ParserDatabase {
         // First pass: resolve names.
         names::resolve_names(&mut ctx);
 
-        // Return early on name resolution errors.
-
         // Second pass: resolve top-level items and field types.
         types::resolve_types(&mut ctx);
+
+        // Resolve type aliases now because Jinja template validation needs this
+        // information.
+        types::resolve_type_aliases(&mut ctx);
 
         // Return early on type resolution errors.
         ctx.diagnostics.to_result()?;
@@ -125,7 +127,7 @@ impl ParserDatabase {
         ctx.diagnostics.to_result()
     }
 
-    /// Updates the prompt
+    /// Last changes after validation.
     pub fn finalize(&mut self, diag: &mut Diagnostics) {
         self.finalize_dependencies(diag);
     }
@@ -152,56 +154,57 @@ impl ParserDatabase {
         // instead of strings (class names). That requires less conversions when
         // working with the graph. Once the work is done, IDs can be converted
         // to names where needed.
-        let cycles = Tarjan::components(&HashMap::from_iter(
-            self.types.class_dependencies.iter().map(|(id, deps)| {
-                let deps =
-                    HashSet::from_iter(deps.iter().filter_map(
-                        |dep| match self.find_type_by_str(dep) {
-                            Some(Either::Left(cls)) => Some(cls.id),
-                            Some(Either::Right(_)) => None,
-                            None => panic!("Unknown class `{dep}`"),
-                        },
-                    ));
-                (*id, deps)
-            }),
-        ));
+        let mut resolved_dependency_graph = HashMap::new();
 
-        // Inject finite cycles into parser DB. This will then be passed into
-        // the IR and then into the Jinja output format.
-        self.types.finite_recursive_cycles = cycles
-            .into_iter()
-            .map(|cycle| cycle.into_iter().collect())
-            .collect();
+        for (id, deps) in self.types.class_dependencies.iter() {
+            let mut resolved_deps = HashSet::new();
 
-        // Additionally ensure the same thing for functions, but since we've already handled classes,
-        // this should be trivial.
+            for dep in deps {
+                match self.find_type_by_str(dep) {
+                    Some(TypeWalker::Class(cls)) => {
+                        resolved_deps.insert(cls.id);
+                    }
+                    Some(TypeWalker::Enum(_)) => {}
+                    // Gotta resolve type aliases.
+                    Some(TypeWalker::TypeAlias(alias)) => {
+                        resolved_deps.extend(alias.resolved().flat_idns().iter().map(|ident| {
+                            match self.find_type_by_str(ident.name()) {
+                                Some(TypeWalker::Class(cls)) => cls.id,
+                                Some(TypeWalker::Enum(_)) => {
+                                    panic!("Enums are not allowed in type aliases")
+                                }
+                                Some(TypeWalker::TypeAlias(alias)) => {
+                                    panic!("Alias should be resolved at this point")
+                                }
+                                None => panic!("Unknown class `{dep}`"),
+                            }
+                        }))
+                    }
+                    None => panic!("Unknown class `{dep}`"),
+                }
+            }
+
+            resolved_dependency_graph.insert(*id, resolved_deps);
+        }
+
+        // Find the cycles and inject them into parser DB. This will then be
+        // passed into the IR and then into the Jinja output format.
+        //
+        // TODO: Should we update `class_dependencies` to include resolved
+        // aliases or not?
+        self.types.finite_recursive_cycles = Tarjan::components(&resolved_dependency_graph);
+
+        // Fully resolve function dependencies.
         let extends = self
             .types
             .function
             .iter()
-            .map(|(&k, func)| {
+            .map(|(&id, func)| {
                 let (input, output) = &func.dependencies;
-                let input_deps = input
-                    .iter()
-                    .filter_map(|f| match self.find_type_by_str(f) {
-                        Some(Either::Left(walker)) => Some(walker.dependencies().iter().cloned()),
-                        Some(Either::Right(_)) => None,
-                        _ => panic!("Unknown class `{}`", f),
-                    })
-                    .flatten()
-                    .collect::<HashSet<_>>();
+                let input_deps = self.collect_dependency_tree(input);
+                let output_deps = self.collect_dependency_tree(output);
 
-                let output_deps = output
-                    .iter()
-                    .filter_map(|f| match self.find_type_by_str(f) {
-                        Some(Either::Left(walker)) => Some(walker.dependencies().iter().cloned()),
-                        Some(Either::Right(_)) => None,
-                        _ => panic!("Unknown class `{}`", f),
-                    })
-                    .flatten()
-                    .collect::<HashSet<_>>();
-
-                (k, (input_deps, output_deps))
+                (id, (input_deps, output_deps))
             })
             .collect::<Vec<_>>();
 
@@ -212,10 +215,67 @@ impl ParserDatabase {
         }
     }
 
+    /// Resolve the entire tree of dependencies for functions.
+    ///
+    /// Initial passes through the AST can only resolve one level of
+    /// dependencies for functions. This method will go through that first level
+    /// and collect all the dependencies of the dependencies.
+    fn collect_dependency_tree(&self, deps: &HashSet<String>) -> HashSet<String> {
+        let mut collected_deps = HashSet::new();
+        let mut stack = Vec::from_iter(deps.iter().map(|dep| dep.as_str()));
+
+        while let Some(dep) = stack.pop() {
+            match self.find_type_by_str(dep) {
+                // Add all the dependencies of the class.
+                Some(TypeWalker::Class(walker)) => {
+                    for nested_dep in walker.dependencies() {
+                        if collected_deps.insert(nested_dep.to_owned()) {
+                            // Recurse if not already visited.
+                            stack.push(nested_dep);
+                        }
+                    }
+                }
+
+                // For aliases just get the resolved identifiers and
+                // push them into the stack. If we find resolved classes we'll
+                // add their dependencies as well.
+                Some(TypeWalker::TypeAlias(walker)) => {
+                    stack.extend(walker.resolved().flat_idns().iter().filter_map(|ident| {
+                        // Add the resolved name itself to the deps.
+                        collected_deps.insert(ident.name().to_owned());
+                        // If the type is an alias then don't recurse.
+                        if self.is_recursive_type_alias(&walker.id) {
+                            None
+                        } else {
+                            Some(ident.name())
+                        }
+                    }))
+                }
+
+                // Skip enums.
+                Some(TypeWalker::Enum(_)) => {}
+
+                // This should not happen.
+                _ => panic!("Unknown class `{dep}`"),
+            }
+        }
+
+        collected_deps
+    }
+
     /// The parsed AST.
     pub fn ast(&self) -> &ast::SchemaAst {
         &self.ast
     }
+
+    /// Returns the graph of type aliases.
+    ///
+    /// Each vertex is a type alias and each edge is a reference to another type
+    /// alias.
+    pub fn type_alias_dependencies(&self) -> &HashMap<ast::TypeAliasId, HashSet<ast::TypeAliasId>> {
+        &self.types.type_alias_dependencies
+    }
+
     /// The total number of enums in the schema. This is O(1).
     pub fn enums_count(&self) -> usize {
         self.types.enum_attributes.len()
@@ -241,10 +301,12 @@ mod test {
     use std::path::PathBuf;
 
     use super::*;
+    use ast::FieldArity;
+    use baml_types::TypeValue;
     use internal_baml_diagnostics::{Diagnostics, SourceFile};
     use internal_baml_schema_ast::parse_schema;
 
-    fn assert_finite_cycles(baml: &'static str, expected: &[&[&str]]) -> Result<(), Diagnostics> {
+    fn parse(baml: &'static str) -> Result<ParserDatabase, Diagnostics> {
         let mut db = ParserDatabase::new();
         let source = SourceFile::new_static(PathBuf::from("test.baml"), baml);
         let (ast, mut diag) = parse_schema(source.path_buf(), &source)?;
@@ -253,10 +315,38 @@ mod test {
         db.validate(&mut diag)?;
         db.finalize(&mut diag);
 
+        diag.to_result()?;
+
+        Ok(db)
+    }
+
+    fn assert_finite_cycles(baml: &'static str, expected: &[&[&str]]) -> Result<(), Diagnostics> {
+        let db = parse(baml)?;
+
         assert_eq!(
             db.finite_recursive_cycles()
                 .iter()
                 .map(|ids| Vec::from_iter(ids.iter().map(|id| db.ast()[*id].name.to_string())))
+                .collect::<Vec<_>>(),
+            expected
+                .iter()
+                .map(|cycle| Vec::from_iter(cycle.iter().map(ToString::to_string)))
+                .collect::<Vec<_>>()
+        );
+
+        Ok(())
+    }
+
+    fn assert_structural_alias_cycles(
+        baml: &'static str,
+        expected: &[&[&str]],
+    ) -> Result<(), Diagnostics> {
+        let db = parse(baml)?;
+
+        assert_eq!(
+            db.recursive_alias_cycles()
+                .iter()
+                .map(|ids| Vec::from_iter(ids.iter().map(|id| db.ast()[*id].name().to_string())))
                 .collect::<Vec<_>>(),
             expected
                 .iter()
@@ -478,5 +568,129 @@ mod test {
             "#,
             &[&["RecMap"]],
         )
+    }
+
+    #[test]
+    fn resolve_simple_alias() -> Result<(), Diagnostics> {
+        let db = parse("type Number = int")?;
+
+        assert!(matches!(
+            db.resolved_type_alias_by_name("Number").unwrap(),
+            FieldType::Primitive(FieldArity::Required, TypeValue::Int, _, _)
+        ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn resolve_multiple_levels_of_aliases() -> Result<(), Diagnostics> {
+        #[rustfmt::skip]
+        let db = parse(r#"
+            type One = string
+            type Two = One
+            type Three = Two
+            type Four = Three
+        "#)?;
+
+        assert!(matches!(
+            db.resolved_type_alias_by_name("Four").unwrap(),
+            FieldType::Primitive(FieldArity::Required, TypeValue::String, _, _)
+        ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn sync_alias_arity() -> Result<(), Diagnostics> {
+        #[rustfmt::skip]
+        let db = parse(r#"
+            type Required = float
+            type Optional = Required?
+        "#)?;
+
+        assert!(matches!(
+            db.resolved_type_alias_by_name("Optional").unwrap(),
+            FieldType::Primitive(FieldArity::Optional, TypeValue::Float, _, _)
+        ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn find_basic_map_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles(
+            "type RecursiveMap = map<string, RecursiveMap>",
+            &[&["RecursiveMap"]],
+        )
+    }
+
+    #[test]
+    fn find_basic_list_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles("type A = A[]", &[&["A"]])
+    }
+
+    #[test]
+    fn find_long_list_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles(
+            r#"
+                type A = B
+                type B = C
+                type C = A[]
+            "#,
+            &[&["A", "B", "C"]],
+        )
+    }
+
+    #[test]
+    fn find_intricate_structural_cycle() -> Result<(), Diagnostics> {
+        assert_structural_alias_cycles(
+            r#"
+                type JsonValue = string | int | float | bool | null | JsonArray | JsonObject
+                type JsonArray = JsonValue[]
+                type JsonObject = map<string, JsonValue>
+            "#,
+            &[&["JsonValue", "JsonArray", "JsonObject"]],
+        )
+    }
+
+    #[test]
+    fn merged_alias_attrs() -> Result<(), Diagnostics> {
+        #[rustfmt::skip]
+        let db = parse(r#"
+            type One = int @assert({{ this < 5 }})
+            type Two = One @assert({{ this > 0 }})
+        "#)?;
+
+        let resolved = db.resolved_type_alias_by_name("Two").unwrap();
+
+        assert_eq!(resolved.attributes().len(), 2);
+
+        Ok(())
+    }
+
+    // Resolution of aliases here at the parser database level doesn't matter
+    // as much because there's no notion of "classes" or "enums", it's just
+    // "symbols". But the resolve type function should not stack overflow
+    // anyway.
+    #[test]
+    fn resolve_simple_structural_recursive_alias() -> Result<(), Diagnostics> {
+        #[rustfmt::skip]
+        let db = parse(r#"
+            type A = A[]
+        "#)?;
+
+        let resolved = db.resolved_type_alias_by_name("A").unwrap();
+
+        let FieldType::List(_, inner, ..) = resolved else {
+            panic!("expected a list type, got {resolved:?}");
+        };
+
+        let FieldType::Symbol(_, ident, _) = &**inner else {
+            panic!("expected a symbol type, got {inner:?}");
+        };
+
+        assert_eq!(ident.name(), "A");
+
+        Ok(())
     }
 }

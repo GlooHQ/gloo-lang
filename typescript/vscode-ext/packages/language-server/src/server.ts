@@ -140,7 +140,7 @@ export function startServer(options?: LSOptions): void {
       capabilities: {
         textDocumentSync: TextDocumentSyncKind.Full,
         definitionProvider: true,
-        documentFormattingProvider: false,
+        documentFormattingProvider: true,
         completionProvider: {
           resolveProvider: false,
           triggerCharacters: ['@', '"', '.'],
@@ -527,6 +527,21 @@ export function startServer(options?: LSOptions): void {
     }
   })
 
+  connection.onDocumentFormatting((params: DocumentFormattingParams) => {
+    try {
+      const doc = getDocument(params.textDocument.uri)
+      if (doc) {
+        const formatted = BamlWasm.format_document(doc.uri, doc.getText())
+        if (formatted) {
+          return [TextEdit.replace(Range.create(doc.positionAt(0), doc.positionAt(doc.getText().length)), formatted)]
+        }
+      }
+      return []
+    } catch (e) {
+      console.error(`Error occurred while formatting document:\n${e}`)
+    }
+  })
+
   connection.onCodeLens((params: CodeLensParams) => {
     try {
       const document = getDocument(params.textDocument.uri)
@@ -575,7 +590,7 @@ export function startServer(options?: LSOptions): void {
                   command: 'baml.runBamlTest',
                   arguments: [
                     {
-                      projectId: proj,
+                      projectId: proj.rootPath(),
                       functionName: parentFunction.name,
                       showTests: true,
                       testCaseName: testcase.name,
@@ -642,8 +657,9 @@ export function startServer(options?: LSOptions): void {
     // }
   })
 
-  connection.onRequest('requestDiagnostics', async () => {
-    await bamlProjectManager.requestDiagnostics()
+  // The projectId is actually the document.uri of the file that is open
+  connection.onRequest('requestDiagnostics', async ({ projectId }: { projectId: string }) => {
+    await bamlProjectManager.requestDiagnostics(URI.parse(projectId))
   })
 
   connection.onRequest('bamlCliVersion', async () => {

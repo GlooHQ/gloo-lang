@@ -1,20 +1,19 @@
 use std::collections::HashSet;
 
 use anyhow::{anyhow, Result};
-use baml_types::{Constraint, ConstraintLevel, FieldType, StringOr, UnresolvedValue};
-use either::Either;
+use baml_types::{
+    Constraint, ConstraintLevel, FieldType, JinjaExpression, StringOr, UnresolvedValue,
+};
 use indexmap::{IndexMap, IndexSet};
 use internal_baml_parser_database::{
     walkers::{
         ClassWalker, ClientWalker, ConfigurationWalker, EnumValueWalker, EnumWalker, FieldWalker,
-        FunctionWalker, TemplateStringWalker, Walker as AstWalker,
+        FunctionWalker, TemplateStringWalker, TypeAliasWalker, Walker as AstWalker,
     },
-    Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy,
+    Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy, TypeWalker,
 };
-use internal_baml_schema_ast::ast::{SubType, ValExpId};
 
-use baml_types::JinjaExpression;
-use internal_baml_schema_ast::ast::{self, FieldArity, WithName, WithSpan};
+use internal_baml_schema_ast::ast::{self, FieldArity, SubType, ValExpId, WithName, WithSpan};
 use internal_llm_client::{ClientProvider, ClientSpec, UnresolvedClientProperty};
 use serde::Serialize;
 
@@ -28,12 +27,20 @@ use crate::Configuration;
 pub struct IntermediateRepr {
     enums: Vec<Node<Enum>>,
     classes: Vec<Node<Class>>,
-    /// Strongly connected components of the dependency graph (finite cycles).
-    finite_recursive_cycles: Vec<IndexSet<String>>,
+    type_aliases: Vec<Node<TypeAlias>>,
     functions: Vec<Node<Function>>,
     clients: Vec<Node<Client>>,
     retry_policies: Vec<Node<RetryPolicy>>,
     template_strings: Vec<Node<TemplateString>>,
+
+    /// Strongly connected components of the dependency graph (finite cycles).
+    finite_recursive_cycles: Vec<IndexSet<String>>,
+
+    /// Type alias cycles introduced by lists and maps.
+    ///
+    /// These are the only allowed cycles, because lists and maps introduce a
+    /// level of indirection that makes the cycle finite.
+    structural_recursive_alias_cycles: Vec<IndexMap<String, FieldType>>,
 
     configuration: Configuration,
 }
@@ -52,7 +59,9 @@ impl IntermediateRepr {
         IntermediateRepr {
             enums: vec![],
             classes: vec![],
+            type_aliases: vec![],
             finite_recursive_cycles: vec![],
+            structural_recursive_alias_cycles: vec![],
             functions: vec![],
             clients: vec![],
             retry_policies: vec![],
@@ -98,12 +107,30 @@ impl IntermediateRepr {
         &self.finite_recursive_cycles
     }
 
+    pub fn structural_recursive_alias_cycles(&self) -> &[IndexMap<String, FieldType>] {
+        &self.structural_recursive_alias_cycles
+    }
+
     pub fn walk_enums(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<Enum>>> {
         self.enums.iter().map(|e| Walker { db: self, item: e })
     }
 
     pub fn walk_classes(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<Class>>> {
         self.classes.iter().map(|e| Walker { db: self, item: e })
+    }
+
+    pub fn walk_type_aliases(&self) -> impl ExactSizeIterator<Item = Walker<'_, &Node<TypeAlias>>> {
+        self.type_aliases
+            .iter()
+            .map(|e| Walker { db: self, item: e })
+    }
+
+    // TODO: Exact size Iterator + Node<>?
+    pub fn walk_alias_cycles(&self) -> impl Iterator<Item = Walker<'_, (&String, &FieldType)>> {
+        self.structural_recursive_alias_cycles
+            .iter()
+            .flatten()
+            .map(|e| Walker { db: self, item: e })
     }
 
     pub fn function_names(&self) -> impl ExactSizeIterator<Item = &str> {
@@ -159,6 +186,10 @@ impl IntermediateRepr {
                 .walk_classes()
                 .map(|e| e.node(db))
                 .collect::<Result<Vec<_>>>()?,
+            type_aliases: db
+                .walk_type_aliases()
+                .map(|e| e.node(db))
+                .collect::<Result<Vec<_>>>()?,
             finite_recursive_cycles: db
                 .finite_recursive_cycles()
                 .iter()
@@ -168,6 +199,18 @@ impl IntermediateRepr {
                         .collect()
                 })
                 .collect(),
+            structural_recursive_alias_cycles: {
+                let mut recursive_aliases = vec![];
+                for cycle in db.recursive_alias_cycles() {
+                    let mut component = IndexMap::new();
+                    for id in cycle {
+                        let alias = &db.ast()[*id];
+                        component.insert(alias.name().to_string(), alias.value.repr(db)?);
+                    }
+                    recursive_aliases.push(component);
+                }
+                recursive_aliases
+            },
             functions: db
                 .walk_functions()
                 .map(|e| e.node(db))
@@ -395,10 +438,9 @@ impl WithRepr<FieldType> for ast::FieldType {
             }
             ast::FieldType::Symbol(arity, idn, ..) => type_with_arity(
                 match db.find_type(idn) {
-                    Some(Either::Left(class_walker)) => {
+                    Some(TypeWalker::Class(class_walker)) => {
                         let base_class = FieldType::Class(class_walker.name().to_string());
-                        let maybe_constraints = class_walker.get_constraints(SubType::Class);
-                        match maybe_constraints {
+                        match class_walker.get_constraints(SubType::Class) {
                             Some(constraints) if !constraints.is_empty() => {
                                 FieldType::Constrained {
                                     base: Box::new(base_class),
@@ -408,10 +450,9 @@ impl WithRepr<FieldType> for ast::FieldType {
                             _ => base_class,
                         }
                     }
-                    Some(Either::Right(enum_walker)) => {
+                    Some(TypeWalker::Enum(enum_walker)) => {
                         let base_type = FieldType::Enum(enum_walker.name().to_string());
-                        let maybe_constraints = enum_walker.get_constraints(SubType::Enum);
-                        match maybe_constraints {
+                        match enum_walker.get_constraints(SubType::Enum) {
                             Some(constraints) if !constraints.is_empty() => {
                                 FieldType::Constrained {
                                     base: Box::new(base_type),
@@ -421,6 +462,14 @@ impl WithRepr<FieldType> for ast::FieldType {
                             _ => base_type,
                         }
                     }
+                    Some(TypeWalker::TypeAlias(alias_walker)) => {
+                        if db.is_recursive_type_alias(&alias_walker.id) {
+                            FieldType::RecursiveTypeAlias(alias_walker.name().to_string())
+                        } else {
+                            alias_walker.resolved().to_owned().repr(db)?
+                        }
+                    }
+
                     None => return Err(anyhow!("Field type uses unresolvable local identifier")),
                 },
                 arity,
@@ -700,6 +749,31 @@ impl Class {
         &self.inputs
     }
 }
+
+#[derive(Debug)]
+pub struct TypeAlias {
+    pub name: String,
+    pub r#type: Node<FieldType>,
+    pub docstring: Option<Docstring>,
+}
+
+impl WithRepr<TypeAlias> for TypeAliasWalker<'_> {
+    fn attributes(&self, _: &ParserDatabase) -> NodeAttributes {
+        NodeAttributes {
+            span: Some(self.span().clone()),
+            ..Default::default() // TODO: Rest of attributes.
+        }
+    }
+
+    fn repr(&self, db: &ParserDatabase) -> Result<TypeAlias> {
+        Ok(TypeAlias {
+            name: self.name().to_string(),
+            r#type: self.target().node(db)?,
+            docstring: None, // TODO: Type alias docstring
+        })
+    }
+}
+
 #[derive(serde::Serialize, Debug)]
 pub enum OracleType {
     LLM,
@@ -1109,7 +1183,7 @@ pub fn make_test_ir(source_code: &str) -> anyhow::Result<IntermediateRepr> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ir::ir_helpers::IRHelper;
+    use crate::ir::{ir_helpers::IRHelper, TypeValue};
 
     #[test]
     fn test_docstrings() {
@@ -1201,5 +1275,63 @@ mod tests {
         let function = ir.find_function("Foo").unwrap();
         let walker = ir.find_test(&function, "Foo").unwrap();
         assert_eq!(walker.item.1.elem.constraints.len(), 1);
+    }
+
+    #[test]
+    fn test_resolve_type_alias() {
+        let ir = make_test_ir(
+            r##"
+            type One = int 
+            type Two = One 
+            type Three = Two
+
+            class Test {
+                field Three
+            }
+        "##,
+        )
+        .unwrap();
+
+        let class = ir.find_class("Test").unwrap();
+        let alias = class.find_field("field").unwrap();
+
+        assert_eq!(*alias.r#type(), FieldType::Primitive(TypeValue::Int));
+    }
+
+    #[test]
+    fn test_merge_type_alias_attributes() {
+        let ir = make_test_ir(
+            r##"
+            type One = int @check(gt_ten, {{ this > 10 }})
+            type Two = One @check(lt_twenty, {{ this < 20 }})
+            type Three = Two @assert({{ this != 15 }})
+
+            class Test {
+                field Three
+            }
+        "##,
+        )
+        .unwrap();
+
+        let class = ir.find_class("Test").unwrap();
+        let alias = class.find_field("field").unwrap();
+
+        let FieldType::Constrained { base, constraints } = alias.r#type() else {
+            panic!(
+                "expected resolved constrained type, found {:?}",
+                alias.r#type()
+            );
+        };
+
+        assert_eq!(constraints.len(), 3);
+
+        assert_eq!(constraints[0].level, ConstraintLevel::Assert);
+        assert_eq!(constraints[0].label, None);
+
+        assert_eq!(constraints[1].level, ConstraintLevel::Check);
+        assert_eq!(constraints[1].label, Some("lt_twenty".to_string()));
+
+        assert_eq!(constraints[2].level, ConstraintLevel::Check);
+        assert_eq!(constraints[2].label, Some("gt_ten".to_string()));
     }
 }
