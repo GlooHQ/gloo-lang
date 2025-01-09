@@ -76,7 +76,7 @@ pub struct BamlRuntime {
     env_vars: HashMap<String, String>,
     #[cfg(not(target_arch = "wasm32"))]
     pub async_runtime: Arc<tokio::runtime::Runtime>,
-    pub trace_agent_tx: tokio::sync::mpsc::UnboundedSender<btrace::TraceEvent>,
+    pub trace_agent_tx: tokio::sync::mpsc::UnboundedSender<baml_types::tracing::TraceEvent>,
 }
 
 impl BamlRuntime {
