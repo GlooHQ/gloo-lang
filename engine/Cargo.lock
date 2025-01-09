@@ -1253,7 +1253,7 @@ dependencies = [
 
 [[package]]
 name = "btrace"
-version = "0.70.1"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "baml-types",
