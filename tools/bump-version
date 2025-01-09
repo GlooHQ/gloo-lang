@@ -224,7 +224,11 @@ while true; do
     fi
 done
 
+cp CHANGELOG.md ${_repo_root}/fern/pages/changelog.mdx
+sed -i '' '1s/.*/---\ntitle: Changelog\n---/' ./fern/pages/changelog.mdx
+
 git add CHANGELOG.md
+git add fern/pages/changelog.mdx
 git commit --amend --no-edit
 
 # Now run the build scripts for python and typescript integ tests
