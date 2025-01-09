@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { atom, useAtom, useAtomValue } from 'jotai'
-import { Braces, Bug, ChevronDown, FileJson, PlayCircle, Settings } from 'lucide-react'
+import { Braces, Bug, BugIcon, ChevronDown, FileJson, PlayCircle, Settings, Workflow } from 'lucide-react'
 import React from 'react'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { areTestsRunningAtom, selectedItemAtom, showEnvDialogAtom } from './atoms'
@@ -13,6 +13,8 @@ import { Dialog, DialogContent } from '@radix-ui/react-dialog'
 import EnvVars from './side-bar/env-vars'
 import { cn } from '@/lib/utils'
 import { areEnvVarsMissingAtom } from './atoms'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/components/ui/tooltip'
 export const renderModeAtom = atom<'prompt' | 'curl' | 'tokens'>('prompt')
 
 const RunButton: React.FC = () => {
@@ -37,6 +39,8 @@ const RunButton: React.FC = () => {
   )
 }
 
+export const isClientCallGraphEnabledAtom = atom(false)
+
 export default function Component() {
   const [renderMode, setRenderMode] = useAtom(renderModeAtom)
   const selections = useAtomValue(selectedItemAtom)
@@ -53,6 +57,7 @@ export default function Component() {
   ]
 
   const areEnvVarsMissing = useAtomValue(areEnvVarsMissingAtom)
+  const [isClientCallGraphEnabled, setIsClientCallGraphEnabled] = useAtom(isClientCallGraphEnabledAtom)
 
   const selectedOption = options.find((opt) => opt.value === renderMode)
 
@@ -106,6 +111,25 @@ export default function Component() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        <TooltipProvider>
+          <Tooltip delayDuration={100}>
+            <TooltipTrigger>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  isClientCallGraphEnabled ? 'text-purple-500 bg-muted hover:text-purple-500' : 'hover:text-purple-500',
+                )}
+                onClick={() => setIsClientCallGraphEnabled(!isClientCallGraphEnabled)}
+              >
+                <Workflow className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Show LLM Client Call Graph</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   )

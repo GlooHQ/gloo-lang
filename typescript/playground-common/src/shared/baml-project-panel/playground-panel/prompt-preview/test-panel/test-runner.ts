@@ -12,6 +12,7 @@ import {
   selectedFunctionAtom,
 } from '../../atoms'
 import { testHistoryAtom, selectedHistoryIndexAtom, type TestHistoryRun } from './atoms'
+import { isClientCallGraphEnabledAtom } from '../../preview-toolbar'
 
 export const useRunTests = (maxBatchSize = 5) => {
   const { rt } = useAtomValue(runtimeAtom)
@@ -19,6 +20,7 @@ export const useRunTests = (maxBatchSize = 5) => {
   const wasm = useAtomValue(wasmAtom)
   const setSelectedTestcase = useSetAtom(selectedTestcaseAtom)
   const setSelectedFunction = useSetAtom(selectedFunctionAtom)
+  const setIsClientCallGraphEnabled = useSetAtom(isClientCallGraphEnabledAtom)
   const runTests = useAtomCallback(
     useCallback(
       async (get, set, tests: { functionName: string; testName: string }[]) => {
@@ -33,6 +35,8 @@ export const useRunTests = (maxBatchSize = 5) => {
             input: get(testCaseAtom(test))?.tc.inputs, // Store input
           })),
         }
+
+        setIsClientCallGraphEnabled(false)
 
         set(testHistoryAtom, (prev) => [historyRun, ...prev])
         set(selectedHistoryIndexAtom, 0)

@@ -94,7 +94,7 @@ export default function CustomSidebar() {
       <div
         className={cn(
           'flex flex-col h-full border-l transition-all duration-200 border-border bg-background/50',
-          isOpen ? 'opacity-100 w-[160px] min-w-[160px]' : 'w-8 opacity-100 min-w-8',
+          isOpen ? 'opacity-100 w-[170px] min-w-[170px]' : 'w-8 opacity-100 min-w-8',
         )}
       >
         <ResizablePanelGroup direction="vertical">
@@ -107,10 +107,10 @@ export default function CustomSidebar() {
                     <div className="flex relative items-center">
                       <Search className="absolute left-2 top-1/2 w-3 h-3 text-gray-400 -translate-y-1/2" />
                       <Input
-                        placeholder="Filter Tests..."
+                        placeholder="Filter Tests"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="flex px-8 py-2 w-full h-9 text-xs rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="flex px-8 py-2 w-full h-9 text-xs rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring max-w-[140px]"
                       />
                     </div>
                   </div>
@@ -208,15 +208,16 @@ function FunctionItem({ label, tests, isLast = false, isSelected = false, search
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
+      className=""
     >
       <div
         className={cn(
-          'flex relative items-center px-1 py-1 -mx-2 transition-colors cursor-pointer hover:bg-muted',
+          'flex relative items-center px-1 py-1 -mx-2 transition-colors cursor-pointer group hover:bg-muted',
           isSelected ? 'font-bold text-purple-400' : 'text-muted-foreground',
         )}
         onClick={handleClick}
       >
-        <div className="flex flex-1 items-center min-w-0">
+        <div className="flex items-center min-w-0">
           <motion.div
             initial={false}
             animate={{ rotate: isOpen ? 90 : 0 }}
@@ -225,9 +226,11 @@ function FunctionItem({ label, tests, isLast = false, isSelected = false, search
           >
             <ChevronRight className="w-3 h-3" />
           </motion.div>
-          <span className="ml-1 font-mono text-xs truncate">{highlightText(label)}</span>
+          <span className="ml-1 font-mono text-[11px] py-1 group-hover:max-w-[112px] w-[120px] truncate">
+            {highlightText(label)}
+          </span>
         </div>
-        <Button variant="ghost" size="sm" className="p-0 w-6 h-6" onClick={handleRunAll}>
+        <Button variant="ghost" size="icon" className="hidden p-0 w-6 h-6 group-hover:flex" onClick={handleRunAll}>
           <Play className="w-3 h-3" />
         </Button>
       </div>
@@ -336,9 +339,11 @@ function TestItem({ label, isLast = false, isSelected = false, searchTerm = '', 
         )}
         onClick={handleClick}
       >
-        <div className="flex flex-1 items-center min-w-0">
+        <div className="flex items-center min-w-0">
           {getStatusIcon()}
-          <span className="ml-1 font-mono text-xs truncate">{highlightText(label)}</span>
+          <span className="ml-1 font-mono text-[11px] group-hover:truncate min-w-[90px] group-hover:max-w-[90px] max-w-[95px]">
+            {highlightText(label)}
+          </span>
         </div>
         <Button
           variant="ghost"
@@ -362,7 +367,7 @@ function TreeView({ functions, searchTerm }: TreeViewProps) {
   const selectedItem = useAtomValue(selectedItemAtom)
 
   return (
-    <div className="space-y-1 bg-background">
+    <div className="space-y-2 bg-background">
       {functions.map((func, index) => (
         <FunctionItem
           key={func.name}

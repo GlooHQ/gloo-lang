@@ -9,11 +9,17 @@ import { TabularView } from './components/TabularView'
 import { TestMenu } from './components/TestMenu'
 import { ClientGraphView } from './components/ClientGraphView'
 import { ErrorBoundary } from 'react-error-boundary'
+import { isClientCallGraphEnabledAtom } from '../../preview-toolbar'
 
 const TestPanel = () => {
   const [selectedHistoryIndex, setSelectedHistoryIndex] = useAtom(selectedHistoryIndexAtom)
   const testHistory = useAtomValue(testHistoryAtom)
   const viewType = useAtomValue(testPanelViewTypeAtom)
+  const isClientCallGraphEnabled = useAtomValue(isClientCallGraphEnabledAtom)
+
+  if (isClientCallGraphEnabled) {
+    return <ClientGraphView />
+  }
 
   // TODO: still render the client graph view even if no tests are running.
   if (testHistory.length === 0) {
@@ -40,7 +46,16 @@ const TestPanel = () => {
   return (
     <>
       <div className="px-1 pt-2">
-        <TestMenu />
+        <ErrorBoundary
+          fallback={<div>Error rendering</div>}
+          onReset={() => {
+            // Reset any state that may have caused the error
+            window.location.reload()
+          }}
+          resetKeys={[viewType, currentRun]}
+        >
+          <TestMenu />
+        </ErrorBoundary>
       </div>
 
       <ScrollArea className="relative flex-1 p-0" type="always">

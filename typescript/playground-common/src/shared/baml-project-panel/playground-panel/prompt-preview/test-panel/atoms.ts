@@ -1,5 +1,6 @@
 import { atom } from 'jotai'
 import { type TestState } from '../../atoms'
+import { atomWithStorage } from 'jotai/utils'
 
 export interface TestHistoryEntry {
   timestamp: number
@@ -14,5 +15,5 @@ export interface TestHistoryRun {
   tests: TestHistoryEntry[]
 }
 
-export const testHistoryAtom = atom<TestHistoryRun[]>([])
+export const testHistoryAtom = atomWithStorage<TestHistoryRun[]>('test-history', [])
 export const selectedHistoryIndexAtom = atom<number>(0)

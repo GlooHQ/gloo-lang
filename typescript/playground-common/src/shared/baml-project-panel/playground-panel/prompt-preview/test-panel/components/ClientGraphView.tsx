@@ -36,12 +36,15 @@ const ClientHeader: React.FC = () => {
   const clientsArray = useAtomValue(currentClientsAtom)
   const currentClient = clientsArray[orchIndex]
   return (
-    <div className="flex flex-col-reverse items-start gap-0.5">
-      <span className="pl-2 text-xs text-muted-foreground flex flex-row flex-wrap items-center gap-0.5">
-        {clientsArray.length > 1 && `Attempt ${orchIndex} in Client Graph`}
-      </span>
-      <div className="max-w-[300px] justify-start items-center flex hover:bg-vscode-button-hoverBackground h-fit rounded-md text-vscode-foreground cursor-pointer">
-        <span className="px-2 py-1 w-full text-left truncate">{currentClient}</span>
+    <div className="pt-4">
+      <div className="text-sm font-bold">LLM Client Call Graph</div>
+      <div className="flex flex-col-reverse items-start gap-0.5">
+        <span className="pl-2 text-xs text-muted-foreground flex flex-row flex-wrap items-center gap-0.5">
+          {clientsArray.length > 1 && `Attempt ${orchIndex} in Client Graph`}
+        </span>
+        <div className="max-w-[300px] justify-start items-center flex hover:bg-vscode-button-hoverBackground h-fit rounded-md text-vscode-foreground cursor-pointer">
+          <span className="px-2 py-1 w-full text-left truncate">{currentClient}</span>
+        </div>
       </div>
     </div>
   )
@@ -118,7 +121,7 @@ export const ClientGraphView: React.FC = () => {
   return (
     <div className="w-full h-full">
       <ClientHeader />
-      <div style={{ height: '100dvh', width: '100%' }} className="">
+      <div className="h-[400px] border-b-red-500 border-b-24 border">
         <ReactFlow
           style={styles}
           nodes={flowNodes}

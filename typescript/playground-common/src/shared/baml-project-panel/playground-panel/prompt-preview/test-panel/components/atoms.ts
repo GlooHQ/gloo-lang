@@ -1,4 +1,5 @@
 import { atom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
 
 export enum TestPanelViewType {
   TABULAR = 'tabular',
@@ -15,8 +16,8 @@ export interface TabularViewConfig {
   responseViewType: ResponseViewType
 }
 
-export const testPanelViewTypeAtom = atom<TestPanelViewType>(TestPanelViewType.CARD_EXPANDED)
-export const tabularViewConfigAtom = atom<TabularViewConfig>({
+export const testPanelViewTypeAtom = atomWithStorage<TestPanelViewType>('testPanelViewType', TestPanelViewType.TABULAR)
+export const tabularViewConfigAtom = atomWithStorage<TabularViewConfig>('tabularViewConfig', {
   showInputs: true,
   showModel: false,
   responseViewType: 'parsed',

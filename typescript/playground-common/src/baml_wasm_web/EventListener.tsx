@@ -15,6 +15,7 @@ import {
   updateCursorAtom,
 } from '@/shared/baml-project-panel/playground-panel/atoms'
 import { useRunTests } from '@/shared/baml-project-panel/playground-panel/prompt-preview/test-panel/test-runner'
+import { orchIndexAtom } from '@/shared/baml-project-panel/playground-panel/atoms-orch-graph'
 
 export const hasClosedEnvVarsDialogAtom = atomWithStorage<boolean>(
   'has-closed-env-vars-dialog',
@@ -382,21 +383,12 @@ export const hasClosedIntroToChecksDialogAtom = atomWithStorage<boolean>(
 
 // We don't use ASTContext.provider because we should the default value of the context
 export const EventListener: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // const updateFile = useSetAtom(updateFileAtom)
   const updateCursor = useSetAtom(updateCursorAtom)
   const setFiles = useSetAtom(filesAtom)
-  // const removeProject = useSetAtom(removeProjectAtom)
-  // const availableProjects = useAtomValue(availableProjectsAtom)
-  // const [selectedProject, setSelectedProject] = useAtom(selectedProjectAtom)
-  // const version = useAtomValue(versionAtom)
-  // const wasm = useAtomValue(wasmAtom)
   const [selectedFunc, setSelectedFunction] = useAtom(selectedFunctionAtom)
   const setSelectedTestcase = useSetAtom(selectedTestcaseAtom)
-  // const envVars = useAtomValue(envVarsAtom)
   const [bamlCliVersion, setBamlCliVersion] = useAtom(bamlCliVersionAtom)
   const { setRunningTests } = useRunTests()
-  // const setShowTests = useSetAtom(showTestsAtom)
-  // const setClientGraph = useSetAtom(showClientGraphAtom)
   const wasm = useAtomValue(wasmAtom)
   useEffect(() => {
     if (wasm) {
@@ -408,40 +400,15 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
   }, [wasm])
-  // useEffect(() => {
-  //   if (wasm) {
-  //     console.log('wasm ready!')
-  //     postMessageToExtension({ command: 'get_port' })
-  //     postMessageToExtension({ command: 'add_project' })
-  //   }
-  // }, [wasm])
 
-  // const createRuntimeCb = useAtomCallback(
-  //   useCallback(
-  //     (get, set, wasm: typeof import('@gloo-ai/baml-schema-wasm-web'), envVars: Record<string, string>) => {
-  //       const selectedProject = get(selectedProjectAtom)
-  //       if (!selectedProject) {
-  //         return
-  //       }
+  const setOrchestratorIndex = useSetAtom(orchIndexAtom)
 
-  //       const project_files = get(projectFilesAtom(selectedProject))
-  //       const { project, runtime, diagnostics } = createRuntime(wasm, envVars, selectedProject, project_files)
-  //       set(projectFamilyAtom(selectedProject), project)
-  //       set(runtimeFamilyAtom(selectedProject), {
-  //         last_successful_runtime: undefined,
-  //         current_runtime: runtime,
-  //         diagnostics,
-  //       })
-  //     },
-  //     [wasm, envVars, selectedProject, projectFilesAtom, selectedProjectAtom, projectFamilyAtom, runtimeFamilyAtom],
-  //   ),
-  // )
-
-  // useEffect(() => {
-  //   if (wasm) {
-  //     createRuntimeCb(wasm, envVars)
-  //   }
-  // }, [wasm, envVars])
+  useEffect(() => {
+    if (selectedFunc) {
+      // todo: maybe we use a derived atom to reset it. But for now this useeffect works.
+      setOrchestratorIndex(0)
+    }
+  }, [selectedFunc])
 
   useEffect(() => {
     const fn = (
@@ -545,8 +512,8 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <>
-      <div className='flex absolute right-2 bottom-2 z-50 flex-row gap-2 text-xs bg-transparent'>
-        <div className='pr-4 whitespace-nowrap'>{bamlCliVersion && 'baml-cli ' + bamlCliVersion}</div>
+      <div className="flex absolute right-2 bottom-2 z-50 flex-row gap-2 text-xs bg-transparent">
+        <div className="pr-4 whitespace-nowrap">{bamlCliVersion && 'baml-cli ' + bamlCliVersion}</div>
         {<span>VSCode Runtime Version: {bamlCliVersion}</span>}
       </div>
       {/* {selectedProject === null ? (
@@ -569,7 +536,7 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
           </div>
         )
       ) : ( */}
-      <CustomErrorBoundary message='Error loading project'>{children}</CustomErrorBoundary>
+      <CustomErrorBoundary message="Error loading project">{children}</CustomErrorBoundary>
       {/* )} */}
     </>
   )
