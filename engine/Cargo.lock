@@ -1062,6 +1062,8 @@ dependencies = [
  "serde",
  "serde_json",
  "strum",
+ "tracing-core",
+ "web-time",
 ]
 
 [[package]]
@@ -1233,14 +1235,18 @@ name = "btrace"
 version = "0.70.1"
 dependencies = [
  "anyhow",
+ "baml-types",
  "base64 0.22.1",
  "bytes",
  "futures-timer",
  "hostname",
  "js-sys",
+ "log",
  "reqwest",
+ "serde",
  "serde_json",
  "tokio",
+ "tokio-stream",
  "tracing-core",
  "uuid",
  "wasm-bindgen",

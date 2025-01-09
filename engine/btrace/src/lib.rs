@@ -1,3 +1,6 @@
+use baml_types::tracing::{
+    SpanId, TraceEvent, TraceLog, TraceMetadata, TraceSpanEnd, TraceSpanStart, TraceTags,
+};
 #[cfg(not(target_arch = "wasm32"))]
 mod tracer_thread;
 
@@ -5,7 +8,11 @@ mod tracer_thread;
 pub use tracer_thread::TracerThread;
 pub use tracing_core::Level;
 
-type TraceTags = serde_json::Map<String, serde_json::Value>;
+#[derive(Clone, Debug)]
+pub enum InstrumentationScope {
+    Root,
+    Child { parent_span_id: SpanId },
+}
 
 #[derive(Clone)]
 pub struct TraceContext {
@@ -18,7 +25,7 @@ pub struct TraceContext {
 
 impl TraceContext {
     fn child_ctx(&self) -> (Self, SpanId) {
-        let new_uuid = uuid::Uuid::now_v7();
+        let new_uuid = uuid::Uuid::now_v7().to_string();
         let span_id = match &self.scope {
             InstrumentationScope::Root => SpanId(vec![new_uuid]),
             InstrumentationScope::Child { parent_span_id } => {
@@ -52,84 +59,28 @@ thread_local! {
     tags: serde_json::Map::new(),
   };
 }
-
-#[derive(Clone, Debug)]
-pub struct SpanId(Vec<uuid::Uuid>);
-
-impl Default for SpanId {
-    fn default() -> Self {
-        Self(vec![uuid::Uuid::now_v7()])
-    }
-}
-
-#[derive(Clone, Debug)]
-pub enum InstrumentationScope {
-    Root,
-    Child { parent_span_id: SpanId },
-}
-
-pub enum TraceEvent {
-    SpanStart(TraceSpanStart),
-    SpanEnd(TraceSpanEnd),
-    Log(TraceLog),
-}
-
-#[derive(Clone, Debug)]
-pub struct TraceMetadata {
-    /// human-readable callsite identifier, e.g. "ExtractResume" or "openai/gpt-4o/chat"
-    callsite: String,
-    /// verbosity level
-    verbosity: tracing_core::Level,
-}
-
 // -------------------------------------------------------------------------------------------------
 
-pub struct TraceSpanStart {
-    span_id: SpanId,
-    meta: TraceMetadata,
-    start_time: web_time::Instant,
-    fields: serde_json::Map<String, serde_json::Value>,
-}
-
-#[derive(Debug)]
-pub struct TraceSpanEnd {
-    span_id: SpanId,
-    meta: TraceMetadata,
-    start_time: web_time::Instant,
-    duration: web_time::Duration,
-    fields: serde_json::Map<String, serde_json::Value>,
-}
-
-pub struct TraceLog {
-    span_id: SpanId,
-    meta: TraceMetadata,
-    start_time: web_time::Instant,
-    msg: String,
-    tags: serde_json::Map<String, serde_json::Value>,
-}
-
-// -------------------------------------------------------------------------------------------------
-
-impl TraceSpanStart {
-    pub fn new(
-        verbosity: tracing_core::Level,
-        callsite: String,
-        fields: serde_json::Value,
-    ) -> Self {
-        Self {
-            span_id: Default::default(),
-            start_time: web_time::Instant::now(),
-            meta: TraceMetadata {
-                callsite,
-                verbosity,
-            },
-            fields: match fields {
-                serde_json::Value::Object(o) => o,
-                _ => serde_json::Map::new(),
-            },
-        }
-    }
-}
+// impl TraceSpanStart {
+//     pub fn new(
+//         verbosity: tracing_core::Level,
+//         callsite: String,
+//         fields: serde_json::Value,
+//     ) -> Self {
+//         Self {
+//             span_id: SpanId(vec![format!("span_{}", uuid::Uuid::now_v7())]),
+//             start_time: web_time::Instant::now(),
+//             meta: TraceMetadata {
+//                 callsite,
+//                 verbosity,
+//             },
+//             fields: match fields {
+//                 serde_json::Value::Object(o) => o,
+//                 _ => serde_json::Map::new(),
+//             },
+//         }
+//     }
+// }
 
 pub fn log(
     verbosity: tracing_core::Level,
