@@ -275,9 +275,9 @@ export const CodeMirrorViewer = ({
   }
 
   return (
-    <div className="w-full h-fit">
+    <div className='w-full h-fit'>
       <div
-        className="pb-8 w-full h-full"
+        className='pb-8 w-full h-full'
         onKeyDown={(e) => {
           if ((e.metaKey || e.ctrlKey) && e.key === 's') {
             e.preventDefault()
@@ -308,9 +308,9 @@ export const CodeMirrorViewer = ({
           readOnly={false}
           extensions={[...extensions, ...inlineCopilotExtension]}
           theme={editorTheme}
-          className="text-xs border-none"
-          height="100%"
-          width="100%"
+          className='text-xs border-none'
+          height='100%'
+          width='100%'
           style={{ width: '100%', height: '100%' }}
         />
         {/* {modified && (

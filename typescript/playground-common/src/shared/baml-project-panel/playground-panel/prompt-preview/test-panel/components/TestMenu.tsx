@@ -78,18 +78,18 @@ export const TestMenu = () => {
   const currentRun = testHistory[selectedHistoryIndex]
   if (!currentRun)
     return (
-      <div className="flex justify-between items-center pr-2 mb-3">
+      <div className='flex justify-between items-center pr-2 mb-3'>
         <ViewSelector />
       </div>
     )
 
   return (
-    <div className="flex justify-between items-center pt-1 pr-2 mb-3">
-      <div className="flex items-center space-x-4">
-        <div className="flex overflow-x-auto">
-          <div className="flex gap-1 items-center">
-            <div className="flex gap-1 items-center pr-3">
-              <History className="w-4 h-4 opacity-50" />
+    <div className='flex justify-between items-center pt-1 pr-2 mb-3'>
+      <div className='flex items-center space-x-4'>
+        <div className='flex overflow-x-auto'>
+          <div className='flex gap-1 items-center'>
+            <div className='flex gap-1 items-center pr-3'>
+              <History className='w-4 h-4 opacity-50' />
             </div>
             {testHistory.slice(-7).map((run, index) => (
               <button
@@ -106,14 +106,14 @@ export const TestMenu = () => {
           </div>
         </div>
       </div>
-      <div className="flex gap-2 items-center">
+      <div className='flex gap-2 items-center'>
         <TooltipProvider>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
-                size="icon"
-                className="w-6 h-6"
+                variant='ghost'
+                size='icon'
+                className='w-6 h-6'
                 onClick={() => {
                   const allTests = currentRun.tests.map((test) => ({
                     functionName: test.functionName,
@@ -122,7 +122,7 @@ export const TestMenu = () => {
                   setRunningTests(allTests)
                 }}
               >
-                <Play className="w-4 h-4" fill="#a855f7" stroke="#a855f7" />
+                <Play className='w-4 h-4' fill='#a855f7' stroke='#a855f7' />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -135,9 +135,9 @@ export const TestMenu = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
-                size="icon"
-                className="w-6 h-6"
+                variant='ghost'
+                size='icon'
+                className='w-6 h-6'
                 onClick={() => {
                   const failedTests = currentRun.tests
                     .filter((test) => {
@@ -156,7 +156,7 @@ export const TestMenu = () => {
                   }
                 }}
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className='w-4 h-4' />
               </Button>
             </TooltipTrigger>
             <TooltipContent>

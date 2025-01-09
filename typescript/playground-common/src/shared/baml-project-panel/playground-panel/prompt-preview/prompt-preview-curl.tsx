@@ -49,7 +49,7 @@ export const PromptPreviewCurl = () => {
   }
   return (
     <WithCopyButton text={value}>
-      <pre className="w-[100%] whitespace-pre-wrap break-all rounded-lg border bg-muted p-4 font-mono text-xs">
+      <pre className='w-[100%] whitespace-pre-wrap break-all rounded-lg border bg-muted p-4 font-mono text-xs'>
         {value}
       </pre>
     </WithCopyButton>

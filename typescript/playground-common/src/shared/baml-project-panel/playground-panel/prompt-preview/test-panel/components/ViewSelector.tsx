@@ -8,8 +8,8 @@ export const ViewSelector = () => {
 
   return (
     <Select value={viewType} onValueChange={(value) => setViewType(value as TestPanelViewType)}>
-      <SelectTrigger className="h-8 w-[120px]">
-        <SelectValue placeholder="Select view" />
+      <SelectTrigger className='h-8 w-[120px]'>
+        <SelectValue placeholder='Select view' />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={TestPanelViewType.TABULAR}>Table View</SelectItem>

@@ -246,7 +246,7 @@ const activateClient = (
 
     client.onRequest('runtime_updated', (params: { root_path: string; files: Record<string, string> }) => {
       // Only send message if current file is part of this root path
-      const activeEditor = vscode.window.activeTextEditor;
+      const activeEditor = vscode.window.activeTextEditor
       if (activeEditor) {
         const currentFilePath = URI.parse(activeEditor.document.uri.toString()).fsPath
         const rootPathUri = URI.file(params.root_path).fsPath
@@ -254,12 +254,12 @@ const activateClient = (
           WebPanelView.currentPanel?.postMessage('add_project', {
             ...params,
             root_path: URI.file(params.root_path).toString(),
-          });
+          })
         } else {
-          console.log("root path doesnt match current file", currentFilePath, rootPathUri)
+          console.log('root path doesnt match current file', currentFilePath, rootPathUri)
         }
       } else {
-        console.log("no active editor")
+        console.log('no active editor')
       }
     })
 

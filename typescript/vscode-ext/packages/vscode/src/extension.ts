@@ -193,7 +193,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   app.use(
     createProxyMiddleware({
-      
       changeOrigin: true,
       pathRewrite: (path, req) => {
         console.log('reqmethod', req.method)
@@ -257,8 +256,8 @@ export function activate(context: vscode.ExtensionContext) {
         },
         error: (error, req, res) => {
           console.error('proxy error:', error)
-          
-          res.end(JSON.stringify({ error: error }));
+
+          res.end(JSON.stringify({ error: error }))
         },
       },
     }),
@@ -343,7 +342,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const editor = vscode.window.activeTextEditor
     // makes it so we reload the project. Could probably be called reloadProjectFiles or something. This is because we may be clicking into a different file in a separate baml_src.
-    requestDiagnostics();
+    requestDiagnostics()
     if (editor) {
       const name = editor.document.fileName
       const text = editor.document.getText()

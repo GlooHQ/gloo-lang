@@ -178,8 +178,6 @@ export class WebPanelView {
     `
   }
 
-  
-
   /**
    * Sets up an event listener to listen for messages passed from the webview context and
    * executes code based on the message that is recieved.

@@ -23,9 +23,9 @@ const RunButton: React.FC = () => {
   const selected = useAtomValue(selectedItemAtom)
   return (
     <Button
-      variant="default"
-      size="sm"
-      className="items-center px-2 space-x-2 h-7 text-sm text-white bg-purple-500 hover:bg-purple-700 disabled:bg-muted disabled:text-muted-foreground dark:bg-purple-700 dark:text-foreground dark:hover:bg-purple-800"
+      variant='default'
+      size='sm'
+      className='items-center px-2 space-x-2 h-7 text-sm text-white bg-purple-500 hover:bg-purple-700 disabled:bg-muted disabled:text-muted-foreground dark:bg-purple-700 dark:text-foreground dark:hover:bg-purple-800'
       disabled={isRunning || selected === undefined}
       onClick={() => {
         if (selected) {
@@ -33,8 +33,8 @@ const RunButton: React.FC = () => {
         }
       }}
     >
-      <PlayCircle className="mr-0 w-4 h-4" />
-      <div className="text-xs">Run {selected ? selected[1] : ''}</div>
+      <PlayCircle className='mr-0 w-4 h-4' />
+      <div className='text-xs'>Run {selected ? selected[1] : ''}</div>
     </Button>
   )
 }
@@ -64,48 +64,48 @@ export default function Component() {
   const SelectedIcon = selectedOption?.icon || FileJson
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className='flex flex-col gap-1'>
       <div
         className={cn('flex flex-row gap-1 items-center', selections === undefined ? 'justify-end' : 'justify-start')}
       >
         {selections !== undefined && <FunctionTestName functionName={selections[0]} testName={selections[1]} />}
         <Button
-          variant="ghost"
-          size="sm"
-          className="flex gap-2 items-center text-muted-foreground/70"
+          variant='ghost'
+          size='sm'
+          className='flex gap-2 items-center text-muted-foreground/70'
           onClick={() => setShowEnvDialog(true)}
         >
-          <div className="relative">
-            <Settings className="w-4 h-4 text-muted-foreground" />
-            {areEnvVarsMissing && <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full" />}
+          <div className='relative'>
+            <Settings className='w-4 h-4 text-muted-foreground' />
+            {areEnvVarsMissing && <div className='absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full' />}
           </div>
           <span>API Keys</span>
         </Button>
         <ThemeToggle />
       </div>
 
-      <div className="flex items-center space-x-4 w-full">
+      <div className='flex items-center space-x-4 w-full'>
         <RunButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant="outline"
-              size="sm"
-              className="h-8 border-border bg-background hover:bg-accent hover:text-accent-foreground"
+              variant='outline'
+              size='sm'
+              className='h-8 border-border bg-background hover:bg-accent hover:text-accent-foreground'
             >
-              <SelectedIcon className="mr-2 w-4 h-4" />
+              <SelectedIcon className='mr-2 w-4 h-4' />
               {selectedOption?.label}
-              <ChevronDown className="ml-2 w-4 h-4 opacity-50" />
+              <ChevronDown className='ml-2 w-4 h-4 opacity-50' />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="border-border bg-background">
+          <DropdownMenuContent align='start' className='border-border bg-background'>
             {options.map((option) => (
               <DropdownMenuItem
                 key={option.label}
                 onSelect={() => setRenderMode(option.value)}
-                className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                className='hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground'
               >
-                <option.icon className="mr-2 w-4 h-4" />
+                <option.icon className='mr-2 w-4 h-4' />
                 {option.label}
               </DropdownMenuItem>
             ))}
@@ -115,14 +115,14 @@ export default function Component() {
           <Tooltip delayDuration={100}>
             <TooltipTrigger>
               <Button
-                variant="ghost"
-                size="sm"
+                variant='ghost'
+                size='sm'
                 className={cn(
                   isClientCallGraphEnabled ? 'text-purple-500 bg-muted hover:text-purple-500' : 'hover:text-purple-500',
                 )}
                 onClick={() => setIsClientCallGraphEnabled(!isClientCallGraphEnabled)}
               >
-                <Workflow className="w-4 h-4" />
+                <Workflow className='w-4 h-4' />
               </Button>
             </TooltipTrigger>
             <TooltipContent>

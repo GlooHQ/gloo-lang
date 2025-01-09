@@ -23,7 +23,7 @@ const TestPanel = () => {
 
   // TODO: still render the client graph view even if no tests are running.
   if (testHistory.length === 0) {
-    return <div className="p-4 text-muted-foreground">No tests running</div>
+    return <div className='p-4 text-muted-foreground'>No tests running</div>
   }
 
   const currentRun = testHistory[selectedHistoryIndex]
@@ -45,7 +45,7 @@ const TestPanel = () => {
 
   return (
     <>
-      <div className="px-1 pt-2">
+      <div className='px-1 pt-2'>
         <ErrorBoundary
           fallback={<div>Error rendering</div>}
           onReset={() => {
@@ -58,9 +58,9 @@ const TestPanel = () => {
         </ErrorBoundary>
       </div>
 
-      <ScrollArea className="relative flex-1 p-0" type="always">
+      <ScrollArea className='relative flex-1 p-0' type='always'>
         {currentRun && (
-          <div className="mb-1 text-xs text-muted-foreground/50">{new Date(currentRun.timestamp).toLocaleString()}</div>
+          <div className='mb-1 text-xs text-muted-foreground/50'>{new Date(currentRun.timestamp).toLocaleString()}</div>
         )}
         <ErrorBoundary
           fallback={<div>Error rendering view</div>}

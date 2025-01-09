@@ -16,8 +16,8 @@ export const TestStatus = ({ status, finalState }: TestStatusProps) => {
       return finalState === 'passed'
         ? 'text-green-500'
         : finalState === 'constraints_failed'
-        ? 'text-yellow-600'
-        : 'text-red-500'
+          ? 'text-yellow-600'
+          : 'text-red-500'
     }
     if (status === 'error') return 'text-red-500'
     return 'text-gray-500'
@@ -47,10 +47,10 @@ export const TestStatus = ({ status, finalState }: TestStatusProps) => {
   const getStatusIcon = () => {
     if (status === 'running') return <Loader />
     if (status === 'done') {
-      if (finalState === 'passed') return <CheckCircle className="w-4 h-4" />
-      if (finalState) return <XCircle className="w-4 h-4" />
+      if (finalState === 'passed') return <CheckCircle className='w-4 h-4' />
+      if (finalState) return <XCircle className='w-4 h-4' />
     }
-    if (status === 'error') return <AlertCircle className="w-4 h-4" />
+    if (status === 'error') return <AlertCircle className='w-4 h-4' />
     return null
   }
 
@@ -59,7 +59,7 @@ export const TestStatus = ({ status, finalState }: TestStatusProps) => {
   return (
     <div className={`flex items-center gap-1.5 ${color}`}>
       {getStatusIcon()}
-      <span className="text-xs md:whitespace-nowrap">{getStatusText()}</span>
+      <span className='text-xs md:whitespace-nowrap'>{getStatusText()}</span>
     </div>
   )
 }

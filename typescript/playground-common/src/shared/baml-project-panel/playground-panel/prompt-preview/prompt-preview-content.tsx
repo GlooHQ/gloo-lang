@@ -34,7 +34,7 @@ export const PromptPreviewContent = () => {
   )
 
   if (isLoading) {
-    return <Loader message="Refreshing..." />
+    return <Loader message='Refreshing...' />
   }
 
   if (error) {
@@ -43,10 +43,10 @@ export const PromptPreviewContent = () => {
 
   if (diagnostics.length > 0 && diagnostics.some((d) => d.type === 'error')) {
     return (
-      <div className="p-3">
-        <div className="mb-2 text-sm font-medium text-red-500">Syntax Error</div>
-        <pre className="px-2 py-1 font-mono text-sm text-red-500 whitespace-pre-wrap rounded-lg">
-          <div className="space-y-2">
+      <div className='p-3'>
+        <div className='mb-2 text-sm font-medium text-red-500'>Syntax Error</div>
+        <pre className='px-2 py-1 font-mono text-sm text-red-500 whitespace-pre-wrap rounded-lg'>
+          <div className='space-y-2'>
             <div>{diagnostics.filter((d) => d.type === 'error').length} error(s):</div>
             {diagnostics
               .filter((d) => d.type === 'error')
@@ -77,18 +77,18 @@ export const NoTestsContent = () => {
   }, [testSnippet])
 
   return (
-    <div className="flex flex-col justify-center items-center">
-      <div className="mb-4 text-sm font-medium text-muted-foreground">Add a test to see the preview!</div>
-      <div className="relative w-full max-w-2xl rounded-lg border border-border bg-muted">
-        <div className="absolute top-2 right-2">
+    <div className='flex flex-col justify-center items-center'>
+      <div className='mb-4 text-sm font-medium text-muted-foreground'>Add a test to see the preview!</div>
+      <div className='relative w-full max-w-2xl rounded-lg border border-border bg-muted'>
+        <div className='absolute top-2 right-2'>
           <button
             onClick={handleCopy}
-            className="px-2 py-1 text-xs font-medium rounded shadow-sm bg-background text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className='px-2 py-1 text-xs font-medium rounded shadow-sm bg-background text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
           >
             {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
-        <pre className="overflow-x-auto p-4 font-mono text-sm text-balance text-foreground">{testSnippet}</pre>
+        <pre className='overflow-x-auto p-4 font-mono text-sm text-balance text-foreground'>{testSnippet}</pre>
       </div>
     </div>
   )

@@ -11,7 +11,7 @@ export const ParsedResponseRenderer: React.FC<{
   response?: WasmFunctionResponse | WasmTestResponse
 }> = ({ response }) => {
   if (!response || !response.parsed_response()) {
-    return <div className="text-xs text-muted-foreground">Waiting for response...</div>
+    return <div className='text-xs text-muted-foreground'>Waiting for response...</div>
   }
 
   const parsedResponse = response.parsed_response()
@@ -40,10 +40,10 @@ const ParsedResponseRender = ({ response }: { response: string }) => {
   }
 
   return (
-    <div className="flex max-h-[500px]  text-xs">
-      <ScrollArea className="pr-2 w-full text-xs" type="always">
+    <div className='flex max-h-[500px]  text-xs'>
+      <ScrollArea className='pr-2 w-full text-xs' type='always'>
         <JsonView
-          className="p-1 w-full rounded-md"
+          className='p-1 w-full rounded-md'
           value={parsedResponseObj}
           collapsed={false}
           enableClipboard={true}
@@ -60,8 +60,8 @@ const ParsedResponseRender = ({ response }: { response: string }) => {
               }
               if (type === 'value') {
                 return (
-                  <span {...reset} className="whitespace-pre-wrap break-all">
-                    &quot;{children}&quot;<span className="text-muted-foreground">, </span>
+                  <span {...reset} className='whitespace-pre-wrap break-all'>
+                    &quot;{children}&quot;<span className='text-muted-foreground'>, </span>
                   </span>
                 )
               }
@@ -78,14 +78,14 @@ const ParsedResponseRender = ({ response }: { response: string }) => {
 
           <JsonView.Null
             render={({ children, ...reset }) => (
-              <span {...reset} className="whitespace-pre-wrap break-words">
+              <span {...reset} className='whitespace-pre-wrap break-words'>
                 null
               </span>
             )}
           />
           <JsonView.Undefined
             render={({ children, ...reset }) => (
-              <span {...reset} className="whitespace-pre-wrap break-words">
+              <span {...reset} className='whitespace-pre-wrap break-words'>
                 undefined
               </span>
             )}
@@ -93,9 +93,9 @@ const ParsedResponseRender = ({ response }: { response: string }) => {
           <JsonView.KeyName
             render={({ ...props }, { parentValue, value, keyName }) => {
               if (Array.isArray(parentValue) && Number.isFinite(props.children)) {
-                return <span className="" />
+                return <span className='' />
               }
-              return <span className="" {...props} />
+              return <span className='' {...props} />
             }}
           />
         </JsonView>

@@ -1,4 +1,4 @@
-import { URI } from "vscode-uri"
+import { URI } from 'vscode-uri'
 import * as vscode from 'vscode'
 
 export const getCurrentOpenedFile = () => {
