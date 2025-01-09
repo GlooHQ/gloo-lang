@@ -52,3 +52,8 @@ export interface {{cls.name}} {
   {%- endif %}
 }
 {% endfor %}
+
+{#- Type Aliases -#}
+{% for alias in structural_recursive_alias_cycles %}
+type {{alias.name}} = {{alias.target}}
+{% endfor %}

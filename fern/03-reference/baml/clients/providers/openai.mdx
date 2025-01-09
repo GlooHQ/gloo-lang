@@ -42,14 +42,6 @@ The options are passed through directly to the API, barring a few. Here's a shor
   **Default: `https://api.openai.com/v1`**
 </ParamField>
 
-<ParamField path="default_role" type="string">
-  The default role for any prompts that don't specify a role.
-  
-  We don't do any validation of this field, so you can pass any string you wish.
-  
-  **Default: `system`**
-</ParamField>
-
 <ParamField path="headers" type="object">
   Additional headers to send with the request.
 
@@ -76,6 +68,7 @@ client<llm> MyClient {
 
 <Markdown src="/snippets/supports-streaming-openai.mdx" />
 
+<Markdown src="/snippets/finish-reason.mdx" />
 
 ## Forwarded options
 

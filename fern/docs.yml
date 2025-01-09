@@ -318,6 +318,8 @@ navigation:
             path: 03-reference/baml-cli/serve.mdx
           - page: dev
             path: 03-reference/baml-cli/dev.mdx
+          - page: fmt
+            path: 03-reference/baml-cli/fmt.mdx
       - section: Language Reference
         slug: baml
         contents:
@@ -444,6 +446,8 @@ navigation:
             path: 03-reference/vscode-ext/generateCodeOnSave.mdx
           - page: baml.restartTSServerOnSave
             path: 03-reference/vscode-ext/restartTSServerOnSave.mdx
+          - page: baml.enablePlaygroundProxy
+            path: 03-reference/vscode-ext/enablePlaygroundProxy.mdx
       - section: Boundary Extraction API
         contents:
           - api: API Reference

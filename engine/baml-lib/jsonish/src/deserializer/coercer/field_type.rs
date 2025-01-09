@@ -9,9 +9,13 @@ use crate::deserializer::{
 };
 
 use super::{
-    array_helper, coerce_array::coerce_array, coerce_map::coerce_map,
-    coerce_optional::coerce_optional, coerce_union::coerce_union, ir_ref::IrRef, ParsingContext,
-    ParsingError,
+    array_helper,
+    coerce_array::coerce_array,
+    coerce_map::coerce_map,
+    coerce_optional::coerce_optional,
+    coerce_union::coerce_union,
+    ir_ref::{coerce_alias::coerce_alias, IrRef},
+    ParsingContext, ParsingError,
 };
 
 impl TypeCoercer for FieldType {
@@ -79,6 +83,7 @@ impl TypeCoercer for FieldType {
                 FieldType::Enum(e) => IrRef::Enum(e).coerce(ctx, target, value),
                 FieldType::Literal(l) => l.coerce(ctx, target, value),
                 FieldType::Class(c) => IrRef::Class(c).coerce(ctx, target, value),
+                FieldType::RecursiveTypeAlias(name) => coerce_alias(ctx, self, value),
                 FieldType::List(_) => coerce_array(ctx, self, value),
                 FieldType::Union(_) => coerce_union(ctx, self, value),
                 FieldType::Optional(_) => coerce_optional(ctx, self, value),
@@ -88,7 +93,7 @@ impl TypeCoercer for FieldType {
                     let mut coerced_value = base.coerce(ctx, base, value)?;
                     let constraint_results = run_user_checks(&coerced_value.clone().into(), self)
                         .map_err(|e| ParsingError {
-                        reason: format!("Failed to evaluate constraints: {:?}", e),
+                        reason: format!("Failed to evaluate constraints: {e:?}"),
                         scope: ctx.scope.clone(),
                         causes: Vec::new(),
                     })?;
@@ -164,6 +169,7 @@ impl DefaultValue for FieldType {
             FieldType::Enum(e) => None,
             FieldType::Literal(_) => None,
             FieldType::Class(_) => None,
+            FieldType::RecursiveTypeAlias(_) => None,
             FieldType::List(_) => Some(BamlValueWithFlags::List(get_flags(), Vec::new())),
             FieldType::Union(items) => items.iter().find_map(|i| i.default_value(error)),
             FieldType::Primitive(TypeValue::Null) | FieldType::Optional(_) => {

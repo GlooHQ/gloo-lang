@@ -28,6 +28,7 @@ module Baml
     class BookOrder < T::Struct; end
     class ClassOptionalOutput < T::Struct; end
     class ClassOptionalOutput2 < T::Struct; end
+    class ClassToRecAlias < T::Struct; end
     class ClassWithImage < T::Struct; end
     class CompoundBigNumbers < T::Struct; end
     class ContactInfo < T::Struct; end
@@ -46,24 +47,31 @@ module Baml
     class FlightConfirmation < T::Struct; end
     class FooAny < T::Struct; end
     class Forest < T::Struct; end
+    class FormatterTest0 < T::Struct; end
+    class FormatterTest1 < T::Struct; end
+    class FormatterTest2 < T::Struct; end
+    class FormatterTest3 < T::Struct; end
     class GroceryReceipt < T::Struct; end
     class InnerClass < T::Struct; end
     class InnerClass2 < T::Struct; end
     class InputClass < T::Struct; end
     class InputClassNested < T::Struct; end
     class LinkedList < T::Struct; end
+    class LinkedListAliasNode < T::Struct; end
     class LiteralClassHello < T::Struct; end
     class LiteralClassOne < T::Struct; end
     class LiteralClassTwo < T::Struct; end
     class MalformedConstraints < T::Struct; end
     class MalformedConstraints2 < T::Struct; end
     class Martian < T::Struct; end
+    class MergeAttrs < T::Struct; end
     class NamedArgsSingleClass < T::Struct; end
     class Nested < T::Struct; end
     class Nested2 < T::Struct; end
     class NestedBlockConstraint < T::Struct; end
     class NestedBlockConstraintForParam < T::Struct; end
     class Node < T::Struct; end
+    class NodeWithAliasIndirection < T::Struct; end
     class OptionalListAndMap < T::Struct; end
     class OptionalTest_Prop1 < T::Struct; end
     class OptionalTest_ReturnType < T::Struct; end
@@ -203,6 +211,18 @@ module Baml
           prop1: props[:prop1],
           prop2: props[:prop2],
           prop3: props[:prop3],
+        )
+
+        @props = props
+      end
+    end
+    class ClassToRecAlias < T::Struct
+      include Baml::Sorbet::Struct
+      const :list, Baml::PartialTypes::LinkedListAliasNode
+
+      def initialize(props)
+        super(
+          list: props[:list],
         )
 
         @props = props
@@ -470,6 +490,62 @@ module Baml
         @props = props
       end
     end
+    class FormatterTest0 < T::Struct
+      include Baml::Sorbet::Struct
+      const :lorem, T.nilable(String)
+      const :ipsum, T.nilable(String)
+
+      def initialize(props)
+        super(
+          lorem: props[:lorem],
+          ipsum: props[:ipsum],
+        )
+
+        @props = props
+      end
+    end
+    class FormatterTest1 < T::Struct
+      include Baml::Sorbet::Struct
+      const :lorem, T.nilable(String)
+      const :ipsum, T.nilable(String)
+
+      def initialize(props)
+        super(
+          lorem: props[:lorem],
+          ipsum: props[:ipsum],
+        )
+
+        @props = props
+      end
+    end
+    class FormatterTest2 < T::Struct
+      include Baml::Sorbet::Struct
+      const :lorem, T.nilable(String)
+      const :ipsum, T.nilable(String)
+
+      def initialize(props)
+        super(
+          lorem: props[:lorem],
+          ipsum: props[:ipsum],
+        )
+
+        @props = props
+      end
+    end
+    class FormatterTest3 < T::Struct
+      include Baml::Sorbet::Struct
+      const :lorem, T.nilable(String)
+      const :ipsum, T.nilable(String)
+
+      def initialize(props)
+        super(
+          lorem: props[:lorem],
+          ipsum: props[:ipsum],
+        )
+
+        @props = props
+      end
+    end
     class GroceryReceipt < T::Struct
       include Baml::Sorbet::Struct
       const :receiptId, T.nilable(String)
@@ -560,6 +636,20 @@ module Baml
         @props = props
       end
     end
+    class LinkedListAliasNode < T::Struct
+      include Baml::Sorbet::Struct
+      const :value, T.nilable(Integer)
+      const :next, Baml::PartialTypes::LinkedListAliasNode
+
+      def initialize(props)
+        super(
+          value: props[:value],
+          next: props[:next],
+        )
+
+        @props = props
+      end
+    end
     class LiteralClassHello < T::Struct
       include Baml::Sorbet::Struct
       const :prop, T.nilable(String)
@@ -631,6 +721,18 @@ module Baml
       def initialize(props)
         super(
           age: props[:age],
+        )
+
+        @props = props
+      end
+    end
+    class MergeAttrs < T::Struct
+      include Baml::Sorbet::Struct
+      const :amount, Baml::Checked[T.nilable(Integer)]
+
+      def initialize(props)
+        super(
+          amount: props[:amount],
         )
 
         @props = props
@@ -714,6 +816,20 @@ module Baml
       def initialize(props)
         super(
           data: props[:data],
+          next: props[:next],
+        )
+
+        @props = props
+      end
+    end
+    class NodeWithAliasIndirection < T::Struct
+      include Baml::Sorbet::Struct
+      const :value, T.nilable(Integer)
+      const :next, Baml::PartialTypes::NodeWithAliasIndirection
+
+      def initialize(props)
+        super(
+          value: props[:value],
           next: props[:next],
         )
 

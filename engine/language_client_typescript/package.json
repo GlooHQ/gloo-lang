@@ -1,10 +1,10 @@
 {
   "name": "@boundaryml/baml",
-  "version": "0.70.5",
+  "version": "0.72.0",
   "description": "BAML typescript bindings (package.json)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/BoundaryML/baml.git",
+    "url": "git+https://github.com/BoundaryML/baml.git",
     "directory": "engine/language_client_typescript"
   },
   "license": "MIT",

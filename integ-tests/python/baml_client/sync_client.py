@@ -70,6 +70,52 @@ class BamlSyncClient:
       )
       return cast(types.Recipe, raw.cast_to(types, types))
     
+    def AliasThatPointsToRecursiveType(
+        self,
+        list: types.LinkedListAliasNode,
+        baml_options: BamlCallOptions = {},
+    ) -> types.LinkedListAliasNode:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "AliasThatPointsToRecursiveType",
+        {
+          "list": list,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.LinkedListAliasNode, raw.cast_to(types, types))
+    
+    def AliasWithMultipleAttrs(
+        self,
+        money: Checked[int,types.Literal["gt_ten"]],
+        baml_options: BamlCallOptions = {},
+    ) -> Checked[int,types.Literal["gt_ten"]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "AliasWithMultipleAttrs",
+        {
+          "money": money,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Checked[int,types.Literal["gt_ten"]], raw.cast_to(types, types))
+    
     def AliasedInputClass(
         self,
         input: types.InputClass,
@@ -276,6 +322,29 @@ class BamlSyncClient:
         __cr__,
       )
       return cast(types.Tree, raw.cast_to(types, types))
+    
+    def ClassThatPointsToRecursiveClassThroughAlias(
+        self,
+        cls: types.ClassToRecAlias,
+        baml_options: BamlCallOptions = {},
+    ) -> types.ClassToRecAlias:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "ClassThatPointsToRecursiveClassThroughAlias",
+        {
+          "cls": cls,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.ClassToRecAlias, raw.cast_to(types, types))
     
     def ClassifyDynEnumTwo(
         self,
@@ -1404,6 +1473,29 @@ class BamlSyncClient:
       )
       return cast(Dict[Literal["key"], str], raw.cast_to(types, types))
     
+    def JsonTypeAliasCycle(
+        self,
+        input: types.JsonValue,
+        baml_options: BamlCallOptions = {},
+    ) -> types.JsonValue:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "JsonTypeAliasCycle",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.JsonValue, raw.cast_to(types, types))
+    
     def LiteralUnionsTest(
         self,
         input: str,
@@ -1473,6 +1565,52 @@ class BamlSyncClient:
       )
       return cast(types.NestedBlockConstraint, raw.cast_to(types, types))
     
+    def MapAlias(
+        self,
+        m: Dict[str, List[str]],
+        baml_options: BamlCallOptions = {},
+    ) -> Dict[str, List[str]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "MapAlias",
+        {
+          "m": m,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Dict[str, List[str]], raw.cast_to(types, types))
+    
+    def MergeAliasAttributes(
+        self,
+        money: int,
+        baml_options: BamlCallOptions = {},
+    ) -> types.MergeAttrs:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "MergeAliasAttributes",
+        {
+          "money": money,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.MergeAttrs, raw.cast_to(types, types))
+    
     def MyFunc(
         self,
         input: str,
@@ -1495,6 +1633,29 @@ class BamlSyncClient:
         __cr__,
       )
       return cast(types.DynamicOutput, raw.cast_to(types, types))
+    
+    def NestedAlias(
+        self,
+        c: Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]],
+        baml_options: BamlCallOptions = {},
+    ) -> Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "NestedAlias",
+        {
+          "c": c,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]], raw.cast_to(types, types))
     
     def OptionalTest_Function(
         self,
@@ -1564,6 +1725,29 @@ class BamlSyncClient:
         __cr__,
       )
       return cast(Checked[int,types.Literal["too_big"]], raw.cast_to(types, types))
+    
+    def PrimitiveAlias(
+        self,
+        p: Union[int, str, bool, float],
+        baml_options: BamlCallOptions = {},
+    ) -> Union[int, str, bool, float]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "PrimitiveAlias",
+        {
+          "p": p,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Union[int, str, bool, float], raw.cast_to(types, types))
     
     def PromptTestClaude(
         self,
@@ -1726,6 +1910,75 @@ class BamlSyncClient:
       )
       return cast(str, raw.cast_to(types, types))
     
+    def RecursiveAliasCycle(
+        self,
+        input: types.RecAliasOne,
+        baml_options: BamlCallOptions = {},
+    ) -> types.RecAliasOne:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "RecursiveAliasCycle",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.RecAliasOne, raw.cast_to(types, types))
+    
+    def RecursiveClassWithAliasIndirection(
+        self,
+        cls: types.NodeWithAliasIndirection,
+        baml_options: BamlCallOptions = {},
+    ) -> types.NodeWithAliasIndirection:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "RecursiveClassWithAliasIndirection",
+        {
+          "cls": cls,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.NodeWithAliasIndirection, raw.cast_to(types, types))
+    
+    def ReturnAliasWithMergedAttributes(
+        self,
+        money: Checked[int,types.Literal["gt_ten"]],
+        baml_options: BamlCallOptions = {},
+    ) -> Checked[int,types.Literal["gt_ten"]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "ReturnAliasWithMergedAttributes",
+        {
+          "money": money,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Checked[int,types.Literal["gt_ten"]], raw.cast_to(types, types))
+    
     def ReturnFailingAssert(
         self,
         inp: int,
@@ -1794,6 +2047,52 @@ class BamlSyncClient:
         __cr__,
       )
       return cast(types.Schema, raw.cast_to(types, types))
+    
+    def SimpleRecursiveListAlias(
+        self,
+        input: types.RecursiveListAlias,
+        baml_options: BamlCallOptions = {},
+    ) -> types.RecursiveListAlias:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "SimpleRecursiveListAlias",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.RecursiveListAlias, raw.cast_to(types, types))
+    
+    def SimpleRecursiveMapAlias(
+        self,
+        input: types.RecursiveMapAlias,
+        baml_options: BamlCallOptions = {},
+    ) -> types.RecursiveMapAlias:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "SimpleRecursiveMapAlias",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.RecursiveMapAlias, raw.cast_to(types, types))
     
     def StreamBigNumbers(
         self,
@@ -1979,6 +2278,52 @@ class BamlSyncClient:
       )
       return cast(str, raw.cast_to(types, types))
     
+    def TestAwsInvalidAccessKey(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "TestAwsInvalidAccessKey",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types))
+    
+    def TestAwsInvalidProfile(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "TestAwsInvalidProfile",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types))
+    
     def TestAwsInvalidRegion(
         self,
         input: str,
@@ -1993,6 +2338,29 @@ class BamlSyncClient:
 
       raw = self.__runtime.call_function_sync(
         "TestAwsInvalidRegion",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types))
+    
+    def TestAwsInvalidSessionToken(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "TestAwsInvalidSessionToken",
         {
           "input": input,
         },
@@ -2849,6 +3217,66 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def AliasThatPointsToRecursiveType(
+        self,
+        list: types.LinkedListAliasNode,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.LinkedListAliasNode, types.LinkedListAliasNode]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "AliasThatPointsToRecursiveType",
+        {
+          "list": list,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[partial_types.LinkedListAliasNode, types.LinkedListAliasNode](
+        raw,
+        lambda x: cast(partial_types.LinkedListAliasNode, x.cast_to(types, partial_types)),
+        lambda x: cast(types.LinkedListAliasNode, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def AliasWithMultipleAttrs(
+        self,
+        money: Checked[int,types.Literal["gt_ten"]],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Checked[Optional[int],types.Literal["gt_ten"]], Checked[int,types.Literal["gt_ten"]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "AliasWithMultipleAttrs",
+        {
+          "money": money,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Checked[Optional[int],types.Literal["gt_ten"]], Checked[int,types.Literal["gt_ten"]]](
+        raw,
+        lambda x: cast(Checked[Optional[int],types.Literal["gt_ten"]], x.cast_to(types, partial_types)),
+        lambda x: cast(Checked[int,types.Literal["gt_ten"]], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def AliasedInputClass(
         self,
         input: types.InputClass,
@@ -3116,6 +3544,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.Tree, x.cast_to(types, partial_types)),
         lambda x: cast(types.Tree, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def ClassThatPointsToRecursiveClassThroughAlias(
+        self,
+        cls: types.ClassToRecAlias,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.ClassToRecAlias, types.ClassToRecAlias]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "ClassThatPointsToRecursiveClassThroughAlias",
+        {
+          "cls": cls,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[partial_types.ClassToRecAlias, types.ClassToRecAlias](
+        raw,
+        lambda x: cast(partial_types.ClassToRecAlias, x.cast_to(types, partial_types)),
+        lambda x: cast(types.ClassToRecAlias, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -4596,6 +5054,36 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def JsonTypeAliasCycle(
+        self,
+        input: types.JsonValue,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[types.JsonValue, types.JsonValue]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "JsonTypeAliasCycle",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[types.JsonValue, types.JsonValue](
+        raw,
+        lambda x: cast(types.JsonValue, x.cast_to(types, partial_types)),
+        lambda x: cast(types.JsonValue, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def LiteralUnionsTest(
         self,
         input: str,
@@ -4684,6 +5172,66 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def MapAlias(
+        self,
+        m: Dict[str, List[str]],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Dict[str, List[Optional[str]]], Dict[str, List[str]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "MapAlias",
+        {
+          "m": m,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Dict[str, List[Optional[str]]], Dict[str, List[str]]](
+        raw,
+        lambda x: cast(Dict[str, List[Optional[str]]], x.cast_to(types, partial_types)),
+        lambda x: cast(Dict[str, List[str]], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def MergeAliasAttributes(
+        self,
+        money: int,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.MergeAttrs, types.MergeAttrs]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "MergeAliasAttributes",
+        {
+          "money": money,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[partial_types.MergeAttrs, types.MergeAttrs](
+        raw,
+        lambda x: cast(partial_types.MergeAttrs, x.cast_to(types, partial_types)),
+        lambda x: cast(types.MergeAttrs, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def MyFunc(
         self,
         input: str,
@@ -4711,6 +5259,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.DynamicOutput, x.cast_to(types, partial_types)),
         lambda x: cast(types.DynamicOutput, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def NestedAlias(
+        self,
+        c: Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Optional[Union[Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], List[Optional[str]], Dict[str, List[Optional[str]]]]], Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "NestedAlias",
+        {
+          "c": c,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Optional[Union[Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], List[Optional[str]], Dict[str, List[Optional[str]]]]], Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]]](
+        raw,
+        lambda x: cast(Optional[Union[Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], List[Optional[str]], Dict[str, List[Optional[str]]]]], x.cast_to(types, partial_types)),
+        lambda x: cast(Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -4801,6 +5379,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(Checked[Optional[int],types.Literal["too_big"]], x.cast_to(types, partial_types)),
         lambda x: cast(Checked[int,types.Literal["too_big"]], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def PrimitiveAlias(
+        self,
+        p: Union[int, str, bool, float],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], Union[int, str, bool, float]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "PrimitiveAlias",
+        {
+          "p": p,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], Union[int, str, bool, float]](
+        raw,
+        lambda x: cast(Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], x.cast_to(types, partial_types)),
+        lambda x: cast(Union[int, str, bool, float], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -5014,6 +5622,96 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def RecursiveAliasCycle(
+        self,
+        input: types.RecAliasOne,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[types.RecAliasOne, types.RecAliasOne]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "RecursiveAliasCycle",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[types.RecAliasOne, types.RecAliasOne](
+        raw,
+        lambda x: cast(types.RecAliasOne, x.cast_to(types, partial_types)),
+        lambda x: cast(types.RecAliasOne, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def RecursiveClassWithAliasIndirection(
+        self,
+        cls: types.NodeWithAliasIndirection,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.NodeWithAliasIndirection, types.NodeWithAliasIndirection]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "RecursiveClassWithAliasIndirection",
+        {
+          "cls": cls,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[partial_types.NodeWithAliasIndirection, types.NodeWithAliasIndirection](
+        raw,
+        lambda x: cast(partial_types.NodeWithAliasIndirection, x.cast_to(types, partial_types)),
+        lambda x: cast(types.NodeWithAliasIndirection, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def ReturnAliasWithMergedAttributes(
+        self,
+        money: Checked[int,types.Literal["gt_ten"]],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Checked[Optional[int],types.Literal["gt_ten"]], Checked[int,types.Literal["gt_ten"]]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "ReturnAliasWithMergedAttributes",
+        {
+          "money": money,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Checked[Optional[int],types.Literal["gt_ten"]], Checked[int,types.Literal["gt_ten"]]](
+        raw,
+        lambda x: cast(Checked[Optional[int],types.Literal["gt_ten"]], x.cast_to(types, partial_types)),
+        lambda x: cast(Checked[int,types.Literal["gt_ten"]], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def ReturnFailingAssert(
         self,
         inp: int,
@@ -5101,6 +5799,66 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.Schema, x.cast_to(types, partial_types)),
         lambda x: cast(types.Schema, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def SimpleRecursiveListAlias(
+        self,
+        input: types.RecursiveListAlias,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[types.RecursiveListAlias, types.RecursiveListAlias]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "SimpleRecursiveListAlias",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[types.RecursiveListAlias, types.RecursiveListAlias](
+        raw,
+        lambda x: cast(types.RecursiveListAlias, x.cast_to(types, partial_types)),
+        lambda x: cast(types.RecursiveListAlias, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def SimpleRecursiveMapAlias(
+        self,
+        input: types.RecursiveMapAlias,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[types.RecursiveMapAlias, types.RecursiveMapAlias]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "SimpleRecursiveMapAlias",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[types.RecursiveMapAlias, types.RecursiveMapAlias](
+        raw,
+        lambda x: cast(types.RecursiveMapAlias, x.cast_to(types, partial_types)),
+        lambda x: cast(types.RecursiveMapAlias, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -5346,6 +6104,66 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def TestAwsInvalidAccessKey(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "TestAwsInvalidAccessKey",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
+        lambda x: cast(str, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestAwsInvalidProfile(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "TestAwsInvalidProfile",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
+        lambda x: cast(str, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
     def TestAwsInvalidRegion(
         self,
         input: str,
@@ -5360,6 +6178,36 @@ class BamlStreamClient:
 
       raw = self.__runtime.stream_function_sync(
         "TestAwsInvalidRegion",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
+        lambda x: cast(str, x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestAwsInvalidSessionToken(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "TestAwsInvalidSessionToken",
         {
           "input": input,
         },

@@ -16,7 +16,7 @@ test_deserializer_with_expected_score!(
     CLASS_FOO_INT_STRING,
     r#"{"age": 11, "name": "Greg"}"#,
     FieldType::Class("Foo".to_string()),
-    0
+    1
 );
 
 test_deserializer_with_expected_score!(
@@ -24,7 +24,7 @@ test_deserializer_with_expected_score!(
     CLASS_FOO_INT_STRING,
     r#"{"age": 21, "name": "Grog"}"#,
     FieldType::Class("Foo".to_string()),
-    0
+    1
 );
 
 test_failing_deserializer!(
@@ -61,7 +61,7 @@ test_deserializer_with_expected_score!(
     UNION_WITH_CHECKS,
     r#"{"bar": 5, "things":[]}"#,
     FieldType::Class("Either".to_string()),
-    2
+    3
 );
 
 test_deserializer_with_expected_score!(
@@ -69,7 +69,7 @@ test_deserializer_with_expected_score!(
     UNION_WITH_CHECKS,
     r#"{"bar": 15, "things":[]}"#,
     FieldType::Class("Either".to_string()),
-    2
+    3
 );
 
 test_failing_deserializer!(
@@ -90,7 +90,7 @@ test_deserializer_with_expected_score!(
     MAP_WITH_CHECKS,
     r#"{"foo": {"hello": 10, "there":13}}"#,
     FieldType::Class("Foo".to_string()),
-    1
+    2
 );
 
 test_deserializer_with_expected_score!(
@@ -98,7 +98,7 @@ test_deserializer_with_expected_score!(
     MAP_WITH_CHECKS,
     r#"{"foo": {"hello": 11, "there":13}}"#,
     FieldType::Class("Foo".to_string()),
-    1
+    2
 );
 
 const NESTED_CLASS_CONSTRAINTS: &str = r#"
@@ -116,7 +116,7 @@ test_deserializer_with_expected_score!(
     NESTED_CLASS_CONSTRAINTS,
     r#"{"inner": {"value": 15}}"#,
     FieldType::Class("Outer".to_string()),
-    0
+    1
 );
 
 const BLOCK_LEVEL: &str = r#"

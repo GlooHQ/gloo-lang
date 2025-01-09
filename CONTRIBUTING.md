@@ -86,46 +86,180 @@ Issues labeled `good first issue` are a good place to start.
 
 ## Running Integration Tests
 
-1. Setup your environment variables in an `.env` file with:
+The integration tests verify BAML's functionality across multiple programming languages. Each language has its own test suite in the `integ-tests/` directory.
 
-- `OPENAI_API_KEY=”your key”` (you mainly just need this one).
+### Prerequisites for All Tests
 
-2. Ensure the environment variables are into the test process. You can use [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) to do this.
+- [Rust toolchain](https://rustup.rs/) (for building native clients)
+- [BAML CLI](https://github.com/boundaryml/baml#installation)
 
+#### Environment Variables
+You can set up environment variables in two ways:
 
-### Python Integration Tests
+1. **Using .env file (Recommended for external contributors)**:
+   - Create a `.env` file in the `integ-tests` directory
+   - Required variables:
+     ```bash
+     OPENAI_API_KEY=your_key_here
+     # Add other provider keys as needed:
+     # ANTHROPIC_API_KEY=your_key_here
+     # AWS_ACCESS_KEY_ID=your_key_here
+     # etc.
+     ```
 
-1. Install poetry [https://python-poetry.org/docs/](https://python-poetry.org/docs/)
-
-2. Navigate to the Python integration tests: `cd integ-tests/python/`
-
-3. Run the following commands:
-   - `poetry shell`
-   - `poetry lock && poetry install`
-   - `env -u CONDA_PREFIX poetry run maturin develop --manifest-path ../../engine/language_client_python/Cargo.toml`
-   - `poetry run baml-cli generate --from ../baml_src`
-   - `poetry run python -m pytest -s`
-   - To run a specific test: `poetry run python -m pytest -s -k "my_test_name"`
-
+2. **Using Infisical (BAML internal use only)**:
+   - Install [Infisical CLI](https://infisical.com/docs/cli/overview)
+   - Use the `infisical run` commands shown in examples below
+   - External contributors should replace `infisical run --env=test --` with `dotenv -e ../.env --` in all commands
 
 ### TypeScript Integration Tests
 
-   1. Install pnpm: [https://pnpm.io/installation](https://pnpm.io/installation)
+1. Install prerequisites:
+   - [Node.js](https://nodejs.org/) (Latest LTS recommended)
+   - [pnpm](https://pnpm.io/installation) package manager
 
-   2. Navigate to the Language Client TypeScript directory and install dependencies:
-      - `cd engine/language_client_typescript/`
-      - `pnpm i`
+2. Build the TypeScript runtime:
+```bash
+cd engine/language_client_typescript
+pnpm build:debug
+```
 
-   3. Navigate to the TypeScript integration tests:
-      - `cd integ-tests/typescript/`
-   
-   4. Run the following commands:
+3. Set up and run tests:
+```bash
+cd integ-tests/typescript
+pnpm install
+pnpm generate
+dotenv -e ../.env -- pnpm integ-tests  # or use infisical for internal BAML devs
+```
 
-      - `pnpm i` (install dependencies)
-      - `pnpm build:debug` (builds your new compiler changes)
-      - `pnpm generate` (generates `baml_client` for your tests with any new changes)
-      - `pnpm integ-tests` or `pnpm integ-tests -t "my test name"`
+### Python Integration Tests
 
+1. Install prerequisites:
+   - [Python](https://www.python.org/downloads/) 3.8 or higher
+   - [Poetry](https://python-poetry.org/docs/#installation) package manager
+
+2. Set up the environment:
+```bash
+cd integ-tests/python
+poetry install
+```
+
+3. Build and install the Python client:
+```bash
+# Note: env -u CONDA_PREFIX is needed if using Conda
+env -u CONDA_PREFIX poetry run maturin develop --manifest-path ../../engine/language_client_python/Cargo.toml
+```
+
+4. Generate client code and run tests:
+```bash
+poetry run baml-cli generate --from ../baml_src
+dotenv -e ../.env -- poetry run pytest  # or use infisical for internal BAML devs
+```
+
+### Ruby Integration Tests
+
+1. Install prerequisites:
+   - [mise](https://mise.jdx.dev/getting-started.html) for Ruby version management:
+     ```bash
+     brew install mise  # on macOS
+     # or
+     curl https://mise.run | sh  # other platforms
+     ```
+   - Rust toolchain (installed above)
+
+2. Set up mise and build the Ruby client:
+```bash
+cd integ-tests/ruby
+mise install  # This will install Ruby version from .mise.toml
+(cd ../../engine/language_client_ruby && mise exec -- rake compile)
+```
+
+3. Install dependencies and generate client:
+```bash
+mise exec -- bundle install
+mise exec -- baml-cli generate --from ../baml_src
+```
+
+4. Run tests:
+```bash
+dotenv -e ../.env -- mise exec -- rake test  # or use infisical for internal BAML devs
+```
+
+### Adding New Tests
+
+1. Define your BAML files in `integ-tests/baml_src/`:
+   - Add clients in `clients.baml`
+   - Add functions and tests in `test-files/providers/`
+   - See [BAML Source README](integ-tests/baml_src/README.md) for details
+
+2. Generate client code for each language:
+```bash
+# TypeScript
+cd integ-tests/typescript && pnpm generate
+
+# Python
+cd integ-tests/python && poetry run baml-cli generate --from ../baml_src
+
+# Ruby
+cd integ-tests/ruby && mise exec -- baml-cli generate --from ../baml_src
+```
+
+3. Create language-specific test files:
+   - Follow the patterns in existing test files
+   - Use language-appropriate testing frameworks (Jest, pytest, Minitest)
+   - Include both success and error cases
+   - Test edge cases and timeouts
+
+4. Run the tests in each language to ensure cross-language compatibility
+
+### Debugging Tests
+
+Each language has its own debugging setup in VS Code:
+
+1. **TypeScript**:
+   - Install Jest Runner extension
+   - Use launch configuration from TypeScript README
+   - Set `BAML_LOG=trace` for detailed logs
+
+2. **Python**:
+   - Install Python Test Explorer
+   - Use launch configuration from Python README
+   - Use `-s` flag to show print statements
+
+3. **Ruby**:
+   - Install Ruby Test Explorer
+   - Use launch configuration from Ruby README
+   - Use verbose mode for detailed output
+
+### Common Issues and Solutions
+
+1. **Environment Setup**:
+   - For external contributors:
+     - Create a `.env` file with required API keys
+     - Use `dotenv` commands instead of Infisical
+   - For BAML internal developers:
+     - Ensure Infisical is configured correctly
+     - Use `infisical run` commands
+
+2. **Client Generation**:
+   - Ensure BAML CLI is up to date: `baml update-client`
+   - Check BAML source files for errors
+   - Regenerate client code after changes
+
+3. **Build Issues**:
+   - Clean and rebuild language clients
+   - Check language-specific toolchain versions
+   - Verify all dependencies are installed
+
+4. **Environment Variables**:
+   - Set up Infisical correctly
+   - Verify API keys are present
+   - Check `.env` file if not using Infisical
+
+5. **Test Timeouts**:
+   - Adjust timeout settings in test configurations
+   - Consider rate limiting for API calls
+   - Use appropriate test annotations/decorators
 
 ### OpenAPI Server Testss
 

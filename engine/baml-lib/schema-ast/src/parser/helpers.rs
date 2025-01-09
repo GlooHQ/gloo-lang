@@ -9,7 +9,8 @@ pub fn parsing_catch_all(token: Pair<'_>, kind: &str) {
         | Rule::trailing_comment
         | Rule::comment_block
         | Rule::block_comment
-        | Rule::SPACER_TEXT => {}
+        | Rule::SPACER_TEXT
+        | Rule::NEWLINE => {}
         x => unreachable!(
             "Encountered impossible {} during parsing: {:?} {:?}",
             kind,

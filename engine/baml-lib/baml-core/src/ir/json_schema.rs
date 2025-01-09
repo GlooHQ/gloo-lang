@@ -159,6 +159,9 @@ impl WithJsonSchema for FieldType {
             FieldType::Literal(v) => json!({
                 "const": v.to_string(),
             }),
+            FieldType::RecursiveTypeAlias(_) => json!({
+                "type": ["number", "string", "boolean", "object", "array", "null"]
+            }),
             FieldType::Primitive(t) => match t {
                 TypeValue::String => json!({
                     "type": "string",

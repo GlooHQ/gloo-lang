@@ -16,7 +16,7 @@
 import baml_py
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
-from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union
+from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union, TypeAlias
 
 
 T = TypeVar('T')
@@ -189,6 +189,9 @@ class ClassOptionalOutput2(BaseModel):
     prop2: Optional[str] = None
     prop3: Optional["Blah"] = None
 
+class ClassToRecAlias(BaseModel):
+    list: "LinkedListAliasNode"
+
 class ClassWithImage(BaseModel):
     myImage: baml_py.Image
     param2: str
@@ -271,6 +274,22 @@ class FooAny(BaseModel):
 class Forest(BaseModel):
     trees: List["Tree"]
 
+class FormatterTest0(BaseModel):
+    lorem: str
+    ipsum: str
+
+class FormatterTest1(BaseModel):
+    lorem: str
+    ipsum: str
+
+class FormatterTest2(BaseModel):
+    lorem: str
+    ipsum: str
+
+class FormatterTest3(BaseModel):
+    lorem: str
+    ipsum: str
+
 class GroceryReceipt(BaseModel):
     receiptId: str
     storeName: str
@@ -298,6 +317,10 @@ class LinkedList(BaseModel):
     head: Optional["Node"] = None
     len: int
 
+class LinkedListAliasNode(BaseModel):
+    value: int
+    next: Optional["LinkedListAliasNode"] = None
+
 class LiteralClassHello(BaseModel):
     prop: Literal["hello"]
 
@@ -319,6 +342,9 @@ class Martian(BaseModel):
     age: Checked[int,Literal["young_enough"]]
     """The age of the Martian in Mars years.
     So many Mars years."""
+
+class MergeAttrs(BaseModel):
+    amount: Checked[int,Literal["gt_ten"]]
 
 class NamedArgsSingleClass(BaseModel):
     key: str
@@ -343,6 +369,10 @@ class NestedBlockConstraintForParam(BaseModel):
 class Node(BaseModel):
     data: int
     next: Optional["Node"] = None
+
+class NodeWithAliasIndirection(BaseModel):
+    value: int
+    next: Optional["NodeWithAliasIndirection"] = None
 
 class OptionalListAndMap(BaseModel):
     p: Optional[List[str]] = None
@@ -468,3 +498,19 @@ class UnionTest_ReturnType(BaseModel):
 class WithReasoning(BaseModel):
     value: str
     reasoning: str
+
+RecursiveMapAlias: TypeAlias = Dict[str, "RecursiveMapAlias"]
+
+RecursiveListAlias: TypeAlias = List["RecursiveListAlias"]
+
+RecAliasOne: TypeAlias = "RecAliasTwo"
+
+RecAliasTwo: TypeAlias = "RecAliasThree"
+
+RecAliasThree: TypeAlias = List["RecAliasOne"]
+
+JsonValue: TypeAlias = Union[int, str, bool, float, "JsonObject", "JsonArray"]
+
+JsonObject: TypeAlias = Dict[str, "JsonValue"]
+
+JsonArray: TypeAlias = List["JsonValue"]

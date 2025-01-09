@@ -1,6 +1,9 @@
 use std::collections::HashSet;
 
-use crate::{AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection};
+use crate::{
+    AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes,
+    UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection,
+};
 use anyhow::Result;
 
 use baml_types::{GetEnvVar, StringOr, UnresolvedValue};
@@ -64,7 +67,12 @@ pub struct ResolvedOpenAI {
 
 impl ResolvedOpenAI {
     fn is_o1_model(&self) -> bool {
-        self.properties.get("model").is_some_and(|model| model.as_str().map(|s| s.starts_with("o1-")).unwrap_or(false))
+        self.properties.get("model").is_some_and(|model| {
+            model
+                .as_str()
+                .map(|s| s.starts_with("o1-") || s.eq("o1"))
+                .unwrap_or(false)
+        })
     }
 
     pub fn supports_streaming(&self) -> bool {
@@ -79,7 +87,11 @@ impl ResolvedOpenAI {
             if self.is_o1_model() {
                 vec!["user".to_string(), "assistant".to_string()]
             } else {
-                vec!["system".to_string(), "user".to_string(), "assistant".to_string()]
+                vec![
+                    "system".to_string(),
+                    "user".to_string(),
+                    "assistant".to_string(),
+                ]
             }
         })
     }
@@ -89,7 +101,6 @@ impl ResolvedOpenAI {
             // TODO: guard against empty allowed_roles
             // The compiler should already guarantee that this is non-empty
             self.allowed_roles().remove(0)
-        
         })
     }
 }
@@ -277,7 +288,10 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
 
         let mut instance = Self::create_common(properties, base_url, None)?;
         instance.query_params = query_params;
-        instance.headers.entry("api-key".to_string()).or_insert(api_key);
+        instance
+            .headers
+            .entry("api-key".to_string())
+            .or_insert(api_key);
 
         Ok(instance)
     }
@@ -300,7 +314,8 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
 
         let api_key = properties.ensure_api_key();
 
-        let mut instance = Self::create_common(properties, Some(either::Either::Left(base_url)), api_key)?;
+        let mut instance =
+            Self::create_common(properties, Some(either::Either::Left(base_url)), api_key)?;
         // Ollama uses smaller models many of which prefer the user role
         if instance.role_selection.default.is_none() {
             instance.role_selection.default = Some(StringOr::Value("user".to_string()));

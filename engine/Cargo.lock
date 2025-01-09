@@ -803,7 +803,7 @@ dependencies = [
 
 [[package]]
 name = "baml-cli"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "ambassador",
  "anyhow",
@@ -891,7 +891,7 @@ dependencies = [
 
 [[package]]
 name = "baml-lib"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "base64 0.13.1",
  "dissimilar",
@@ -934,7 +934,7 @@ dependencies = [
 
 [[package]]
 name = "baml-runtime"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "ambassador",
  "anyhow",
@@ -1031,7 +1031,7 @@ dependencies = [
 
 [[package]]
 name = "baml-schema-build"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "baml-runtime",
@@ -1069,7 +1069,7 @@ dependencies = [
 
 [[package]]
 name = "baml-types"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1198,7 +1198,7 @@ dependencies = [
 
 [[package]]
 name = "bstd"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -2612,7 +2612,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-codegen"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2637,7 +2637,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-core"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2674,7 +2674,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-diagnostics"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "colored",
@@ -2687,7 +2687,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-jinja"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2708,7 +2708,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-jinja-types"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "askama",
@@ -2727,7 +2727,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-parser-database"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2752,7 +2752,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-prompt-parser"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "internal-baml-diagnostics",
  "internal-baml-schema-ast",
@@ -2764,7 +2764,7 @@ dependencies = [
 
 [[package]]
 name = "internal-baml-schema-ast"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "baml-types",
@@ -2775,6 +2775,8 @@ dependencies = [
  "pest",
  "pest_derive",
  "pretty",
+ "pretty_assertions",
+ "regex",
  "serde",
  "serde_json",
  "test-log",
@@ -2783,9 +2785,10 @@ dependencies = [
 
 [[package]]
 name = "internal-llm-client"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
+ "aws-config",
  "baml-types",
  "derive_more",
  "either",
@@ -2881,7 +2884,7 @@ checksum = "9dbbfed4e59ba9750e15ba154fdfd9329cee16ff3df539c2666b70f58cc32105"
 
 [[package]]
 name = "jsonish"
-version = "0.70.5"
+version = "0.72.0"
 dependencies = [
  "anyhow",
  "assert-json-diff",
@@ -3744,9 +3747,9 @@ dependencies = [
 
 [[package]]
 name = "pretty_assertions"
-version = "1.4.0"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af7cee1a6c8a5b9208b3cb1061f10c0cb689087b3d8ce85fb9d2dd7a29b6ba66"
+checksum = "3ae130e2f271fbc2ac3a40fb1d07180839cdbbe443c7a27e1e3c13c5cac0116d"
 dependencies = [
  "diff",
  "yansi",
@@ -5792,9 +5795,9 @@ checksum = "66fee0b777b0f5ac1c69bb06d361268faafa61cd4682ae064a171c16c433e9e4"
 
 [[package]]
 name = "yansi"
-version = "0.5.1"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"
+checksum = "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049"
 
 [[package]]
 name = "zerocopy"

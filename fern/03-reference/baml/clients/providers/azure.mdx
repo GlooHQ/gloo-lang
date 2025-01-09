@@ -62,15 +62,6 @@ The options are passed through directly to the API, barring a few. Here's a shor
   See the `base_url` field.
 </ParamField>
 
-<ParamField
-  path="default_role"
-  type="string"
->
-  The default role for any prompts that don't specify a role. **Default: `system`**
-  
-  We don't have any checks for this field, you can pass any string you wish.
-</ParamField>
-
 <ParamField path="api_version" type="string" required>
   Will be passed via a query parameter `api-version`.
 </ParamField>
@@ -101,6 +92,7 @@ client<llm> MyClient {
 
 <Markdown src="/snippets/supports-streaming.mdx" />
 
+<Markdown src="/snippets/finish-reason.mdx" />
 
 ## Forwarded options
 <ParamField

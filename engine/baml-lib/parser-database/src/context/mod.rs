@@ -16,12 +16,13 @@ mod attributes;
 ///
 /// ## Attribute Validation
 ///
-/// The Context also acts as a state machine for attribute validation. The goal is to avoid manual
-/// work validating things that are valid for every attribute set, and every argument set inside an
-/// attribute: multiple unnamed arguments are not valid, attributes we do not use in parser-database
-/// are not valid, multiple arguments with the same name are not valid, etc.
+/// The Context also acts as a state machine for attribute validation. The goal
+/// is to avoid manual work validating things that are valid for every attribute
+/// set, and every argument set inside an attribute: multiple unnamed arguments
+/// are not valid, attributes we do not use in parser-database are not valid,
+/// multiple arguments with the same name are not valid, etc.
 ///
-/// See `visit_attributes()`.
+/// See [`Self::assert_all_attributes_processed`].
 pub(crate) struct Context<'db> {
     pub(crate) ast: &'db ast::SchemaAst,
     pub(crate) interner: &'db mut StringInterner,
@@ -75,14 +76,17 @@ impl<'db> Context<'db> {
         self.diagnostics.push_warning(warning)
     }
 
-    /// All attribute validation should go through `visit_attributes()`. It lets
-    /// us enforce some rules, for example that certain attributes should not be
-    /// repeated, and make sure that _all_ attributes are visited during the
-    /// validation process, emitting unknown attribute errors when it is not
-    /// the case.
+    /// Attribute processing entry point.
     ///
-    /// - When you are done validating an attribute, you must call `discard_arguments()` or
-    ///   `validate_visited_arguments()`. Otherwise, Context will helpfully panic.
+    /// All attribute validation should go through
+    /// [`Self::assert_all_attributes_processed`]. It lets us enforce some
+    /// rules, for example that certain attributes should not be repeated, and
+    /// make sure that _all_ attributes are visited during the validation
+    /// process, emitting unknown attribute errors when it is not the case.
+    ///
+    /// - When you are done validating an attribute, you must call
+    /// [`Self::discard_arguments()`] or [`Self::validate_visited_arguments()`].
+    /// Otherwise, [`Context`] will helpfully panic.
     pub(super) fn assert_all_attributes_processed(
         &mut self,
         ast_attributes: ast::AttributeContainer,
@@ -96,28 +100,6 @@ impl<'db> Context<'db> {
         }
 
         self.attributes.set_attributes(ast_attributes, self.ast);
-    }
-
-    /// Extract an attribute that can occur zero or more times. Example: @@index on models.
-    ///
-    /// Returns `true` as long as a next attribute is found.
-    pub(crate) fn _visit_repeated_attr(&mut self, name: &'static str) -> bool {
-        let mut has_valid_attribute = false;
-
-        while !has_valid_attribute {
-            let first_attr = iter_attributes(self.attributes.attributes.as_ref(), self.ast)
-                .filter(|(_, attr)| attr.name.name() == name)
-                .find(|(attr_id, _)| self.attributes.unused_attributes.contains(attr_id));
-            let (attr_id, attr) = if let Some(first_attr) = first_attr {
-                first_attr
-            } else {
-                break;
-            };
-            self.attributes.unused_attributes.remove(&attr_id);
-            has_valid_attribute = self.set_attribute(attr_id, attr);
-        }
-
-        has_valid_attribute
     }
 
     /// Extract an attribute that can occur zero or more times. Example: @assert on types.

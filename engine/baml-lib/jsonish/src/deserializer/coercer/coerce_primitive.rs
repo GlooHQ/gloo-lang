@@ -64,18 +64,16 @@ fn coerce_string(
     target: &FieldType,
     value: Option<&crate::jsonish::Value>,
 ) -> Result<BamlValueWithFlags, ParsingError> {
-    if let Some(value) = value {
-        match value {
-            crate::jsonish::Value::String(s) => {
-                Ok(BamlValueWithFlags::String(s.to_string().into()))
-            }
-            crate::jsonish::Value::Null => Err(ctx.error_unexpected_null(target)),
-            v => Ok(BamlValueWithFlags::String(
-                (v.to_string(), Flag::JsonToString(v.clone())).into(),
-            )),
-        }
-    } else {
-        Err(ctx.error_unexpected_null(target))
+    let Some(value) = value else {
+        return Err(ctx.error_unexpected_null(target));
+    };
+
+    match value {
+        crate::jsonish::Value::String(s) => Ok(BamlValueWithFlags::String(s.to_string().into())),
+        crate::jsonish::Value::Null => Err(ctx.error_unexpected_null(target)),
+        v => Ok(BamlValueWithFlags::String(
+            (v.to_string(), Flag::JsonToString(v.clone())).into(),
+        )),
     }
 }
 
@@ -84,54 +82,54 @@ pub(super) fn coerce_int(
     target: &FieldType,
     value: Option<&crate::jsonish::Value>,
 ) -> Result<BamlValueWithFlags, ParsingError> {
-    if let Some(value) = value {
-        match value {
-            crate::jsonish::Value::Number(n) => {
-                if let Some(n) = n.as_i64() {
-                    Ok(BamlValueWithFlags::Int(n.into()))
-                } else if let Some(n) = n.as_u64() {
-                    Ok(BamlValueWithFlags::Int((n as i64).into()))
-                } else if let Some(n) = n.as_f64() {
-                    Ok(BamlValueWithFlags::Int(
-                        ((n.round() as i64), Flag::FloatToInt(n)).into(),
-                    ))
-                } else {
-                    Err(ctx.error_unexpected_type(target, value))
-                }
+    let Some(value) = value else {
+        return Err(ctx.error_unexpected_null(target));
+    };
+
+    match value {
+        crate::jsonish::Value::Number(n) => {
+            if let Some(n) = n.as_i64() {
+                Ok(BamlValueWithFlags::Int(n.into()))
+            } else if let Some(n) = n.as_u64() {
+                Ok(BamlValueWithFlags::Int((n as i64).into()))
+            } else if let Some(n) = n.as_f64() {
+                Ok(BamlValueWithFlags::Int(
+                    ((n.round() as i64), Flag::FloatToInt(n)).into(),
+                ))
+            } else {
+                Err(ctx.error_unexpected_type(target, value))
             }
-            crate::jsonish::Value::String(s) => {
-                let s = s.trim();
-                // Trim trailing commas
-                let s = s.trim_end_matches(',');
-                if let Ok(n) = s.parse::<i64>() {
-                    Ok(BamlValueWithFlags::Int(n.into()))
-                } else if let Ok(n) = s.parse::<u64>() {
-                    Ok(BamlValueWithFlags::Int((n as i64).into()))
-                } else if let Ok(n) = s.parse::<f64>() {
-                    Ok(BamlValueWithFlags::Int(
-                        ((n.round() as i64), Flag::FloatToInt(n)).into(),
-                    ))
-                } else if let Some(frac) = float_from_maybe_fraction(s) {
-                    Ok(BamlValueWithFlags::Int(
-                        ((frac.round() as i64), Flag::FloatToInt(frac)).into(),
-                    ))
-                } else if let Some(frac) = float_from_comma_separated(s) {
-                    Ok(BamlValueWithFlags::Int(
-                        ((frac.round() as i64), Flag::FloatToInt(frac)).into(),
-                    ))
-                } else {
-                    Err(ctx.error_unexpected_type(target, value))
-                }
-            }
-            crate::jsonish::Value::Array(items) => {
-                coerce_array_to_singular(ctx, target, &items.iter().collect::<Vec<_>>(), &|value| {
-                    coerce_int(ctx, target, Some(value))
-                })
-            }
-            _ => Err(ctx.error_unexpected_type(target, value)),
         }
-    } else {
-        Err(ctx.error_unexpected_null(target))
+        crate::jsonish::Value::String(s) => {
+            let s = s.trim();
+            // Trim trailing commas
+            let s = s.trim_end_matches(',');
+            if let Ok(n) = s.parse::<i64>() {
+                Ok(BamlValueWithFlags::Int(n.into()))
+            } else if let Ok(n) = s.parse::<u64>() {
+                Ok(BamlValueWithFlags::Int((n as i64).into()))
+            } else if let Ok(n) = s.parse::<f64>() {
+                Ok(BamlValueWithFlags::Int(
+                    ((n.round() as i64), Flag::FloatToInt(n)).into(),
+                ))
+            } else if let Some(frac) = float_from_maybe_fraction(s) {
+                Ok(BamlValueWithFlags::Int(
+                    ((frac.round() as i64), Flag::FloatToInt(frac)).into(),
+                ))
+            } else if let Some(frac) = float_from_comma_separated(s) {
+                Ok(BamlValueWithFlags::Int(
+                    ((frac.round() as i64), Flag::FloatToInt(frac)).into(),
+                ))
+            } else {
+                Err(ctx.error_unexpected_type(target, value))
+            }
+        }
+        crate::jsonish::Value::Array(items) => {
+            coerce_array_to_singular(ctx, target, &items.iter().collect::<Vec<_>>(), &|value| {
+                coerce_int(ctx, target, Some(value))
+            })
+        }
+        _ => Err(ctx.error_unexpected_type(target, value)),
     }
 }
 
@@ -172,46 +170,53 @@ fn coerce_float(
     target: &FieldType,
     value: Option<&crate::jsonish::Value>,
 ) -> Result<BamlValueWithFlags, ParsingError> {
-    if let Some(value) = value {
-        match value {
-            crate::jsonish::Value::Number(n) => {
-                if let Some(n) = n.as_f64() {
-                    Ok(BamlValueWithFlags::Float(n.into()))
-                } else if let Some(n) = n.as_i64() {
-                    Ok(BamlValueWithFlags::Float((n as f64).into()))
-                } else if let Some(n) = n.as_u64() {
-                    Ok(BamlValueWithFlags::Float((n as f64).into()))
-                } else {
-                    Err(ctx.error_unexpected_type(target, value))
-                }
+    let Some(value) = value else {
+        return Err(ctx.error_unexpected_null(target));
+    };
+
+    match value {
+        crate::jsonish::Value::Number(n) => {
+            if let Some(n) = n.as_f64() {
+                Ok(BamlValueWithFlags::Float(n.into()))
+            } else if let Some(n) = n.as_i64() {
+                Ok(BamlValueWithFlags::Float((n as f64).into()))
+            } else if let Some(n) = n.as_u64() {
+                Ok(BamlValueWithFlags::Float((n as f64).into()))
+            } else {
+                Err(ctx.error_unexpected_type(target, value))
             }
-            crate::jsonish::Value::String(s) => {
-                let s = s.trim();
-                // Trim trailing commas
-                let s = s.trim_end_matches(',');
-                if let Ok(n) = s.parse::<f64>() {
-                    Ok(BamlValueWithFlags::Float(n.into()))
-                } else if let Ok(n) = s.parse::<i64>() {
-                    Ok(BamlValueWithFlags::Float((n as f64).into()))
-                } else if let Ok(n) = s.parse::<u64>() {
-                    Ok(BamlValueWithFlags::Float((n as f64).into()))
-                } else if let Some(frac) = float_from_maybe_fraction(s) {
-                    Ok(BamlValueWithFlags::Float(frac.into()))
-                } else if let Some(frac) = float_from_comma_separated(s) {
-                    Ok(BamlValueWithFlags::Float(frac.into()))
-                } else {
-                    Err(ctx.error_unexpected_type(target, value))
-                }
-            }
-            crate::jsonish::Value::Array(items) => {
-                coerce_array_to_singular(ctx, target, &items.iter().collect::<Vec<_>>(), &|value| {
-                    coerce_float(ctx, target, Some(value))
-                })
-            }
-            _ => Err(ctx.error_unexpected_type(target, value)),
         }
-    } else {
-        Err(ctx.error_unexpected_null(target))
+        crate::jsonish::Value::String(s) => {
+            let s = s.trim();
+            // Trim trailing commas
+            let s = s.trim_end_matches(',');
+            if let Ok(n) = s.parse::<f64>() {
+                Ok(BamlValueWithFlags::Float(n.into()))
+            } else if let Ok(n) = s.parse::<i64>() {
+                Ok(BamlValueWithFlags::Float((n as f64).into()))
+            } else if let Ok(n) = s.parse::<u64>() {
+                Ok(BamlValueWithFlags::Float((n as f64).into()))
+            } else if let Some(frac) = float_from_maybe_fraction(s) {
+                Ok(BamlValueWithFlags::Float(frac.into()))
+            } else if let Some(frac) = float_from_comma_separated(s) {
+                let mut baml_value = BamlValueWithFlags::Float(frac.into());
+                // Add flag here to penalize strings like
+                // "1 cup unsalted butter, room temperature".
+                // If we're trying to parse this to a float it should work
+                // anyway but unions like "float | string" should still coerce
+                // this to a string.
+                baml_value.add_flag(Flag::StringToFloat(s.to_string()));
+                Ok(baml_value)
+            } else {
+                Err(ctx.error_unexpected_type(target, value))
+            }
+        }
+        crate::jsonish::Value::Array(items) => {
+            coerce_array_to_singular(ctx, target, &items.iter().collect::<Vec<_>>(), &|value| {
+                coerce_float(ctx, target, Some(value))
+            })
+        }
+        _ => Err(ctx.error_unexpected_type(target, value)),
     }
 }
 
@@ -220,51 +225,51 @@ pub(super) fn coerce_bool(
     target: &FieldType,
     value: Option<&crate::jsonish::Value>,
 ) -> Result<BamlValueWithFlags, ParsingError> {
-    if let Some(value) = value {
-        match value {
-            crate::jsonish::Value::Boolean(b) => Ok(BamlValueWithFlags::Bool((*b).into())),
-            crate::jsonish::Value::String(s) => match s.to_lowercase().as_str() {
-                "true" => Ok(BamlValueWithFlags::Bool(
-                    (true, Flag::StringToBool(s.clone())).into(),
-                )),
-                "false" => Ok(BamlValueWithFlags::Bool(
-                    (false, Flag::StringToBool(s.clone())).into(),
-                )),
-                _ => {
-                    match super::match_string::match_string(
-                        ctx,
-                        target,
-                        Some(value),
-                        &[
-                            ("true", vec!["true".into(), "True".into(), "TRUE".into()]),
-                            (
-                                "false",
-                                vec!["false".into(), "False".into(), "FALSE".into()],
-                            ),
-                        ],
-                    ) {
-                        Ok(val) => match val.value().as_str() {
-                            "true" => Ok(BamlValueWithFlags::Bool(
-                                (true, Flag::StringToBool(val.value().clone())).into(),
-                            )),
-                            "false" => Ok(BamlValueWithFlags::Bool(
-                                (false, Flag::StringToBool(val.value().clone())).into(),
-                            )),
-                            _ => Err(ctx.error_unexpected_type(target, value)),
-                        },
-                        Err(_) => Err(ctx.error_unexpected_type(target, value)),
-                    }
+    let Some(value) = value else {
+        return Err(ctx.error_unexpected_null(target));
+    };
+
+    match value {
+        crate::jsonish::Value::Boolean(b) => Ok(BamlValueWithFlags::Bool((*b).into())),
+        crate::jsonish::Value::String(s) => match s.to_lowercase().as_str() {
+            "true" => Ok(BamlValueWithFlags::Bool(
+                (true, Flag::StringToBool(s.clone())).into(),
+            )),
+            "false" => Ok(BamlValueWithFlags::Bool(
+                (false, Flag::StringToBool(s.clone())).into(),
+            )),
+            _ => {
+                match super::match_string::match_string(
+                    ctx,
+                    target,
+                    Some(value),
+                    &[
+                        ("true", vec!["true".into(), "True".into(), "TRUE".into()]),
+                        (
+                            "false",
+                            vec!["false".into(), "False".into(), "FALSE".into()],
+                        ),
+                    ],
+                ) {
+                    Ok(val) => match val.value().as_str() {
+                        "true" => Ok(BamlValueWithFlags::Bool(
+                            (true, Flag::StringToBool(val.value().clone())).into(),
+                        )),
+                        "false" => Ok(BamlValueWithFlags::Bool(
+                            (false, Flag::StringToBool(val.value().clone())).into(),
+                        )),
+                        _ => Err(ctx.error_unexpected_type(target, value)),
+                    },
+                    Err(_) => Err(ctx.error_unexpected_type(target, value)),
                 }
-            },
-            crate::jsonish::Value::Array(items) => {
-                coerce_array_to_singular(ctx, target, &items.iter().collect::<Vec<_>>(), &|value| {
-                    coerce_bool(ctx, target, Some(value))
-                })
             }
-            _ => Err(ctx.error_unexpected_type(target, value)),
+        },
+        crate::jsonish::Value::Array(items) => {
+            coerce_array_to_singular(ctx, target, &items.iter().collect::<Vec<_>>(), &|value| {
+                coerce_bool(ctx, target, Some(value))
+            })
         }
-    } else {
-        Err(ctx.error_unexpected_null(target))
+        _ => Err(ctx.error_unexpected_type(target, value)),
     }
 }
 
@@ -337,7 +342,7 @@ mod tests {
             ("12,111,123,", Some(12111123.0)),
         ];
 
-        for &(input, expected) in &test_cases {
+        for (input, expected) in test_cases {
             let result = float_from_comma_separated(input);
             assert_eq!(
                 result, expected,

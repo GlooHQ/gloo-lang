@@ -39,15 +39,6 @@ The options are passed through directly to the API, barring a few. Here's a shor
 </ParamField>
 
 <ParamField
-  path="default_role"
-  type="string"
->
-  The default role for any prompts that don't specify a role. **Default: `user`**
-
-  We don't have any checks for this field, you can pass any string you wish.
-</ParamField>
-
-<ParamField
   path="model"
   type="string"
 >
@@ -86,6 +77,8 @@ client<llm> MyClient {
 <Markdown src="/snippets/allowed-role-metadata-basic.mdx" />
 
 <Markdown src="/snippets/supports-streaming.mdx" />
+
+<Markdown src="/snippets/finish-reason.mdx" />
 
 ## Forwarded options
 <ParamField

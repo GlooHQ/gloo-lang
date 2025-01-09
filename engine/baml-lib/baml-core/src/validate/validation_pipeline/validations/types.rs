@@ -3,6 +3,7 @@ use std::collections::VecDeque;
 use baml_types::{LiteralValue, TypeValue};
 use either::Either;
 use internal_baml_diagnostics::{DatamodelError, DatamodelWarning, Span};
+use internal_baml_parser_database::TypeWalker;
 use internal_baml_schema_ast::ast::{
     Argument, Attribute, Expression, FieldArity, FieldType, Identifier, WithName, WithSpan,
 };
@@ -62,7 +63,7 @@ fn validate_type_allowed(ctx: &mut Context<'_>, field_type: &FieldType) {
                     if ctx
                         .db
                         .find_type(identifier)
-                        .is_some_and(|t| matches!(t, Either::Right(_))) => {}
+                        .is_some_and(|t| matches!(t, TypeWalker::Enum(_))) => {}
 
                 // Literal string key.
                 FieldType::Literal(FieldArity::Required, LiteralValue::String(_), ..) => {}

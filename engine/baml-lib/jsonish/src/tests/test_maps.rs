@@ -166,6 +166,7 @@ fn test_union_of_map_and_class() {
     assert!(result.is_ok(), "Failed to parse: {:?}", result);
 
     let value = result.unwrap();
+    dbg!(&value);
     assert!(matches!(value, BamlValueWithFlags::Class(_, _, _)));
 
     log::trace!("Score: {}", value.score());

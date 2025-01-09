@@ -19,7 +19,7 @@ client<llm> GPT4 {
     model gpt-4o
     api_key env.OPENAI_API_KEY
   }
-}  
+}
 
 
 client<llm> GPT4o {
@@ -28,7 +28,7 @@ client<llm> GPT4o {
     model gpt-4o
     api_key env.OPENAI_API_KEY
   }
-} 
+}
 
 
 client<llm> GPT4Turbo {
@@ -38,12 +38,20 @@ client<llm> GPT4Turbo {
     model gpt-4-turbo
     api_key env.OPENAI_API_KEY
   }
-} 
+}
+
+retry_policy GPT4oRetry {
+  max_retries 2
+  strategy {
+    type exponential_backoff
+  }
+}
 
 client<llm> GPT35 {
   provider openai
+  retry_policy GPT4oRetry
   options {
-    model "gpt-3.5-turbo"
+    model "gpt-4o-mini"
     api_key env.OPENAI_API_KEY
   }
 }
@@ -88,7 +96,7 @@ client<llm> Gemini {
 }
 
 client<llm> Vertex {
-  provider vertex-ai  
+  provider vertex-ai
   options {
     model gemini-1.5-pro
     location us-central1
@@ -105,7 +113,12 @@ client<llm> AwsBedrock {
     }
     // model "anthropic.claude-3-5-sonnet-20240620-v1:0"
     // model_id "anthropic.claude-3-haiku-20240307-v1:0"
-    model_id "meta.llama3-8b-instruct-v1:0"
+    model "meta.llama3-8b-instruct-v1:0"
+    // region "us-east-1"
+    // access_key_id env.AWS_ACCESS_KEY_ID
+    // secret_access_key env.AWS_SECRET_ACCESS_KEY
+    // session_token env.AWS_SESSION_TOKEN
+    // session_token null
     // model_id "mistral.mistral-7b-instruct-v0:2"
   }
 }
@@ -121,6 +134,58 @@ client<llm> AwsBedrockInvalidRegion {
     // model_id "anthropic.claude-3-haiku-20240307-v1:0"
     model_id "meta.llama3-8b-instruct-v1:0"
     // model_id "mistral.mistral-7b-instruct-v0:2"
+  }
+}
+
+client<llm> AwsBedrockInvalidAccessKey {
+  provider aws-bedrock
+  options {
+    model_id "meta.llama3-8b-instruct-v1:0"
+    access_key_id "AKIAINVALID12345678"
+    secret_access_key "abcdef1234567890abcdef1234567890abcdef12"
+    inference_configuration {
+      max_tokens 100
+    }
+  }
+}
+
+client<llm> AwsBedrockInvalidProfile {
+  provider aws-bedrock
+  options {
+    model_id "meta.llama3-8b-instruct-v1:0"
+    profile "invalid-profile"
+    inference_configuration {
+      max_tokens 100
+    }
+  }
+}
+
+client<llm> AwsBedrockInvalidSessionToken {
+  provider aws-bedrock
+  options {
+    model_id "meta.llama3-8b-instruct-v1:0"
+    region "us-east-1"
+    access_key_id "AKIAINVALID12345678"
+    secret_access_key "abcdef1234567890abcdef1234567890abcdef12"
+    session_token "invalid-session-token"
+    inference_configuration {
+      max_tokens 100
+    }
+  }
+}
+
+
+client<llm> Invalid{
+  provider aws-bedrock
+  options {
+    model_id "meta.llama3-8b-instruct-v1:0"
+    region "us-east-1"
+    access_key_id "AKIAINVALID12345678"
+    secret_access_key "abcdef1234567890abcdef1234567890abcdef12"
+    session_token "invalid-session-token"
+    inference_configuration {
+      max_tokens 100
+    }
   }
 }
 
@@ -164,8 +229,8 @@ client<llm> Resilient_SimpleSyntax {
       Lottery_SimpleSyntax
     ]
   }
-} 
- 
+}
+
 client<llm> Lottery_SimpleSyntax {
   provider baml-round-robin
   options {

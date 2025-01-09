@@ -1,19 +1,12 @@
-/** @type {import('jest').Config} */
-const config = {
-  transform: {
-    '^.+\\.(t|j)sx?$': '@swc/jest',
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/tests'],
+  testMatch: ['**/*.test.ts'],
+  moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+  setupFilesAfterEnv: ['<rootDir>/tests/test-setup.ts'],
+  testTimeout: 600000,
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
   },
-  reporters: [
-    'default',
-    [
-      './node_modules/jest-html-reporter',
-      {
-        pageTitle: 'Test Report',
-        includeConsoleLog: true,
-        includeFailureMsg: true,
-      },
-    ],
-  ],
 }
-
-module.exports = config

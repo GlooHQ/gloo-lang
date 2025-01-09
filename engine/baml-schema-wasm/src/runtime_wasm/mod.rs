@@ -876,6 +876,7 @@ fn get_dummy_value(
         baml_runtime::FieldType::Literal(_) => None,
         baml_runtime::FieldType::Enum(_) => None,
         baml_runtime::FieldType::Class(_) => None,
+        baml_runtime::FieldType::RecursiveTypeAlias(_) => None,
         baml_runtime::FieldType::List(item) => {
             let dummy = get_dummy_value(indent + 1, allow_multiline, item);
             // Repeat it 2 times
@@ -1200,6 +1201,19 @@ impl WasmRuntime {
             });
         }
         if let Ok(walker) = runtime.find_class(symbol) {
+            let elem = walker.span().unwrap();
+
+            let _uri_str = elem.file.path().to_string(); // Store the String in a variable
+            let ((s_line, s_character), (e_line, e_character)) = elem.line_and_column();
+            return Some(SymbolLocation {
+                uri: elem.file.path().to_string(), // Use the variable here
+                start_line: s_line,
+                start_character: s_character,
+                end_line: e_line,
+                end_character: e_character,
+            });
+        }
+        if let Ok(walker) = runtime.find_type_alias(symbol) {
             let elem = walker.span().unwrap();
 
             let _uri_str = elem.file.path().to_string(); // Store the String in a variable

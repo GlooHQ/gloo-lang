@@ -2,7 +2,7 @@
 import baml_py
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
-from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union
+from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union, TypeAlias
 
 
 T = TypeVar('T')
@@ -58,4 +58,9 @@ class {{cls.name}}(BaseModel):
 
     {%- endif %}
     {%- endfor %}
+{% endfor %}
+
+{#- Type Aliases -#}
+{% for alias in structural_recursive_alias_cycles %}
+{{alias.name}}: TypeAlias = {{alias.target}}
 {% endfor %}

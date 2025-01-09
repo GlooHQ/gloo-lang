@@ -78,7 +78,7 @@ single_word     = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_" | "-")* }
 // ######################################
 // Type Alias
 // ######################################
-type_alias = { TYPE_KEYWORD ~ identifier ~ base_type ~ (NEWLINE? ~ field_attribute)* }
+type_alias = { identifier ~ identifier ~ assignment ~ field_type_with_attr }
 
 // ######################################
 // Arguments
@@ -162,7 +162,7 @@ doc_content      = @{ (!NEWLINE ~ ANY)* }
 // Shared Building Blocks and Comments
 // ######################################
 WHITESPACE  = _{ " " | "\t" }
-NEWLINE     = _{ "\n" | "\r\n" | "\r" }
+NEWLINE     = { "\n" | "\r\n" | "\r" }
 empty_lines = @{ (WHITESPACE* ~ NEWLINE)+ }
 
 // ######################################
@@ -177,7 +177,6 @@ BLOCK_CLOSE = { "}" }
 BLOCK_LEVEL_CATCH_ALL = { !BLOCK_CLOSE ~ CATCH_ALL }
 CATCH_ALL             = { (!NEWLINE ~ ANY)+ ~ NEWLINE? }
 
-TYPE_KEYWORD         = { "type" }
 FUNCTION_KEYWORD     = { "function" }
 TEMPLATE_KEYWORD     = { "template_string" | "string_template" }
 TEST_KEYWORD         = { "test" }

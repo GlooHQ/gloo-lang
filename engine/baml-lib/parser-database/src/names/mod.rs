@@ -90,6 +90,19 @@ pub(super) fn resolve_names(ctx: &mut Context<'_>) {
             (_, ast::Top::Class(_)) => {
                 unreachable!("Encountered impossible class declaration during parsing")
             }
+
+            (ast::TopId::TypeAlias(_), ast::Top::TypeAlias(type_alias)) => {
+                validate_type_alias_name(type_alias, ctx.diagnostics);
+
+                ctx.interner.intern(type_alias.name());
+
+                Some(either::Left(&mut names.tops))
+            }
+
+            (_, ast::Top::TypeAlias(_)) => {
+                unreachable!("Encountered impossible type alias declaration during parsing")
+            }
+
             (ast::TopId::TemplateString(_), ast::Top::TemplateString(template_string)) => {
                 validate_template_string_name(template_string, ctx.diagnostics);
                 validate_attribute_identifiers(template_string, ctx);

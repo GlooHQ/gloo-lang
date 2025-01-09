@@ -51,7 +51,7 @@ class BamlCtxManager {
             return;
         }
         try {
-            span.finish(response, manager);
+            span.finish(response === undefined ? null : response, manager);
         }
         catch (e) {
             console.error('BAML internal error', e);
@@ -78,7 +78,7 @@ class BamlCtxManager {
                 [`arg${i}`]: arg, // generic way to label args
             }), {});
             const [mng, span] = this.startTrace(name, params);
-            this.ctx.run(mng, () => {
+            return this.ctx.run(mng, () => {
                 try {
                     const response = func(...args);
                     this.endTrace(span, response);
@@ -99,7 +99,7 @@ class BamlCtxManager {
                 [`arg${i}`]: arg, // generic way to label args
             }), {});
             const [mng, span] = this.startTrace(name, params);
-            await this.ctx.run(mng, async () => {
+            return await this.ctx.run(mng, async () => {
                 try {
                     const response = await func(...args);
                     this.endTrace(span, response);

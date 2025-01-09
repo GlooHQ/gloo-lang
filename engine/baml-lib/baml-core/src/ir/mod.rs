@@ -15,6 +15,7 @@ pub(super) use repr::IntermediateRepr;
 pub type Enum = repr::Node<repr::Enum>;
 pub type EnumValue = repr::Node<repr::EnumValue>;
 pub type Class = repr::Node<repr::Class>;
+pub type TypeAlias = repr::Node<repr::TypeAlias>;
 pub type Field = repr::Node<repr::Field>;
 pub type FieldType = baml_types::FieldType;
 pub type TypeValue = baml_types::TypeValue;
