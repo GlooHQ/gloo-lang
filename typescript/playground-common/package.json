@@ -69,6 +69,7 @@
     "@codemirror/lint": "^6.8.4",
     "@gloo-ai/baml-schema-wasm-web": "workspace:*",
     "@hookform/resolvers": "^3.3.4",
+    "@lezer/highlight": "^1.2.1",
     "@mdx-js/mdx": "^3.1.0",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-checkbox": "^1.0.4",
