@@ -212,11 +212,11 @@ class Project {
     this.current_runtime = undefined
   }
 
-  get_file(file_path: string) {
+  get_file(file_path: URI) {
     // Read the file content
-    const fileContent = readFileSync(file_path, 'utf8')
+    const fileContent = readFileSync(file_path.fsPath, 'utf8')
 
-    const doc = TextDocument.create(file_path, 'plaintext', 1, fileContent)
+    const doc = TextDocument.create(file_path.fsPath, 'plaintext', 1, fileContent)
 
     return doc
   }
@@ -281,7 +281,8 @@ class Project {
         end: { line: match.end_line, character: match.end_character },
       }
 
-      const hoverDoc = this.get_file(URI.file(match.uri).toString())
+
+      const hoverDoc = this.get_file(URI.file(match.uri))
 
       if (hoverDoc) {
         const hoverText = hoverDoc.getText(range)
