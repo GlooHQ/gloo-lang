@@ -281,7 +281,6 @@ class Project {
         end: { line: match.end_line, character: match.end_character },
       }
 
-
       const hoverDoc = this.get_file(URI.file(match.uri))
 
       if (hoverDoc) {
@@ -424,7 +423,7 @@ class Project {
               )
             }
             try {
-            await rename(out_dir, backupDir)
+              await rename(out_dir, backupDir)
             } catch (e) {
               console.error(`Something happened backing up baml_client to the .bak directory. ${e}`)
             }
