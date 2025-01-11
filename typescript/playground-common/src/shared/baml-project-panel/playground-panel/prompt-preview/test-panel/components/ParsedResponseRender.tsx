@@ -3,7 +3,7 @@ import { githubLightTheme as lightTheme } from '@uiw/react-json-view/githubLight
 import { vscodeTheme as darkTheme } from '@uiw/react-json-view/vscode'
 import { type WasmFunctionResponse, type WasmTestResponse } from '@gloo-ai/baml-schema-wasm-web'
 import { useTheme } from 'next-themes'
-import { RenderText } from '../../render-text'
+import { RenderPromptPart } from '../../render-text'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 // Renders the parsed response only
@@ -36,7 +36,7 @@ const ParsedResponseRender = ({ response }: { response: string }) => {
   }
 
   if (typeof parsedResponseObj === 'string') {
-    return <RenderText text={parsedResponseObj} />
+    return <RenderPromptPart text={parsedResponseObj} />
   }
 
   return (

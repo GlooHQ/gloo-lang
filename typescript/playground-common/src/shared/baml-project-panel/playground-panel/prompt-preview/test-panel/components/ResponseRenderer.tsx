@@ -7,7 +7,7 @@ import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 import { ParsedResponseRenderer } from './ParsedResponseRender'
-import { RenderText } from '../../render-text'
+import { RenderPromptPart } from '../../render-text'
 
 interface ResponseRendererProps {
   response?: WasmFunctionResponse | WasmTestResponse
@@ -69,7 +69,7 @@ export const ResponseRenderer: React.FC<ResponseRendererProps> = ({ response, st
           <div className='relative group'>
             <div className='space-y-2'>
               <span className='text-xs text-muted-foreground'>Raw LLM Response</span>
-              <RenderText text={llmResponse.content} />
+              <RenderPromptPart text={llmResponse.content} />
             </div>
             <CopyButton copied={llmCopied} onCopy={handleLlmCopy} />
           </div>
@@ -108,7 +108,7 @@ export const RawResponseRenderer: React.FC<{
   if (!response) {
     return <div className='text-xs text-muted-foreground'>Waiting for response...</div>
   }
-  return <RenderText text={response.llm_response()?.content ?? ''} />
+  return <RenderPromptPart text={response.llm_response()?.content ?? ''} />
 }
 
 const MetadataBadges: React.FC<{ llmResponse: WasmLLMResponse }> = ({ llmResponse }) => (
