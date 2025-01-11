@@ -331,7 +331,7 @@
 }
 
 button.woot-widget-bubble:nth-child(1) {
-  @apply scale-50 origin-bottom-left left-1 bottom-1;
+  @apply scale-50 origin-bottom-left left-1 bottom-1 opacity-30;
 }
 
 button.woot-elements--right:nth-child(2) {
