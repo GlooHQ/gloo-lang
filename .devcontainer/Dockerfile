@@ -4,6 +4,7 @@ FROM ubuntu:24.04
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
     build-essential \
     clang \
+    pkg-config \
     zlib1g \
     zlib1g-dev \
     libssl-dev \
@@ -29,7 +30,7 @@ RUN curl https://mise.run | sh \
     && ~/.local/bin/mise --verbose use -g --yes ruby@3.1 node@20.14 pnpm@9.9 \
     && echo 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"' >> ~/.bash_profile \
     && echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/share/mise/installs/ruby/3.1/lib' >> ~/.bash_profile
- 
+
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 

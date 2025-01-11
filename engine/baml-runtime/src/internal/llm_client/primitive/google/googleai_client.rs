@@ -168,7 +168,11 @@ impl SseResponseTrait for GoogleAIClient {
 
                         if let Some(choice) = event.candidates.get(0) {
                             let part_index = content_part(&model_id);
-                            if let Some(content) = choice.content.as_ref().and_then(|c| c.parts.get(part_index)) {
+                            if let Some(content) = choice
+                                .content
+                                .as_ref()
+                                .and_then(|c| c.parts.get(part_index))
+                            {
                                 inner.content += &content.text;
                             }
                             if let Some(FinishReason::Stop) = choice.finish_reason.as_ref() {
@@ -458,11 +462,11 @@ impl ToProviderMessage for GoogleAIClient {
 /// The Google Gemini 2 model has an experimental feature
 /// called Flash Thinking Mode, which is turned on in a particular
 /// named model: gemini-2.0-flash-thinking-exp-1219
-/// 
+///
 /// When run in this mode, Gemini returns `candidates` with 2 parts each.
 /// Part 0 is the chain of thought, part 1 is the actual output.
 /// Other Gemini models put the output data in part 0.
-/// 
+///
 /// TODO: Explicitly represent Flash Thinking Mode response and
 /// do more thorough checking for the content part.
 /// For examples of how to introspect the response more safely, see:
