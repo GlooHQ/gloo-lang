@@ -236,7 +236,7 @@ pub fn truthy(ty: &Type) -> Option<Type> {
             match truthy_variants.len() {
                 0 => None,
                 1 => Some(truthy_variants[0].clone()),
-                _ => Some(Type::Tuple(truthy_variants)),
+                _ => Some(Type::Union(truthy_variants)),
             }
         }
         Type::Both(x, y) => match (truthy(x), truthy(y)) {
