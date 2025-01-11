@@ -150,8 +150,8 @@ where
 {
     #[allow(async_fn_in_trait)]
     async fn single_call(&self, ctx: &RuntimeContext, prompt: &RenderedPrompt) -> LLMResponse {
-        if let RenderedPrompt::Chat(chat) = &prompt {
-            match process_media_urls(
+        match prompt {
+            RenderedPrompt::Chat(chat) => match process_media_urls(
                 self.model_features().resolve_media_urls,
                 true,
                 None,
@@ -160,15 +160,10 @@ where
             )
             .await
             {
-                Ok(messages) => return self.chat(ctx, &messages).await,
-                Err(e) => {
-                    return LLMResponse::InternalFailure(format!("Error occurred:\n\n{:?}", e))
-                }
-            }
-        }
+                Ok(messages) => self.chat(ctx, &messages).await,
+                Err(e) => LLMResponse::InternalFailure(format!("Error occurred:\n\n{:?}", e)),
+            },
 
-        match prompt {
-            RenderedPrompt::Chat(p) => self.chat(ctx, p).await,
             RenderedPrompt::Completion(p) => self.completion(ctx, p).await,
         }
     }
