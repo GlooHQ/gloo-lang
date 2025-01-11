@@ -27,6 +27,10 @@ permissions:
   pull-requests: read
   repository-projects: read
 
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -48,7 +52,8 @@ jobs:
       - name: Check TS Lint
         run: pnpm biome ci . --organize-imports-enabled=false
         working-directory: typescript
-  test_node_generator:
+
+  test-typescript:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -66,21 +71,23 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: engine
-      - name: Install Node
-        run: pnpm install --frozen-lockfile
-        working-directory: engine/language_client_typescript
-      - name: Build Node
-        run: pnpm build:debug
-        working-directory: engine/language_client_typescript
-      - name: Install Node
-        run: pnpm install --frozen-lockfile
-        working-directory: integ-tests/typescript
-      - name: Test Node Generator
-        run: pnpm generate
-        working-directory: integ-tests/typescript
-      - name: Ensure No Changes
+      # Build TypeScript client
+      - name: Build TypeScript Client
+        run: |
+          cd engine/language_client_typescript
+          pnpm install --frozen-lockfile
+          pnpm build:debug
+      # Generate and test
+      - name: Generate and Test TypeScript
+        run: |
+          cd integ-tests/typescript
+          pnpm install --frozen-lockfile
+          pnpm generate
+          pnpm integ-tests:dotenv
+      - name: Verify No Changes
         run: git diff --exit-code
-  build:
+
+  test-rust:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -91,26 +98,17 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: engine
-      - name: Test Rust
-        # skip doctests & integration tests (the latter require OPENAI_API_KEY and ANTHROPIC_API_KEY to be set)
+      - name: Run Rust Tests
         run: cargo test --lib
         working-directory: engine
-  build-wasm:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v2
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-      - run: rustup target add wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: engine
-      - name: Build rust for wasm32
+      # WASM tests
+      - name: Setup WASM Target
+        run: rustup target add wasm32-unknown-unknown
+      - name: Build WASM
         run: cargo build --target=wasm32-unknown-unknown
         working-directory: engine/baml-schema-wasm
-  integ-tests:
+
+  test-python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -121,8 +119,43 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: engine
-      - name: run python tests
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          cache: 'poetry'
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+      - name: Run Python Integration Tests
         run: |
           cd integ-tests/python
           poetry install
-          ./run_tests.sh
+          poetry run maturin develop --manifest-path ../../engine/language_client_python/Cargo.toml
+          poetry run baml-cli generate --from ../baml_src
+          poetry run pytest
+      - name: Verify No Changes
+        run: git diff --exit-code
+
+  test-ruby:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: engine
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+      - name: Run Ruby Integration Tests
+        run: |
+          cd integ-tests/ruby
+          bundle install
+          rake generate
+          rake test
+      - name: Verify No Changes
+        run: git diff --exit-code
