@@ -7,7 +7,7 @@ import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 import { ParsedResponseRenderer } from './ParsedResponseRender'
-import { RenderText } from '../../render-text'
+import { RenderPromptPart } from '../../render-text'
 
 interface ResponseRendererProps {
   response?: WasmFunctionResponse | WasmTestResponse
@@ -20,7 +20,7 @@ export const ResponseRenderer: React.FC<ResponseRendererProps> = ({ response, st
   const [llmCopied, setLlmCopied] = useState(false)
 
   if (!response) {
-    return <div className='text-xs text-muted-foreground'>Waiting for response...</div>
+    return <div className="text-xs text-muted-foreground">Waiting for response...</div>
   }
 
   const llmFailure = response.llm_failure()
@@ -54,10 +54,10 @@ export const ResponseRenderer: React.FC<ResponseRendererProps> = ({ response, st
   }
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {/* Metadata Section */}
       {llmResponse && (
-        <div className='flex flex-wrap gap-2'>
+        <div className="flex flex-wrap gap-2">
           <MetadataBadges llmResponse={llmResponse} />
         </div>
       )}
@@ -66,10 +66,10 @@ export const ResponseRenderer: React.FC<ResponseRendererProps> = ({ response, st
       <div className={`grid ${shouldShowParsedSeparately() ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
         {/* LLM Response */}
         {llmResponse && (
-          <div className='relative group'>
-            <div className='space-y-2'>
-              <span className='text-xs text-muted-foreground'>Raw LLM Response</span>
-              <RenderText text={llmResponse.content} />
+          <div className="relative group">
+            <div className="space-y-2">
+              <span className="text-xs text-muted-foreground">Raw LLM Response</span>
+              <RenderPromptPart text={llmResponse.content} />
             </div>
             <CopyButton copied={llmCopied} onCopy={handleLlmCopy} />
           </div>
@@ -77,12 +77,12 @@ export const ResponseRenderer: React.FC<ResponseRendererProps> = ({ response, st
 
         {/* Parsed Response */}
         {shouldShowParsedSeparately() && (
-          <div className='relative group'>
-            <div className='space-y-2'>
-              <span className='flex flex-row gap-x-1 text-xs text-muted-foreground'>
+          <div className="relative group">
+            <div className="space-y-2">
+              <span className="flex flex-row gap-x-1 text-xs text-muted-foreground">
                 <div>Parsed Response</div>
                 {parsedResponse && typeof parsedResponse !== 'string' && parsedResponse.check_count > 0 ? (
-                  <div className='flex items-center space-x-1'>
+                  <div className="flex items-center space-x-1">
                     {/* <CheckCircle className="w-3 h-3" /> */}
                     <span>({parsedResponse.check_count} checks ran)</span>
                   </div>
@@ -96,7 +96,7 @@ export const ResponseRenderer: React.FC<ResponseRendererProps> = ({ response, st
       </div>
 
       {/* Error Messages */}
-      {failureMessage && <div className='text-xs text-red-500'>Error: {failureMessage}</div>}
+      {failureMessage && <div className="text-xs text-red-500">Error: {failureMessage}</div>}
     </div>
   )
 }
@@ -106,17 +106,17 @@ export const RawResponseRenderer: React.FC<{
   response?: WasmFunctionResponse | WasmTestResponse
 }> = ({ response }) => {
   if (!response) {
-    return <div className='text-xs text-muted-foreground'>Waiting for response...</div>
+    return <div className="text-xs text-muted-foreground">Waiting for response...</div>
   }
-  return <RenderText text={response.llm_response()?.content ?? ''} />
+  return <RenderPromptPart text={response.llm_response()?.content ?? ''} />
 }
 
 const MetadataBadges: React.FC<{ llmResponse: WasmLLMResponse }> = ({ llmResponse }) => (
   <TooltipProvider>
     <Tooltip>
       <TooltipTrigger asChild>
-        <Badge variant='outline' className='flex items-center space-x-1 font-light text-muted-foreground'>
-          <Brain className='w-3 h-3' />
+        <Badge variant="outline" className="flex items-center space-x-1 font-light text-muted-foreground">
+          <Brain className="w-3 h-3" />
           <span>{llmResponse.model}</span>
         </Badge>
       </TooltipTrigger>
@@ -125,8 +125,8 @@ const MetadataBadges: React.FC<{ llmResponse: WasmLLMResponse }> = ({ llmRespons
 
     <Tooltip>
       <TooltipTrigger asChild>
-        <Badge variant='outline' className='flex items-center space-x-1 font-light text-muted-foreground'>
-          <Clock className='w-3 h-3' />
+        <Badge variant="outline" className="flex items-center space-x-1 font-light text-muted-foreground">
+          <Clock className="w-3 h-3" />
           <span>{(Number(llmResponse.latency_ms) / 1000).toFixed(2)}s</span>
         </Badge>
       </TooltipTrigger>
@@ -137,12 +137,12 @@ const MetadataBadges: React.FC<{ llmResponse: WasmLLMResponse }> = ({ llmRespons
 
 const CopyButton: React.FC<{ copied: boolean; onCopy: () => void }> = ({ copied, onCopy }) => (
   <Button
-    variant='ghost'
-    size='icon'
-    className='absolute top-0 right-0 w-4 h-4 opacity-0 transition-opacity bg-muted group-hover:opacity-100'
+    variant="ghost"
+    size="icon"
+    className="absolute top-0 right-0 w-4 h-4 opacity-0 transition-opacity bg-muted group-hover:opacity-100"
     onClick={onCopy}
   >
-    {copied ? <Check className='w-4 h-4' /> : <Copy className='w-4 h-4' />}
+    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
   </Button>
 )
 
@@ -150,28 +150,28 @@ const LLMFailureView: React.FC<{ failure: WasmLLMFailure }> = ({ failure }) => {
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <div className='space-y-3 text-xs'>
-      <div className='flex items-center space-x-2 text-destructive'>
-        <AlertCircle className='w-4 h-4' />
-        <span className='font-semibold'>{failure.code}</span>
+    <div className="space-y-3 text-xs">
+      <div className="flex items-center space-x-2 text-destructive">
+        <AlertCircle className="w-4 h-4" />
+        <span className="font-semibold">{failure.code}</span>
       </div>
 
-      <Button variant='ghost' size='sm' onClick={() => setIsExpanded(!isExpanded)} className='p-0 h-auto font-normal'>
+      <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)} className="p-0 h-auto font-normal">
         {isExpanded ? (
           <>
-            <ChevronUp className='mr-1 w-4 h-4' />
+            <ChevronUp className="mr-1 w-4 h-4" />
             Hide full message
           </>
         ) : (
           <>
-            <ChevronDown className='mr-1 w-4 h-4' />
+            <ChevronDown className="mr-1 w-4 h-4" />
             Show full message
           </>
         )}
       </Button>
 
       {isExpanded && (
-        <div className='p-3 mt-2 font-mono text-xs whitespace-pre-wrap rounded-md bg-muted'>{failure.message}</div>
+        <div className="p-3 mt-2 font-mono text-xs whitespace-pre-wrap rounded-md bg-muted">{failure.message}</div>
       )}
 
       {/* <MetadataBadges llmResponse={failure.} /> */}

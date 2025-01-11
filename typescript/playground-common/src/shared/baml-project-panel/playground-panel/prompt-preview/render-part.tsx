@@ -1,5 +1,5 @@
 import type { WasmChatMessagePart, WasmParam, WasmTestCase } from '@gloo-ai/baml-schema-wasm-web'
-import { RenderText } from './render-text'
+import { RenderPromptPart } from './render-text'
 import { WebviewMedia } from './webview-media'
 
 export const RenderPart: React.FC<{
@@ -48,7 +48,7 @@ export const RenderPart: React.FC<{
       }
     })
 
-    return text ? <RenderText text={text} highlightChunks={highlightChunks} /> : null
+    return text ? <RenderPromptPart text={text} highlightChunks={highlightChunks} /> : null
   }
 
   const media = part.as_media()
@@ -57,11 +57,11 @@ export const RenderPart: React.FC<{
   }
 
   if (part.is_image()) {
-    return <WebviewMedia bamlMediaType='image' media={media} />
+    return <WebviewMedia bamlMediaType="image" media={media} />
   }
 
   if (part.is_audio()) {
-    return <WebviewMedia bamlMediaType='audio' media={media} />
+    return <WebviewMedia bamlMediaType="audio" media={media} />
   }
 
   return null
