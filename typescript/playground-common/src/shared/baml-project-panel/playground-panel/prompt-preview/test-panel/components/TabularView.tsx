@@ -6,7 +6,7 @@ import { Check, Copy, Play } from 'lucide-react'
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
-import { WasmTestResponse } from '@gloo-ai/baml-schema-wasm-web'
+import { WasmFunctionResponse, WasmTestResponse } from '@gloo-ai/baml-schema-wasm-web'
 import { ErrorBoundary } from 'react-error-boundary'
 import { Button } from '~/components/ui/button'
 import { selectedItemAtom, TestState } from '../../../atoms'
@@ -50,7 +50,7 @@ const CopyButton = ({
     const content =
       responseViewType === 'parsed'
         ? JSON.stringify(JSON.parse(response?.parsed_response()?.value ?? ''), null, 2)
-        : (response?.llm_response()?.content ?? '')
+        : response?.llm_response()?.content ?? ''
     navigator.clipboard.writeText(content)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -58,25 +58,36 @@ const CopyButton = ({
 
   return (
     <Button
-      variant='ghost'
-      size='icon'
-      className='absolute top-0 right-0 w-4 h-4 opacity-0 transition-opacity bg-muted group-hover:opacity-100'
+      variant="ghost"
+      size="icon"
+      className="absolute top-0 right-0 w-4 h-4 opacity-0 transition-opacity bg-muted group-hover:opacity-100"
       onClick={handleCopy}
     >
-      {copied ? <Check className='w-4 h-4' /> : <Copy className='w-4 h-4' />}
+      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
     </Button>
   )
 }
 
-const ResponseContent = ({ state, responseViewType }: { state: TestState; responseViewType: ResponseViewType }) => {
+const ResponseContent = ({
+  response,
+  state,
+  responseViewType,
+}: {
+  response: WasmTestResponse | WasmFunctionResponse | undefined
+  state: TestState
+  responseViewType: ResponseViewType
+}) => {
+  const failureMessage = response && 'failure_message' in response ? response.failure_message() : undefined
+
   return (
-    <div className=''>
+    <div className="">
+      {failureMessage && <pre className="pb-2 text-xs text-red-500 text-balance">Error: {failureMessage}</pre>}
       {responseViewType === 'parsed' && (
         <>
           <ParsedResponseRenderer response={getTestStateResponse(state)} />
 
           {getExplanation(state) && (
-            <div className='mt-2 text-xs text-muted-foreground/80'>{getExplanation(state)}</div>
+            <div className="mt-2 text-xs text-muted-foreground/80">{getExplanation(state)}</div>
           )}
         </>
       )}
@@ -84,7 +95,7 @@ const ResponseContent = ({ state, responseViewType }: { state: TestState; respon
         <MarkdownRenderer source={getTestStateResponse(state)?.llm_response()?.content || ''} />
       )}
       {responseViewType === 'raw' && (
-        <pre className='font-sans text-xs whitespace-pre-wrap break-words'>
+        <pre className="font-sans text-xs whitespace-pre-wrap break-words">
           {getTestStateResponse(state)?.llm_response()?.content}
         </pre>
       )}
@@ -123,53 +134,53 @@ export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
   }, [selectedItem])
 
   return (
-    <div className='space-y-4'>
-      <div className='flex items-center space-x-4'>
-        <div className='flex items-center space-x-2'>
+    <div className="space-y-4">
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           <input
-            type='checkbox'
-            id='showInputs'
+            type="checkbox"
+            id="showInputs"
             checked={config.showInputs}
             onChange={() => toggleConfig('showInputs')}
-            className='w-4 h-4 rounded opacity-80 text-primary focus:ring-primary'
+            className="w-4 h-4 rounded opacity-80 text-primary focus:ring-primary"
           />
-          <Label htmlFor='showInputs' className='text-muted-foreground/80'>
+          <Label htmlFor="showInputs" className="text-muted-foreground/80">
             Inputs
           </Label>
         </div>
-        <div className='flex items-center space-x-2'>
+        <div className="flex items-center space-x-2">
           <input
-            type='checkbox'
-            id='showModel'
+            type="checkbox"
+            id="showModel"
             checked={config.showModel}
             onChange={() => toggleConfig('showModel')}
-            className='w-4 h-4 rounded opacity-80 text-primary focus:ring-primary'
+            className="w-4 h-4 rounded opacity-80 text-primary focus:ring-primary"
           />
-          <Label htmlFor='showModel' className='text-muted-foreground/80'>
+          <Label htmlFor="showModel" className="text-muted-foreground/80">
             Model
           </Label>
         </div>
       </div>
 
-      <Table className='w-full table-fixed'>
+      <Table className="w-full table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead className='w-[8%] py-1'>Test</TableHead>
-            {config.showInputs && <TableHead className='w-[32%] py-1'>Inputs</TableHead>}
+            <TableHead className="w-[8%] py-1">Test</TableHead>
+            {config.showInputs && <TableHead className="w-[32%] py-1">Inputs</TableHead>}
             <TableHead className={`${config.showModel ? 'w-[35%]' : 'w-[47%]'} py-1`}>
               <Select value={config.responseViewType} onValueChange={handleResponseTypeChange}>
-                <SelectTrigger className='w-full text-left'>
-                  <SelectValue placeholder='Response Type' />
+                <SelectTrigger className="w-full text-left">
+                  <SelectValue placeholder="Response Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='parsed'>Parsed Response</SelectItem>
-                  <SelectItem value='pretty'>Raw Response (markdown)</SelectItem>
-                  <SelectItem value='raw'>Raw Response</SelectItem>
+                  <SelectItem value="parsed">Parsed Response</SelectItem>
+                  <SelectItem value="pretty">Raw Response (markdown)</SelectItem>
+                  <SelectItem value="raw">Raw Response</SelectItem>
                 </SelectContent>
               </Select>
             </TableHead>
-            <TableHead className='w-[10%] px-1 py-1'>Status</TableHead>
-            {config.showModel && <TableHead className='w-[10%] py-1'>Model</TableHead>}
+            <TableHead className="w-[10%] px-1 py-1">Status</TableHead>
+            {config.showModel && <TableHead className="w-[10%] py-1">Model</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -186,11 +197,11 @@ export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
                 )}
                 onClick={() => setSelectedItem(test.functionName, test.testName)}
               >
-                <TableCell className='px-1 py-1'>
-                  <div className='flex flex-col items-center space-y-2'>
+                <TableCell className="px-1 py-1">
+                  <div className="flex flex-col items-center space-y-2">
                     <Button
-                      variant='ghost'
-                      size='icon'
+                      variant="ghost"
+                      size="icon"
                       onClick={(e) => {
                         e.stopPropagation() // Prevent row selection when clicking the button
                         setRunningTests([
@@ -200,19 +211,19 @@ export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
                           },
                         ])
                       }}
-                      className='w-6 h-6'
+                      className="w-6 h-6"
                     >
-                      <Play className='w-4 h-4 text-purple-400' />
+                      <Play className="w-4 h-4 text-purple-400" />
                     </Button>
-                    <span className='text-xs truncate whitespace-pre-wrap break-all text-muted-foreground'>
+                    <span className="text-xs truncate whitespace-pre-wrap break-all text-muted-foreground">
                       {test.testName}
                     </span>
                   </div>
                 </TableCell>
                 {config.showInputs && (
-                  <TableCell className='py-1 whitespace-pre-wrap break-words'>
+                  <TableCell className="py-1 whitespace-pre-wrap break-words">
                     <ErrorBoundary fallbackRender={() => <div>Error rendering input</div>}>
-                      <div className='max-h-[400px] overflow-auto text-xs'>
+                      <div className="max-h-[400px] overflow-auto text-xs">
                         {test.input?.reduce((acc: Record<string, any>, input: { name?: string; value: any }) => {
                           let value = input.value
                           if (typeof value === 'string') {
@@ -249,24 +260,28 @@ export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
                     </ErrorBoundary>
                   </TableCell>
                 )}
-                <TableCell className='px-1 py-1'>
+                <TableCell className="px-1 py-1">
                   {/* <ScrollArea
                     className="relative max-h-[500px] flex-1"
                     type="always"
                   > */}
-                  <ResponseContent state={test.response} responseViewType={config.responseViewType} />
+                  <ResponseContent
+                    response={getTestStateResponse(test.response)}
+                    state={test.response}
+                    responseViewType={config.responseViewType}
+                  />
                   {/* </ScrollArea> */}
                 </TableCell>
-                <TableCell className='px-1 py-1'>
+                <TableCell className="px-1 py-1">
                   <TestStatus status={test.response.status} finalState={getStatus(test.response)} />
                   {test.response.status === 'error' && (
-                    <div className='mt-1 text-xs text-red-500'>{test.response.message}</div>
+                    <div className="mt-1 text-xs text-red-500">{test.response.message}</div>
                   )}
                 </TableCell>
                 {config.showModel && (
-                  <TableCell className='px-1 py-1 whitespace-normal'>
+                  <TableCell className="px-1 py-1 whitespace-normal">
                     {test.response.status === 'done' && test.response.response && (
-                      <span className='text-xs text-muted-foreground'>
+                      <span className="text-xs text-muted-foreground">
                         {test.response.response.llm_response()?.model}
                       </span>
                     )}
