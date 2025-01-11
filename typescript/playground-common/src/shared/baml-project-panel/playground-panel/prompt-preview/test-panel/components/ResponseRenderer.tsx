@@ -96,7 +96,7 @@ export const ResponseRenderer: React.FC<ResponseRendererProps> = ({ response, st
       </div>
 
       {/* Error Messages */}
-      {failureMessage && <div className='text-xs text-red-500'>Error: {failureMessage}</div>}
+      {failureMessage && <pre className='text-xs text-red-500 text-balance'>Error: {failureMessage}</pre>}
     </div>
   )
 }

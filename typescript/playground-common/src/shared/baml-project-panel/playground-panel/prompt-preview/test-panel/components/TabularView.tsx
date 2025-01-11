@@ -6,7 +6,7 @@ import { Check, Copy, Play } from 'lucide-react'
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
-import { WasmTestResponse } from '@gloo-ai/baml-schema-wasm-web'
+import { WasmFunctionResponse, WasmTestResponse } from '@gloo-ai/baml-schema-wasm-web'
 import { ErrorBoundary } from 'react-error-boundary'
 import { Button } from '~/components/ui/button'
 import { selectedItemAtom, TestState } from '../../../atoms'
@@ -68,9 +68,20 @@ const CopyButton = ({
   )
 }
 
-const ResponseContent = ({ state, responseViewType }: { state: TestState; responseViewType: ResponseViewType }) => {
+const ResponseContent = ({
+  response,
+  state,
+  responseViewType,
+}: {
+  response: WasmTestResponse | WasmFunctionResponse | undefined
+  state: TestState
+  responseViewType: ResponseViewType
+}) => {
+  const failureMessage = response && 'failure_message' in response ? response.failure_message() : undefined
+
   return (
     <div className=''>
+      {failureMessage && <pre className='pb-2 text-xs text-red-500 text-balance'>Error: {failureMessage}</pre>}
       {responseViewType === 'parsed' && (
         <>
           <ParsedResponseRenderer response={getTestStateResponse(state)} />
@@ -254,7 +265,11 @@ export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
                     className="relative max-h-[500px] flex-1"
                     type="always"
                   > */}
-                  <ResponseContent state={test.response} responseViewType={config.responseViewType} />
+                  <ResponseContent
+                    response={getTestStateResponse(test.response)}
+                    state={test.response}
+                    responseViewType={config.responseViewType}
+                  />
                   {/* </ScrollArea> */}
                 </TableCell>
                 <TableCell className='px-1 py-1'>
