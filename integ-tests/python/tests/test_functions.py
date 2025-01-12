@@ -448,6 +448,12 @@ async def test_should_work_with_vertex():
 
 
 @pytest.mark.asyncio
+async def test_should_work_with_vertex_adding_system_instructions():
+    res = await b.TestVertexWithSystemInstructions()
+    assert_that(len(res) > 0)
+
+
+@pytest.mark.asyncio
 async def test_should_work_with_image_base64():
     res = await b.TestImageInput(img=baml_py.Image.from_base64("image/png", image_b64))
     assert_that(res.lower()).matches(r"(green|yellow|shrek|ogre)")
