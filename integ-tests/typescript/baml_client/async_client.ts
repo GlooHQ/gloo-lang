@@ -3343,6 +3343,31 @@ export class BamlAsyncClient {
     }
   }
   
+  async TestVertexWithSystemInstructions(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "TestVertexWithSystemInstructions",
+        {
+          
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   async UnionTest_Function(
       input: string | boolean,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -7781,6 +7806,39 @@ class BamlStreamClient {
         "TestVertex",
         {
           "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<string>, string>(
+        raw,
+        (a): a is RecursivePartialNull<string> => a,
+        (a): a is string => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  TestVertexWithSystemInstructions(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<string>, string> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "TestVertexWithSystemInstructions",
+        {
+          
         },
         undefined,
         this.ctx_manager.cloneContext(),
