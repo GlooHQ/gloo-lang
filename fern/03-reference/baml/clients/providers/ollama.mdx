@@ -23,10 +23,12 @@ client<llm> MyClient {
   }
 }
 ```
+## BAML-specific request `options`
+These unique parameters (aka `options`)  modify the API request sent to the provider.
 
-The options are passed through directly to the API, barring a few. Here's a shorthand of the options:
+You can use this to modify the `headers` and `base_url` for example.
 
-## Non-forwarded options
+
 <ParamField
   path="base_url"
   type="string"

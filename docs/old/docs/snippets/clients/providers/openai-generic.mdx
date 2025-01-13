@@ -20,7 +20,12 @@ client<llm> MyClient {
 ```
 
 
-## Non-forwarded options
+
+## BAML-specific request `options`
+These unique parameters (aka `options`) are modify the API request sent to the provider.
+
+You can use this to modify the `headers`, `base_url`, and `default_role` sent to the provider for example.
+
 
 <ParamField path="base_url" type="string">
   The base URL for the API.

@@ -42,8 +42,11 @@ The `project_id` of your client object must match the `project_id` of your crede
 </Tip>
 
 
-The options are passed through directly to the API, barring a few. Here's a shorthand of the options:
-## Non-forwarded options
+## BAML-specific request `options`
+These unique parameters (aka `options`) modify the API request sent to the provider.
+
+You can use this to modify the `headers` and `base_url` for example.
+
 <ParamField path="base_url" type="string">
   The base URL for the API.
   
