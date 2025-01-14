@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useTestAwsAction } from '../../baml_client/react/client-hooks'
+import { useTestAws } from '../../baml_client/react/client'
 import { Loader2 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ export default function TestClient() {
     isError,
     error,
     mutate
-  } = useTestAwsAction()
+  } = useTestAws()
 
   const response = isLoading ? streamingResponse : finalResponse
   const [prompt, setPrompt] = React.useState('')

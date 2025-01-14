@@ -125,7 +125,7 @@ export type MakeStreamableResult<TPartial, TFinal, TArgs extends unknown[]> = (
 /**
  * Converts a BAML stream function into a streamable server action.
  */
-export function makeStreamable<TPartial, TFinal, TArgs extends unknown[]>(
+export async function makeStreamable<TPartial, TFinal, TArgs extends unknown[]>(
   streamFunction: BamlStreamFunction<TPartial, TFinal, TArgs>,
 ): MakeStreamableResult<TPartial, TFinal, TArgs> {
   return async (...args) => {
@@ -134,278 +134,1524 @@ export function makeStreamable<TPartial, TFinal, TArgs extends unknown[]>(
     return streamHelper(stream);
   };
 }
-export const AaaSamOutputFormatAction = makeStreamable(b.stream.AaaSamOutputFormat);
-
-export const AliasThatPointsToRecursiveTypeAction = makeStreamable(b.stream.AliasThatPointsToRecursiveType);
-
-export const AliasWithMultipleAttrsAction = makeStreamable(b.stream.AliasWithMultipleAttrs);
-
-export const AliasedInputClassAction = makeStreamable(b.stream.AliasedInputClass);
-
-export const AliasedInputClass2Action = makeStreamable(b.stream.AliasedInputClass2);
-
-export const AliasedInputClassNestedAction = makeStreamable(b.stream.AliasedInputClassNested);
-
-export const AliasedInputEnumAction = makeStreamable(b.stream.AliasedInputEnum);
-
-export const AliasedInputListAction = makeStreamable(b.stream.AliasedInputList);
-
-export const AllowedOptionalsAction = makeStreamable(b.stream.AllowedOptionals);
-
-export const AudioInputAction = makeStreamable(b.stream.AudioInput);
-
-export const BuildLinkedListAction = makeStreamable(b.stream.BuildLinkedList);
-
-export const BuildTreeAction = makeStreamable(b.stream.BuildTree);
-
-export const ClassThatPointsToRecursiveClassThroughAliasAction = makeStreamable(b.stream.ClassThatPointsToRecursiveClassThroughAlias);
-
-export const ClassifyDynEnumTwoAction = makeStreamable(b.stream.ClassifyDynEnumTwo);
-
-export const ClassifyMessageAction = makeStreamable(b.stream.ClassifyMessage);
-
-export const ClassifyMessage2Action = makeStreamable(b.stream.ClassifyMessage2);
-
-export const ClassifyMessage3Action = makeStreamable(b.stream.ClassifyMessage3);
-
-export const CompletionAction = makeStreamable(b.stream.Completion);
-
-export const CustomTaskAction = makeStreamable(b.stream.CustomTask);
-
-export const DescribeImageAction = makeStreamable(b.stream.DescribeImage);
-
-export const DescribeImage2Action = makeStreamable(b.stream.DescribeImage2);
-
-export const DescribeImage3Action = makeStreamable(b.stream.DescribeImage3);
-
-export const DescribeImage4Action = makeStreamable(b.stream.DescribeImage4);
-
-export const DifferentiateUnionsAction = makeStreamable(b.stream.DifferentiateUnions);
-
-export const DummyOutputFunctionAction = makeStreamable(b.stream.DummyOutputFunction);
-
-export const DynamicFuncAction = makeStreamable(b.stream.DynamicFunc);
-
-export const DynamicInputOutputAction = makeStreamable(b.stream.DynamicInputOutput);
-
-export const DynamicListInputOutputAction = makeStreamable(b.stream.DynamicListInputOutput);
-
-export const ExpectFailureAction = makeStreamable(b.stream.ExpectFailure);
-
-export const ExtractContactInfoAction = makeStreamable(b.stream.ExtractContactInfo);
-
-export const ExtractHobbyAction = makeStreamable(b.stream.ExtractHobby);
-
-export const ExtractNamesAction = makeStreamable(b.stream.ExtractNames);
-
-export const ExtractPeopleAction = makeStreamable(b.stream.ExtractPeople);
-
-export const ExtractReceiptInfoAction = makeStreamable(b.stream.ExtractReceiptInfo);
-
-export const ExtractResumeAction = makeStreamable(b.stream.ExtractResume);
-
-export const ExtractResume2Action = makeStreamable(b.stream.ExtractResume2);
-
-export const FnClassOptionalOutputAction = makeStreamable(b.stream.FnClassOptionalOutput);
-
-export const FnClassOptionalOutput2Action = makeStreamable(b.stream.FnClassOptionalOutput2);
-
-export const FnEnumListOutputAction = makeStreamable(b.stream.FnEnumListOutput);
-
-export const FnEnumOutputAction = makeStreamable(b.stream.FnEnumOutput);
-
-export const FnLiteralClassInputOutputAction = makeStreamable(b.stream.FnLiteralClassInputOutput);
-
-export const FnLiteralUnionClassInputOutputAction = makeStreamable(b.stream.FnLiteralUnionClassInputOutput);
-
-export const FnNamedArgsSingleStringOptionalAction = makeStreamable(b.stream.FnNamedArgsSingleStringOptional);
-
-export const FnOutputBoolAction = makeStreamable(b.stream.FnOutputBool);
-
-export const FnOutputClassAction = makeStreamable(b.stream.FnOutputClass);
-
-export const FnOutputClassListAction = makeStreamable(b.stream.FnOutputClassList);
-
-export const FnOutputClassNestedAction = makeStreamable(b.stream.FnOutputClassNested);
-
-export const FnOutputClassWithEnumAction = makeStreamable(b.stream.FnOutputClassWithEnum);
-
-export const FnOutputIntAction = makeStreamable(b.stream.FnOutputInt);
-
-export const FnOutputLiteralBoolAction = makeStreamable(b.stream.FnOutputLiteralBool);
-
-export const FnOutputLiteralIntAction = makeStreamable(b.stream.FnOutputLiteralInt);
-
-export const FnOutputLiteralStringAction = makeStreamable(b.stream.FnOutputLiteralString);
-
-export const FnOutputStringListAction = makeStreamable(b.stream.FnOutputStringList);
-
-export const FnTestAliasedEnumOutputAction = makeStreamable(b.stream.FnTestAliasedEnumOutput);
-
-export const FnTestClassAliasAction = makeStreamable(b.stream.FnTestClassAlias);
-
-export const FnTestNamedArgsSingleEnumAction = makeStreamable(b.stream.FnTestNamedArgsSingleEnum);
-
-export const GetDataTypeAction = makeStreamable(b.stream.GetDataType);
-
-export const GetOrderInfoAction = makeStreamable(b.stream.GetOrderInfo);
-
-export const GetQueryAction = makeStreamable(b.stream.GetQuery);
-
-export const InOutEnumMapKeyAction = makeStreamable(b.stream.InOutEnumMapKey);
-
-export const InOutLiteralStringUnionMapKeyAction = makeStreamable(b.stream.InOutLiteralStringUnionMapKey);
-
-export const InOutSingleLiteralStringMapKeyAction = makeStreamable(b.stream.InOutSingleLiteralStringMapKey);
-
-export const JsonTypeAliasCycleAction = makeStreamable(b.stream.JsonTypeAliasCycle);
-
-export const LiteralUnionsTestAction = makeStreamable(b.stream.LiteralUnionsTest);
-
-export const MakeBlockConstraintAction = makeStreamable(b.stream.MakeBlockConstraint);
-
-export const MakeNestedBlockConstraintAction = makeStreamable(b.stream.MakeNestedBlockConstraint);
-
-export const MapAliasAction = makeStreamable(b.stream.MapAlias);
-
-export const MergeAliasAttributesAction = makeStreamable(b.stream.MergeAliasAttributes);
-
-export const MyFuncAction = makeStreamable(b.stream.MyFunc);
-
-export const NestedAliasAction = makeStreamable(b.stream.NestedAlias);
-
-export const NullLiteralClassHelloAction = makeStreamable(b.stream.NullLiteralClassHello);
-
-export const OptionalTest_FunctionAction = makeStreamable(b.stream.OptionalTest_Function);
-
-export const PredictAgeAction = makeStreamable(b.stream.PredictAge);
-
-export const PredictAgeBareAction = makeStreamable(b.stream.PredictAgeBare);
-
-export const PrimitiveAliasAction = makeStreamable(b.stream.PrimitiveAlias);
-
-export const PromptTestClaudeAction = makeStreamable(b.stream.PromptTestClaude);
-
-export const PromptTestClaudeChatAction = makeStreamable(b.stream.PromptTestClaudeChat);
-
-export const PromptTestClaudeChatNoSystemAction = makeStreamable(b.stream.PromptTestClaudeChatNoSystem);
-
-export const PromptTestOpenAIAction = makeStreamable(b.stream.PromptTestOpenAI);
-
-export const PromptTestOpenAIChatAction = makeStreamable(b.stream.PromptTestOpenAIChat);
-
-export const PromptTestOpenAIChatNoSystemAction = makeStreamable(b.stream.PromptTestOpenAIChatNoSystem);
-
-export const PromptTestStreamingAction = makeStreamable(b.stream.PromptTestStreaming);
-
-export const RecursiveAliasCycleAction = makeStreamable(b.stream.RecursiveAliasCycle);
-
-export const RecursiveClassWithAliasIndirectionAction = makeStreamable(b.stream.RecursiveClassWithAliasIndirection);
-
-export const ReturnAliasWithMergedAttributesAction = makeStreamable(b.stream.ReturnAliasWithMergedAttributes);
-
-export const ReturnFailingAssertAction = makeStreamable(b.stream.ReturnFailingAssert);
-
-export const ReturnMalformedConstraintsAction = makeStreamable(b.stream.ReturnMalformedConstraints);
-
-export const SchemaDescriptionsAction = makeStreamable(b.stream.SchemaDescriptions);
-
-export const SimpleRecursiveListAliasAction = makeStreamable(b.stream.SimpleRecursiveListAlias);
-
-export const SimpleRecursiveMapAliasAction = makeStreamable(b.stream.SimpleRecursiveMapAlias);
-
-export const StreamBigNumbersAction = makeStreamable(b.stream.StreamBigNumbers);
-
-export const StreamFailingAssertionAction = makeStreamable(b.stream.StreamFailingAssertion);
-
-export const StreamOneBigNumberAction = makeStreamable(b.stream.StreamOneBigNumber);
-
-export const StreamUnionIntegersAction = makeStreamable(b.stream.StreamUnionIntegers);
-
-export const StreamingCompoundNumbersAction = makeStreamable(b.stream.StreamingCompoundNumbers);
-
-export const TestAnthropicAction = makeStreamable(b.stream.TestAnthropic);
-
-export const TestAnthropicShorthandAction = makeStreamable(b.stream.TestAnthropicShorthand);
-
-export const TestAwsAction = makeStreamable(b.stream.TestAws);
-
-export const TestAwsInvalidAccessKeyAction = makeStreamable(b.stream.TestAwsInvalidAccessKey);
-
-export const TestAwsInvalidProfileAction = makeStreamable(b.stream.TestAwsInvalidProfile);
-
-export const TestAwsInvalidRegionAction = makeStreamable(b.stream.TestAwsInvalidRegion);
-
-export const TestAwsInvalidSessionTokenAction = makeStreamable(b.stream.TestAwsInvalidSessionToken);
-
-export const TestAzureAction = makeStreamable(b.stream.TestAzure);
-
-export const TestAzureFailureAction = makeStreamable(b.stream.TestAzureFailure);
-
-export const TestCachingAction = makeStreamable(b.stream.TestCaching);
-
-export const TestFallbackClientAction = makeStreamable(b.stream.TestFallbackClient);
-
-export const TestFallbackToShorthandAction = makeStreamable(b.stream.TestFallbackToShorthand);
-
-export const TestFnNamedArgsSingleBoolAction = makeStreamable(b.stream.TestFnNamedArgsSingleBool);
-
-export const TestFnNamedArgsSingleClassAction = makeStreamable(b.stream.TestFnNamedArgsSingleClass);
-
-export const TestFnNamedArgsSingleEnumListAction = makeStreamable(b.stream.TestFnNamedArgsSingleEnumList);
-
-export const TestFnNamedArgsSingleFloatAction = makeStreamable(b.stream.TestFnNamedArgsSingleFloat);
-
-export const TestFnNamedArgsSingleIntAction = makeStreamable(b.stream.TestFnNamedArgsSingleInt);
-
-export const TestFnNamedArgsSingleMapStringToClassAction = makeStreamable(b.stream.TestFnNamedArgsSingleMapStringToClass);
-
-export const TestFnNamedArgsSingleMapStringToMapAction = makeStreamable(b.stream.TestFnNamedArgsSingleMapStringToMap);
-
-export const TestFnNamedArgsSingleMapStringToStringAction = makeStreamable(b.stream.TestFnNamedArgsSingleMapStringToString);
-
-export const TestFnNamedArgsSingleStringAction = makeStreamable(b.stream.TestFnNamedArgsSingleString);
-
-export const TestFnNamedArgsSingleStringArrayAction = makeStreamable(b.stream.TestFnNamedArgsSingleStringArray);
-
-export const TestFnNamedArgsSingleStringListAction = makeStreamable(b.stream.TestFnNamedArgsSingleStringList);
-
-export const TestGeminiAction = makeStreamable(b.stream.TestGemini);
-
-export const TestImageInputAction = makeStreamable(b.stream.TestImageInput);
-
-export const TestImageInputAnthropicAction = makeStreamable(b.stream.TestImageInputAnthropic);
-
-export const TestImageListInputAction = makeStreamable(b.stream.TestImageListInput);
-
-export const TestMulticlassNamedArgsAction = makeStreamable(b.stream.TestMulticlassNamedArgs);
-
-export const TestNamedArgsLiteralBoolAction = makeStreamable(b.stream.TestNamedArgsLiteralBool);
-
-export const TestNamedArgsLiteralIntAction = makeStreamable(b.stream.TestNamedArgsLiteralInt);
-
-export const TestNamedArgsLiteralStringAction = makeStreamable(b.stream.TestNamedArgsLiteralString);
-
-export const TestOllamaAction = makeStreamable(b.stream.TestOllama);
-
-export const TestOpenAILegacyProviderAction = makeStreamable(b.stream.TestOpenAILegacyProvider);
-
-export const TestOpenAIShorthandAction = makeStreamable(b.stream.TestOpenAIShorthand);
-
-export const TestRetryConstantAction = makeStreamable(b.stream.TestRetryConstant);
-
-export const TestRetryExponentialAction = makeStreamable(b.stream.TestRetryExponential);
-
-export const TestSingleFallbackClientAction = makeStreamable(b.stream.TestSingleFallbackClient);
-
-export const TestVertexAction = makeStreamable(b.stream.TestVertex);
-
-export const TestVertexWithSystemInstructionsAction = makeStreamable(b.stream.TestVertexWithSystemInstructions);
-
-export const UnionTest_FunctionAction = makeStreamable(b.stream.UnionTest_Function);
-
-export const UseBlockConstraintAction = makeStreamable(b.stream.UseBlockConstraint);
-
-export const UseMalformedConstraintsAction = makeStreamable(b.stream.UseMalformedConstraints);
-
-export const UseNestedBlockConstraintAction = makeStreamable(b.stream.UseNestedBlockConstraint);
+export const AaaSamOutputFormatAction = async (params: {
+  recipe: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.AaaSamOutputFormat)(rest);
+  }
+  return b.AaaSamOutputFormat(rest);
+};
+
+export const AliasThatPointsToRecursiveTypeAction = async (params: {
+  list: LinkedListAliasNode,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.AliasThatPointsToRecursiveType)(rest);
+  }
+  return b.AliasThatPointsToRecursiveType(rest);
+};
+
+export const AliasWithMultipleAttrsAction = async (params: {
+  money: Checked<number,"gt_ten">,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.AliasWithMultipleAttrs)(rest);
+  }
+  return b.AliasWithMultipleAttrs(rest);
+};
+
+export const AliasedInputClassAction = async (params: {
+  input: InputClass,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.AliasedInputClass)(rest);
+  }
+  return b.AliasedInputClass(rest);
+};
+
+export const AliasedInputClass2Action = async (params: {
+  input: InputClass,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.AliasedInputClass2)(rest);
+  }
+  return b.AliasedInputClass2(rest);
+};
+
+export const AliasedInputClassNestedAction = async (params: {
+  input: InputClassNested,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.AliasedInputClassNested)(rest);
+  }
+  return b.AliasedInputClassNested(rest);
+};
+
+export const AliasedInputEnumAction = async (params: {
+  input: AliasedEnum,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.AliasedInputEnum)(rest);
+  }
+  return b.AliasedInputEnum(rest);
+};
+
+export const AliasedInputListAction = async (params: {
+  input: AliasedEnum[],
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.AliasedInputList)(rest);
+  }
+  return b.AliasedInputList(rest);
+};
+
+export const AllowedOptionalsAction = async (params: {
+  optionals: OptionalListAndMap,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.AllowedOptionals)(rest);
+  }
+  return b.AllowedOptionals(rest);
+};
+
+export const AudioInputAction = async (params: {
+  aud: Audio,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.AudioInput)(rest);
+  }
+  return b.AudioInput(rest);
+};
+
+export const BuildLinkedListAction = async (params: {
+  input: number[],
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.BuildLinkedList)(rest);
+  }
+  return b.BuildLinkedList(rest);
+};
+
+export const BuildTreeAction = async (params: {
+  input: BinaryNode,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.BuildTree)(rest);
+  }
+  return b.BuildTree(rest);
+};
+
+export const ClassThatPointsToRecursiveClassThroughAliasAction = async (params: {
+  cls: ClassToRecAlias,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ClassThatPointsToRecursiveClassThroughAlias)(rest);
+  }
+  return b.ClassThatPointsToRecursiveClassThroughAlias(rest);
+};
+
+export const ClassifyDynEnumTwoAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ClassifyDynEnumTwo)(rest);
+  }
+  return b.ClassifyDynEnumTwo(rest);
+};
+
+export const ClassifyMessageAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ClassifyMessage)(rest);
+  }
+  return b.ClassifyMessage(rest);
+};
+
+export const ClassifyMessage2Action = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ClassifyMessage2)(rest);
+  }
+  return b.ClassifyMessage2(rest);
+};
+
+export const ClassifyMessage3Action = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ClassifyMessage3)(rest);
+  }
+  return b.ClassifyMessage3(rest);
+};
+
+export const CompletionAction = async (params: {
+  prefix: string,
+  suffix: string,
+  language: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.Completion)(rest);
+  }
+  return b.Completion(rest);
+};
+
+export const CustomTaskAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.CustomTask)(rest);
+  }
+  return b.CustomTask(rest);
+};
+
+export const DescribeImageAction = async (params: {
+  img: Image,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.DescribeImage)(rest);
+  }
+  return b.DescribeImage(rest);
+};
+
+export const DescribeImage2Action = async (params: {
+  classWithImage: ClassWithImage,
+  img2: Image,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.DescribeImage2)(rest);
+  }
+  return b.DescribeImage2(rest);
+};
+
+export const DescribeImage3Action = async (params: {
+  classWithImage: ClassWithImage,
+  img2: Image,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.DescribeImage3)(rest);
+  }
+  return b.DescribeImage3(rest);
+};
+
+export const DescribeImage4Action = async (params: {
+  classWithImage: ClassWithImage,
+  img2: Image,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.DescribeImage4)(rest);
+  }
+  return b.DescribeImage4(rest);
+};
+
+export const DifferentiateUnionsAction = async (params: {
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.DifferentiateUnions)(rest);
+  }
+  return b.DifferentiateUnions(rest);
+};
+
+export const DummyOutputFunctionAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.DummyOutputFunction)(rest);
+  }
+  return b.DummyOutputFunction(rest);
+};
+
+export const DynamicFuncAction = async (params: {
+  input: DynamicClassOne,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.DynamicFunc)(rest);
+  }
+  return b.DynamicFunc(rest);
+};
+
+export const DynamicInputOutputAction = async (params: {
+  input: DynInputOutput,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.DynamicInputOutput)(rest);
+  }
+  return b.DynamicInputOutput(rest);
+};
+
+export const DynamicListInputOutputAction = async (params: {
+  input: DynInputOutput[],
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.DynamicListInputOutput)(rest);
+  }
+  return b.DynamicListInputOutput(rest);
+};
+
+export const ExpectFailureAction = async (params: {
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ExpectFailure)(rest);
+  }
+  return b.ExpectFailure(rest);
+};
+
+export const ExtractContactInfoAction = async (params: {
+  document: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ExtractContactInfo)(rest);
+  }
+  return b.ExtractContactInfo(rest);
+};
+
+export const ExtractHobbyAction = async (params: {
+  text: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ExtractHobby)(rest);
+  }
+  return b.ExtractHobby(rest);
+};
+
+export const ExtractNamesAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ExtractNames)(rest);
+  }
+  return b.ExtractNames(rest);
+};
+
+export const ExtractPeopleAction = async (params: {
+  text: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ExtractPeople)(rest);
+  }
+  return b.ExtractPeople(rest);
+};
+
+export const ExtractReceiptInfoAction = async (params: {
+  email: string,
+  reason: "curiosity" | "personal_finance",
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ExtractReceiptInfo)(rest);
+  }
+  return b.ExtractReceiptInfo(rest);
+};
+
+export const ExtractResumeAction = async (params: {
+  resume: string,
+  img?: Image | null,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ExtractResume)(rest);
+  }
+  return b.ExtractResume(rest);
+};
+
+export const ExtractResume2Action = async (params: {
+  resume: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ExtractResume2)(rest);
+  }
+  return b.ExtractResume2(rest);
+};
+
+export const FnClassOptionalOutputAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnClassOptionalOutput)(rest);
+  }
+  return b.FnClassOptionalOutput(rest);
+};
+
+export const FnClassOptionalOutput2Action = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnClassOptionalOutput2)(rest);
+  }
+  return b.FnClassOptionalOutput2(rest);
+};
+
+export const FnEnumListOutputAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnEnumListOutput)(rest);
+  }
+  return b.FnEnumListOutput(rest);
+};
+
+export const FnEnumOutputAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnEnumOutput)(rest);
+  }
+  return b.FnEnumOutput(rest);
+};
+
+export const FnLiteralClassInputOutputAction = async (params: {
+  input: LiteralClassHello,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnLiteralClassInputOutput)(rest);
+  }
+  return b.FnLiteralClassInputOutput(rest);
+};
+
+export const FnLiteralUnionClassInputOutputAction = async (params: {
+  input: LiteralClassOne | LiteralClassTwo,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnLiteralUnionClassInputOutput)(rest);
+  }
+  return b.FnLiteralUnionClassInputOutput(rest);
+};
+
+export const FnNamedArgsSingleStringOptionalAction = async (params: {
+  myString?: string | null,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnNamedArgsSingleStringOptional)(rest);
+  }
+  return b.FnNamedArgsSingleStringOptional(rest);
+};
+
+export const FnOutputBoolAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnOutputBool)(rest);
+  }
+  return b.FnOutputBool(rest);
+};
+
+export const FnOutputClassAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnOutputClass)(rest);
+  }
+  return b.FnOutputClass(rest);
+};
+
+export const FnOutputClassListAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnOutputClassList)(rest);
+  }
+  return b.FnOutputClassList(rest);
+};
+
+export const FnOutputClassNestedAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnOutputClassNested)(rest);
+  }
+  return b.FnOutputClassNested(rest);
+};
+
+export const FnOutputClassWithEnumAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnOutputClassWithEnum)(rest);
+  }
+  return b.FnOutputClassWithEnum(rest);
+};
+
+export const FnOutputIntAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnOutputInt)(rest);
+  }
+  return b.FnOutputInt(rest);
+};
+
+export const FnOutputLiteralBoolAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnOutputLiteralBool)(rest);
+  }
+  return b.FnOutputLiteralBool(rest);
+};
+
+export const FnOutputLiteralIntAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnOutputLiteralInt)(rest);
+  }
+  return b.FnOutputLiteralInt(rest);
+};
+
+export const FnOutputLiteralStringAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnOutputLiteralString)(rest);
+  }
+  return b.FnOutputLiteralString(rest);
+};
+
+export const FnOutputStringListAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnOutputStringList)(rest);
+  }
+  return b.FnOutputStringList(rest);
+};
+
+export const FnTestAliasedEnumOutputAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnTestAliasedEnumOutput)(rest);
+  }
+  return b.FnTestAliasedEnumOutput(rest);
+};
+
+export const FnTestClassAliasAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnTestClassAlias)(rest);
+  }
+  return b.FnTestClassAlias(rest);
+};
+
+export const FnTestNamedArgsSingleEnumAction = async (params: {
+  myArg: NamedArgsSingleEnum,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.FnTestNamedArgsSingleEnum)(rest);
+  }
+  return b.FnTestNamedArgsSingleEnum(rest);
+};
+
+export const GetDataTypeAction = async (params: {
+  text: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.GetDataType)(rest);
+  }
+  return b.GetDataType(rest);
+};
+
+export const GetOrderInfoAction = async (params: {
+  email: Email,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.GetOrderInfo)(rest);
+  }
+  return b.GetOrderInfo(rest);
+};
+
+export const GetQueryAction = async (params: {
+  query: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.GetQuery)(rest);
+  }
+  return b.GetQuery(rest);
+};
+
+export const InOutEnumMapKeyAction = async (params: {
+  i1: Partial<Record<MapKey, string>>,
+  i2: Partial<Record<MapKey, string>>,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.InOutEnumMapKey)(rest);
+  }
+  return b.InOutEnumMapKey(rest);
+};
+
+export const InOutLiteralStringUnionMapKeyAction = async (params: {
+  i1: Partial<Record<"one" | "two" | "three" | "four", string>>,
+  i2: Partial<Record<"one" | "two" | "three" | "four", string>>,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.InOutLiteralStringUnionMapKey)(rest);
+  }
+  return b.InOutLiteralStringUnionMapKey(rest);
+};
+
+export const InOutSingleLiteralStringMapKeyAction = async (params: {
+  m: Partial<Record<"key", string>>,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.InOutSingleLiteralStringMapKey)(rest);
+  }
+  return b.InOutSingleLiteralStringMapKey(rest);
+};
+
+export const JsonTypeAliasCycleAction = async (params: {
+  input: JsonValue,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.JsonTypeAliasCycle)(rest);
+  }
+  return b.JsonTypeAliasCycle(rest);
+};
+
+export const LiteralUnionsTestAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.LiteralUnionsTest)(rest);
+  }
+  return b.LiteralUnionsTest(rest);
+};
+
+export const MakeBlockConstraintAction = async (params: {
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.MakeBlockConstraint)(rest);
+  }
+  return b.MakeBlockConstraint(rest);
+};
+
+export const MakeNestedBlockConstraintAction = async (params: {
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.MakeNestedBlockConstraint)(rest);
+  }
+  return b.MakeNestedBlockConstraint(rest);
+};
+
+export const MapAliasAction = async (params: {
+  m: Record<string, string[]>,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.MapAlias)(rest);
+  }
+  return b.MapAlias(rest);
+};
+
+export const MergeAliasAttributesAction = async (params: {
+  money: number,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.MergeAliasAttributes)(rest);
+  }
+  return b.MergeAliasAttributes(rest);
+};
+
+export const MyFuncAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.MyFunc)(rest);
+  }
+  return b.MyFunc(rest);
+};
+
+export const NestedAliasAction = async (params: {
+  c: number | string | boolean | number | string[] | Record<string, string[]>,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.NestedAlias)(rest);
+  }
+  return b.NestedAlias(rest);
+};
+
+export const NullLiteralClassHelloAction = async (params: {
+  s: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.NullLiteralClassHello)(rest);
+  }
+  return b.NullLiteralClassHello(rest);
+};
+
+export const OptionalTest_FunctionAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.OptionalTest_Function)(rest);
+  }
+  return b.OptionalTest_Function(rest);
+};
+
+export const PredictAgeAction = async (params: {
+  name: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.PredictAge)(rest);
+  }
+  return b.PredictAge(rest);
+};
+
+export const PredictAgeBareAction = async (params: {
+  inp: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.PredictAgeBare)(rest);
+  }
+  return b.PredictAgeBare(rest);
+};
+
+export const PrimitiveAliasAction = async (params: {
+  p: number | string | boolean | number,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.PrimitiveAlias)(rest);
+  }
+  return b.PrimitiveAlias(rest);
+};
+
+export const PromptTestClaudeAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.PromptTestClaude)(rest);
+  }
+  return b.PromptTestClaude(rest);
+};
+
+export const PromptTestClaudeChatAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.PromptTestClaudeChat)(rest);
+  }
+  return b.PromptTestClaudeChat(rest);
+};
+
+export const PromptTestClaudeChatNoSystemAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.PromptTestClaudeChatNoSystem)(rest);
+  }
+  return b.PromptTestClaudeChatNoSystem(rest);
+};
+
+export const PromptTestOpenAIAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.PromptTestOpenAI)(rest);
+  }
+  return b.PromptTestOpenAI(rest);
+};
+
+export const PromptTestOpenAIChatAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.PromptTestOpenAIChat)(rest);
+  }
+  return b.PromptTestOpenAIChat(rest);
+};
+
+export const PromptTestOpenAIChatNoSystemAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.PromptTestOpenAIChatNoSystem)(rest);
+  }
+  return b.PromptTestOpenAIChatNoSystem(rest);
+};
+
+export const PromptTestStreamingAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.PromptTestStreaming)(rest);
+  }
+  return b.PromptTestStreaming(rest);
+};
+
+export const RecursiveAliasCycleAction = async (params: {
+  input: RecAliasOne,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.RecursiveAliasCycle)(rest);
+  }
+  return b.RecursiveAliasCycle(rest);
+};
+
+export const RecursiveClassWithAliasIndirectionAction = async (params: {
+  cls: NodeWithAliasIndirection,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.RecursiveClassWithAliasIndirection)(rest);
+  }
+  return b.RecursiveClassWithAliasIndirection(rest);
+};
+
+export const ReturnAliasWithMergedAttributesAction = async (params: {
+  money: Checked<number,"gt_ten">,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ReturnAliasWithMergedAttributes)(rest);
+  }
+  return b.ReturnAliasWithMergedAttributes(rest);
+};
+
+export const ReturnFailingAssertAction = async (params: {
+  inp: number,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ReturnFailingAssert)(rest);
+  }
+  return b.ReturnFailingAssert(rest);
+};
+
+export const ReturnMalformedConstraintsAction = async (params: {
+  a: number,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.ReturnMalformedConstraints)(rest);
+  }
+  return b.ReturnMalformedConstraints(rest);
+};
+
+export const SchemaDescriptionsAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.SchemaDescriptions)(rest);
+  }
+  return b.SchemaDescriptions(rest);
+};
+
+export const SimpleRecursiveListAliasAction = async (params: {
+  input: RecursiveListAlias,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.SimpleRecursiveListAlias)(rest);
+  }
+  return b.SimpleRecursiveListAlias(rest);
+};
+
+export const SimpleRecursiveMapAliasAction = async (params: {
+  input: RecursiveMapAlias,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.SimpleRecursiveMapAlias)(rest);
+  }
+  return b.SimpleRecursiveMapAlias(rest);
+};
+
+export const StreamBigNumbersAction = async (params: {
+  digits: number,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.StreamBigNumbers)(rest);
+  }
+  return b.StreamBigNumbers(rest);
+};
+
+export const StreamFailingAssertionAction = async (params: {
+  theme: string,
+  length: number,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.StreamFailingAssertion)(rest);
+  }
+  return b.StreamFailingAssertion(rest);
+};
+
+export const StreamOneBigNumberAction = async (params: {
+  digits: number,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.StreamOneBigNumber)(rest);
+  }
+  return b.StreamOneBigNumber(rest);
+};
+
+export const StreamUnionIntegersAction = async (params: {
+  digits: number,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.StreamUnionIntegers)(rest);
+  }
+  return b.StreamUnionIntegers(rest);
+};
+
+export const StreamingCompoundNumbersAction = async (params: {
+  digits: number,
+  yapping: boolean,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.StreamingCompoundNumbers)(rest);
+  }
+  return b.StreamingCompoundNumbers(rest);
+};
+
+export const TestAnthropicAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestAnthropic)(rest);
+  }
+  return b.TestAnthropic(rest);
+};
+
+export const TestAnthropicShorthandAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestAnthropicShorthand)(rest);
+  }
+  return b.TestAnthropicShorthand(rest);
+};
+
+export const TestAwsAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestAws)(rest);
+  }
+  return b.TestAws(rest);
+};
+
+export const TestAwsInvalidAccessKeyAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestAwsInvalidAccessKey)(rest);
+  }
+  return b.TestAwsInvalidAccessKey(rest);
+};
+
+export const TestAwsInvalidProfileAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestAwsInvalidProfile)(rest);
+  }
+  return b.TestAwsInvalidProfile(rest);
+};
+
+export const TestAwsInvalidRegionAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestAwsInvalidRegion)(rest);
+  }
+  return b.TestAwsInvalidRegion(rest);
+};
+
+export const TestAwsInvalidSessionTokenAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestAwsInvalidSessionToken)(rest);
+  }
+  return b.TestAwsInvalidSessionToken(rest);
+};
+
+export const TestAzureAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestAzure)(rest);
+  }
+  return b.TestAzure(rest);
+};
+
+export const TestAzureFailureAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestAzureFailure)(rest);
+  }
+  return b.TestAzureFailure(rest);
+};
+
+export const TestCachingAction = async (params: {
+  input: string,
+  not_cached: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestCaching)(rest);
+  }
+  return b.TestCaching(rest);
+};
+
+export const TestFallbackClientAction = async (params: {
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFallbackClient)(rest);
+  }
+  return b.TestFallbackClient(rest);
+};
+
+export const TestFallbackToShorthandAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFallbackToShorthand)(rest);
+  }
+  return b.TestFallbackToShorthand(rest);
+};
+
+export const TestFnNamedArgsSingleBoolAction = async (params: {
+  myBool: boolean,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleBool)(rest);
+  }
+  return b.TestFnNamedArgsSingleBool(rest);
+};
+
+export const TestFnNamedArgsSingleClassAction = async (params: {
+  myArg: NamedArgsSingleClass,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleClass)(rest);
+  }
+  return b.TestFnNamedArgsSingleClass(rest);
+};
+
+export const TestFnNamedArgsSingleEnumListAction = async (params: {
+  myArg: NamedArgsSingleEnumList[],
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleEnumList)(rest);
+  }
+  return b.TestFnNamedArgsSingleEnumList(rest);
+};
+
+export const TestFnNamedArgsSingleFloatAction = async (params: {
+  myFloat: number,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleFloat)(rest);
+  }
+  return b.TestFnNamedArgsSingleFloat(rest);
+};
+
+export const TestFnNamedArgsSingleIntAction = async (params: {
+  myInt: number,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleInt)(rest);
+  }
+  return b.TestFnNamedArgsSingleInt(rest);
+};
+
+export const TestFnNamedArgsSingleMapStringToClassAction = async (params: {
+  myMap: Record<string, StringToClassEntry>,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleMapStringToClass)(rest);
+  }
+  return b.TestFnNamedArgsSingleMapStringToClass(rest);
+};
+
+export const TestFnNamedArgsSingleMapStringToMapAction = async (params: {
+  myMap: Record<string, Record<string, string>>,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleMapStringToMap)(rest);
+  }
+  return b.TestFnNamedArgsSingleMapStringToMap(rest);
+};
+
+export const TestFnNamedArgsSingleMapStringToStringAction = async (params: {
+  myMap: Record<string, string>,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleMapStringToString)(rest);
+  }
+  return b.TestFnNamedArgsSingleMapStringToString(rest);
+};
+
+export const TestFnNamedArgsSingleStringAction = async (params: {
+  myString: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleString)(rest);
+  }
+  return b.TestFnNamedArgsSingleString(rest);
+};
+
+export const TestFnNamedArgsSingleStringArrayAction = async (params: {
+  myStringArray: string[],
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleStringArray)(rest);
+  }
+  return b.TestFnNamedArgsSingleStringArray(rest);
+};
+
+export const TestFnNamedArgsSingleStringListAction = async (params: {
+  myArg: string[],
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestFnNamedArgsSingleStringList)(rest);
+  }
+  return b.TestFnNamedArgsSingleStringList(rest);
+};
+
+export const TestGeminiAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestGemini)(rest);
+  }
+  return b.TestGemini(rest);
+};
+
+export const TestImageInputAction = async (params: {
+  img: Image,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestImageInput)(rest);
+  }
+  return b.TestImageInput(rest);
+};
+
+export const TestImageInputAnthropicAction = async (params: {
+  img: Image,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestImageInputAnthropic)(rest);
+  }
+  return b.TestImageInputAnthropic(rest);
+};
+
+export const TestImageListInputAction = async (params: {
+  imgs: Image[],
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestImageListInput)(rest);
+  }
+  return b.TestImageListInput(rest);
+};
+
+export const TestMulticlassNamedArgsAction = async (params: {
+  myArg: NamedArgsSingleClass,
+  myArg2: NamedArgsSingleClass,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestMulticlassNamedArgs)(rest);
+  }
+  return b.TestMulticlassNamedArgs(rest);
+};
+
+export const TestNamedArgsLiteralBoolAction = async (params: {
+  myBool: true,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestNamedArgsLiteralBool)(rest);
+  }
+  return b.TestNamedArgsLiteralBool(rest);
+};
+
+export const TestNamedArgsLiteralIntAction = async (params: {
+  myInt: 1,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestNamedArgsLiteralInt)(rest);
+  }
+  return b.TestNamedArgsLiteralInt(rest);
+};
+
+export const TestNamedArgsLiteralStringAction = async (params: {
+  myString: "My String",
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestNamedArgsLiteralString)(rest);
+  }
+  return b.TestNamedArgsLiteralString(rest);
+};
+
+export const TestOllamaAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestOllama)(rest);
+  }
+  return b.TestOllama(rest);
+};
+
+export const TestOpenAILegacyProviderAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestOpenAILegacyProvider)(rest);
+  }
+  return b.TestOpenAILegacyProvider(rest);
+};
+
+export const TestOpenAIShorthandAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestOpenAIShorthand)(rest);
+  }
+  return b.TestOpenAIShorthand(rest);
+};
+
+export const TestRetryConstantAction = async (params: {
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestRetryConstant)(rest);
+  }
+  return b.TestRetryConstant(rest);
+};
+
+export const TestRetryExponentialAction = async (params: {
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestRetryExponential)(rest);
+  }
+  return b.TestRetryExponential(rest);
+};
+
+export const TestSingleFallbackClientAction = async (params: {
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestSingleFallbackClient)(rest);
+  }
+  return b.TestSingleFallbackClient(rest);
+};
+
+export const TestVertexAction = async (params: {
+  input: string,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestVertex)(rest);
+  }
+  return b.TestVertex(rest);
+};
+
+export const TestVertexWithSystemInstructionsAction = async (params: {
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.TestVertexWithSystemInstructions)(rest);
+  }
+  return b.TestVertexWithSystemInstructions(rest);
+};
+
+export const UnionTest_FunctionAction = async (params: {
+  input: string | boolean,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.UnionTest_Function)(rest);
+  }
+  return b.UnionTest_Function(rest);
+};
+
+export const UseBlockConstraintAction = async (params: {
+  inp: BlockConstraintForParam,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.UseBlockConstraint)(rest);
+  }
+  return b.UseBlockConstraint(rest);
+};
+
+export const UseMalformedConstraintsAction = async (params: {
+  a: MalformedConstraints2,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.UseMalformedConstraints)(rest);
+  }
+  return b.UseMalformedConstraints(rest);
+};
+
+export const UseNestedBlockConstraintAction = async (params: {
+  inp: NestedBlockConstraintForParam,
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.UseNestedBlockConstraint)(rest);
+  }
+  return b.UseNestedBlockConstraint(rest);
+};

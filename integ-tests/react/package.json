@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@boundaryml/baml": "link:../../engine/language_client_typescript",
+    "@boundaryml/baml-nextjs-plugin": "link:../../typescript/nextjs-plugin",
     "@radix-ui/react-dropdown-menu": "^2.1.4",
     "@radix-ui/react-label": "^2.1.1",
     "@radix-ui/react-progress": "^1.1.1",

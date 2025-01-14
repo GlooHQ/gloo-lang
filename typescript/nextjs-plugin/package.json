@@ -27,7 +27,6 @@
 		"test": "jest"
 	},
 	"peerDependencies": {
-		"@boundaryml/baml": "*",
 		"next": "*",
 		"react": "*",
 		"webpack": "*"

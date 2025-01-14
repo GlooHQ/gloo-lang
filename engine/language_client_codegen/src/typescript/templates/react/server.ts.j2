@@ -108,7 +108,7 @@ export type MakeStreamableResult<TPartial, TFinal, TArgs extends unknown[]> = (
 /**
  * Converts a BAML stream function into a streamable server action.
  */
-export function makeStreamable<TPartial, TFinal, TArgs extends unknown[]>(
+export async function makeStreamable<TPartial, TFinal, TArgs extends unknown[]>(
   streamFunction: BamlStreamFunction<TPartial, TFinal, TArgs>,
 ): MakeStreamableResult<TPartial, TFinal, TArgs> {
   return async (...args) => {
@@ -119,5 +119,16 @@ export function makeStreamable<TPartial, TFinal, TArgs extends unknown[]>(
 }
 
 {%- for func in funcs %}
-export const {{ func.name }}Action = makeStreamable(b.stream.{{ func.name }});
+export const {{ func.name }}Action = async (params: {
+  {%- for (name, optional, type) in func.args %}
+  {{ name }}{% if optional %}?{% endif %}: {{ type }},
+  {%- endfor %}
+  stream?: boolean
+}) => {
+  const { stream, ...rest } = params;
+  if (stream) {
+    return makeStreamable(b.stream.{{ func.name }})(rest);
+  }
+  return b.{{ func.name }}(rest);
+};
 {% endfor -%}
