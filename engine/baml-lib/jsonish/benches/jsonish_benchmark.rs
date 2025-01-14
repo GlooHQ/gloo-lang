@@ -1,6 +1,5 @@
 use criterion::{criterion_group, criterion_main};
 
-mod common;
 mod literals;
 mod lists;
 mod classes;

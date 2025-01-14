@@ -1,5 +1,4 @@
 use internal_baml_jinja::types::{Builder, OutputFormatContent};
-use jsonish::from_str;
 use baml_types::{FieldType, LiteralValue};
 
 pub const CLASS_SCHEMA: &str = r#"
@@ -30,6 +29,12 @@ class ImageContent {
 }
 
 class VideoContent {
+    url string
+    duration int
+}
+
+class AudioContent {
+    type string
     url string
     duration int
 }

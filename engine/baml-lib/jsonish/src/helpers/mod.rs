@@ -1,3 +1,4 @@
+pub mod common;
 use std::{collections::HashSet, path::PathBuf};
 
 use anyhow::Result;
