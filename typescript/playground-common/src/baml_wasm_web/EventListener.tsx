@@ -47,7 +47,7 @@ export const versionAtom = atom((get) => {
 export const numErrorsAtom = atom((get) => {
   const errors = get(diagnosticsAtom)
 
-  const warningCount = errors.filter((e) => e.type === 'warning').length
+  const warningCount = errors.filter((e: any) => e.type === 'warning').length
 
   return { errors: errors.length - warningCount, warnings: warningCount }
 })
@@ -56,20 +56,20 @@ const ErrorCount: React.FC = () => {
   const { errors, warnings } = useAtomValue(numErrorsAtom)
   if (errors === 0 && warnings === 0) {
     return (
-      <div className='flex flex-row gap-1 items-center text-green-600'>
+      <div className="flex flex-row gap-1 items-center text-green-600">
         <CheckCircle size={12} />
       </div>
     )
   }
   if (errors === 0) {
     return (
-      <div className='flex flex-row gap-1 items-center text-yellow-600'>
+      <div className="flex flex-row gap-1 items-center text-yellow-600">
         {warnings} <AlertTriangle size={12} />
       </div>
     )
   }
   return (
-    <div className='flex flex-row gap-1 items-center text-red-600'>
+    <div className="flex flex-row gap-1 items-center text-red-600">
       {errors} <XCircle size={12} /> {warnings} <AlertTriangle size={12} />{' '}
     </div>
   )
@@ -210,11 +210,11 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <>
-      <div className='flex absolute right-2 bottom-2 z-50 flex-row gap-2 text-xs bg-transparent'>
-        <div className='pr-4 whitespace-nowrap'>{bamlCliVersion && 'baml-cli ' + bamlCliVersion}</div>
-        <ErrorCount /> <span className='text-muted-foreground text-[10px]'>VSCode Runtime Version: {version}</span>
+      <div className="flex absolute right-2 bottom-2 z-50 flex-row gap-2 text-xs bg-transparent">
+        <div className="pr-4 whitespace-nowrap">{bamlCliVersion && 'baml-cli ' + bamlCliVersion}</div>
+        <ErrorCount /> <span className="text-muted-foreground text-[10px]">VSCode Runtime Version: {version}</span>
       </div>
-      <CustomErrorBoundary message='Error loading project'>{children}</CustomErrorBoundary>
+      <CustomErrorBoundary message="Error loading project">{children}</CustomErrorBoundary>
     </>
   )
 }
