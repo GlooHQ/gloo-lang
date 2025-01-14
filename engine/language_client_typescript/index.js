@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BamlValidationError = exports.BamlClientFinishReasonError = exports.BamlCtxManager = exports.BamlStream = exports.BamlLogEvent = exports.ClientRegistry = exports.invoke_runtime_cli = exports.Audio = exports.ClientBuilder = exports.Image = exports.FunctionResultStream = exports.FunctionResult = exports.BamlRuntime = void 0;
-exports.createBamlValidationError = createBamlValidationError;
+exports.createBamlValidationError = exports.BamlValidationError = exports.BamlClientFinishReasonError = exports.BamlCtxManager = exports.BamlStream = exports.BamlLogEvent = exports.ClientRegistry = exports.invoke_runtime_cli = exports.Audio = exports.ClientBuilder = exports.Image = exports.FunctionResultStream = exports.FunctionResult = exports.BamlRuntime = void 0;
 var native_1 = require("./native");
 Object.defineProperty(exports, "BamlRuntime", { enumerable: true, get: function () { return native_1.BamlRuntime; } });
 Object.defineProperty(exports, "FunctionResult", { enumerable: true, get: function () { return native_1.FunctionResult; } });
@@ -101,4 +100,5 @@ function createBamlValidationError(error) {
     // otherwise return the original error
     return error;
 }
+exports.createBamlValidationError = createBamlValidationError;
 // No need for a separate throwBamlValidationError function in TypeScript
