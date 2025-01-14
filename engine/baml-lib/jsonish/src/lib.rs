@@ -1,3 +1,6 @@
+#[cfg(any(feature = "bench", test))]
+pub mod helpers;
+
 #[cfg(test)]
 mod tests;
 

@@ -126,8 +126,8 @@ fn test_union_of_class_and_map() {
     let llm_output = r#"{"a": 1, "b": "hello"}"#;
     let expected = json!({"a": "1", "b": "hello"});
 
-    let ir = load_test_ir(file_content);
-    let target = render_output_format(&ir, &target_type, &Default::default()).unwrap();
+    let ir = crate::helpers::load_test_ir(file_content);
+    let target = crate::helpers::render_output_format(&ir, &target_type, &Default::default()).unwrap();
 
     let result = from_str(&target, &target_type, llm_output, false);
 
@@ -158,8 +158,8 @@ fn test_union_of_map_and_class() {
     let llm_output = r#"{"a": 1, "b": "hello"}"#;
     let expected = json!({"a": "1", "b": "hello"});
 
-    let ir = load_test_ir(file_content);
-    let target = render_output_format(&ir, &target_type, &Default::default()).unwrap();
+    let ir = crate::helpers::load_test_ir(file_content);
+    let target = crate::helpers::render_output_format(&ir, &target_type, &Default::default()).unwrap();
 
     let result = from_str(&target, &target_type, llm_output, false);
 
