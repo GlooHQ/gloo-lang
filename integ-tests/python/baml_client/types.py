@@ -543,6 +543,13 @@ class UnionTest_ReturnType(BaseModel):
     prop2: List[Union[float, bool]]
     prop3: Union[List[bool], List[int]]
 
+class UniverseQuestion(BaseModel):
+    question: str
+    answer: str
+
+class UniverseQuestionInput(BaseModel):
+    question: str
+
 class WithReasoning(BaseModel):
     value: str
     reasoning: str

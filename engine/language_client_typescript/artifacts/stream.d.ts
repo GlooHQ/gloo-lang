@@ -11,5 +11,10 @@ export declare class BamlStream<PartialOutputType, FinalOutputType> {
     private driveToCompletionInBg;
     [Symbol.asyncIterator](): AsyncIterableIterator<PartialOutputType>;
     getFinalResponse(): Promise<FinalOutputType>;
+    /**
+     * Converts the BAML stream to a Next.js compatible stream.
+     * This is used for server-side streaming in Next.js API routes and Server Actions.
+     */
+    toStreamable(): ReadableStream<Uint8Array>;
 }
 //# sourceMappingURL=stream.d.ts.map

@@ -1,0 +1,34 @@
+<CodeBlocks>
+```typescript title="next.config.ts" {1,8}
+import { withBaml } from '@boundaryml/nextjs';
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  // ... existing config
+};
+
+export default withBaml()(nextConfig);
+```
+
+```javascript title="next.config.mjs" {1,8}
+import { withBaml } from '@boundaryml/nextjs';
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  // ... existing config
+};
+
+export default withBaml()(nextConfig);
+```
+
+```javascript title="next.config.js" {1,8}
+const { withBaml } = require('@boundaryml/nextjs');
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // ... existing config
+}
+
+module.exports = withBaml()(nextConfig)
+```
+</CodeBlocks>

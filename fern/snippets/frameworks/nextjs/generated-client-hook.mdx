@@ -1,0 +1,54 @@
+
+```tsx title="app/components/story-form.tsx" {3, 7-15}
+'use client'
+
+import { useWriteMeAStoryAction } from "@/baml_client/nextjs";
+import type { Story } from "@/baml_client/types";
+
+export function StoryForm() {
+  // Generated hook from BAML Function WriteMeAStory
+  const {
+    data: finalStory,
+    partialData: streamingStory,
+    isLoading,
+    isError,
+    error,
+    mutate
+  } = useWriteMeAStoryAction();
+
+  const story = isLoading ? streamingStory : finalStory; // Typesafe: Story | undefined
+  const title = story?.title; // Typesafe: string | undefined
+  const content = story?.content; // Typesafe: string | undefined
+
+  return (
+      <div>
+        <form
+          onSubmit={(e) => {
+            const formData = new FormData(e.currentTarget as HTMLFormElement);
+
+            mutate(formData.get('prompt') as string);
+          }}
+        >
+          <input name="prompt" placeholder="Enter your prompt..." />
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? 'Generating...' : 'Generate'}
+          </button>
+        </form>
+
+        <div>
+          <h3>{streamingStory ? "Streaming Response:" : "Final Response:"}</h3>
+          <h4>{story?.title}</h4>
+          <pre>
+            {story?.content}
+          </pre>
+        </div>
+
+        {isError && (
+          <div>
+            Error: {error?.message}
+          </div>
+        )}
+      </div>
+  );
+}
+```

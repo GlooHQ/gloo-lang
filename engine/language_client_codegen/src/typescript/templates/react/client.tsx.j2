@@ -1,0 +1,512 @@
+'use client'
+
+import { useCallback, useMemo, useReducer, useTransition } from 'react';
+import type {
+  PartialResponse,
+  FinalResponse,
+  StreamingProps,
+  NonStreamingProps,
+  StreamingHookResult,
+  NonStreamingHookResult,
+  HookProps,
+  HookResult
+} from './types';
+import type { RecursivePartialNull, Check, Checked } from '../types';
+import type { Image, Audio } from "@boundaryml/baml"
+import { BamlValidationError, BamlClientFinishReasonError } from "@boundaryml/baml/errors"
+import * as ServerActions from './server';
+
+import type {
+  {%- for t in types %}{{ t }}{% if !loop.last %}, {% endif %}{% endfor -%}
+} from "../types"
+
+/**
+ * Type guard to check if props are for streaming mode
+ */
+function isStreamingProps<Action>(
+  props: HookProps<Action>
+): props is StreamingProps<Action> {
+  return props.stream === true;
+}
+
+interface HookState<TPartial, TFinal> {
+  isSuccess: boolean;
+  error: Error | BamlValidationError | BamlClientFinishReasonError | null;
+  data: TFinal | null;
+  partialData: TPartial | null;
+}
+
+type HookStateAction<TPartial, TFinal> =
+  | { type: 'START_REQUEST' }
+  | { type: 'SET_ERROR'; payload: Error | BamlValidationError | BamlClientFinishReasonError }
+  | { type: 'SET_PARTIAL'; payload: TPartial }
+  | { type: 'SET_FINAL'; payload: TFinal }
+  | { type: 'RESET' };
+
+function hookReducer<TPartial, TFinal>(
+  state: HookState<TPartial, TFinal>,
+  action: HookStateAction<TPartial, TFinal>
+): HookState<TPartial, TFinal> {
+  switch (action.type) {
+    case 'START_REQUEST':
+      return {
+        ...state,
+        isSuccess: false,
+        error: null,
+        data: null,
+        partialData: null,
+      };
+    case 'SET_ERROR':
+      return {
+        ...state,
+        isSuccess: false,
+        error: action.payload,
+        data: null,
+        partialData: null,
+      };
+    case 'SET_PARTIAL':
+      return {
+        ...state,
+        partialData: action.payload,
+      };
+    case 'SET_FINAL':
+      return {
+        ...state,
+        isSuccess: true,
+        data: action.payload,
+        partialData: null,
+      };
+    case 'RESET':
+      return {
+        isSuccess: false,
+        error: null,
+        data: null,
+        partialData: null,
+      };
+    default:
+      return state;
+  }
+}
+
+/**
+ * Base hook for making BAML function calls with support for both streaming and non-streaming modes.
+ * Provides a unified interface for handling loading states, errors, and data updates.
+ *
+ * This hook can be used directly with any BAML server action, or through the specialized hooks
+ * generated for each BAML function.
+ *
+ * Features:
+ * 1. Streaming Support
+ *    - Real-time partial updates via `partialData`
+ *    - Progress indicators and incremental UI updates
+ *    - Automatic stream cleanup and error handling
+ *
+ * 2. State Management
+ *    - Loading state via `isPending`
+ *    - Success/error states
+ *    - Final result in `data`
+ *    - Partial results in `partialData` (streaming mode)
+ *
+ * 3. Error Handling
+ *    - Type-safe error handling with three possible error types:
+ *      1. BamlValidationError: Thrown when BAML fails to parse LLM output
+ *         - Access error.prompt for the original prompt
+ *         - Access error.raw_output for the LLM's raw response
+ *         - Access error.message for parsing error details
+ *      2. BamlClientFinishReasonError: Thrown when LLM terminates with disallowed finish reason
+ *         - Access error.prompt for the original prompt
+ *         - Access error.raw_output for the LLM's raw response
+ *         - Access error.message for error details
+ *         - Access error.finish_reason for the specific termination reason
+ *      3. Error: Standard JavaScript errors for other cases
+ *    - Example error handling:
+ *      ```typescript
+ *      try {
+ *        await mutate(params);
+ *      } catch (e) {
+ *        if (e instanceof BamlValidationError) {
+ *          console.error('Failed to parse LLM output:', e.raw_output);
+ *          console.error('Original prompt:', e.prompt);
+ *        } else if (e instanceof BamlClientFinishReasonError) {
+ *          console.error('LLM terminated early:', e.finish_reason);
+ *          console.error('Partial output:', e.raw_output);
+ *        } else {
+ *          console.error('Other error:', e);
+ *        }
+ *      }
+ *      ```
+ *    - Network error detection
+ *    - Stream interruption handling
+ *
+ * 4. Type Safety
+ *    - Full TypeScript support
+ *    - Inferred types from server actions
+ *    - Proper typing for streaming/non-streaming modes
+ *
+ * @template Action The type of the server action
+ * @param serverAction The server action function to execute
+ * @param props Configuration props for the hook
+ * @returns An object containing the current state and controls
+ *
+ * @example
+ * ```tsx
+ * // 1. Basic Usage (Non-streaming)
+ * const { data, error, isPending, mutate } = useBamlAction(myServerAction);
+ *
+ * // 2. Streaming with Progress
+ * const {
+ *   data,         // Final result (Action's return type | null)
+ *   partialData,  // Latest partial update (RecursivePartialNull<ReturnType> | null)
+ *   isPending,    // Whether a request is in progress
+ *   isSuccess,    // Whether the last request succeeded
+ *   isError,      // Whether the last request failed
+ *   error,        // Error object if failed
+ *   status,       // 'idle' | 'pending' | 'success' | 'error'
+ *   mutate        // Function to trigger the action
+ * } = useBamlAction(myServerAction, {
+ *   stream: true,
+ *
+ *   // Called on each partial update
+ *   onPartial: (partial) => {
+ *     console.log('Partial update:', partial);
+ *   },
+ *
+ *   // Called when streaming completes successfully
+ *   onFinal: (final) => {
+ *     console.log('Final result:', final);
+ *   },
+ *
+ *   // Called on any error
+ *   onError: (error) => {
+ *     console.error('Request failed:', error);
+ *   }
+ * });
+ *
+ * // 3. Making Requests
+ * const handleClick = async () => {
+ *   try {
+ *     const result = await mutate({
+ *       // your action's parameters
+ *       param1: 'value1',
+ *       param2: 'value2'
+ *     });
+ *
+ *     if (result) {
+ *       // Handle success
+ *     }
+ *   } catch (e) {
+ *     // Handle errors
+ *   }
+ * };
+ *
+ * // 4. Using with React Effects
+ * useEffect(() => {
+ *   if (data) {
+ *     // Handle final data
+ *   }
+ * }, [data]);
+ *
+ * useEffect(() => {
+ *   if (partialData) {
+ *     // Handle streaming updates
+ *   }
+ * }, [partialData]);
+ *
+ * // 5. Error Handling
+ * useEffect(() => {
+ *   if (error) {
+ *     console.error('Request failed:', error);
+ *   }
+ * }, [error]);
+ *
+ * // 6. Conditional Rendering
+ * if (isPending) return <LoadingSpinner />;
+ * if (error) return <ErrorMessage error={error} />;
+ * if (data) return <SuccessView data={data} />;
+ *
+ * // 7. Streaming Progress
+ * return (
+ *   <div>
+ *     {isPending && <ProgressIndicator />}
+ *     {partialData && <PartialResult data={partialData} />}
+ *     {data && <FinalResult data={data} />}
+ *
+ *     <button
+ *       onClick={handleClick}
+ *       disabled={isPending}
+ *     >
+ *       {isPending ? 'Processing...' : 'Start'}
+ *     </button>
+ *   </div>
+ * );
+ * ```
+ */
+export function useBamlAction<Action>(
+  action: Action,
+  props: StreamingProps<Action>
+): StreamingHookResult<Action>;
+
+export function useBamlAction<Action>(
+  action: Action,
+  props?: NonStreamingProps<Action>
+): NonStreamingHookResult<Action>;
+
+export function useBamlAction<Action>(
+  serverAction: Action,
+  props: HookProps<Action> = {},
+): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+  const { onFinal, onError, onPartial } = props;
+  const isStreaming = isStreamingProps(props);
+  const [isPending, startTransition] = useTransition();
+
+  const [state, dispatch] = useReducer(hookReducer<RecursivePartialNull<Awaited<ReturnType<Action>>>, Awaited<ReturnType<Action>>>, {
+    isSuccess: false,
+    error: null,
+    data: null,
+    partialData: null,
+  });
+
+  const mutate = useCallback(
+    async (...input: Parameters<typeof serverAction>) => {
+      dispatch({ type: 'START_REQUEST' });
+
+      try {
+        let response: Awaited<ReturnType<Action>>;
+        await startTransition(async () => {
+          response = await serverAction(...input);
+
+          if (isStreaming && response instanceof ReadableStream) {
+            const reader = response.getReader();
+            const decoder = new TextDecoder();
+
+            try {
+              while (true) {
+                const { value, done } = await reader.read();
+
+                if (done) break;
+
+                if (value) {
+                  const chunk = decoder.decode(value, { stream: true }).trim();
+                  try {
+                    const parsed: BamlStreamResponse<Awaited<ReturnType<NonStreamingAction>>> = JSON.parse(chunk);
+
+                    if (parsed.error) {
+                      // Create appropriate error type
+                      let error: Error | BamlValidationError | BamlClientFinishReasonError;
+                      if (parsed.error.type === "BamlValidationError") {
+                        error = new BamlValidationError(
+                          parsed.error.prompt,
+                          parsed.error.raw_output,
+                          parsed.error.message
+                        );
+                      } else if (parsed.error.type === "BamlClientFinishReasonError") {
+                        error = new BamlClientFinishReasonError(
+                          parsed.error.prompt,
+                          parsed.error.raw_output,
+                          parsed.error.message
+                        );
+                      } else {
+                        error = new Error(parsed.error.message);
+                      }
+                      throw error;
+                    }
+
+                    if (parsed.partial !== undefined) {
+                      dispatch({ type: 'SET_PARTIAL', payload: parsed.partial });
+                      onPartial?.(parsed.partial);
+                    }
+
+                    if (parsed.final !== undefined) {
+                      dispatch({ type: 'SET_FINAL', payload: parsed.final });
+                      onFinal?.(parsed.final);
+                      return parsed.final;
+                    }
+                  } catch (err) {
+                    dispatch({ type: "SET_ERROR", payload: err });
+                    onError?.(err);
+                    break;
+                  }
+                }
+              }
+            } finally {
+              reader.releaseLock();
+            }
+            return response;
+          }
+
+          // Non-streaming case
+          dispatch({ type: 'SET_FINAL', payload: response });
+          onFinal?.(response);
+        });
+        return response;
+      } catch (error_) {
+        dispatch({ type: 'SET_ERROR', payload: error_ });
+        onError?.(error_);
+        throw error_;
+      }
+    },
+    [serverAction, isStreaming, onPartial, onFinal, onError],
+  );
+
+  const status = useMemo<"idle" | "pending" | "success" | "error">(() => {
+    if (isPending) return "pending";
+    if (state.error) return "error";
+    if (state.isSuccess) return "success";
+    return "idle";
+  }, [isPending, state.error, state.isSuccess]);
+
+  const result = {
+    data: state.data,
+    error: state.error,
+    isError: state.error !== null,
+    isSuccess: state.isSuccess,
+    isPending,
+    mutate,
+    status,
+  };
+
+  return {
+    ...result,
+    partialData: isStreaming ? state.partialData : undefined,
+  };
+}
+
+{%- for func in funcs %}
+/**
+ * A specialized hook for the {{ func.name }} BAML function that handles both streaming and non-streaming responses.
+ *
+ * Input Types:
+ * {%- for (name, optional, type) in func.args %}
+ * - {{ name }}{% if optional %} (optional){% endif %}: {{ type }}
+ * {%- endfor %}
+ *
+ * Return Type:
+ * - Non-streaming: {{ func.return_type }}
+ * - Streaming Partial: RecursivePartialNull<{{ func.return_type }}>
+ * - Streaming Final: {{ func.return_type }}
+ *
+ * Common Usage Patterns:
+ * 1. Non-streaming (Default)
+ *    - Best for: Quick responses, simple UI updates
+ *    - Avoid when: Response takes >5s or UI needs progressive updates
+ *
+ * 2. Streaming
+ *    - Best for: Long-running operations, real-time UI feedback
+ *    - Required when: Using features like chat interfaces or progress indicators
+ *
+ * Edge Cases & Gotchas:
+ * 1. Error Handling
+ *    - Network failures won't trigger onPartial/onFinal
+ *    - Always implement onError for graceful degradation
+ *    - Check error.message for specific failure reasons
+ *
+ * 2. Streaming Mode
+ *    - partialData may be null even after updates (handle this case!)
+ *    - Stream can end without final data (connection loss)
+ *    - Partial results may be incomplete/invalid
+ *
+ * 3. State Management
+ *    - data persists after completion (clear if needed)
+ *    - isPending stays true until final/error
+ *    - Multiple rapid calls can race (latest wins)
+ *
+ * @example
+ * ```tsx
+ * // 1. Basic Usage (Non-streaming)
+ * const { data, error, isPending, mutate } = use{{ func.name }}();
+ *
+ * // Handle the response
+ * useEffect(() => {
+ *   if (data) {
+ *     // Type-safe access to {{ func.return_type }}
+ *     console.log('Success:', data);
+ *   }
+ * }, [data]);
+ *
+ * // 2. Streaming with Progress
+ * const {
+ *   data,        // Type: {{ func.return_type }} | null
+ *   partialData, // Type: RecursivePartialNull<{{ func.return_type }}> | null
+ *   isPending,
+ *   error,
+ *   mutate
+ * } = use{{ func.name }}({
+ *   stream: true,
+ *
+ *   // Handle partial updates (may be incomplete!)
+ *   onPartial: (partial) => {
+ *     console.log('Partial:', partial);
+ *   },
+ *
+ *   // Handle successful completion
+ *   onFinal: (final) => {
+ *     console.log('Final:', final);
+ *   },
+ *
+ *   // Robust error handling
+ *   onError: (error) => {
+ *     console.error('Request failed:', error);
+ *   }
+ * });
+ *
+ * // 3. Making the Request
+ * const handleSubmit = async () => {
+ *   try {
+ *     const result = await mutate({
+ *       // Type-safe parameters:
+{%- for (name, optional, type) in func.args %}
+ *       {{ name }}: someValue as {{ type }},  // Replace someValue with your data
+{%- endfor %}
+ *     });
+ *
+ *     if (result) {
+ *       // Success case
+ *     }
+ *   } catch (e) {
+ *     // Handle any synchronous errors
+ *   }
+ * };
+ *
+ * // 4. Race Condition Handling
+ * const handleMultipleCalls = async () => {
+ *   // Only the latest call's results will be reflected in the UI
+ *   const results = await Promise.all([
+ *     mutate({
+{%- for (name, optional, type) in func.args %}
+ *       {{ name }}: firstValue as {{ type }},
+{%- endfor %}
+ *     }),
+ *     mutate({
+{%- for (name, optional, type) in func.args %}
+ *       {{ name }}: secondValue as {{ type }},
+{%- endfor %}
+ *     })
+ *   ]);
+ *   // Check results[1] for the final state
+ * };
+ * ```
+ */
+export function use{{ func.name }}<Action extends typeof ServerActions.{{ func.name }}Action>(
+  props: StreamingProps<Action>
+): StreamingHookResult<Action>;
+
+export function use{{ func.name }}<Action extends typeof ServerActions.{{ func.name }}Action>(
+  props?: NonStreamingProps<Action>
+): NonStreamingHookResult<Action>;
+
+export function use{{ func.name }}<Action extends typeof ServerActions.{{ func.name }}Action>(
+  props: HookProps<Action> = {},
+): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+  if (props.stream) {
+    return useBamlAction(
+      ServerActions.{{ func.name }}StreamingAction,
+      props
+    );
+  }
+
+  return useBamlAction(
+    ServerActions.{{ func.name }}Action,
+    props
+  );
+}
+{% endfor -%}

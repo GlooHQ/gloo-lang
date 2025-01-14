@@ -83,10 +83,36 @@ navigation:
           - page: REST API (other languages)
             icon: fa-regular fa-network-wired
             path: 01-guide/02-languages/rest.mdx
-
-          - page: NextJS
+      - section: Framework Integration
+        icon: fa-solid fa-plug
+        contents:
+          - section: Next.js
             icon: fa-brands fa-react
-            path: 01-guide/08-integrations/nextjs.mdx
+            contents:
+              # - page: Overview
+              #   icon: fa-regular fa-circle-info
+              #   path: 01-guide/08-integrations/01-nextjs-overview.mdx
+              - page: App Router Setup
+                icon: fa-regular fa-route
+                path: 01-guide/08-integrations/02-nextjs-app-router.mdx
+              # - page: Pages Router Setup
+              #   icon: fa-regular fa-file-code
+              #   path: 01-guide/08-integrations/03-nextjs-pages-router.mdx
+              # - page: React Server Components
+              #   icon: fa-regular fa-server
+              #   path: 01-guide/08-integrations/04-nextjs-rsc.mdx
+              # - page: Streaming
+              #   icon: fa-regular fa-faucet
+              #   path: 01-guide/08-integrations/05-nextjs-streaming.mdx
+              # - page: Environment Setup
+              #   icon: fa-regular fa-gear
+              #   path: 01-guide/08-integrations/06-nextjs-environment.mdx
+              # - page: Deployment
+              #   icon: fa-regular fa-rocket
+              #   path: 01-guide/08-integrations/07-nextjs-deployment.mdx
+              # - page: Examples
+              #   icon: fa-regular fa-code
+              #   path: 01-guide/08-integrations/08-nextjs-examples.mdx
       - section: Development
         contents:
           - page: Environment Variables
@@ -288,6 +314,44 @@ navigation:
       #       path: 01-guide/introduction.mdx
       #     - page: PHP
       #       icon: fa-brands fa-php
+      #       path: 01-guide/introduction.mdx
+      #     - page: b
+      #       path: 01-guide/introduction.mdx
+      #     - page: async_client
+      #       path: 01-guide/introduction.mdx
+      #     - page: sync_client
+      #       path: 01-guide/introduction.mdx
+      #     - page: reset_baml_env_vars
+      #       path: 01-guide/introduction.mdx
+      #     - page: trace
+      #       path: 01-guide/introduction.mdx
+      #     - page: set_tags
+      #       path: 01-guide/introduction.mdx
+      # - section: "baml_client: Typescript"
+      #   contents:
+      #     - page: TypeBuilder
+      #       path: 01-guide/introduction.mdx
+      #     - page: ClientRegistry
+      #       path: 01-guide/introduction.mdx
+      #     - page: BamlError
+      #       path: 01-guide/introduction.mdx
+      #     - page: BamlImageTs
+      #       path: 01-guide/introduction.mdx
+      #     - page: BamlAudioTs
+      #       path: 01-guide/introduction.mdx
+      #     - page: b
+      #       path: 01-guide/introduction.mdx
+      #     - page: async_client
+      #       path: 01-guide/introduction.mdx
+      #     - page: sync_client
+      #       path: 01-guide/introduction.mdx
+      #     - page: resetBamlEnvVars
+      #       path: 01-guide/introduction.mdx
+      #     - page: trace_async
+      #       path: 01-guide/introduction.mdx
+      #     - page: trace_sync
+      #       path: 01-guide/introduction.mdx
+      #     - page: set_tags
       #       path: 01-guide/introduction.mdx
   - tab: reference
     layout:
