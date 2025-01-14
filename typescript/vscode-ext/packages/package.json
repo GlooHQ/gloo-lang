@@ -188,7 +188,7 @@
     "esbuild": "^0.19.4",
     "is-ci": "3.0.1",
     "ovsx": "0.8.3",
-    "typescript": "5.2.2"
+    "typescript": "5.7.2"
   },
   "preview": false
 }

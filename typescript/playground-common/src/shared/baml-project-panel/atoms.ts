@@ -5,7 +5,7 @@ import { unwrap } from 'jotai/utils'
 import { type ICodeBlock } from './types'
 import { vscodeLocalStorageStore } from './Jotai'
 import { orchIndexAtom } from './playground-panel/atoms-orch-graph'
-import { WasmCallContext } from '@gloo-ai/baml-schema-wasm-web/baml_schema_build'
+import { WasmCallContext, WasmDiagnosticError } from '@gloo-ai/baml-schema-wasm-web/baml_schema_build'
 import { vscode } from './vscode'
 
 const wasmAtomAsync = atom(async () => {
@@ -91,7 +91,6 @@ export const runtimeAtom = atom((get) => {
     return { rt, diags }
   } catch (e) {
     console.log('Error occurred while getting runtime', e)
-    const WasmDiagnosticError = wasm.WasmDiagnosticError
     if (e instanceof Error) {
       console.error(e.message)
     } else if (e instanceof WasmDiagnosticError) {

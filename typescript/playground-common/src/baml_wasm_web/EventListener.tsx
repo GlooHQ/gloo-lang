@@ -47,7 +47,7 @@ export const versionAtom = atom((get) => {
 export const numErrorsAtom = atom((get) => {
   const errors = get(diagnosticsAtom)
 
-  const warningCount = errors.filter((e) => e.type === 'warning').length
+  const warningCount = errors.filter((e: any) => e.type === 'warning').length
 
   return { errors: errors.length - warningCount, warnings: warningCount }
 })
