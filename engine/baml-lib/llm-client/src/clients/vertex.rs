@@ -1,20 +1,28 @@
 use std::collections::HashSet;
 
-use crate::{AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes, UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection};
-use anyhow::{Context, Result};
+use crate::{
+    AllowedRoleMetadata, FinishReasonFilter, RolesSelection, SupportedRequestModes,
+    UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection,
+};
+use anyhow::Result;
 
 use baml_types::{GetEnvVar, StringOr, UnresolvedValue};
+use either::Either;
 use indexmap::IndexMap;
 use serde::Deserialize;
 
 use super::helpers::{Error, PropertyHandler, UnresolvedUrl};
 
 #[derive(Debug)]
-enum UnresolvedServiceAccountDetails<Meta> {
-    RawAuthorizationHeader(StringOr),
-    MaybeFilePathOrContent(StringOr),
-    Object(IndexMap<String, (Meta, UnresolvedValue<Meta>)>),
-    Json(StringOr),
+enum UnresolvedGcpAuthStrategy<Meta> {
+    /// This can be resolved as either FilePath or JsonString
+    CredentialsString(StringOr),
+    /// This will always be resolved as JsonObject
+    CredentialsJsonObject(IndexMap<String, (Meta, UnresolvedValue<Meta>)>),
+    /// This will always be resolved as JsonString
+    CredentialsContentString(StringOr),
+    /// This will always be resolved as UseSystemDefault
+    UseSystemDefault,
 }
 
 #[derive(Debug, Deserialize)]
@@ -25,99 +33,128 @@ pub struct ServiceAccount {
     pub private_key: String,
 }
 
-pub enum ResolvedServiceAccountDetails {
-    RawAuthorizationHeader(String),
-    Json(ServiceAccount),
+pub enum ResolvedGcpAuthStrategy {
+    /// This is the mechanism that GCP SDKs usually support for GOOGLE_APPLICATION_CREDENTIALS
+    FilePath(String),
+    /// Because the WASM playground needs a way to pass in credentials.
+    JsonString(String),
+    /// JsonObject was implemented for a user: https://github.com/BoundaryML/baml/issues/1001
+    JsonObject(IndexMap<String, String>),
+    /// The normal GCP application default credentials flow, after checking
+    /// GOOGLE_APPLICATION_CREDENTIALS (since we have to intercept that), with
+    /// an additional gcloud-based fallback
+    ///
+    /// See:
+    ///   - https://cloud.google.com/docs/authentication/application-default-credentials
+    ///   - https://docs.rs/gcp_auth/latest/gcp_auth/fn.provider.html
+    UseSystemDefault,
 }
 
-impl<Meta> UnresolvedServiceAccountDetails<Meta> {
-    fn without_meta(&self) -> UnresolvedServiceAccountDetails<()> {
+impl<Meta> UnresolvedGcpAuthStrategy<Meta> {
+    fn without_meta(&self) -> UnresolvedGcpAuthStrategy<()> {
         match self {
-            UnresolvedServiceAccountDetails::RawAuthorizationHeader(s) => {
-                UnresolvedServiceAccountDetails::RawAuthorizationHeader(s.clone())
+            UnresolvedGcpAuthStrategy::CredentialsString(s) => {
+                UnresolvedGcpAuthStrategy::CredentialsString(s.clone())
             }
-            UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s) => {
-                UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s.clone())
+            UnresolvedGcpAuthStrategy::CredentialsJsonObject(m) => {
+                UnresolvedGcpAuthStrategy::CredentialsJsonObject(
+                    m.iter()
+                        .map(|(k, v)| (k.clone(), ((), v.1.without_meta())))
+                        .collect(),
+                )
             }
-            UnresolvedServiceAccountDetails::Object(s) => UnresolvedServiceAccountDetails::Object(
-                s.iter()
-                    .map(|(k, v)| (k.clone(), ((), v.1.without_meta())))
-                    .collect(),
-            ),
-            UnresolvedServiceAccountDetails::Json(s) => {
-                UnresolvedServiceAccountDetails::Json(s.clone())
+            UnresolvedGcpAuthStrategy::CredentialsContentString(s) => {
+                UnresolvedGcpAuthStrategy::CredentialsContentString(s.clone())
+            }
+            UnresolvedGcpAuthStrategy::UseSystemDefault => {
+                UnresolvedGcpAuthStrategy::UseSystemDefault
             }
         }
     }
 
     fn required_env_vars(&self) -> HashSet<String> {
         match self {
-            UnresolvedServiceAccountDetails::RawAuthorizationHeader(s) => s.required_env_vars(),
-            UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s) => s.required_env_vars(),
-            UnresolvedServiceAccountDetails::Object(s) => s
+            UnresolvedGcpAuthStrategy::CredentialsString(s) => s.required_env_vars(),
+            UnresolvedGcpAuthStrategy::CredentialsJsonObject(m) => m
                 .values()
                 .flat_map(|(_, v)| v.required_env_vars())
                 .collect(),
-            UnresolvedServiceAccountDetails::Json(s) => s.required_env_vars(),
+            UnresolvedGcpAuthStrategy::CredentialsContentString(s) => s.required_env_vars(),
+            // required_env_vars() is only used for the playground list, I think, so this is safe to set
+            UnresolvedGcpAuthStrategy::UseSystemDefault => {
+                vec!["GOOGLE_APPLICATION_CREDENTIALS".to_string()]
+                    .into_iter()
+                    .collect()
+            }
         }
     }
 
-    fn resolve(&self, ctx: &impl GetEnvVar) -> Result<ResolvedServiceAccountDetails> {
-        match self {
-            UnresolvedServiceAccountDetails::RawAuthorizationHeader(s) => Ok(
-                ResolvedServiceAccountDetails::RawAuthorizationHeader(s.resolve(ctx)?),
-            ),
-            UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s) => {
-                let value = s.resolve(ctx)?;
-                match serde_json::from_str(&value) {
-                    Ok(json) => Ok(ResolvedServiceAccountDetails::Json(json)),
-                    Err(_) => {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            // Not a valid JSON, so we assume it's a file path
-                            // Load the file and parse it as JSON
-                            let file = std::fs::read_to_string(&value).context(format!(
-                                "Failed to read service account file: {value}"
-                            ))?;
-                            let json = serde_json::from_str(&file)
-                                .context("Failed to parse service account file as JSON")?;
-                            Ok(ResolvedServiceAccountDetails::Json(json))
+    fn resolve(&self, ctx: &impl GetEnvVar) -> Result<ResolvedGcpAuthStrategy> {
+        Ok(match self {
+            UnresolvedGcpAuthStrategy::CredentialsString(s) => {
+                let s = s.resolve(ctx)?;
+                match serde_json::from_str::<serde_json::Value>(&s) {
+                    Ok(_) => ResolvedGcpAuthStrategy::JsonString(s),
+                    Err(_) => ResolvedGcpAuthStrategy::FilePath(s),
+                }
+            }
+            UnresolvedGcpAuthStrategy::CredentialsJsonObject(m) => {
+                let m = m
+                    .iter()
+                    .map(|(k, (_, v))| Ok((k.clone(), v.resolve_string(ctx)?)))
+                    .collect::<Result<IndexMap<_, _>>>()?;
+                ResolvedGcpAuthStrategy::JsonObject(m)
+            }
+            UnresolvedGcpAuthStrategy::CredentialsContentString(s) => {
+                let s = s.resolve(ctx)?;
+                ResolvedGcpAuthStrategy::JsonString(s)
+            }
+            UnresolvedGcpAuthStrategy::UseSystemDefault => {
+                log::debug!("Neither options.credentials nor options.credentials_content are set, falling back to env vars");
+                // Without this, for some reason get_env_var() comes back as "$BASH_STYLE_SUBSTITUTION"
+                // I'm sure there's a reason for this, but it doesn't make sense to me right now.
+                let ctx = ctx.set_allow_missing_env_var(false);
+                match (
+                    ctx.get_env_var("GOOGLE_APPLICATION_CREDENTIALS").ok(),
+                    ctx.get_env_var("GOOGLE_APPLICATION_CREDENTIALS_CONTENT")
+                        .ok(),
+                ) {
+                    (Some(credentials), _) => {
+                        log::debug!(
+                            "Using GOOGLE_APPLICATION_CREDENTIALS from env {:?}",
+                            credentials
+                        );
+                        if credentials.is_empty() {
+                            log::warn!("Resolving GOOGLE_APPLICATION_CREDENTIALS from env, but it is an empty string");
                         }
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            anyhow::bail!(
-                                format!("Reading from files not supported in BAML playground. For the playground, pass in the contents of your credentials file as a string to the same environment variable you used for 'credentials'.\nFile: {}", value)
-                            );
+                        match serde_json::from_str::<serde_json::Value>(&credentials) {
+                            Ok(_) => ResolvedGcpAuthStrategy::JsonString(credentials),
+                            Err(_) => ResolvedGcpAuthStrategy::FilePath(credentials),
                         }
+                    }
+                    (None, Some(credentials_content)) => {
+                        log::debug!("Using GOOGLE_APPLICATION_CREDENTIALS_CONTENT from env");
+                        if credentials_content.is_empty() {
+                            log::warn!("Resolving GOOGLE_APPLICATION_CREDENTIALS_CONTENT from env, but it is an empty string");
+                        }
+                        ResolvedGcpAuthStrategy::JsonString(credentials_content)
+                    }
+                    (None, None) => {
+                        log::debug!("Using UseSystemDefault strategy");
+                        ResolvedGcpAuthStrategy::UseSystemDefault
                     }
                 }
             }
-            UnresolvedServiceAccountDetails::Object(s) => {
-                let raw = s
-                    .iter()
-                    .map(|(k, v)| Ok((k, v.1.resolve_serde::<serde_json::Value>(ctx)?)))
-                    .collect::<Result<IndexMap<_, _>>>()?;
-                Ok(ResolvedServiceAccountDetails::Json(
-                    serde_json::from_value(serde_json::json!(raw))
-                        .context("Failed to parse service account JSON")?,
-                ))
-            }
-            UnresolvedServiceAccountDetails::Json(s) => {
-                let raw = s.resolve(ctx)?;
-                Ok(ResolvedServiceAccountDetails::Json(
-                    serde_json::from_str(&raw).context("Failed to parse service account JSON")?,
-                ))
-            }
-        }
+        })
     }
 }
 
 #[derive(Debug)]
 pub struct UnresolvedVertex<Meta> {
     // Either base_url or location
-    base_url: either::Either<UnresolvedUrl, StringOr>,
+    base_url_or_location: Either<UnresolvedUrl, StringOr>,
     project_id: Option<StringOr>,
-    authorization: UnresolvedServiceAccountDetails<Meta>,
+    auth_strategy: UnresolvedGcpAuthStrategy<Meta>,
     model: StringOr,
     headers: IndexMap<String, StringOr>,
     role_selection: UnresolvedRolesSelection,
@@ -127,9 +164,15 @@ pub struct UnresolvedVertex<Meta> {
     properties: IndexMap<String, (Meta, UnresolvedValue<Meta>)>,
 }
 
+pub enum BaseUrlOrLocation {
+    BaseUrl(String),
+    Location(String),
+}
+
 pub struct ResolvedVertex {
-    pub base_url: String,
-    pub authorization: ResolvedServiceAccountDetails,
+    pub base_url_or_location: BaseUrlOrLocation,
+    pub project_id: Option<String>,
+    pub auth_strategy: ResolvedGcpAuthStrategy,
     pub model: String,
     pub headers: IndexMap<String, String>,
     role_selection: RolesSelection,
@@ -143,7 +186,11 @@ pub struct ResolvedVertex {
 impl ResolvedVertex {
     pub fn allowed_roles(&self) -> Vec<String> {
         self.role_selection.allowed_or_else(|| {
-            vec!["system".to_string(), "user".to_string(), "assistant".to_string()]
+            vec![
+                "system".to_string(),
+                "user".to_string(),
+                "assistant".to_string(),
+            ]
         })
     }
 
@@ -153,7 +200,10 @@ impl ResolvedVertex {
             if allowed_roles.contains(&"user".to_string()) {
                 "user".to_string()
             } else {
-                allowed_roles.first().cloned().unwrap_or_else(|| "user".to_string())
+                allowed_roles
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| "user".to_string())
             }
         })
     }
@@ -162,14 +212,14 @@ impl ResolvedVertex {
 impl<Meta: Clone> UnresolvedVertex<Meta> {
     pub fn required_env_vars(&self) -> HashSet<String> {
         let mut env_vars = HashSet::new();
-        match self.base_url {
+        match self.base_url_or_location {
             either::Either::Left(ref base_url) => env_vars.extend(base_url.required_env_vars()),
             either::Either::Right(ref location) => env_vars.extend(location.required_env_vars()),
         }
         if let Some(ref project_id) = self.project_id {
             env_vars.extend(project_id.required_env_vars());
         }
-        env_vars.extend(self.authorization.required_env_vars());
+        env_vars.extend(self.auth_strategy.required_env_vars());
         env_vars.extend(self.model.required_env_vars());
         env_vars.extend(self.headers.values().flat_map(StringOr::required_env_vars));
         env_vars.extend(self.role_selection.required_env_vars());
@@ -186,9 +236,9 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
 
     pub fn without_meta(&self) -> UnresolvedVertex<()> {
         UnresolvedVertex {
-            base_url: self.base_url.clone(),
+            base_url_or_location: self.base_url_or_location.clone(),
             project_id: self.project_id.clone(),
-            authorization: self.authorization.without_meta(),
+            auth_strategy: self.auth_strategy.without_meta(),
             model: self.model.clone(),
             headers: self.headers.clone(),
             role_selection: self.role_selection.clone(),
@@ -205,31 +255,10 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
 
     pub fn resolve(&self, ctx: &impl GetEnvVar) -> Result<ResolvedVertex> {
         // Validate auth options - only one should be provided
-        let authorization = self.authorization.resolve(ctx)?;
-
-        let base_url = match self.base_url.as_ref() {
-            either::Either::Left(url) => url.resolve(ctx),
-            either::Either::Right(location) => {
-                let project_id = match self.project_id.as_ref() {
-                    Some(project_id) => project_id.resolve(ctx)?,
-                    None => match &authorization {
-                        ResolvedServiceAccountDetails::Json(service_account) => {
-                            service_account.project_id.clone()
-                        }
-                        ResolvedServiceAccountDetails::RawAuthorizationHeader(_) => {
-                            return Err(anyhow::anyhow!(
-                                "project_id is required when using location + authorization"
-                            ))
-                        }
-                    },
-                };
-
-                let location = location.resolve(ctx)?;
-                Ok(format!(
-                    "https://{location}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{location}/publishers/google/models"
-                ))
-            }
-        }?;
+        let base_url_or_location = match &self.base_url_or_location {
+            either::Either::Left(base_url) => BaseUrlOrLocation::BaseUrl(base_url.resolve(ctx)?),
+            either::Either::Right(location) => BaseUrlOrLocation::Location(location.resolve(ctx)?),
+        };
 
         let model = self.model.resolve(ctx)?;
 
@@ -242,8 +271,12 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
             .collect::<Result<IndexMap<_, _>>>()?;
 
         Ok(ResolvedVertex {
-            base_url,
-            authorization,
+            base_url_or_location,
+            project_id: match self.project_id {
+                Some(ref project_id) => Some(project_id.resolve(ctx)?),
+                None => None,
+            },
+            auth_strategy: self.auth_strategy.resolve(ctx)?,
             model,
             headers,
             role_selection,
@@ -260,62 +293,47 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
     }
 
     pub fn create_from(mut properties: PropertyHandler<Meta>) -> Result<Self, Vec<Error<Meta>>> {
-        let authorization = {
-            let credentials = properties
-                .ensure_any("credentials")
-                .map(|(_, v)| v)
-                .and_then(|v| match v {
-                    UnresolvedValue::String(s, ..) => {
-                        Some(UnresolvedServiceAccountDetails::MaybeFilePathOrContent(s))
+        let auth_strategy: UnresolvedGcpAuthStrategy<Meta> = {
+            let credentials_field = properties.ensure_any("credentials");
+            let credentials_content_field = properties.ensure_string("credentials_content", false);
+
+            match (credentials_field, credentials_content_field) {
+                (Some((credentials_span, credentials_value)), credentials_content_field) => {
+                    if let Some((credentials_content_span, _credentials_content_value, _)) =
+                        credentials_content_field
+                    {
+                        properties.push_error("Both 'credentials' and 'credentials_content' provided. Please only set one or the other.", credentials_span);
+                        properties.push_error("Both 'credentials' and 'credentials_content' provided. Please only set one or the other.", credentials_content_span);
                     }
-                    UnresolvedValue::Map(m, ..) => Some(UnresolvedServiceAccountDetails::Object(m)),
-                    other => {
-                        properties.push_error(
-                            format!(
-                                "credentials must be a string or an object. Got: {}",
-                                other.r#type()
-                            ),
-                            other.meta().clone(),
-                        );
-                        None
-                    }
-                });
 
-            let credentials_content = properties
-                .ensure_string("credentials_content", false)
-                .map(|(_, v, _)| UnresolvedServiceAccountDetails::Json(v));
-
-            let authz = properties
-                .ensure_string("authorization", false)
-                .map(|(_, v, _)| UnresolvedServiceAccountDetails::RawAuthorizationHeader(v));
-
-            match (authz, credentials, credentials_content) {
-                (Some(authz), _, _) => Some(authz),
-                (None, Some(credentials), Some(credentials_content)) => {
-                    if cfg!(target_arch = "wasm32") {
-                        Some(credentials_content)
-                    } else {
-                        Some(credentials)
+                    match credentials_value {
+                        UnresolvedValue::String(s, ..) => {
+                            UnresolvedGcpAuthStrategy::CredentialsString(s)
+                        }
+                        UnresolvedValue::Map(m, ..) => {
+                            UnresolvedGcpAuthStrategy::CredentialsJsonObject(m)
+                        }
+                        other => {
+                            properties.push_error(
+                                format!(
+                                    "credentials must be a string or an object. Got: {}",
+                                    other.r#type()
+                                ),
+                                other.meta().clone(),
+                            );
+                            UnresolvedGcpAuthStrategy::UseSystemDefault
+                        }
                     }
                 }
-                (None, Some(credentials), None) => Some(credentials),
-                (None, None, Some(credentials_content)) => Some(credentials_content),
-                (None, None, None) => {
-                    if cfg!(target_arch = "wasm32") {
-                        Some(UnresolvedServiceAccountDetails::Json(StringOr::EnvVar(
-                            "GOOGLE_APPLICATION_CREDENTIALS_CONTENT".to_string(),
-                        )))
-                    } else {
-                        Some(UnresolvedServiceAccountDetails::MaybeFilePathOrContent(
-                            StringOr::EnvVar("GOOGLE_APPLICATION_CREDENTIALS".to_string()),
-                        ))
-                    }
+                (None, Some((_, credentials_content, _))) => {
+                    UnresolvedGcpAuthStrategy::CredentialsContentString(credentials_content)
                 }
+                (None, None) => UnresolvedGcpAuthStrategy::UseSystemDefault,
             }
         };
         let model = properties.ensure_string("model", true).map(|(_, v, _)| v);
 
-        let base_url = {
+        let base_url_or_location = {
             let base_url = properties.ensure_base_url(false);
             let location = properties
                 .ensure_string("location", false)
@@ -326,14 +344,15 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
                 (None, Some(name)) => Some(either::Either::Right(name.1)),
                 (Some((key_1_span, ..)), Some((key_2_span, _))) => {
                     for key in [key_1_span, key_2_span] {
-                        properties
-                            .push_error("Only one of base_url or location must be provided", key);
+                        properties.push_error(
+                            "vertex-ai clients may specify either location or base_url, but not both (try removing 'base_url' from options).",
+                            key,
+                        );
                     }
                     None
                 }
                 (None, None) => {
-                    // Its possible this will come in from credentials later
-                    properties.push_option_error("Missing either base_url or location");
+                    properties.push_option_error("vertex-ai clients must specify a GCP region in options.location (e.g. us-central1)");
                     None
                 }
             }
@@ -355,13 +374,13 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
         }
 
         let model = model.expect("model is required");
-        let base_url = base_url.expect("base_url is required");
-        let authorization = authorization.expect("authorization is required");
+        let base_url_or_location =
+            base_url_or_location.expect("location (or base_url) is required");
 
         Ok(Self {
-            base_url,
+            base_url_or_location,
             project_id,
-            authorization,
+            auth_strategy,
             model,
             headers,
             role_selection,

@@ -3,7 +3,7 @@ name: BAML Release - Build Python
 on:
   workflow_call: {}
   push:
-    branches: [manylinux-x86, aaron-fix]
+    branches: [sam/gcp-auth]
 
 concurrency:
   # suffix is important to prevent a concurrency deadlock with the calling workflow
