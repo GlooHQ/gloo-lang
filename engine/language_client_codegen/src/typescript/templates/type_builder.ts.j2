@@ -1,5 +1,6 @@
-import { FieldType } from '@boundaryml/baml/native'
-import { TypeBuilder as _TypeBuilder, EnumBuilder, ClassBuilder } from '@boundaryml/baml/type_builder'
+import type { FieldType } from '@boundaryml/baml/native'
+import { TypeBuilder as _TypeBuilder } from '@boundaryml/baml/type_builder'
+import type { EnumBuilder, ClassBuilder } from '@boundaryml/baml/type_builder'
 
 export default class TypeBuilder {
     private tb: _TypeBuilder;
@@ -36,7 +37,7 @@ export default class TypeBuilder {
     __tb() {
       return this.tb._tb();
     }
-    
+
     string(): FieldType {
         return this.tb.string()
     }

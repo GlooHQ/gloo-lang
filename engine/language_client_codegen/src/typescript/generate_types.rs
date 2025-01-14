@@ -30,6 +30,7 @@ pub(crate) struct TypescriptTypes<'ir> {
 #[derive(askama::Template)]
 #[template(path = "partial_types.ts.j2", escape = "none")]
 pub(crate) struct TypescriptStreamTypes<'ir> {
+    types: Vec<String>,
     partial_classes: Vec<PartialTypescriptClass<'ir>>,
 }
 
@@ -89,6 +90,12 @@ impl<'ir> TryFrom<(&'ir IntermediateRepr, &'ir GeneratorArgs)> for TypescriptStr
         (ir, _): (&'ir IntermediateRepr, &'ir GeneratorArgs),
     ) -> Result<TypescriptStreamTypes<'ir>> {
         Ok(TypescriptStreamTypes {
+            types: ir
+                .walk_classes()
+                .map(|c| c.name().to_string())
+                .chain(ir.walk_enums().map(|e| e.name().to_string()))
+                .chain(ir.walk_alias_cycles().map(|a| a.item.0.clone()))
+                .collect(),
             partial_classes: ir
                 .walk_classes()
                 .map(|e| Into::<PartialTypescriptClass>::into(e))

@@ -1,11 +1,16 @@
-import { BamlRuntime, FunctionResult, BamlCtxManager, BamlStream, Image, ClientRegistry, BamlValidationError, createBamlValidationError } from "@boundaryml/baml"
-import { Checked, Check } from "./types"
-import "./partial_types"
-import {
+import { type BamlCtxManager, type BamlRuntime, BamlStream, BamlValidationError, type ClientRegistry, FunctionResult, type Image, createBamlValidationError } from "@boundaryml/baml"
+import type { Checked, Check, RecursivePartialNull as MovedRecursivePartialNull } from "./types"
+import type { partial_types } from "./partial_types";
+import type {
   {%- for t in types %}{{ t }}{% if !loop.last %}, {% endif %}{% endfor -%}
 } from "./types"
-import TypeBuilder from "./type_builder"
+import type TypeBuilder from "./type_builder"
 import { DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX, DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME } from "./globals"
+
+/**
+ * @deprecated Use RecursivePartialNull from 'baml_client/types' instead.
+ */
+export type RecursivePartialNull<T> = MovedRecursivePartialNull<T>
 
 export class BamlAsyncClient {
   private runtime: BamlRuntime
@@ -46,9 +51,9 @@ export class BamlAsyncClient {
       const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
         throw bamlError;
-      } else {
-        throw error;
       }
+
+      throw error;
     }
   }
   {% endfor %}
