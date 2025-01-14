@@ -11,6 +11,10 @@ The way it works is:
 3. **Get the function parameters from the LLM** for the appropriate function it choose
 4. **Call the functions** in your code with those parameters
 
+It's common for people to think of "function calling" or "tool use" separately from "structured outputs" (even OpenAI has separate parameters for them), but at BAML, we think it's simpler and more impactful to think of them equivalently. This is because, at the end of the day, you are looking to get something processable back from your LLM. Whether it's extracting data from a document or calling the Weather API, you need a standard representation of that output, which is where BAML lives.
+
+<control flow image>
+
 In BAML, you can get represent a `tool` or a `function` you want to call as a BAML `class`, and make the function output be that class definition.
 
 ```baml BAML
@@ -39,15 +43,20 @@ Call the function like this:
 <CodeGroup>
 ```python Python
 import asyncio
+import datetime
 from baml_client import b
 from baml_client.types import WeatherAPI
+
+def get_weather(city: str, time_of_day: datetime.date):
+    ...
 
 def main():
     weather_info = b.UseTool("What's the weather like in San Francisco?")
     print(weather_info)
     assert isinstance(weather_info, WeatherAPI)
     print(f"City: {weather_info.city}")
-    print(f"Time of Day: {weather_info.timeOfDay}")
+    print(f"Time of Day: {weather_info.time_of_day}")
+    weather = get_weather(city=weather_info.city, time_of_day=weather_info.timeOfDay)
 
 if __name__ == '__main__':
     main()
@@ -241,6 +250,58 @@ def main
 end
 
 main
+```
+</CodeGroup>
+
+
+## Dynamically Generate the tool signature
+It might be cumbersome to define schemas in baml and code, so you can define them from code as well. Read more about dynamic types [here](https://docs.boundaryml.com/guide/baml-advanced/dynamic-runtime-types)
+```baml BAML
+class WeatherAPI {
+  @@dynamic // params defined from code
+}
+
+function UseTool(user_message: string) -> WeatherAPI {
+  .... // same thing
+}
+```
+
+Call the function like this:
+
+<CodeGroup>
+```python Python
+import asyncio
+import inspect
+
+from baml_client import b
+from baml_client.type_builder import TypeBuilder
+from baml_client.types import WeatherAPI
+
+async def get_weather(city: str, time_of_day: str):
+    print(f"Getting weather for {city} at {time_of_day}")
+    return 42
+
+async def main():
+    tb = TypeBuilder()
+    type_map = {int: tb.int(), float: tb.float(), str: tb.string()}
+    signature = inspect.signature(get_weather)
+    for param_name, param in signature.parameters.items():
+        tb.WeatherAPI.add_property(param_name, type_map[param.annotation])
+    tool = b.UseTool("What's the weather like in San Francisco this afternoon?", { "tb": tb })
+    print(tool)
+    weather = await get_weather(**tool.model_dump())
+    print(weather)
+
+if __name__ == '__main__':
+    asyncio.run(main())
+```
+
+```typescript TypeScript
+...
+```
+
+```ruby Ruby
+...
 ```
 </CodeGroup>
 
