@@ -16,6 +16,11 @@ generator lang_ruby {
   version "0.72.0"
 }
 
+generator lang_typescript_react {
+  output_type typescript/react
+  output_dir "../react"
+  version "0.72.0"
+}
 // generator openapi {
 //   output_type rest/openapi
 //   output_dir "../openapi"

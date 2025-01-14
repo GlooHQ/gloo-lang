@@ -1,0 +1,244 @@
+'use client'
+
+import { useState } from 'react';
+import type { BamlStream } from '@boundaryml/baml';
+import * as React from "react";
+
+export interface useLLMBaseOptions<TFinal> {
+  /** Called when final data is received */
+  onFinal?: (data: TFinal) => void;
+  /** Called when an error occurs */
+  onError?: (error: Error) => void;
+}
+
+export interface useLLMStreamingOptions<TPartial, TFinal>
+  extends useLLMBaseOptions<TFinal> {
+  /** Called when partial data is received */
+  onPartial?: (data: TPartial) => void;
+  /** Whether to use streaming mode */
+  stream: true;
+}
+
+export interface useLLMNonStreamingOptions<TFinal>
+  extends useLLMBaseOptions<TFinal> {
+  /** Whether to use streaming mode */
+  stream?: false;
+}
+
+export type useLLMOptions<TPartial, TFinal> =
+  | useLLMStreamingOptions<TPartial, TFinal>
+  | useLLMNonStreamingOptions<TFinal>;
+
+export type StreamingServerAction<
+  TPartial,
+  TFinal,
+  TParams extends unknown[],
+> = (...args: TParams) => Promise<{
+  object: ReadableStream<{ partial: TPartial } | { final: TFinal }>;
+}>;
+
+export type NonStreamingServerAction<TFinal, TParams extends unknown[]> = (
+  ...args: TParams
+) => Promise<TFinal>;
+
+interface BaseReturnType<TFinal, TParams extends unknown[]> {
+  /** The final result */
+  data: TFinal | null;
+  /** Any error that occurred */
+  error: Error | null;
+  /** Whether an error occurred */
+  isError: boolean;
+  /** Whether the request is loading */
+  isLoading: boolean;
+  /** Whether the request completed successfully */
+  isSuccess: boolean;
+  /** The current status of the request */
+  status: "idle" | "loading" | "success" | "error";
+  /** Function to make the request with the given parameters */
+  mutate: (...args: TParams) => Promise<TFinal | null>;
+}
+
+export type StreamingReturnType<
+  TPartial,
+  TFinal,
+  TParams extends unknown[],
+> = BaseReturnType<TFinal, TParams> & {
+  /** The latest partial result from the stream */
+  partialData: TPartial | null;
+};
+
+export type NonStreamingReturnType<
+  TFinal,
+  TParams extends unknown[],
+> = BaseReturnType<TFinal, TParams> & {
+  /** The latest partial result from the stream */
+  partialData: never;
+};
+
+type useLLMReturn<TPartial, TFinal, TParams extends unknown[], TOptions> =
+  TOptions extends useLLMStreamingOptions<TPartial, TFinal>
+    ? StreamingReturnType<TPartial, TFinal, TParams>
+    : NonStreamingReturnType<TFinal, TParams>;
+
+/**
+ * A hook for making BAML function calls, with optional streaming support.
+ *
+ * @example
+ * ```tsx
+ * // Non-streaming usage
+ * const {
+ *   data,
+ *   isLoading,
+ *   isSuccess,
+ *   error,
+ *   mutate
+ * } = useLLM(extractResume, {
+ *   onFinal: (data) => console.log('Final:', data),
+ * });
+ *
+ * // Streaming usage
+ * const {
+ *   data,
+ *   partialData,
+ *   isLoading,
+ *   isSuccess,
+ *   error,
+ *   mutate
+ * } = useLLM(extractResume, {
+ *   stream: true,
+ *   onPartial: (data) => console.log('Partial:', data),
+ *   onFinal: (data) => console.log('Final:', data),
+ * });
+ *
+ * // Call the function
+ * await mutate("Some text to process");
+ * ```
+ */
+export function useLLM<TPartial, TFinal, TParams extends unknown[]>(
+  serverAction:
+    | StreamingServerAction<TPartial, TFinal, TParams>
+    | NonStreamingServerAction<TFinal, TParams>,
+  options: useLLMOptions<TPartial, TFinal> = {},
+): useLLMReturn<TPartial, TFinal, TParams, typeof options> {
+  const { onFinal, onError } = options;
+  const onPartial = (options as useLLMStreamingOptions<TPartial, TFinal>)
+    .onPartial;
+  const isStreaming = options.stream === true;
+
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isSuccess, setIsSuccess] = React.useState(false);
+  const [error, setError] = React.useState<Error | null>(null);
+  const [data, setData] = React.useState<TFinal | null>(null);
+  const [partialData, setPartialData] = React.useState<TPartial | null>(null);
+
+  const mutate = React.useCallback(
+    async (...params: TParams): Promise<TFinal | null> => {
+      setIsLoading(true);
+      setError(null);
+      setData(null);
+      setPartialData(null);
+      setIsSuccess(false);
+
+      try {
+        if (isStreaming) {
+          const streamingAction = serverAction as StreamingServerAction<
+            TPartial,
+            TFinal,
+            TParams
+          >;
+          const response = await streamingAction(...params);
+          const stream = response.object;
+          const reader = stream.getReader();
+          let done = false;
+
+          while (!done) {
+            const result = await reader.read();
+            done = result.done;
+
+            if (!done && result.value) {
+              const value = result.value;
+              if ("partial" in value) {
+                setPartialData(value.partial);
+                onPartial?.(value.partial);
+              } else if ("final" in value) {
+                setData(value.final);
+                setIsSuccess(true);
+                onFinal?.(value.final);
+                return value.final;
+              }
+            }
+          }
+          return null;
+        }
+
+        const nonStreamingAction = serverAction as NonStreamingServerAction<
+          TFinal,
+          TParams
+        >;
+        const response = await nonStreamingAction(...params);
+        setData(response);
+        setIsSuccess(true);
+        onFinal?.(response);
+        return response;
+      } catch (error_) {
+        const error =
+          error_ instanceof Error ? error_ : new Error(String(error_));
+        setError(error);
+        onError?.(error);
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [serverAction, isStreaming, onPartial, onFinal, onError],
+  );
+
+  const status = React.useMemo<"idle" | "loading" | "success" | "error">(() => {
+    if (isLoading) return "loading";
+    if (error) return "error";
+    if (isSuccess) return "success";
+    return "idle";
+  }, [isLoading, error, isSuccess]);
+
+  const isError = error !== null;
+
+  const result = {
+    data,
+    error,
+    isError,
+    isLoading,
+    isSuccess,
+    mutate,
+    status,
+  } as const;
+
+  // Return different types based on streaming mode
+  if (isStreaming) {
+    return {
+      ...result,
+      partialData,
+    } as StreamingReturnType<TPartial, TFinal, TParams>;
+  }
+
+  return result as NonStreamingReturnType<TFinal, TParams>;
+}
+
+{%- for func in funcs %}
+export function use{{ func.name }}(
+    props?: useLLMOptions<RecursivePartialNull<{{ func.return_type }}>, {{ func.return_type }}>
+): useLLMReturn<
+    RecursivePartialNull<{{ func.return_type }}>,
+    {{ func.return_type }},
+    [params: {
+        {%- for (name, optional, type) in func.args %}
+        {{ name }}{% if optional %}?{% endif %}: {{ type }}{% if !loop.last %},{% endif %}
+        {%- endfor %}
+    }],
+    typeof props
+> {
+    return useLLM(
+        props?.stream ? {{ func.name }}Action : b.{{ func.name }},
+        props
+    );
+}
+{% endfor -%}
