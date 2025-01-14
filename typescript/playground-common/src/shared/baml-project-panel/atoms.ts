@@ -78,13 +78,13 @@ export const ctxAtom = atom((get) => {
 })
 
 export const runtimeAtom = atom((get) => {
-  const wasm = get(wasmAtom)
-  const project = get(projectAtom)
-  const envVars = get(envVarsAtom)
-  if (wasm === undefined || project === undefined) {
-    return { rt: undefined, diags: undefined }
-  }
   try {
+    const wasm = get(wasmAtom)
+    const project = get(projectAtom)
+    const envVars = get(envVarsAtom)
+    if (wasm === undefined || project === undefined) {
+      return { rt: undefined, diags: undefined }
+    }
     const selectedEnvVars = Object.fromEntries(Object.entries(envVars).filter(([key, value]) => value !== undefined))
     const rt = project.runtime(selectedEnvVars)
     const diags = project.diagnostics(rt)
