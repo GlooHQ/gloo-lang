@@ -4,8 +4,13 @@ import type * as partial_types from "./partial_types"
 import {
   {%- for t in types %}{{ t }}{% if !loop.last %}, {% endif %}{% endfor -%}
 } from "./types"
-import TypeBuilder from "./type_builder"
+import type TypeBuilder from "./type_builder"
 import { DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX, DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME } from "./globals"
+
+/**
+ * @deprecated Use RecursivePartialNull from 'baml_client/types' instead.
+ */
+export type RecursivePartialNull<T> = MovedRecursivePartialNull<T>
 
 export class BamlAsyncClient {
   private runtime: BamlRuntime

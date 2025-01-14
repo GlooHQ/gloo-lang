@@ -1,0 +1,219 @@
+---
+title: Next.js App Router Setup
+---
+
+This guide walks you through setting up BAML with Next.js App Router, leveraging Server Actions and React Server Components for optimal performance.
+
+## Quick Start
+
+Follow the step-by-step instructions below to set up BAML in a new or existing Next.js project.
+
+<Steps>
+### Create a New Next.js Project
+
+First, create a new Next.js project with the App Router:
+
+<CodeBlocks>
+```bash npm
+npx create-next-app@latest my-baml-app
+```
+
+```bash pnpm
+pnpm create next-app my-baml-app
+```
+
+```bash yarn
+yarn create next-app my-baml-app
+```
+</CodeBlocks>
+
+When prompted, make sure to:
+- Select **Yes** for "Would you like to use TypeScript?"
+- Select **Yes** for "Would you like to use the App Router? (recommended)"
+- Configure other options as needed for your project
+
+### Install Dependencies
+
+Next, install BAML and its dependencies:
+
+<Markdown src="../../snippets/frameworks/nextjs/install-baml.mdx" />
+
+### Configure Next.js
+
+Update your `next.config.mjs`:
+
+<Markdown src="../../snippets/frameworks/nextjs/next-config.mdx" />
+
+### Initialize BAML
+
+Create a new BAML project in your Next.js application:
+<Markdown src="../../snippets/baml/cli/install/nodejs.mdx" />
+
+This will create a `baml_src` directory with starter code.
+
+### Setup Environment Variables
+
+<Markdown src="../../snippets/frameworks/nextjs/env-vars/openai.mdx" />
+
+### Setup BAML Client Provider
+
+<Markdown src="../../snippets/baml/clients/openai.mdx" />
+
+### Setup BAML Next.js Generator
+
+<Markdown src="../../snippets/frameworks/nextjs/baml-generator.mdx" />
+
+### Generate BAML Client
+
+<Markdown src="../../snippets/baml/cli/generate.mdx" />
+
+### Generated Server Actions
+
+BAML automatically generates type-safe Next.js server actions and React hooks for your BAML functions. When you create a BAML function like `WriteMeAStory`, the BAML CLI will generate:
+
+- A server action that handles the API call
+- A React hook (`useWriteMeAStoryAction`) that provides streaming, loading states, and error handling
+- TypeScript types for all inputs and outputs
+
+Here's an example of using the auto-generated hook:
+
+<CodeBlocks>
+<Markdown src="../../snippets/baml/prompts/story.mdx" />
+<Markdown src="../../snippets/frameworks/nextjs/generated-client-hook.mdx" />
+</CodeBlocks>
+
+### Custom Server Actions
+
+Custom Server Actions wrap BAML functions with your own server-side logic. Use them when you need to:
+
+- Add authentication or authorization checks
+- Validate or sanitize inputs
+- Implement rate limiting
+- Add custom error handling
+- Transform inputs or responses
+
+<CodeBlocks>
+<Markdown src="../../snippets/baml/prompts/story.mdx" />
+<Markdown src="../../snippets/frameworks/nextjs/custom-server-action.mdx" />
+<Markdown src="../../snippets/frameworks/nextjs/custom-client-hook.mdx" />
+</CodeBlocks>
+
+### Update Package Scripts
+
+Update your `package.json` scripts:
+
+```json {3,4}
+{
+  "scripts": {
+    "prebuild": "npm run generate",
+    "generate": "baml-cli generate",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+  }
+}
+```
+
+</Steps>
+
+## Best Practices
+
+1. **Component Organization**
+   - Keep BAML calls in server components
+   - Use server actions for mutations
+   - Implement proper error boundaries
+   - Handle cleanup on unmount
+
+2. **Performance**
+   - Use streaming for long responses
+   - Implement proper loading states
+   - Cache results when appropriate
+   - Monitor memory usage
+
+3. **Error Handling**
+   - BAML provides three types of errors you need to handle:
+     ```typescript
+     import { BamlValidationError, BamlClientFinishReasonError } from "@boundaryml/baml/errors"
+
+     try {
+       const result = await myBamlFunction(params);
+     } catch (e) {
+       if (e instanceof BamlValidationError) {
+         // Thrown when BAML fails to parse LLM output
+         console.error('Parsing error:', e.message);
+         console.error('Original prompt:', e.prompt);
+         console.error('Raw LLM output:', e.raw_output);
+       } else if (e instanceof BamlClientFinishReasonError) {
+         // Thrown when LLM terminates with disallowed finish reason
+         console.error('LLM terminated early:', e.finish_reason);
+         console.error('Error message:', e.message);
+         console.error('Original prompt:', e.prompt);
+         console.error('Partial output:', e.raw_output);
+       } else {
+         // Handle other errors (network, etc)
+         console.error('Other error:', e);
+       }
+     }
+     ```
+   - Create error boundaries for graceful UI fallbacks:
+     ```typescript
+     'use client';
+
+     import { useEffect } from 'react';
+     import { useWriteMeAStoryAction } from './baml_client';
+
+     export function StoryGenerator() {
+       const {
+         data,
+         error,
+         isPending,
+         mutate
+       } = useWriteMeAStoryAction();
+
+       useEffect(() => {
+         if (error) {
+           if (error instanceof BamlValidationError) {
+             // Show parsing error UI
+             toast.error('Failed to understand AI response');
+           } else if (error instanceof BamlClientFinishReasonError) {
+             // Show early termination UI
+             toast.error('AI response was cut off');
+           } else {
+             // Show generic error UI
+             toast.error('Something went wrong');
+           }
+         }
+       }, [error]);
+
+       return (
+         <div>
+           {isPending && <LoadingSpinner />}
+           {error && <ErrorDisplay error={error} />}
+           {data && <StoryDisplay story={data} />}
+
+           <button
+             onClick={() => mutate({ topic: 'adventure' })}
+             disabled={isPending}
+           >
+             Generate Story
+           </button>
+         </div>
+       );
+     }
+     ```
+   - Implement retry mechanisms
+   - Show meaningful error messages
+   - Handle network errors
+   - Clean up resources
+
+4. **Security**
+   - Never expose API keys
+   - Validate user input
+   - Implement rate limiting
+   - Use proper authentication
+
+## Next Steps
+
+- Learn about [Streaming](./nextjs-streaming) for real-time updates
+- Explore [Environment Setup](./nextjs-environment) for configuration
+- Check out [Examples](./nextjs-examples) for more use cases

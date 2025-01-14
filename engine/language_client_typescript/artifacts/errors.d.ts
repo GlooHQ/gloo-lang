@@ -1,6 +1,3 @@
-export { BamlRuntime, FunctionResult, FunctionResultStream, BamlImage as Image, ClientBuilder, BamlAudio as Audio, invoke_runtime_cli, ClientRegistry, BamlLogEvent, } from "./native";
-export { BamlStream } from "./stream";
-export { BamlCtxManager } from "./async_context_vars";
 export declare class BamlClientFinishReasonError extends Error {
     prompt: string;
     raw_output: string;
@@ -15,6 +12,7 @@ export declare class BamlValidationError extends Error {
     toJSON(): string;
     static from(error: Error): BamlValidationError | undefined;
 }
+<<<<<<< HEAD:engine/language_client_typescript/index.d.ts
 export declare class BamlClientHttpError extends Error {
     client_name: string;
     status_code: number;
@@ -24,3 +22,7 @@ export declare class BamlClientHttpError extends Error {
 }
 export declare function toBamlError(error: any): any;
 //# sourceMappingURL=index.d.ts.map
+=======
+export declare function createBamlValidationError(error: Error): BamlValidationError | BamlClientFinishReasonError | Error;
+//# sourceMappingURL=errors.d.ts.map
+>>>>>>> 76e0a2db (feat: generation for react working):engine/language_client_typescript/artifacts/errors.d.ts

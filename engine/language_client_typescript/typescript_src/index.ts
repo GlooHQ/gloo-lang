@@ -11,6 +11,7 @@ export {
 } from "./native";
 export { BamlStream } from "./stream";
 export { BamlCtxManager } from "./async_context_vars";
+<<<<<<< HEAD
 
 export class BamlClientFinishReasonError extends Error {
   prompt: string;
@@ -177,4 +178,7 @@ export function toBamlError(error: any) {
   }
 }
 
+=======
+export * from "./errors";
+>>>>>>> 76e0a2db (feat: generation for react working)
 // No need for a separate throwBamlValidationError function in TypeScript
