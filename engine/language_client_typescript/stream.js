@@ -57,5 +57,27 @@ class BamlStream {
         const final = await this.driveToCompletionInBg();
         return this.finalCoerce(final.parsed());
     }
+    /**
+     * Converts the BAML stream to a Next.js compatible stream.
+     * This is used for server-side streaming in Next.js API routes and Server Actions.
+     */
+    toStreamable() {
+        const stream = this;
+        return new ReadableStream({
+            async start(controller) {
+                try {
+                    for await (const partial of stream) {
+                        controller.enqueue(new TextEncoder().encode(JSON.stringify({ partial })));
+                    }
+                    const final = await stream.getFinalResponse();
+                    controller.enqueue(new TextEncoder().encode(JSON.stringify({ final })));
+                    controller.close();
+                }
+                catch (error) {
+                    controller.error(error);
+                }
+            }
+        });
+    }
 }
 exports.BamlStream = BamlStream;
