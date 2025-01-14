@@ -20,8 +20,12 @@ export const PromptPreviewContent = () => {
     if (rt === undefined || ctx === undefined || selectedFn === undefined || selectedTc === undefined) {
       return
     }
-    return selectedFn.render_prompt_for_test(rt, selectedTc.name, ctx, findMediaFile)
+    const newPreview = await selectedFn.render_prompt_for_test(rt, selectedTc.name, ctx, findMediaFile)
+    setLastKnownPreview(newPreview)
+    return newPreview
   }
+
+  const [lastKnownPreview, setLastKnownPreview] = useState<WasmPrompt | undefined>()
 
   const {
     data: preview,
@@ -33,8 +37,11 @@ export const PromptPreviewContent = () => {
     generatePreview,
   )
 
-  if (isLoading) {
-    return <Loader message='Refreshing...' />
+  if (isLoading && !preview) {
+    if (lastKnownPreview) {
+      return <RenderPrompt prompt={lastKnownPreview} testCase={selectedTc} />
+    }
+    return <Loader message='Loading...' />
   }
 
   if (error) {
