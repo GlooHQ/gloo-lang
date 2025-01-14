@@ -281,8 +281,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       posthog-js:
-        specifier: ^1.120.4
-        version: 1.205.0
+        specifier: ^1.205.1
+        version: 1.205.1
       react:
         specifier: ^18
         version: 18.3.1
@@ -295,6 +295,9 @@ importers:
       react-dom:
         specifier: ^18
         version: 18.3.1(react@18.3.1)
+      react-error-boundary:
+        specifier: ^4.0.11
+        version: 4.1.2(react@18.3.1)
       react-hook-form:
         specifier: ^7.51.2
         version: 7.54.2(react@18.3.1)
@@ -6960,8 +6963,8 @@ packages:
     resolution: {integrity: sha512-OCVPnIObs4N29kxTjzLfUryOkvZEq+pf8jTF0lg8E7uETuWHA+v7j3c/xJmiqpX450191LlmZfUKkXxkTry7nA==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.205.0:
-    resolution: {integrity: sha512-zP4SQ9Dg9JwqkEteoAOviAAAMdT/nJ4vk1jqfE6fVudziEa3szkQWd7czk5ehlEdrKFUE85MonCKW4L/uwtybA==}
+  posthog-js@1.205.1:
+    resolution: {integrity: sha512-eFzQsula3zbBeg4XV1MOiYsjrfMx/DHHFIQEvyswv4rx+4ZYOFmA5SHhiATKrzr4uOUN+jdSjl+EHZjURGVVMA==}
 
   posthog-node@3.6.3:
     resolution: {integrity: sha512-JB+ei0LkwE+rKHyW5z79Nd1jUaGxU6TvkfjFqY9vQaHxU5aU8dRl0UUaEmZdZbHwjp3WmXCBQQRNyimwbNQfCw==}
@@ -15613,7 +15616,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.205.0:
+  posthog-js@1.205.1:
     dependencies:
       core-js: 3.40.0
       fflate: 0.4.8
