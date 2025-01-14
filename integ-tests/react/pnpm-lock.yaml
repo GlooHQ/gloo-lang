@@ -11,6 +11,9 @@ importers:
       '@boundaryml/baml':
         specifier: link:../../engine/language_client_typescript
         version: link:../../engine/language_client_typescript
+      '@boundaryml/baml-nextjs-plugin':
+        specifier: link:../../typescript/nextjs-plugin
+        version: link:../../typescript/nextjs-plugin
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.4
         version: 2.1.4(@types/react-dom@19.0.3(@types/react@19.0.7))(@types/react@19.0.7)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
