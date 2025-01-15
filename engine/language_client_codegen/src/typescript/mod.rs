@@ -45,7 +45,7 @@ struct ReactServerActions {
 }
 
 #[derive(askama::Template)]
-#[template(path = "react/client.ts.j2", escape = "none")]
+#[template(path = "react/client.tsx.j2", escape = "none")]
 struct ReactClientHooks {
     funcs: Vec<TypescriptFunction>,
     types: Vec<String>,
@@ -136,6 +136,14 @@ struct InlinedBaml {
 #[template(path = "tracing.ts.j2", escape = "none")]
 struct TypescriptTracing {}
 
+#[derive(askama::Template)]
+#[template(path = "react/types.ts.j2", escape = "none")]
+struct ReactTypes {}
+
+#[derive(askama::Template)]
+#[template(path = "react/utils.ts.j2", escape = "none")]
+struct ReactUtils {}
+
 pub(crate) fn generate(
     ir: &IntermediateRepr,
     generator: &crate::GeneratorArgs,
@@ -156,8 +164,10 @@ pub(crate) fn generate(
     // Add framework-specific files
     match framework {
         TypescriptFramework::React => {
+            collector.add_template::<ReactTypes>("react/types.ts", (ir, generator))?;
+            collector.add_template::<ReactUtils>("react/utils.ts", (ir, generator))?;
             collector.add_template::<ReactServerActions>("react/server.ts", (ir, generator))?;
-            collector.add_template::<ReactClientHooks>("react/client.ts", (ir, generator))?;
+            collector.add_template::<ReactClientHooks>("react/client.tsx", (ir, generator))?;
         }
         TypescriptFramework::None => {}
     }
@@ -283,6 +293,22 @@ impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for ReactClientHo
     fn try_from(params: (&'_ IntermediateRepr, &'_ crate::GeneratorArgs)) -> Result<Self> {
         let typscript_client = TypescriptClient::try_from(params)?;
         Ok(typscript_client.into())
+    }
+}
+
+impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for ReactTypes {
+    type Error = anyhow::Error;
+
+    fn try_from(_: (&IntermediateRepr, &crate::GeneratorArgs)) -> Result<Self> {
+        Ok(ReactTypes {})
+    }
+}
+
+impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for ReactUtils {
+    type Error = anyhow::Error;
+
+    fn try_from(_: (&IntermediateRepr, &crate::GeneratorArgs)) -> Result<Self> {
+        Ok(ReactUtils {})
     }
 }
 

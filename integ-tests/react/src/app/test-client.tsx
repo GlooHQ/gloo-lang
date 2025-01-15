@@ -1,13 +1,14 @@
 'use client'
 
 import * as React from 'react'
-import { useTestAws } from '../../baml_client/react/client'
+import { useFnClassOptionalOutput, useLLM, useTestAws } from '../../baml_client/react/client'
 import { Loader2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { TestAwsAction } from '../../baml_client/react/server'
 
 export default function TestClient() {
   const {
@@ -15,18 +16,50 @@ export default function TestClient() {
     partialData: streamingResponse,
     isLoading,
     isError,
+    // isSuccess,
+    status,
     error,
     mutate
-  } = useTestAws()
+  } = useTestAws({
+    stream: true,
+    onPartial: (partial) => {
+      console.log('Got partial response', partial)
+    },
+    onFinal: (final) => {
+      console.log('Got final response', final)
+    },
+    onError: (error) => {
+      console.error('Got error', error)
+    },
+  })
 
+  const {
+    data: data2,
+    partialData: partialData2,
+  } = useLLM(TestAwsAction,{
+    stream: true,
+    onPartial: (partial) => {
+      console.log('Got partial response', partial)
+    },
+    onFinal: (final) => {
+      console.log('Got final response', final)
+    },
+    onError: (error) => {
+      console.error('Got error', error)
+    },
+  })
+
+  console.log('data2', data2)
+  console.log('partialData2', partialData2)
   const response = isLoading ? streamingResponse : finalResponse
   const [prompt, setPrompt] = React.useState('')
+  console.log('response', response)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!prompt.trim()) return
 
-    await mutate({ input: prompt })
+    await mutate(prompt)
     setPrompt('')
   }
 
@@ -81,11 +114,11 @@ export default function TestClient() {
               </CardContent>
             </Card>
 
-            <p className="text-sm text-muted-foreground text-center">
-              {isLoading ? 'Streaming response...' : 'Final response'}
-            </p>
           </div>
         )}
+        <CardFooter className="text-sm text-muted-foreground text-center">
+          {status}
+        </CardFooter>
       </CardContent>
     </Card>
   )

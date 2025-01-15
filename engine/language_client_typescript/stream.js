@@ -65,12 +65,13 @@ class BamlStream {
         const stream = this;
         return new ReadableStream({
             async start(controller) {
+                const encoder = new TextEncoder();
                 try {
                     for await (const partial of stream) {
-                        controller.enqueue(new TextEncoder().encode(JSON.stringify({ partial })));
+                        controller.enqueue(encoder.encode(JSON.stringify({ partial })));
                     }
                     const final = await stream.getFinalResponse();
-                    controller.enqueue(new TextEncoder().encode(JSON.stringify({ final })));
+                    controller.enqueue(encoder.encode(JSON.stringify({ final: final })));
                     controller.close();
                 }
                 catch (error) {

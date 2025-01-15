@@ -1,0 +1,4 @@
+packages:
+  - '../../engine/language_client_typescript'
+  - '../../engine/language_client_typescript/@boundaryml/baml-darwin-arm64'
+  - '../../typescript/nextjs-plugin'

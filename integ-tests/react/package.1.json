@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@boundaryml/baml": "workspace:*",
-    "@boundaryml/baml-darwin-arm64": "workspace:*",
     "@boundaryml/baml-nextjs-plugin": "workspace:*",
     "@radix-ui/react-dropdown-menu": "^2.1.4",
     "@radix-ui/react-label": "^2.1.1",
@@ -32,6 +31,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sonner": "^1.7.1",
+    "@boundaryml/baml-darwin-arm64": "workspace:*",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7"
   },

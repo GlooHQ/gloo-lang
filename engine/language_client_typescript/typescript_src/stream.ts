@@ -72,10 +72,11 @@ export class BamlStream<PartialOutputType, FinalOutputType> {
     const stream = this;
     return new ReadableStream({
       async start(controller) {
+        const encoder = new TextEncoder()
         try {
           for await (const partial of stream) {
             controller.enqueue(
-              new TextEncoder().encode(
+              encoder.encode(
                 JSON.stringify({ partial })
               )
             );
@@ -83,8 +84,8 @@ export class BamlStream<PartialOutputType, FinalOutputType> {
 
           const final = await stream.getFinalResponse();
           controller.enqueue(
-            new TextEncoder().encode(
-              JSON.stringify({ final })
+            encoder.encode(
+              JSON.stringify({ final: final })
             )
           );
           controller.close();
