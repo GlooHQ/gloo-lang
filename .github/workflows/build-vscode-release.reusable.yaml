@@ -2,6 +2,8 @@ name: BAML Release - Build VSCode Extension
 
 on:
   workflow_call: {}
+  push:
+    - greg/debug-vscode
 
 concurrency:
   # suffix is important to prevent a concurrency deadlock with the calling workflow
