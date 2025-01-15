@@ -55,6 +55,9 @@ class BookOrder(BaseModel):
     quantity: Optional[int] = None
     price: Optional[float] = None
 
+class ClassForNullLiteral(BaseModel):
+    a: Optional[Literal["hi"]] = None
+
 class ClassOptionalOutput(BaseModel):
     prop1: Optional[str] = None
     prop2: Optional[str] = None
@@ -197,13 +200,13 @@ class LinkedListAliasNode(BaseModel):
     next: Optional["LinkedListAliasNode"] = None
 
 class LiteralClassHello(BaseModel):
-    prop: Literal["hello"]
+    prop: Optional[Literal["hello"]] = None
 
 class LiteralClassOne(BaseModel):
-    prop: Literal["one"]
+    prop: Optional[Literal["one"]] = None
 
 class LiteralClassTwo(BaseModel):
-    prop: Literal["two"]
+    prop: Optional[Literal["two"]] = None
 
 class MalformedConstraints(BaseModel):
     foo: Checked[Optional[int],Literal["foo_check"]]
@@ -293,7 +296,7 @@ class RaysData(BaseModel):
 class ReceiptInfo(BaseModel):
     items: List["ReceiptItem"]
     total_cost: Optional[float] = None
-    venue: Optional[Union[Literal["barisa"], Literal["ox_burger"]]] = None
+    venue: Optional[Union[Optional[Literal["barisa"]], Optional[Literal["ox_burger"]]]] = None
 
 class ReceiptItem(BaseModel):
     name: Optional[str] = None
@@ -303,7 +306,7 @@ class ReceiptItem(BaseModel):
 
 class Recipe(BaseModel):
     ingredients: Dict[str, Optional["Quantity"]]
-    recipe_type: Optional[Union[Literal["breakfast"], Literal["dinner"]]] = None
+    recipe_type: Optional[Union[Optional[Literal["breakfast"]], Optional[Literal["dinner"]]]] = None
 
 class Resume(BaseModel):
     name: Optional[str] = None

@@ -343,3 +343,15 @@ test_failing_deserializer!(
         FieldType::Literal(LiteralValue::String("THREE".into())),
     ])
 );
+
+test_partial_deserializer!(
+    test_partial_class_with_null_literal,
+    r#"
+    class Foo {
+      bar "hello"
+    }
+    "#,
+    r#"{}"#,
+    FieldType::class("Foo"),
+    { "bar": null }
+);
