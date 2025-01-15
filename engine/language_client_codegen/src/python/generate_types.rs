@@ -307,7 +307,7 @@ impl ToTypeReferenceInTypeDefinition for FieldType {
                     format!("Optional[\"{name}\"]")
                 }
             }
-            FieldType::Literal(value) => to_python_literal(value),
+            FieldType::Literal(value) => format!("Optional[{}]", to_python_literal(value)),
             FieldType::List(inner) => format!("List[{}]", inner.to_partial_type_ref(ir, true)),
             FieldType::Map(key, value) => {
                 format!(

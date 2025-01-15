@@ -194,6 +194,11 @@ export interface BookOrder {
   
 }
 
+export interface ClassForNullLiteral {
+  a: "hi"
+  
+}
+
 export interface ClassOptionalOutput {
   prop1: string
   prop2: string
