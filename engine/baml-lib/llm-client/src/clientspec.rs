@@ -253,13 +253,14 @@ impl FinishReasonFilter {
                 let Some(reason) = reason.map(|r| r.as_ref().to_string()) else {
                     return false;
                 };
-                allow.contains(&reason)
+                // check case insensitive
+                allow.iter().any(|r| r.to_lowercase() == reason.to_lowercase())
             }
             Self::DenyList(deny) => {
                 let Some(reason) = reason.map(|r| r.as_ref().to_string()) else {
                     return true;
                 };
-                !deny.contains(&reason)
+                !deny.iter().any(|r| r.to_lowercase() == reason.to_lowercase())
             }
             Self::All => true,
         }
