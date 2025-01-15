@@ -18,1619 +18,3703 @@ $ pnpm add @boundaryml/baml
 'use server'
 
 import { b } from '../index';
-import type { BamlStream } from '@boundaryml/baml';
-
-
+import type { StreamedObject } from './types';
+import { Check, Checked, RecursivePartialNull } from "../types"
+import { Image, Audio } from "@boundaryml/baml"
+import {BigNumbers, BinaryNode, Blah, BlockConstraint, BlockConstraintForParam, BookOrder, ClassOptionalOutput, ClassOptionalOutput2, ClassToRecAlias, ClassWithImage, CompoundBigNumbers, ContactInfo, CustomTaskResult, DummyOutput, DynInputOutput, DynamicClassOne, DynamicClassTwo, DynamicOutput, Earthling, Education, Email, EmailAddress, Event, FakeImage, FlightConfirmation, FooAny, Forest, FormatterTest0, FormatterTest1, FormatterTest2, FormatterTest3, GroceryReceipt, InnerClass, InnerClass2, InputClass, InputClassNested, LinkedList, LinkedListAliasNode, LiteralClassHello, LiteralClassOne, LiteralClassTwo, MalformedConstraints, MalformedConstraints2, Martian, MergeAttrs, NamedArgsSingleClass, Nested, Nested2, NestedBlockConstraint, NestedBlockConstraintForParam, Node, NodeWithAliasIndirection, OptionalListAndMap, OptionalTest_Prop1, OptionalTest_ReturnType, OrderInfo, OriginalA, OriginalB, Person, PhoneNumber, Quantity, RaysData, ReceiptInfo, ReceiptItem, Recipe, Resume, Schema, SearchParams, SomeClassNestedDynamic, StringToClassEntry, TestClassAlias, TestClassNested, TestClassWithEnum, TestOutputClass, Tree, TwoStoriesOneTitle, UnionTest_ReturnType, WithReasoning, AliasedEnum, Category, Category2, Category3, Color, DataType, DynEnumOne, DynEnumTwo, EnumInClass, EnumOutput, Hobby, MapKey, NamedArgsSingleEnum, NamedArgsSingleEnumList, OptionalTest_CategoryType, OrderStatus, Tag, TestEnum} from "../types"
 /**
- * Interface defining the structure of a streamable value with methods
- * to update, complete, and handle errors in the stream.
+ * Server action for the AaaSamOutputFormat BAML function.
+ *
+ * Input Types:
+ *
+ * - recipe: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Recipe
+ * - Streaming: ReadableStream
  */
-interface StreamableValue<T> {
-  done: (finalValue?: T) => void;
-  error: (error: Error) => void;
-  object: ReadableStream<T>;
-  update: (value: T) => void;
-}
-
-/**
- * Creates a streamable value with methods to control the stream
- */
-function createStreamableValue<T extends object>(): StreamableValue<T> {
-  let controller: ReadableStreamDefaultController<T>;
-  const stream = new ReadableStream<T>({
-    start(c) {
-      controller = c;
-    },
-  });
-
-  return {
-    done: (finalValue?: T) => {
-      if (finalValue) {
-        controller.enqueue(finalValue);
-      }
-      controller.close();
-    },
-    error: (error: Error) => {
-      controller.error(error);
-    },
-    object: stream,
-    update: (value: T) => {
-      controller.enqueue(value);
-    },
-  };
-}
-
-/**
- * Type alias for defining a StreamableValue based on a BamlStream.
- * It captures either a partial or final result depending on the stream state.
- */
-type StreamResult<TStream extends BamlStream<unknown, unknown>> =
-  | {
-      partial: TStream extends BamlStream<infer PartialResult, unknown>
-        ? PartialResult
-        : never;
-    }
-  | {
-      final: TStream extends BamlStream<unknown, infer FinalResult>
-        ? FinalResult
-        : never;
-    };
-
-/**
- * Helper function to manage and handle a BamlStream.
- */
-async function streamHelper<TStream extends BamlStream<unknown, unknown>>(
-  bamlStream: TStream,
-): Promise<{
-  object: ReadableStream<StreamResult<TStream>>;
-}> {
-  const stream = createStreamableValue<StreamResult<TStream>>();
-
-  (async () => {
-    try {
-      for await (const event of bamlStream) {
-        stream.update({
-          partial: event as TStream extends BamlStream<infer P, unknown>
-            ? P
-            : never,
-        });
-      }
-
-      const response = await bamlStream.getFinalResponse();
-      stream.update({
-        final: response as TStream extends BamlStream<unknown, infer F>
-          ? F
-          : never,
-      });
-      stream.done();
-    } catch (error) {
-      stream.error(error instanceof Error ? error : new Error(String(error)));
-    }
-  })();
-
-  return { object: stream.object };
-}
-
-export type BamlStreamFunction<TPartial, TFinal, TArgs extends unknown[]> = (
-  // this: typeof b.stream,
-  ...args: TArgs
-) => BamlStream<TPartial, TFinal>;
-
-export type MakeStreamableResult<TPartial, TFinal, TArgs extends unknown[]> = (
-  ...args: TArgs
-) => Promise<{
-  object: ReadableStream<{ partial: TPartial } | { final: TFinal }>;
-}>;
-
-/**
- * Converts a BAML stream function into a streamable server action.
- */
-export async function makeStreamable<TPartial, TFinal, TArgs extends unknown[]>(
-  streamFunction: BamlStreamFunction<TPartial, TFinal, TArgs>,
-): MakeStreamableResult<TPartial, TFinal, TArgs> {
-  return async (...args) => {
-    const boundFunction = streamFunction.bind(b.stream);
-    const stream = boundFunction(...args);
-    return streamHelper(stream);
-  };
-}
-export const AaaSamOutputFormatAction = async (params: {
+export const AaaSamOutputFormatAction = async (
   recipe: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.AaaSamOutputFormat)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.AaaSamOutputFormat(
+      recipe,
+    );
+    return stream.toStreamable();
   }
-  return b.AaaSamOutputFormat(rest);
+  return b.AaaSamOutputFormat(
+    recipe,
+  );
 };
 
-export const AliasThatPointsToRecursiveTypeAction = async (params: {
+/**
+ * Server action for the AliasThatPointsToRecursiveType BAML function.
+ *
+ * Input Types:
+ *
+ * - list: LinkedListAliasNode
+ *
+ *
+ * Return Type:
+ * - Non-streaming: LinkedListAliasNode
+ * - Streaming: ReadableStream
+ */
+export const AliasThatPointsToRecursiveTypeAction = async (
   list: LinkedListAliasNode,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.AliasThatPointsToRecursiveType)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.AliasThatPointsToRecursiveType(
+      list,
+    );
+    return stream.toStreamable();
   }
-  return b.AliasThatPointsToRecursiveType(rest);
+  return b.AliasThatPointsToRecursiveType(
+    list,
+  );
 };
 
-export const AliasWithMultipleAttrsAction = async (params: {
+/**
+ * Server action for the AliasWithMultipleAttrs BAML function.
+ *
+ * Input Types:
+ *
+ * - money: Checked<number,"gt_ten">
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Checked<number,"gt_ten">
+ * - Streaming: ReadableStream
+ */
+export const AliasWithMultipleAttrsAction = async (
   money: Checked<number,"gt_ten">,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.AliasWithMultipleAttrs)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.AliasWithMultipleAttrs(
+      money,
+    );
+    return stream.toStreamable();
   }
-  return b.AliasWithMultipleAttrs(rest);
+  return b.AliasWithMultipleAttrs(
+    money,
+  );
 };
 
-export const AliasedInputClassAction = async (params: {
+/**
+ * Server action for the AliasedInputClass BAML function.
+ *
+ * Input Types:
+ *
+ * - input: InputClass
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const AliasedInputClassAction = async (
   input: InputClass,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.AliasedInputClass)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.AliasedInputClass(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.AliasedInputClass(rest);
+  return b.AliasedInputClass(
+    input,
+  );
 };
 
-export const AliasedInputClass2Action = async (params: {
+/**
+ * Server action for the AliasedInputClass2 BAML function.
+ *
+ * Input Types:
+ *
+ * - input: InputClass
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const AliasedInputClass2Action = async (
   input: InputClass,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.AliasedInputClass2)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.AliasedInputClass2(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.AliasedInputClass2(rest);
+  return b.AliasedInputClass2(
+    input,
+  );
 };
 
-export const AliasedInputClassNestedAction = async (params: {
+/**
+ * Server action for the AliasedInputClassNested BAML function.
+ *
+ * Input Types:
+ *
+ * - input: InputClassNested
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const AliasedInputClassNestedAction = async (
   input: InputClassNested,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.AliasedInputClassNested)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.AliasedInputClassNested(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.AliasedInputClassNested(rest);
+  return b.AliasedInputClassNested(
+    input,
+  );
 };
 
-export const AliasedInputEnumAction = async (params: {
+/**
+ * Server action for the AliasedInputEnum BAML function.
+ *
+ * Input Types:
+ *
+ * - input: AliasedEnum
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const AliasedInputEnumAction = async (
   input: AliasedEnum,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.AliasedInputEnum)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.AliasedInputEnum(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.AliasedInputEnum(rest);
+  return b.AliasedInputEnum(
+    input,
+  );
 };
 
-export const AliasedInputListAction = async (params: {
+/**
+ * Server action for the AliasedInputList BAML function.
+ *
+ * Input Types:
+ *
+ * - input: AliasedEnum[]
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const AliasedInputListAction = async (
   input: AliasedEnum[],
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.AliasedInputList)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.AliasedInputList(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.AliasedInputList(rest);
+  return b.AliasedInputList(
+    input,
+  );
 };
 
-export const AllowedOptionalsAction = async (params: {
+/**
+ * Server action for the AllowedOptionals BAML function.
+ *
+ * Input Types:
+ *
+ * - optionals: OptionalListAndMap
+ *
+ *
+ * Return Type:
+ * - Non-streaming: OptionalListAndMap
+ * - Streaming: ReadableStream
+ */
+export const AllowedOptionalsAction = async (
   optionals: OptionalListAndMap,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.AllowedOptionals)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.AllowedOptionals(
+      optionals,
+    );
+    return stream.toStreamable();
   }
-  return b.AllowedOptionals(rest);
+  return b.AllowedOptionals(
+    optionals,
+  );
 };
 
-export const AudioInputAction = async (params: {
+/**
+ * Server action for the AudioInput BAML function.
+ *
+ * Input Types:
+ *
+ * - aud: Audio
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const AudioInputAction = async (
   aud: Audio,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.AudioInput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.AudioInput(
+      aud,
+    );
+    return stream.toStreamable();
   }
-  return b.AudioInput(rest);
+  return b.AudioInput(
+    aud,
+  );
 };
 
-export const BuildLinkedListAction = async (params: {
+/**
+ * Server action for the BuildLinkedList BAML function.
+ *
+ * Input Types:
+ *
+ * - input: number[]
+ *
+ *
+ * Return Type:
+ * - Non-streaming: LinkedList
+ * - Streaming: ReadableStream
+ */
+export const BuildLinkedListAction = async (
   input: number[],
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.BuildLinkedList)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.BuildLinkedList(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.BuildLinkedList(rest);
+  return b.BuildLinkedList(
+    input,
+  );
 };
 
-export const BuildTreeAction = async (params: {
+/**
+ * Server action for the BuildTree BAML function.
+ *
+ * Input Types:
+ *
+ * - input: BinaryNode
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Tree
+ * - Streaming: ReadableStream
+ */
+export const BuildTreeAction = async (
   input: BinaryNode,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.BuildTree)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.BuildTree(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.BuildTree(rest);
+  return b.BuildTree(
+    input,
+  );
 };
 
-export const ClassThatPointsToRecursiveClassThroughAliasAction = async (params: {
+/**
+ * Server action for the ClassThatPointsToRecursiveClassThroughAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - cls: ClassToRecAlias
+ *
+ *
+ * Return Type:
+ * - Non-streaming: ClassToRecAlias
+ * - Streaming: ReadableStream
+ */
+export const ClassThatPointsToRecursiveClassThroughAliasAction = async (
   cls: ClassToRecAlias,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ClassThatPointsToRecursiveClassThroughAlias)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ClassThatPointsToRecursiveClassThroughAlias(
+      cls,
+    );
+    return stream.toStreamable();
   }
-  return b.ClassThatPointsToRecursiveClassThroughAlias(rest);
+  return b.ClassThatPointsToRecursiveClassThroughAlias(
+    cls,
+  );
 };
 
-export const ClassifyDynEnumTwoAction = async (params: {
+/**
+ * Server action for the ClassifyDynEnumTwo BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: (string | DynEnumTwo)
+ * - Streaming: ReadableStream
+ */
+export const ClassifyDynEnumTwoAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ClassifyDynEnumTwo)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ClassifyDynEnumTwo(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.ClassifyDynEnumTwo(rest);
+  return b.ClassifyDynEnumTwo(
+    input,
+  );
 };
 
-export const ClassifyMessageAction = async (params: {
+/**
+ * Server action for the ClassifyMessage BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Category
+ * - Streaming: ReadableStream
+ */
+export const ClassifyMessageAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ClassifyMessage)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ClassifyMessage(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.ClassifyMessage(rest);
+  return b.ClassifyMessage(
+    input,
+  );
 };
 
-export const ClassifyMessage2Action = async (params: {
+/**
+ * Server action for the ClassifyMessage2 BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Category
+ * - Streaming: ReadableStream
+ */
+export const ClassifyMessage2Action = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ClassifyMessage2)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ClassifyMessage2(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.ClassifyMessage2(rest);
+  return b.ClassifyMessage2(
+    input,
+  );
 };
 
-export const ClassifyMessage3Action = async (params: {
+/**
+ * Server action for the ClassifyMessage3 BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Category
+ * - Streaming: ReadableStream
+ */
+export const ClassifyMessage3Action = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ClassifyMessage3)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ClassifyMessage3(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.ClassifyMessage3(rest);
+  return b.ClassifyMessage3(
+    input,
+  );
 };
 
-export const CompletionAction = async (params: {
+/**
+ * Server action for the Completion BAML function.
+ *
+ * Input Types:
+ *
+ * - prefix: string
+ *
+ * - suffix: string
+ *
+ * - language: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const CompletionAction = async (
   prefix: string,
   suffix: string,
   language: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.Completion)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.Completion(
+      prefix,
+      suffix,
+      language,
+    );
+    return stream.toStreamable();
   }
-  return b.Completion(rest);
+  return b.Completion(
+    prefix,
+    suffix,
+    language,
+  );
 };
 
-export const CustomTaskAction = async (params: {
+/**
+ * Server action for the CustomTask BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: BookOrder | FlightConfirmation | GroceryReceipt
+ * - Streaming: ReadableStream
+ */
+export const CustomTaskAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.CustomTask)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.CustomTask(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.CustomTask(rest);
+  return b.CustomTask(
+    input,
+  );
 };
 
-export const DescribeImageAction = async (params: {
+/**
+ * Server action for the DescribeImage BAML function.
+ *
+ * Input Types:
+ *
+ * - img: Image
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const DescribeImageAction = async (
   img: Image,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.DescribeImage)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.DescribeImage(
+      img,
+    );
+    return stream.toStreamable();
   }
-  return b.DescribeImage(rest);
+  return b.DescribeImage(
+    img,
+  );
 };
 
-export const DescribeImage2Action = async (params: {
+/**
+ * Server action for the DescribeImage2 BAML function.
+ *
+ * Input Types:
+ *
+ * - classWithImage: ClassWithImage
+ *
+ * - img2: Image
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const DescribeImage2Action = async (
   classWithImage: ClassWithImage,
   img2: Image,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.DescribeImage2)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.DescribeImage2(
+      classWithImage,
+      img2,
+    );
+    return stream.toStreamable();
   }
-  return b.DescribeImage2(rest);
+  return b.DescribeImage2(
+    classWithImage,
+    img2,
+  );
 };
 
-export const DescribeImage3Action = async (params: {
+/**
+ * Server action for the DescribeImage3 BAML function.
+ *
+ * Input Types:
+ *
+ * - classWithImage: ClassWithImage
+ *
+ * - img2: Image
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const DescribeImage3Action = async (
   classWithImage: ClassWithImage,
   img2: Image,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.DescribeImage3)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.DescribeImage3(
+      classWithImage,
+      img2,
+    );
+    return stream.toStreamable();
   }
-  return b.DescribeImage3(rest);
+  return b.DescribeImage3(
+    classWithImage,
+    img2,
+  );
 };
 
-export const DescribeImage4Action = async (params: {
+/**
+ * Server action for the DescribeImage4 BAML function.
+ *
+ * Input Types:
+ *
+ * - classWithImage: ClassWithImage
+ *
+ * - img2: Image
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const DescribeImage4Action = async (
   classWithImage: ClassWithImage,
   img2: Image,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.DescribeImage4)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.DescribeImage4(
+      classWithImage,
+      img2,
+    );
+    return stream.toStreamable();
   }
-  return b.DescribeImage4(rest);
+  return b.DescribeImage4(
+    classWithImage,
+    img2,
+  );
 };
 
-export const DifferentiateUnionsAction = async (params: {
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.DifferentiateUnions)(rest);
+/**
+ * Server action for the DifferentiateUnions BAML function.
+ *
+ * Input Types:
+ *
+ *
+ * Return Type:
+ * - Non-streaming: OriginalA | OriginalB
+ * - Streaming: ReadableStream
+ */
+export const DifferentiateUnionsAction = async (
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.DifferentiateUnions(
+    );
+    return stream.toStreamable();
   }
-  return b.DifferentiateUnions(rest);
+  return b.DifferentiateUnions(
+  );
 };
 
-export const DummyOutputFunctionAction = async (params: {
+/**
+ * Server action for the DummyOutputFunction BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: DummyOutput
+ * - Streaming: ReadableStream
+ */
+export const DummyOutputFunctionAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.DummyOutputFunction)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.DummyOutputFunction(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.DummyOutputFunction(rest);
+  return b.DummyOutputFunction(
+    input,
+  );
 };
 
-export const DynamicFuncAction = async (params: {
+/**
+ * Server action for the DynamicFunc BAML function.
+ *
+ * Input Types:
+ *
+ * - input: DynamicClassOne
+ *
+ *
+ * Return Type:
+ * - Non-streaming: DynamicClassTwo
+ * - Streaming: ReadableStream
+ */
+export const DynamicFuncAction = async (
   input: DynamicClassOne,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.DynamicFunc)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.DynamicFunc(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.DynamicFunc(rest);
+  return b.DynamicFunc(
+    input,
+  );
 };
 
-export const DynamicInputOutputAction = async (params: {
+/**
+ * Server action for the DynamicInputOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: DynInputOutput
+ *
+ *
+ * Return Type:
+ * - Non-streaming: DynInputOutput
+ * - Streaming: ReadableStream
+ */
+export const DynamicInputOutputAction = async (
   input: DynInputOutput,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.DynamicInputOutput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.DynamicInputOutput(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.DynamicInputOutput(rest);
+  return b.DynamicInputOutput(
+    input,
+  );
 };
 
-export const DynamicListInputOutputAction = async (params: {
+/**
+ * Server action for the DynamicListInputOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: DynInputOutput[]
+ *
+ *
+ * Return Type:
+ * - Non-streaming: DynInputOutput[]
+ * - Streaming: ReadableStream
+ */
+export const DynamicListInputOutputAction = async (
   input: DynInputOutput[],
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.DynamicListInputOutput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.DynamicListInputOutput(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.DynamicListInputOutput(rest);
+  return b.DynamicListInputOutput(
+    input,
+  );
 };
 
-export const ExpectFailureAction = async (params: {
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ExpectFailure)(rest);
+/**
+ * Server action for the ExpectFailure BAML function.
+ *
+ * Input Types:
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const ExpectFailureAction = async (
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ExpectFailure(
+    );
+    return stream.toStreamable();
   }
-  return b.ExpectFailure(rest);
+  return b.ExpectFailure(
+  );
 };
 
-export const ExtractContactInfoAction = async (params: {
+/**
+ * Server action for the ExtractContactInfo BAML function.
+ *
+ * Input Types:
+ *
+ * - document: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: ContactInfo
+ * - Streaming: ReadableStream
+ */
+export const ExtractContactInfoAction = async (
   document: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ExtractContactInfo)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ExtractContactInfo(
+      document,
+    );
+    return stream.toStreamable();
   }
-  return b.ExtractContactInfo(rest);
+  return b.ExtractContactInfo(
+    document,
+  );
 };
 
-export const ExtractHobbyAction = async (params: {
+/**
+ * Server action for the ExtractHobby BAML function.
+ *
+ * Input Types:
+ *
+ * - text: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: (string | Hobby)[]
+ * - Streaming: ReadableStream
+ */
+export const ExtractHobbyAction = async (
   text: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ExtractHobby)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ExtractHobby(
+      text,
+    );
+    return stream.toStreamable();
   }
-  return b.ExtractHobby(rest);
+  return b.ExtractHobby(
+    text,
+  );
 };
 
-export const ExtractNamesAction = async (params: {
+/**
+ * Server action for the ExtractNames BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string[]
+ * - Streaming: ReadableStream
+ */
+export const ExtractNamesAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ExtractNames)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ExtractNames(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.ExtractNames(rest);
+  return b.ExtractNames(
+    input,
+  );
 };
 
-export const ExtractPeopleAction = async (params: {
+/**
+ * Server action for the ExtractPeople BAML function.
+ *
+ * Input Types:
+ *
+ * - text: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Person[]
+ * - Streaming: ReadableStream
+ */
+export const ExtractPeopleAction = async (
   text: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ExtractPeople)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ExtractPeople(
+      text,
+    );
+    return stream.toStreamable();
   }
-  return b.ExtractPeople(rest);
+  return b.ExtractPeople(
+    text,
+  );
 };
 
-export const ExtractReceiptInfoAction = async (params: {
+/**
+ * Server action for the ExtractReceiptInfo BAML function.
+ *
+ * Input Types:
+ *
+ * - email: string
+ *
+ * - reason: "curiosity" | "personal_finance"
+ *
+ *
+ * Return Type:
+ * - Non-streaming: ReceiptInfo
+ * - Streaming: ReadableStream
+ */
+export const ExtractReceiptInfoAction = async (
   email: string,
   reason: "curiosity" | "personal_finance",
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ExtractReceiptInfo)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ExtractReceiptInfo(
+      email,
+      reason,
+    );
+    return stream.toStreamable();
   }
-  return b.ExtractReceiptInfo(rest);
+  return b.ExtractReceiptInfo(
+    email,
+    reason,
+  );
 };
 
-export const ExtractResumeAction = async (params: {
+/**
+ * Server action for the ExtractResume BAML function.
+ *
+ * Input Types:
+ *
+ * - resume: string
+ *
+ * - img (optional): Image | null
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Resume
+ * - Streaming: ReadableStream
+ */
+export const ExtractResumeAction = async (
   resume: string,
   img?: Image | null,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ExtractResume)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ExtractResume(
+      resume,
+      img,
+    );
+    return stream.toStreamable();
   }
-  return b.ExtractResume(rest);
+  return b.ExtractResume(
+    resume,
+    img,
+  );
 };
 
-export const ExtractResume2Action = async (params: {
+/**
+ * Server action for the ExtractResume2 BAML function.
+ *
+ * Input Types:
+ *
+ * - resume: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Resume
+ * - Streaming: ReadableStream
+ */
+export const ExtractResume2Action = async (
   resume: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ExtractResume2)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ExtractResume2(
+      resume,
+    );
+    return stream.toStreamable();
   }
-  return b.ExtractResume2(rest);
+  return b.ExtractResume2(
+    resume,
+  );
 };
 
-export const FnClassOptionalOutputAction = async (params: {
+/**
+ * Server action for the FnClassOptionalOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: ClassOptionalOutput | null
+ * - Streaming: ReadableStream
+ */
+export const FnClassOptionalOutputAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnClassOptionalOutput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnClassOptionalOutput(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnClassOptionalOutput(rest);
+  return b.FnClassOptionalOutput(
+    input,
+  );
 };
 
-export const FnClassOptionalOutput2Action = async (params: {
+/**
+ * Server action for the FnClassOptionalOutput2 BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: ClassOptionalOutput2 | null
+ * - Streaming: ReadableStream
+ */
+export const FnClassOptionalOutput2Action = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnClassOptionalOutput2)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnClassOptionalOutput2(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnClassOptionalOutput2(rest);
+  return b.FnClassOptionalOutput2(
+    input,
+  );
 };
 
-export const FnEnumListOutputAction = async (params: {
+/**
+ * Server action for the FnEnumListOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: EnumOutput[]
+ * - Streaming: ReadableStream
+ */
+export const FnEnumListOutputAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnEnumListOutput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnEnumListOutput(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnEnumListOutput(rest);
+  return b.FnEnumListOutput(
+    input,
+  );
 };
 
-export const FnEnumOutputAction = async (params: {
+/**
+ * Server action for the FnEnumOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: EnumOutput
+ * - Streaming: ReadableStream
+ */
+export const FnEnumOutputAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnEnumOutput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnEnumOutput(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnEnumOutput(rest);
+  return b.FnEnumOutput(
+    input,
+  );
 };
 
-export const FnLiteralClassInputOutputAction = async (params: {
+/**
+ * Server action for the FnLiteralClassInputOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: LiteralClassHello
+ *
+ *
+ * Return Type:
+ * - Non-streaming: LiteralClassHello
+ * - Streaming: ReadableStream
+ */
+export const FnLiteralClassInputOutputAction = async (
   input: LiteralClassHello,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnLiteralClassInputOutput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnLiteralClassInputOutput(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnLiteralClassInputOutput(rest);
+  return b.FnLiteralClassInputOutput(
+    input,
+  );
 };
 
-export const FnLiteralUnionClassInputOutputAction = async (params: {
+/**
+ * Server action for the FnLiteralUnionClassInputOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: LiteralClassOne | LiteralClassTwo
+ *
+ *
+ * Return Type:
+ * - Non-streaming: LiteralClassOne | LiteralClassTwo
+ * - Streaming: ReadableStream
+ */
+export const FnLiteralUnionClassInputOutputAction = async (
   input: LiteralClassOne | LiteralClassTwo,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnLiteralUnionClassInputOutput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnLiteralUnionClassInputOutput(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnLiteralUnionClassInputOutput(rest);
+  return b.FnLiteralUnionClassInputOutput(
+    input,
+  );
 };
 
-export const FnNamedArgsSingleStringOptionalAction = async (params: {
+/**
+ * Server action for the FnNamedArgsSingleStringOptional BAML function.
+ *
+ * Input Types:
+ *
+ * - myString (optional): string | null
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const FnNamedArgsSingleStringOptionalAction = async (
   myString?: string | null,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnNamedArgsSingleStringOptional)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnNamedArgsSingleStringOptional(
+      myString,
+    );
+    return stream.toStreamable();
   }
-  return b.FnNamedArgsSingleStringOptional(rest);
+  return b.FnNamedArgsSingleStringOptional(
+    myString,
+  );
 };
 
-export const FnOutputBoolAction = async (params: {
+/**
+ * Server action for the FnOutputBool BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: boolean
+ * - Streaming: ReadableStream
+ */
+export const FnOutputBoolAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnOutputBool)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnOutputBool(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnOutputBool(rest);
+  return b.FnOutputBool(
+    input,
+  );
 };
 
-export const FnOutputClassAction = async (params: {
+/**
+ * Server action for the FnOutputClass BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: TestOutputClass
+ * - Streaming: ReadableStream
+ */
+export const FnOutputClassAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnOutputClass)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnOutputClass(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnOutputClass(rest);
+  return b.FnOutputClass(
+    input,
+  );
 };
 
-export const FnOutputClassListAction = async (params: {
+/**
+ * Server action for the FnOutputClassList BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: TestOutputClass[]
+ * - Streaming: ReadableStream
+ */
+export const FnOutputClassListAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnOutputClassList)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnOutputClassList(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnOutputClassList(rest);
+  return b.FnOutputClassList(
+    input,
+  );
 };
 
-export const FnOutputClassNestedAction = async (params: {
+/**
+ * Server action for the FnOutputClassNested BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: TestClassNested
+ * - Streaming: ReadableStream
+ */
+export const FnOutputClassNestedAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnOutputClassNested)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnOutputClassNested(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnOutputClassNested(rest);
+  return b.FnOutputClassNested(
+    input,
+  );
 };
 
-export const FnOutputClassWithEnumAction = async (params: {
+/**
+ * Server action for the FnOutputClassWithEnum BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: TestClassWithEnum
+ * - Streaming: ReadableStream
+ */
+export const FnOutputClassWithEnumAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnOutputClassWithEnum)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnOutputClassWithEnum(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnOutputClassWithEnum(rest);
+  return b.FnOutputClassWithEnum(
+    input,
+  );
 };
 
-export const FnOutputIntAction = async (params: {
+/**
+ * Server action for the FnOutputInt BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
+export const FnOutputIntAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnOutputInt)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnOutputInt(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnOutputInt(rest);
+  return b.FnOutputInt(
+    input,
+  );
 };
 
-export const FnOutputLiteralBoolAction = async (params: {
+/**
+ * Server action for the FnOutputLiteralBool BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: false
+ * - Streaming: ReadableStream
+ */
+export const FnOutputLiteralBoolAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnOutputLiteralBool)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnOutputLiteralBool(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnOutputLiteralBool(rest);
+  return b.FnOutputLiteralBool(
+    input,
+  );
 };
 
-export const FnOutputLiteralIntAction = async (params: {
+/**
+ * Server action for the FnOutputLiteralInt BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: 5
+ * - Streaming: ReadableStream
+ */
+export const FnOutputLiteralIntAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnOutputLiteralInt)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnOutputLiteralInt(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnOutputLiteralInt(rest);
+  return b.FnOutputLiteralInt(
+    input,
+  );
 };
 
-export const FnOutputLiteralStringAction = async (params: {
+/**
+ * Server action for the FnOutputLiteralString BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: "example output"
+ * - Streaming: ReadableStream
+ */
+export const FnOutputLiteralStringAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnOutputLiteralString)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnOutputLiteralString(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnOutputLiteralString(rest);
+  return b.FnOutputLiteralString(
+    input,
+  );
 };
 
-export const FnOutputStringListAction = async (params: {
+/**
+ * Server action for the FnOutputStringList BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string[]
+ * - Streaming: ReadableStream
+ */
+export const FnOutputStringListAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnOutputStringList)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnOutputStringList(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnOutputStringList(rest);
+  return b.FnOutputStringList(
+    input,
+  );
 };
 
-export const FnTestAliasedEnumOutputAction = async (params: {
+/**
+ * Server action for the FnTestAliasedEnumOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: TestEnum
+ * - Streaming: ReadableStream
+ */
+export const FnTestAliasedEnumOutputAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnTestAliasedEnumOutput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnTestAliasedEnumOutput(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnTestAliasedEnumOutput(rest);
+  return b.FnTestAliasedEnumOutput(
+    input,
+  );
 };
 
-export const FnTestClassAliasAction = async (params: {
+/**
+ * Server action for the FnTestClassAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: TestClassAlias
+ * - Streaming: ReadableStream
+ */
+export const FnTestClassAliasAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnTestClassAlias)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnTestClassAlias(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.FnTestClassAlias(rest);
+  return b.FnTestClassAlias(
+    input,
+  );
 };
 
-export const FnTestNamedArgsSingleEnumAction = async (params: {
+/**
+ * Server action for the FnTestNamedArgsSingleEnum BAML function.
+ *
+ * Input Types:
+ *
+ * - myArg: NamedArgsSingleEnum
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const FnTestNamedArgsSingleEnumAction = async (
   myArg: NamedArgsSingleEnum,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.FnTestNamedArgsSingleEnum)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.FnTestNamedArgsSingleEnum(
+      myArg,
+    );
+    return stream.toStreamable();
   }
-  return b.FnTestNamedArgsSingleEnum(rest);
+  return b.FnTestNamedArgsSingleEnum(
+    myArg,
+  );
 };
 
-export const GetDataTypeAction = async (params: {
+/**
+ * Server action for the GetDataType BAML function.
+ *
+ * Input Types:
+ *
+ * - text: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: RaysData
+ * - Streaming: ReadableStream
+ */
+export const GetDataTypeAction = async (
   text: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.GetDataType)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.GetDataType(
+      text,
+    );
+    return stream.toStreamable();
   }
-  return b.GetDataType(rest);
+  return b.GetDataType(
+    text,
+  );
 };
 
-export const GetOrderInfoAction = async (params: {
+/**
+ * Server action for the GetOrderInfo BAML function.
+ *
+ * Input Types:
+ *
+ * - email: Email
+ *
+ *
+ * Return Type:
+ * - Non-streaming: OrderInfo
+ * - Streaming: ReadableStream
+ */
+export const GetOrderInfoAction = async (
   email: Email,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.GetOrderInfo)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.GetOrderInfo(
+      email,
+    );
+    return stream.toStreamable();
   }
-  return b.GetOrderInfo(rest);
+  return b.GetOrderInfo(
+    email,
+  );
 };
 
-export const GetQueryAction = async (params: {
+/**
+ * Server action for the GetQuery BAML function.
+ *
+ * Input Types:
+ *
+ * - query: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: SearchParams
+ * - Streaming: ReadableStream
+ */
+export const GetQueryAction = async (
   query: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.GetQuery)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.GetQuery(
+      query,
+    );
+    return stream.toStreamable();
   }
-  return b.GetQuery(rest);
+  return b.GetQuery(
+    query,
+  );
 };
 
-export const InOutEnumMapKeyAction = async (params: {
+/**
+ * Server action for the InOutEnumMapKey BAML function.
+ *
+ * Input Types:
+ *
+ * - i1: Partial<Record<MapKey, string>>
+ *
+ * - i2: Partial<Record<MapKey, string>>
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Partial<Record<MapKey, string>>
+ * - Streaming: ReadableStream
+ */
+export const InOutEnumMapKeyAction = async (
   i1: Partial<Record<MapKey, string>>,
   i2: Partial<Record<MapKey, string>>,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.InOutEnumMapKey)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.InOutEnumMapKey(
+      i1,
+      i2,
+    );
+    return stream.toStreamable();
   }
-  return b.InOutEnumMapKey(rest);
+  return b.InOutEnumMapKey(
+    i1,
+    i2,
+  );
 };
 
-export const InOutLiteralStringUnionMapKeyAction = async (params: {
+/**
+ * Server action for the InOutLiteralStringUnionMapKey BAML function.
+ *
+ * Input Types:
+ *
+ * - i1: Partial<Record<"one" | "two" | "three" | "four", string>>
+ *
+ * - i2: Partial<Record<"one" | "two" | "three" | "four", string>>
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Partial<Record<"one" | "two" | "three" | "four", string>>
+ * - Streaming: ReadableStream
+ */
+export const InOutLiteralStringUnionMapKeyAction = async (
   i1: Partial<Record<"one" | "two" | "three" | "four", string>>,
   i2: Partial<Record<"one" | "two" | "three" | "four", string>>,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.InOutLiteralStringUnionMapKey)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.InOutLiteralStringUnionMapKey(
+      i1,
+      i2,
+    );
+    return stream.toStreamable();
   }
-  return b.InOutLiteralStringUnionMapKey(rest);
+  return b.InOutLiteralStringUnionMapKey(
+    i1,
+    i2,
+  );
 };
 
-export const InOutSingleLiteralStringMapKeyAction = async (params: {
+/**
+ * Server action for the InOutSingleLiteralStringMapKey BAML function.
+ *
+ * Input Types:
+ *
+ * - m: Partial<Record<"key", string>>
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Partial<Record<"key", string>>
+ * - Streaming: ReadableStream
+ */
+export const InOutSingleLiteralStringMapKeyAction = async (
   m: Partial<Record<"key", string>>,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.InOutSingleLiteralStringMapKey)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.InOutSingleLiteralStringMapKey(
+      m,
+    );
+    return stream.toStreamable();
   }
-  return b.InOutSingleLiteralStringMapKey(rest);
+  return b.InOutSingleLiteralStringMapKey(
+    m,
+  );
 };
 
-export const JsonTypeAliasCycleAction = async (params: {
+/**
+ * Server action for the JsonTypeAliasCycle BAML function.
+ *
+ * Input Types:
+ *
+ * - input: JsonValue
+ *
+ *
+ * Return Type:
+ * - Non-streaming: JsonValue
+ * - Streaming: ReadableStream
+ */
+export const JsonTypeAliasCycleAction = async (
   input: JsonValue,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.JsonTypeAliasCycle)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.JsonTypeAliasCycle(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.JsonTypeAliasCycle(rest);
+  return b.JsonTypeAliasCycle(
+    input,
+  );
 };
 
-export const LiteralUnionsTestAction = async (params: {
+/**
+ * Server action for the LiteralUnionsTest BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: 1 | true | "string output"
+ * - Streaming: ReadableStream
+ */
+export const LiteralUnionsTestAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.LiteralUnionsTest)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.LiteralUnionsTest(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.LiteralUnionsTest(rest);
+  return b.LiteralUnionsTest(
+    input,
+  );
 };
 
-export const MakeBlockConstraintAction = async (params: {
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.MakeBlockConstraint)(rest);
+/**
+ * Server action for the MakeBlockConstraint BAML function.
+ *
+ * Input Types:
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Checked<BlockConstraint,"cross_field">
+ * - Streaming: ReadableStream
+ */
+export const MakeBlockConstraintAction = async (
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.MakeBlockConstraint(
+    );
+    return stream.toStreamable();
   }
-  return b.MakeBlockConstraint(rest);
+  return b.MakeBlockConstraint(
+  );
 };
 
-export const MakeNestedBlockConstraintAction = async (params: {
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.MakeNestedBlockConstraint)(rest);
+/**
+ * Server action for the MakeNestedBlockConstraint BAML function.
+ *
+ * Input Types:
+ *
+ *
+ * Return Type:
+ * - Non-streaming: NestedBlockConstraint
+ * - Streaming: ReadableStream
+ */
+export const MakeNestedBlockConstraintAction = async (
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.MakeNestedBlockConstraint(
+    );
+    return stream.toStreamable();
   }
-  return b.MakeNestedBlockConstraint(rest);
+  return b.MakeNestedBlockConstraint(
+  );
 };
 
-export const MapAliasAction = async (params: {
+/**
+ * Server action for the MapAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - m: Record<string, string[]>
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Record<string, string[]>
+ * - Streaming: ReadableStream
+ */
+export const MapAliasAction = async (
   m: Record<string, string[]>,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.MapAlias)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.MapAlias(
+      m,
+    );
+    return stream.toStreamable();
   }
-  return b.MapAlias(rest);
+  return b.MapAlias(
+    m,
+  );
 };
 
-export const MergeAliasAttributesAction = async (params: {
+/**
+ * Server action for the MergeAliasAttributes BAML function.
+ *
+ * Input Types:
+ *
+ * - money: number
+ *
+ *
+ * Return Type:
+ * - Non-streaming: MergeAttrs
+ * - Streaming: ReadableStream
+ */
+export const MergeAliasAttributesAction = async (
   money: number,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.MergeAliasAttributes)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.MergeAliasAttributes(
+      money,
+    );
+    return stream.toStreamable();
   }
-  return b.MergeAliasAttributes(rest);
+  return b.MergeAliasAttributes(
+    money,
+  );
 };
 
-export const MyFuncAction = async (params: {
+/**
+ * Server action for the MyFunc BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: DynamicOutput
+ * - Streaming: ReadableStream
+ */
+export const MyFuncAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.MyFunc)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.MyFunc(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.MyFunc(rest);
+  return b.MyFunc(
+    input,
+  );
 };
 
-export const NestedAliasAction = async (params: {
+/**
+ * Server action for the NestedAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - c: number | string | boolean | number | string[] | Record<string, string[]>
+ *
+ *
+ * Return Type:
+ * - Non-streaming: number | string | boolean | number | string[] | Record<string, string[]>
+ * - Streaming: ReadableStream
+ */
+export const NestedAliasAction = async (
   c: number | string | boolean | number | string[] | Record<string, string[]>,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.NestedAlias)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.NestedAlias(
+      c,
+    );
+    return stream.toStreamable();
   }
-  return b.NestedAlias(rest);
+  return b.NestedAlias(
+    c,
+  );
 };
 
-export const OptionalTest_FunctionAction = async (params: {
+/**
+ * Server action for the OptionalTest_Function BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: (OptionalTest_ReturnType | null)[]
+ * - Streaming: ReadableStream
+ */
+export const OptionalTest_FunctionAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.OptionalTest_Function)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.OptionalTest_Function(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.OptionalTest_Function(rest);
+  return b.OptionalTest_Function(
+    input,
+  );
 };
 
-export const PredictAgeAction = async (params: {
+/**
+ * Server action for the PredictAge BAML function.
+ *
+ * Input Types:
+ *
+ * - name: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: FooAny
+ * - Streaming: ReadableStream
+ */
+export const PredictAgeAction = async (
   name: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.PredictAge)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.PredictAge(
+      name,
+    );
+    return stream.toStreamable();
   }
-  return b.PredictAge(rest);
+  return b.PredictAge(
+    name,
+  );
 };
 
-export const PredictAgeBareAction = async (params: {
+/**
+ * Server action for the PredictAgeBare BAML function.
+ *
+ * Input Types:
+ *
+ * - inp: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Checked<number,"too_big">
+ * - Streaming: ReadableStream
+ */
+export const PredictAgeBareAction = async (
   inp: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.PredictAgeBare)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.PredictAgeBare(
+      inp,
+    );
+    return stream.toStreamable();
   }
-  return b.PredictAgeBare(rest);
+  return b.PredictAgeBare(
+    inp,
+  );
 };
 
-export const PrimitiveAliasAction = async (params: {
+/**
+ * Server action for the PrimitiveAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - p: number | string | boolean | number
+ *
+ *
+ * Return Type:
+ * - Non-streaming: number | string | boolean | number
+ * - Streaming: ReadableStream
+ */
+export const PrimitiveAliasAction = async (
   p: number | string | boolean | number,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.PrimitiveAlias)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.PrimitiveAlias(
+      p,
+    );
+    return stream.toStreamable();
   }
-  return b.PrimitiveAlias(rest);
+  return b.PrimitiveAlias(
+    p,
+  );
 };
 
-export const PromptTestClaudeAction = async (params: {
+/**
+ * Server action for the PromptTestClaude BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const PromptTestClaudeAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.PromptTestClaude)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.PromptTestClaude(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.PromptTestClaude(rest);
+  return b.PromptTestClaude(
+    input,
+  );
 };
 
-export const PromptTestClaudeChatAction = async (params: {
+/**
+ * Server action for the PromptTestClaudeChat BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const PromptTestClaudeChatAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.PromptTestClaudeChat)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.PromptTestClaudeChat(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.PromptTestClaudeChat(rest);
+  return b.PromptTestClaudeChat(
+    input,
+  );
 };
 
-export const PromptTestClaudeChatNoSystemAction = async (params: {
+/**
+ * Server action for the PromptTestClaudeChatNoSystem BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const PromptTestClaudeChatNoSystemAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.PromptTestClaudeChatNoSystem)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.PromptTestClaudeChatNoSystem(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.PromptTestClaudeChatNoSystem(rest);
+  return b.PromptTestClaudeChatNoSystem(
+    input,
+  );
 };
 
-export const PromptTestOpenAIAction = async (params: {
+/**
+ * Server action for the PromptTestOpenAI BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const PromptTestOpenAIAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.PromptTestOpenAI)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.PromptTestOpenAI(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.PromptTestOpenAI(rest);
+  return b.PromptTestOpenAI(
+    input,
+  );
 };
 
-export const PromptTestOpenAIChatAction = async (params: {
+/**
+ * Server action for the PromptTestOpenAIChat BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const PromptTestOpenAIChatAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.PromptTestOpenAIChat)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.PromptTestOpenAIChat(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.PromptTestOpenAIChat(rest);
+  return b.PromptTestOpenAIChat(
+    input,
+  );
 };
 
-export const PromptTestOpenAIChatNoSystemAction = async (params: {
+/**
+ * Server action for the PromptTestOpenAIChatNoSystem BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const PromptTestOpenAIChatNoSystemAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.PromptTestOpenAIChatNoSystem)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.PromptTestOpenAIChatNoSystem(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.PromptTestOpenAIChatNoSystem(rest);
+  return b.PromptTestOpenAIChatNoSystem(
+    input,
+  );
 };
 
-export const PromptTestStreamingAction = async (params: {
+/**
+ * Server action for the PromptTestStreaming BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const PromptTestStreamingAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.PromptTestStreaming)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.PromptTestStreaming(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.PromptTestStreaming(rest);
+  return b.PromptTestStreaming(
+    input,
+  );
 };
 
-export const RecursiveAliasCycleAction = async (params: {
+/**
+ * Server action for the RecursiveAliasCycle BAML function.
+ *
+ * Input Types:
+ *
+ * - input: RecAliasOne
+ *
+ *
+ * Return Type:
+ * - Non-streaming: RecAliasOne
+ * - Streaming: ReadableStream
+ */
+export const RecursiveAliasCycleAction = async (
   input: RecAliasOne,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.RecursiveAliasCycle)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.RecursiveAliasCycle(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.RecursiveAliasCycle(rest);
+  return b.RecursiveAliasCycle(
+    input,
+  );
 };
 
-export const RecursiveClassWithAliasIndirectionAction = async (params: {
+/**
+ * Server action for the RecursiveClassWithAliasIndirection BAML function.
+ *
+ * Input Types:
+ *
+ * - cls: NodeWithAliasIndirection
+ *
+ *
+ * Return Type:
+ * - Non-streaming: NodeWithAliasIndirection
+ * - Streaming: ReadableStream
+ */
+export const RecursiveClassWithAliasIndirectionAction = async (
   cls: NodeWithAliasIndirection,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.RecursiveClassWithAliasIndirection)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.RecursiveClassWithAliasIndirection(
+      cls,
+    );
+    return stream.toStreamable();
   }
-  return b.RecursiveClassWithAliasIndirection(rest);
+  return b.RecursiveClassWithAliasIndirection(
+    cls,
+  );
 };
 
-export const ReturnAliasWithMergedAttributesAction = async (params: {
+/**
+ * Server action for the ReturnAliasWithMergedAttributes BAML function.
+ *
+ * Input Types:
+ *
+ * - money: Checked<number,"gt_ten">
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Checked<number,"gt_ten">
+ * - Streaming: ReadableStream
+ */
+export const ReturnAliasWithMergedAttributesAction = async (
   money: Checked<number,"gt_ten">,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ReturnAliasWithMergedAttributes)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ReturnAliasWithMergedAttributes(
+      money,
+    );
+    return stream.toStreamable();
   }
-  return b.ReturnAliasWithMergedAttributes(rest);
+  return b.ReturnAliasWithMergedAttributes(
+    money,
+  );
 };
 
-export const ReturnFailingAssertAction = async (params: {
+/**
+ * Server action for the ReturnFailingAssert BAML function.
+ *
+ * Input Types:
+ *
+ * - inp: number
+ *
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
+export const ReturnFailingAssertAction = async (
   inp: number,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ReturnFailingAssert)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ReturnFailingAssert(
+      inp,
+    );
+    return stream.toStreamable();
   }
-  return b.ReturnFailingAssert(rest);
+  return b.ReturnFailingAssert(
+    inp,
+  );
 };
 
-export const ReturnMalformedConstraintsAction = async (params: {
+/**
+ * Server action for the ReturnMalformedConstraints BAML function.
+ *
+ * Input Types:
+ *
+ * - a: number
+ *
+ *
+ * Return Type:
+ * - Non-streaming: MalformedConstraints
+ * - Streaming: ReadableStream
+ */
+export const ReturnMalformedConstraintsAction = async (
   a: number,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.ReturnMalformedConstraints)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.ReturnMalformedConstraints(
+      a,
+    );
+    return stream.toStreamable();
   }
-  return b.ReturnMalformedConstraints(rest);
+  return b.ReturnMalformedConstraints(
+    a,
+  );
 };
 
-export const SchemaDescriptionsAction = async (params: {
+/**
+ * Server action for the SchemaDescriptions BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Schema
+ * - Streaming: ReadableStream
+ */
+export const SchemaDescriptionsAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.SchemaDescriptions)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.SchemaDescriptions(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.SchemaDescriptions(rest);
+  return b.SchemaDescriptions(
+    input,
+  );
 };
 
-export const SimpleRecursiveListAliasAction = async (params: {
+/**
+ * Server action for the SimpleRecursiveListAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - input: RecursiveListAlias
+ *
+ *
+ * Return Type:
+ * - Non-streaming: RecursiveListAlias
+ * - Streaming: ReadableStream
+ */
+export const SimpleRecursiveListAliasAction = async (
   input: RecursiveListAlias,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.SimpleRecursiveListAlias)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.SimpleRecursiveListAlias(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.SimpleRecursiveListAlias(rest);
+  return b.SimpleRecursiveListAlias(
+    input,
+  );
 };
 
-export const SimpleRecursiveMapAliasAction = async (params: {
+/**
+ * Server action for the SimpleRecursiveMapAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - input: RecursiveMapAlias
+ *
+ *
+ * Return Type:
+ * - Non-streaming: RecursiveMapAlias
+ * - Streaming: ReadableStream
+ */
+export const SimpleRecursiveMapAliasAction = async (
   input: RecursiveMapAlias,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.SimpleRecursiveMapAlias)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.SimpleRecursiveMapAlias(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.SimpleRecursiveMapAlias(rest);
+  return b.SimpleRecursiveMapAlias(
+    input,
+  );
 };
 
-export const StreamBigNumbersAction = async (params: {
+/**
+ * Server action for the StreamBigNumbers BAML function.
+ *
+ * Input Types:
+ *
+ * - digits: number
+ *
+ *
+ * Return Type:
+ * - Non-streaming: BigNumbers
+ * - Streaming: ReadableStream
+ */
+export const StreamBigNumbersAction = async (
   digits: number,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.StreamBigNumbers)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.StreamBigNumbers(
+      digits,
+    );
+    return stream.toStreamable();
   }
-  return b.StreamBigNumbers(rest);
+  return b.StreamBigNumbers(
+    digits,
+  );
 };
 
-export const StreamFailingAssertionAction = async (params: {
+/**
+ * Server action for the StreamFailingAssertion BAML function.
+ *
+ * Input Types:
+ *
+ * - theme: string
+ *
+ * - length: number
+ *
+ *
+ * Return Type:
+ * - Non-streaming: TwoStoriesOneTitle
+ * - Streaming: ReadableStream
+ */
+export const StreamFailingAssertionAction = async (
   theme: string,
   length: number,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.StreamFailingAssertion)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.StreamFailingAssertion(
+      theme,
+      length,
+    );
+    return stream.toStreamable();
   }
-  return b.StreamFailingAssertion(rest);
+  return b.StreamFailingAssertion(
+    theme,
+    length,
+  );
 };
 
-export const StreamOneBigNumberAction = async (params: {
+/**
+ * Server action for the StreamOneBigNumber BAML function.
+ *
+ * Input Types:
+ *
+ * - digits: number
+ *
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
+export const StreamOneBigNumberAction = async (
   digits: number,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.StreamOneBigNumber)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.StreamOneBigNumber(
+      digits,
+    );
+    return stream.toStreamable();
   }
-  return b.StreamOneBigNumber(rest);
+  return b.StreamOneBigNumber(
+    digits,
+  );
 };
 
-export const StreamUnionIntegersAction = async (params: {
+/**
+ * Server action for the StreamUnionIntegers BAML function.
+ *
+ * Input Types:
+ *
+ * - digits: number
+ *
+ *
+ * Return Type:
+ * - Non-streaming: (number | string)[]
+ * - Streaming: ReadableStream
+ */
+export const StreamUnionIntegersAction = async (
   digits: number,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.StreamUnionIntegers)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.StreamUnionIntegers(
+      digits,
+    );
+    return stream.toStreamable();
   }
-  return b.StreamUnionIntegers(rest);
+  return b.StreamUnionIntegers(
+    digits,
+  );
 };
 
-export const StreamingCompoundNumbersAction = async (params: {
+/**
+ * Server action for the StreamingCompoundNumbers BAML function.
+ *
+ * Input Types:
+ *
+ * - digits: number
+ *
+ * - yapping: boolean
+ *
+ *
+ * Return Type:
+ * - Non-streaming: CompoundBigNumbers
+ * - Streaming: ReadableStream
+ */
+export const StreamingCompoundNumbersAction = async (
   digits: number,
   yapping: boolean,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.StreamingCompoundNumbers)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.StreamingCompoundNumbers(
+      digits,
+      yapping,
+    );
+    return stream.toStreamable();
   }
-  return b.StreamingCompoundNumbers(rest);
+  return b.StreamingCompoundNumbers(
+    digits,
+    yapping,
+  );
 };
 
-export const TestAnthropicAction = async (params: {
+/**
+ * Server action for the TestAnthropic BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestAnthropicAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestAnthropic)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestAnthropic(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestAnthropic(rest);
+  return b.TestAnthropic(
+    input,
+  );
 };
 
-export const TestAnthropicShorthandAction = async (params: {
+/**
+ * Server action for the TestAnthropicShorthand BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestAnthropicShorthandAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestAnthropicShorthand)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestAnthropicShorthand(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestAnthropicShorthand(rest);
+  return b.TestAnthropicShorthand(
+    input,
+  );
 };
 
-export const TestAwsAction = async (params: {
+/**
+ * Server action for the TestAws BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestAwsAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestAws)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestAws(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestAws(rest);
+  return b.TestAws(
+    input,
+  );
 };
 
-export const TestAwsInvalidAccessKeyAction = async (params: {
+/**
+ * Server action for the TestAwsInvalidAccessKey BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestAwsInvalidAccessKeyAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestAwsInvalidAccessKey)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestAwsInvalidAccessKey(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestAwsInvalidAccessKey(rest);
+  return b.TestAwsInvalidAccessKey(
+    input,
+  );
 };
 
-export const TestAwsInvalidProfileAction = async (params: {
+/**
+ * Server action for the TestAwsInvalidProfile BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestAwsInvalidProfileAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestAwsInvalidProfile)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestAwsInvalidProfile(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestAwsInvalidProfile(rest);
+  return b.TestAwsInvalidProfile(
+    input,
+  );
 };
 
-export const TestAwsInvalidRegionAction = async (params: {
+/**
+ * Server action for the TestAwsInvalidRegion BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestAwsInvalidRegionAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestAwsInvalidRegion)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestAwsInvalidRegion(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestAwsInvalidRegion(rest);
+  return b.TestAwsInvalidRegion(
+    input,
+  );
 };
 
-export const TestAwsInvalidSessionTokenAction = async (params: {
+/**
+ * Server action for the TestAwsInvalidSessionToken BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestAwsInvalidSessionTokenAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestAwsInvalidSessionToken)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestAwsInvalidSessionToken(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestAwsInvalidSessionToken(rest);
+  return b.TestAwsInvalidSessionToken(
+    input,
+  );
 };
 
-export const TestAzureAction = async (params: {
+/**
+ * Server action for the TestAzure BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestAzureAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestAzure)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestAzure(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestAzure(rest);
+  return b.TestAzure(
+    input,
+  );
 };
 
-export const TestAzureFailureAction = async (params: {
+/**
+ * Server action for the TestAzureFailure BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestAzureFailureAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestAzureFailure)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestAzureFailure(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestAzureFailure(rest);
+  return b.TestAzureFailure(
+    input,
+  );
 };
 
-export const TestCachingAction = async (params: {
+/**
+ * Server action for the TestCaching BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * - not_cached: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestCachingAction = async (
   input: string,
   not_cached: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestCaching)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestCaching(
+      input,
+      not_cached,
+    );
+    return stream.toStreamable();
   }
-  return b.TestCaching(rest);
+  return b.TestCaching(
+    input,
+    not_cached,
+  );
 };
 
-export const TestFallbackClientAction = async (params: {
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFallbackClient)(rest);
+/**
+ * Server action for the TestFallbackClient BAML function.
+ *
+ * Input Types:
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestFallbackClientAction = async (
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFallbackClient(
+    );
+    return stream.toStreamable();
   }
-  return b.TestFallbackClient(rest);
+  return b.TestFallbackClient(
+  );
 };
 
-export const TestFallbackToShorthandAction = async (params: {
+/**
+ * Server action for the TestFallbackToShorthand BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestFallbackToShorthandAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFallbackToShorthand)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFallbackToShorthand(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFallbackToShorthand(rest);
+  return b.TestFallbackToShorthand(
+    input,
+  );
 };
 
-export const TestFnNamedArgsSingleBoolAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleBool BAML function.
+ *
+ * Input Types:
+ *
+ * - myBool: boolean
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleBoolAction = async (
   myBool: boolean,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleBool)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleBool(
+      myBool,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleBool(rest);
+  return b.TestFnNamedArgsSingleBool(
+    myBool,
+  );
 };
 
-export const TestFnNamedArgsSingleClassAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleClass BAML function.
+ *
+ * Input Types:
+ *
+ * - myArg: NamedArgsSingleClass
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleClassAction = async (
   myArg: NamedArgsSingleClass,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleClass)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleClass(
+      myArg,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleClass(rest);
+  return b.TestFnNamedArgsSingleClass(
+    myArg,
+  );
 };
 
-export const TestFnNamedArgsSingleEnumListAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleEnumList BAML function.
+ *
+ * Input Types:
+ *
+ * - myArg: NamedArgsSingleEnumList[]
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleEnumListAction = async (
   myArg: NamedArgsSingleEnumList[],
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleEnumList)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleEnumList(
+      myArg,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleEnumList(rest);
+  return b.TestFnNamedArgsSingleEnumList(
+    myArg,
+  );
 };
 
-export const TestFnNamedArgsSingleFloatAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleFloat BAML function.
+ *
+ * Input Types:
+ *
+ * - myFloat: number
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleFloatAction = async (
   myFloat: number,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleFloat)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleFloat(
+      myFloat,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleFloat(rest);
+  return b.TestFnNamedArgsSingleFloat(
+    myFloat,
+  );
 };
 
-export const TestFnNamedArgsSingleIntAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleInt BAML function.
+ *
+ * Input Types:
+ *
+ * - myInt: number
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleIntAction = async (
   myInt: number,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleInt)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleInt(
+      myInt,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleInt(rest);
+  return b.TestFnNamedArgsSingleInt(
+    myInt,
+  );
 };
 
-export const TestFnNamedArgsSingleMapStringToClassAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleMapStringToClass BAML function.
+ *
+ * Input Types:
+ *
+ * - myMap: Record<string, StringToClassEntry>
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Record<string, StringToClassEntry>
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleMapStringToClassAction = async (
   myMap: Record<string, StringToClassEntry>,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleMapStringToClass)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleMapStringToClass(
+      myMap,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleMapStringToClass(rest);
+  return b.TestFnNamedArgsSingleMapStringToClass(
+    myMap,
+  );
 };
 
-export const TestFnNamedArgsSingleMapStringToMapAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleMapStringToMap BAML function.
+ *
+ * Input Types:
+ *
+ * - myMap: Record<string, Record<string, string>>
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Record<string, Record<string, string>>
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleMapStringToMapAction = async (
   myMap: Record<string, Record<string, string>>,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleMapStringToMap)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleMapStringToMap(
+      myMap,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleMapStringToMap(rest);
+  return b.TestFnNamedArgsSingleMapStringToMap(
+    myMap,
+  );
 };
 
-export const TestFnNamedArgsSingleMapStringToStringAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleMapStringToString BAML function.
+ *
+ * Input Types:
+ *
+ * - myMap: Record<string, string>
+ *
+ *
+ * Return Type:
+ * - Non-streaming: Record<string, string>
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleMapStringToStringAction = async (
   myMap: Record<string, string>,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleMapStringToString)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleMapStringToString(
+      myMap,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleMapStringToString(rest);
+  return b.TestFnNamedArgsSingleMapStringToString(
+    myMap,
+  );
 };
 
-export const TestFnNamedArgsSingleStringAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleString BAML function.
+ *
+ * Input Types:
+ *
+ * - myString: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleStringAction = async (
   myString: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleString)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleString(
+      myString,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleString(rest);
+  return b.TestFnNamedArgsSingleString(
+    myString,
+  );
 };
 
-export const TestFnNamedArgsSingleStringArrayAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleStringArray BAML function.
+ *
+ * Input Types:
+ *
+ * - myStringArray: string[]
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleStringArrayAction = async (
   myStringArray: string[],
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleStringArray)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleStringArray(
+      myStringArray,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleStringArray(rest);
+  return b.TestFnNamedArgsSingleStringArray(
+    myStringArray,
+  );
 };
 
-export const TestFnNamedArgsSingleStringListAction = async (params: {
+/**
+ * Server action for the TestFnNamedArgsSingleStringList BAML function.
+ *
+ * Input Types:
+ *
+ * - myArg: string[]
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestFnNamedArgsSingleStringListAction = async (
   myArg: string[],
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestFnNamedArgsSingleStringList)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestFnNamedArgsSingleStringList(
+      myArg,
+    );
+    return stream.toStreamable();
   }
-  return b.TestFnNamedArgsSingleStringList(rest);
+  return b.TestFnNamedArgsSingleStringList(
+    myArg,
+  );
 };
 
-export const TestGeminiAction = async (params: {
+/**
+ * Server action for the TestGemini BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestGeminiAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestGemini)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestGemini(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestGemini(rest);
+  return b.TestGemini(
+    input,
+  );
 };
 
-export const TestImageInputAction = async (params: {
+/**
+ * Server action for the TestImageInput BAML function.
+ *
+ * Input Types:
+ *
+ * - img: Image
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestImageInputAction = async (
   img: Image,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestImageInput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestImageInput(
+      img,
+    );
+    return stream.toStreamable();
   }
-  return b.TestImageInput(rest);
+  return b.TestImageInput(
+    img,
+  );
 };
 
-export const TestImageInputAnthropicAction = async (params: {
+/**
+ * Server action for the TestImageInputAnthropic BAML function.
+ *
+ * Input Types:
+ *
+ * - img: Image
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestImageInputAnthropicAction = async (
   img: Image,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestImageInputAnthropic)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestImageInputAnthropic(
+      img,
+    );
+    return stream.toStreamable();
   }
-  return b.TestImageInputAnthropic(rest);
+  return b.TestImageInputAnthropic(
+    img,
+  );
 };
 
-export const TestImageListInputAction = async (params: {
+/**
+ * Server action for the TestImageListInput BAML function.
+ *
+ * Input Types:
+ *
+ * - imgs: Image[]
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestImageListInputAction = async (
   imgs: Image[],
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestImageListInput)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestImageListInput(
+      imgs,
+    );
+    return stream.toStreamable();
   }
-  return b.TestImageListInput(rest);
+  return b.TestImageListInput(
+    imgs,
+  );
 };
 
-export const TestMulticlassNamedArgsAction = async (params: {
+/**
+ * Server action for the TestMulticlassNamedArgs BAML function.
+ *
+ * Input Types:
+ *
+ * - myArg: NamedArgsSingleClass
+ *
+ * - myArg2: NamedArgsSingleClass
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestMulticlassNamedArgsAction = async (
   myArg: NamedArgsSingleClass,
   myArg2: NamedArgsSingleClass,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestMulticlassNamedArgs)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestMulticlassNamedArgs(
+      myArg,
+      myArg2,
+    );
+    return stream.toStreamable();
   }
-  return b.TestMulticlassNamedArgs(rest);
+  return b.TestMulticlassNamedArgs(
+    myArg,
+    myArg2,
+  );
 };
 
-export const TestNamedArgsLiteralBoolAction = async (params: {
+/**
+ * Server action for the TestNamedArgsLiteralBool BAML function.
+ *
+ * Input Types:
+ *
+ * - myBool: true
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestNamedArgsLiteralBoolAction = async (
   myBool: true,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestNamedArgsLiteralBool)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestNamedArgsLiteralBool(
+      myBool,
+    );
+    return stream.toStreamable();
   }
-  return b.TestNamedArgsLiteralBool(rest);
+  return b.TestNamedArgsLiteralBool(
+    myBool,
+  );
 };
 
-export const TestNamedArgsLiteralIntAction = async (params: {
+/**
+ * Server action for the TestNamedArgsLiteralInt BAML function.
+ *
+ * Input Types:
+ *
+ * - myInt: 1
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestNamedArgsLiteralIntAction = async (
   myInt: 1,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestNamedArgsLiteralInt)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestNamedArgsLiteralInt(
+      myInt,
+    );
+    return stream.toStreamable();
   }
-  return b.TestNamedArgsLiteralInt(rest);
+  return b.TestNamedArgsLiteralInt(
+    myInt,
+  );
 };
 
-export const TestNamedArgsLiteralStringAction = async (params: {
+/**
+ * Server action for the TestNamedArgsLiteralString BAML function.
+ *
+ * Input Types:
+ *
+ * - myString: "My String"
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestNamedArgsLiteralStringAction = async (
   myString: "My String",
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestNamedArgsLiteralString)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestNamedArgsLiteralString(
+      myString,
+    );
+    return stream.toStreamable();
   }
-  return b.TestNamedArgsLiteralString(rest);
+  return b.TestNamedArgsLiteralString(
+    myString,
+  );
 };
 
-export const TestOllamaAction = async (params: {
+/**
+ * Server action for the TestOllama BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestOllamaAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestOllama)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestOllama(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestOllama(rest);
+  return b.TestOllama(
+    input,
+  );
 };
 
-export const TestOpenAILegacyProviderAction = async (params: {
+/**
+ * Server action for the TestOpenAILegacyProvider BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestOpenAILegacyProviderAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestOpenAILegacyProvider)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestOpenAILegacyProvider(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestOpenAILegacyProvider(rest);
+  return b.TestOpenAILegacyProvider(
+    input,
+  );
 };
 
-export const TestOpenAIShorthandAction = async (params: {
+/**
+ * Server action for the TestOpenAIShorthand BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestOpenAIShorthandAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestOpenAIShorthand)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestOpenAIShorthand(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestOpenAIShorthand(rest);
+  return b.TestOpenAIShorthand(
+    input,
+  );
 };
 
-export const TestRetryConstantAction = async (params: {
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestRetryConstant)(rest);
+/**
+ * Server action for the TestRetryConstant BAML function.
+ *
+ * Input Types:
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestRetryConstantAction = async (
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestRetryConstant(
+    );
+    return stream.toStreamable();
   }
-  return b.TestRetryConstant(rest);
+  return b.TestRetryConstant(
+  );
 };
 
-export const TestRetryExponentialAction = async (params: {
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestRetryExponential)(rest);
+/**
+ * Server action for the TestRetryExponential BAML function.
+ *
+ * Input Types:
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestRetryExponentialAction = async (
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestRetryExponential(
+    );
+    return stream.toStreamable();
   }
-  return b.TestRetryExponential(rest);
+  return b.TestRetryExponential(
+  );
 };
 
-export const TestSingleFallbackClientAction = async (params: {
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestSingleFallbackClient)(rest);
+/**
+ * Server action for the TestSingleFallbackClient BAML function.
+ *
+ * Input Types:
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestSingleFallbackClientAction = async (
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestSingleFallbackClient(
+    );
+    return stream.toStreamable();
   }
-  return b.TestSingleFallbackClient(rest);
+  return b.TestSingleFallbackClient(
+  );
 };
 
-export const TestVertexAction = async (params: {
+/**
+ * Server action for the TestVertex BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
+export const TestVertexAction = async (
   input: string,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.TestVertex)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.TestVertex(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.TestVertex(rest);
+  return b.TestVertex(
+    input,
+  );
 };
 
-export const UnionTest_FunctionAction = async (params: {
+/**
+ * Server action for the UnionTest_Function BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string | boolean
+ *
+ *
+ * Return Type:
+ * - Non-streaming: UnionTest_ReturnType
+ * - Streaming: ReadableStream
+ */
+export const UnionTest_FunctionAction = async (
   input: string | boolean,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.UnionTest_Function)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.UnionTest_Function(
+      input,
+    );
+    return stream.toStreamable();
   }
-  return b.UnionTest_Function(rest);
+  return b.UnionTest_Function(
+    input,
+  );
 };
 
-export const UseBlockConstraintAction = async (params: {
+/**
+ * Server action for the UseBlockConstraint BAML function.
+ *
+ * Input Types:
+ *
+ * - inp: BlockConstraintForParam
+ *
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
+export const UseBlockConstraintAction = async (
   inp: BlockConstraintForParam,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.UseBlockConstraint)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.UseBlockConstraint(
+      inp,
+    );
+    return stream.toStreamable();
   }
-  return b.UseBlockConstraint(rest);
+  return b.UseBlockConstraint(
+    inp,
+  );
 };
 
-export const UseMalformedConstraintsAction = async (params: {
+/**
+ * Server action for the UseMalformedConstraints BAML function.
+ *
+ * Input Types:
+ *
+ * - a: MalformedConstraints2
+ *
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
+export const UseMalformedConstraintsAction = async (
   a: MalformedConstraints2,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.UseMalformedConstraints)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.UseMalformedConstraints(
+      a,
+    );
+    return stream.toStreamable();
   }
-  return b.UseMalformedConstraints(rest);
+  return b.UseMalformedConstraints(
+    a,
+  );
 };
 
-export const UseNestedBlockConstraintAction = async (params: {
+/**
+ * Server action for the UseNestedBlockConstraint BAML function.
+ *
+ * Input Types:
+ *
+ * - inp: NestedBlockConstraintForParam
+ *
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
+export const UseNestedBlockConstraintAction = async (
   inp: NestedBlockConstraintForParam,
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.UseNestedBlockConstraint)(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.UseNestedBlockConstraint(
+      inp,
+    );
+    return stream.toStreamable();
   }
-  return b.UseNestedBlockConstraint(rest);
+  return b.UseNestedBlockConstraint(
+    inp,
+  );
 };

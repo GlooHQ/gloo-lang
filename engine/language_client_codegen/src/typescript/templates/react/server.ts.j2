@@ -1,134 +1,44 @@
 'use server'
 
 import { b } from '../index';
-import type { BamlStream } from '@boundaryml/baml';
-
-
-/**
- * Interface defining the structure of a streamable value with methods
- * to update, complete, and handle errors in the stream.
- */
-interface StreamableValue<T> {
-  done: (finalValue?: T) => void;
-  error: (error: Error) => void;
-  object: ReadableStream<T>;
-  update: (value: T) => void;
-}
-
-/**
- * Creates a streamable value with methods to control the stream
- */
-function createStreamableValue<T extends object>(): StreamableValue<T> {
-  let controller: ReadableStreamDefaultController<T>;
-  const stream = new ReadableStream<T>({
-    start(c) {
-      controller = c;
-    },
-  });
-
-  return {
-    done: (finalValue?: T) => {
-      if (finalValue) {
-        controller.enqueue(finalValue);
-      }
-      controller.close();
-    },
-    error: (error: Error) => {
-      controller.error(error);
-    },
-    object: stream,
-    update: (value: T) => {
-      controller.enqueue(value);
-    },
-  };
-}
-
-/**
- * Type alias for defining a StreamableValue based on a BamlStream.
- * It captures either a partial or final result depending on the stream state.
- */
-type StreamResult<TStream extends BamlStream<unknown, unknown>> =
-  | {
-      partial: TStream extends BamlStream<infer PartialResult, unknown>
-        ? PartialResult
-        : never;
-    }
-  | {
-      final: TStream extends BamlStream<unknown, infer FinalResult>
-        ? FinalResult
-        : never;
-    };
-
-/**
- * Helper function to manage and handle a BamlStream.
- */
-async function streamHelper<TStream extends BamlStream<unknown, unknown>>(
-  bamlStream: TStream,
-): Promise<{
-  object: ReadableStream<StreamResult<TStream>>;
-}> {
-  const stream = createStreamableValue<StreamResult<TStream>>();
-
-  (async () => {
-    try {
-      for await (const event of bamlStream) {
-        stream.update({
-          partial: event as TStream extends BamlStream<infer P, unknown>
-            ? P
-            : never,
-        });
-      }
-
-      const response = await bamlStream.getFinalResponse();
-      stream.update({
-        final: response as TStream extends BamlStream<unknown, infer F>
-          ? F
-          : never,
-      });
-      stream.done();
-    } catch (error) {
-      stream.error(error instanceof Error ? error : new Error(String(error)));
-    }
-  })();
-
-  return { object: stream.object };
-}
-
-export type BamlStreamFunction<TPartial, TFinal, TArgs extends unknown[]> = (
-  // this: typeof b.stream,
-  ...args: TArgs
-) => BamlStream<TPartial, TFinal>;
-
-export type MakeStreamableResult<TPartial, TFinal, TArgs extends unknown[]> = (
-  ...args: TArgs
-) => Promise<{
-  object: ReadableStream<{ partial: TPartial } | { final: TFinal }>;
-}>;
-
-/**
- * Converts a BAML stream function into a streamable server action.
- */
-export async function makeStreamable<TPartial, TFinal, TArgs extends unknown[]>(
-  streamFunction: BamlStreamFunction<TPartial, TFinal, TArgs>,
-): MakeStreamableResult<TPartial, TFinal, TArgs> {
-  return async (...args) => {
-    const boundFunction = streamFunction.bind(b.stream);
-    const stream = boundFunction(...args);
-    return streamHelper(stream);
-  };
-}
+import type { StreamedObject } from './types';
+import { Check, Checked, RecursivePartialNull } from "../types"
+import { Image, Audio } from "@boundaryml/baml"
+import {
+  {%- for t in types %}{{ t }}{% if !loop.last %}, {% endif %}{% endfor -%}
+} from "../types"
 
 {%- for func in funcs %}
-export const {{ func.name }}Action = async (params: {
+/**
+ * Server action for the {{ func.name }} BAML function.
+ *
+ * Input Types:
+ * {%- for (name, optional, type) in func.args %}
+ * - {{ name }}{% if optional %} (optional){% endif %}: {{ type }}
+ * {%- endfor %}
+ *
+ * Return Type:
+ * - Non-streaming: {{ func.return_type }}
+ * - Streaming: ReadableStream
+ */
+export const {{ func.name }}Action = async (
   {%- for (name, optional, type) in func.args %}
   {{ name }}{% if optional %}?{% endif %}: {{ type }},
   {%- endfor %}
-  stream?: boolean
-}) => {
-  const { stream, ...rest } = params;
-  if (stream) {
-    return makeStreamable(b.stream.{{ func.name }})(rest);
+  options?: { stream?: boolean }
+) => {
+  if (options?.stream) {
+    const stream = b.stream.{{ func.name }}(
+      {%- for (name, _, _) in func.args %}
+      {{ name }},
+      {%- endfor %}
+    );
+    return stream.toStreamable();
   }
-  return b.{{ func.name }}(rest);
+  return b.{{ func.name }}(
+    {%- for (name, _, _) in func.args %}
+    {{ name }},
+    {%- endfor %}
+  );
 };
 {% endfor -%}
