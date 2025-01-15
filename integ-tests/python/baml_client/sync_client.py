@@ -1657,6 +1657,29 @@ class BamlSyncClient:
       )
       return cast(Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]], raw.cast_to(types, types))
     
+    def NullLiteralClassHello(
+        self,
+        s: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.ClassForNullLiteral:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "NullLiteralClassHello",
+        {
+          "s": s,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.ClassForNullLiteral, raw.cast_to(types, types))
+    
     def OptionalTest_Function(
         self,
         input: str,
@@ -4666,7 +4689,7 @@ class BamlStreamClient:
         self,
         input: str,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlSyncStream[Literal[False], Literal[False]]:
+    ) -> baml_py.BamlSyncStream[Optional[Literal[False]], Literal[False]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb # type: ignore (we know how to use this private attribute)
@@ -4685,9 +4708,9 @@ class BamlStreamClient:
         __cr__,
       )
 
-      return baml_py.BamlSyncStream[Literal[False], Literal[False]](
+      return baml_py.BamlSyncStream[Optional[Literal[False]], Literal[False]](
         raw,
-        lambda x: cast(Literal[False], x.cast_to(types, partial_types)),
+        lambda x: cast(Optional[Literal[False]], x.cast_to(types, partial_types)),
         lambda x: cast(Literal[False], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
@@ -4696,7 +4719,7 @@ class BamlStreamClient:
         self,
         input: str,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlSyncStream[Literal[5], Literal[5]]:
+    ) -> baml_py.BamlSyncStream[Optional[Literal[5]], Literal[5]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb # type: ignore (we know how to use this private attribute)
@@ -4715,9 +4738,9 @@ class BamlStreamClient:
         __cr__,
       )
 
-      return baml_py.BamlSyncStream[Literal[5], Literal[5]](
+      return baml_py.BamlSyncStream[Optional[Literal[5]], Literal[5]](
         raw,
-        lambda x: cast(Literal[5], x.cast_to(types, partial_types)),
+        lambda x: cast(Optional[Literal[5]], x.cast_to(types, partial_types)),
         lambda x: cast(Literal[5], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
@@ -4726,7 +4749,7 @@ class BamlStreamClient:
         self,
         input: str,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlSyncStream[Literal["example output"], Literal["example output"]]:
+    ) -> baml_py.BamlSyncStream[Optional[Literal["example output"]], Literal["example output"]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb # type: ignore (we know how to use this private attribute)
@@ -4745,9 +4768,9 @@ class BamlStreamClient:
         __cr__,
       )
 
-      return baml_py.BamlSyncStream[Literal["example output"], Literal["example output"]](
+      return baml_py.BamlSyncStream[Optional[Literal["example output"]], Literal["example output"]](
         raw,
-        lambda x: cast(Literal["example output"], x.cast_to(types, partial_types)),
+        lambda x: cast(Optional[Literal["example output"]], x.cast_to(types, partial_types)),
         lambda x: cast(Literal["example output"], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
@@ -5088,7 +5111,7 @@ class BamlStreamClient:
         self,
         input: str,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlSyncStream[Optional[Union[Literal[1], Literal[True], Literal["string output"]]], Union[Literal[1], Literal[True], Literal["string output"]]]:
+    ) -> baml_py.BamlSyncStream[Optional[Union[Optional[Literal[1]], Optional[Literal[True]], Optional[Literal["string output"]]]], Union[Literal[1], Literal[True], Literal["string output"]]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb # type: ignore (we know how to use this private attribute)
@@ -5107,9 +5130,9 @@ class BamlStreamClient:
         __cr__,
       )
 
-      return baml_py.BamlSyncStream[Optional[Union[Literal[1], Literal[True], Literal["string output"]]], Union[Literal[1], Literal[True], Literal["string output"]]](
+      return baml_py.BamlSyncStream[Optional[Union[Optional[Literal[1]], Optional[Literal[True]], Optional[Literal["string output"]]]], Union[Literal[1], Literal[True], Literal["string output"]]](
         raw,
-        lambda x: cast(Optional[Union[Literal[1], Literal[True], Literal["string output"]]], x.cast_to(types, partial_types)),
+        lambda x: cast(Optional[Union[Optional[Literal[1]], Optional[Literal[True]], Optional[Literal["string output"]]]], x.cast_to(types, partial_types)),
         lambda x: cast(Union[Literal[1], Literal[True], Literal["string output"]], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
@@ -5289,6 +5312,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(Optional[Union[Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], List[Optional[str]], Dict[str, List[Optional[str]]]]], x.cast_to(types, partial_types)),
         lambda x: cast(Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def NullLiteralClassHello(
+        self,
+        s: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.ClassForNullLiteral, types.ClassForNullLiteral]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "NullLiteralClassHello",
+        {
+          "s": s,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[partial_types.ClassForNullLiteral, types.ClassForNullLiteral](
+        raw,
+        lambda x: cast(partial_types.ClassForNullLiteral, x.cast_to(types, partial_types)),
+        lambda x: cast(types.ClassForNullLiteral, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
