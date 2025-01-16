@@ -1,6 +1,7 @@
 import type { WasmChatMessagePart, WasmParam, WasmTestCase } from '@gloo-ai/baml-schema-wasm-web'
 import { RenderPromptPart } from './render-text'
 import { WebviewMedia } from './webview-media'
+import he from 'he'
 
 export const RenderPart: React.FC<{
   part: WasmChatMessagePart
@@ -17,11 +18,11 @@ export const RenderPart: React.FC<{
             if (typeof parsed === 'object') {
               return Object.values(parsed).filter((val): val is string => typeof val === 'string')
             } else {
-              return [parsed]
+              return [he.encode(parsed)]
             }
           } catch {
             // If parsing fails, treat it as a regular string
-            return [input.value]
+            return [he.encode(input.value)]
           }
         }
         if (typeof input.value === 'object') {
@@ -31,7 +32,8 @@ export const RenderPart: React.FC<{
       })
     }
 
-    const text = part.as_text()
+    // this makes it so that we can escape html
+    const text = he.encode(part.as_text() ?? '')
     const allChunks = extractStringValues(testCase?.inputs ?? [])
     const highlightChunks = allChunks.filter((chunk) => {
       if (!chunk || !text) return false
@@ -57,11 +59,11 @@ export const RenderPart: React.FC<{
   }
 
   if (part.is_image()) {
-    return <WebviewMedia bamlMediaType='image' media={media} />
+    return <WebviewMedia bamlMediaType="image" media={media} />
   }
 
   if (part.is_audio()) {
-    return <WebviewMedia bamlMediaType='audio' media={media} />
+    return <WebviewMedia bamlMediaType="audio" media={media} />
   }
 
   return null

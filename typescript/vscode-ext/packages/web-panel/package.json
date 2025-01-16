@@ -66,6 +66,7 @@
     "githubLight": "link:@uiw/react-json-view/githubLight",
     "hast": "^1.0.0",
     "hast-util-has-property": "^3.0.0",
+    "he": "^1.2.0",
     "jotai": "^2.8.0",
     "js-tiktoken": "^1.0.10",
     "json-schema-empty": "^1.1.1",
@@ -99,6 +100,7 @@
   "devDependencies": {
     "@githubocto/tailwind-vscode": "^1.0.5",
     "@types/hast": "^3.0.4",
+    "@types/he": "^1.2.3",
     "@types/node": "^20.12.12",
     "@types/papaparse": "^5.3.14",
     "@types/react": "^18.2.74",
