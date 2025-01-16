@@ -8,6 +8,7 @@ import { Suspense } from 'react'
 import { BrowseSheet } from './_components/BrowseSheet'
 import { PHProvider, RB2BElement } from './_components/PosthogProvider'
 import { ThemeProvider } from './_components/ThemeProvider'
+import { ErrorBoundary } from 'react-error-boundary'
 
 const PostHogPageView = dynamic(() => import('./PostHogPageView'), {
   ssr: false,
@@ -30,7 +31,9 @@ export default function RootLayout({
       <RB2BElement />
       <PHProvider>
         <body className={'bg-background'}>
-          <PostHogPageView />
+          <ErrorBoundary fallback={<div></div>}>
+            <PostHogPageView />
+          </ErrorBoundary>
           <ThemeProvider attribute='class' defaultTheme='dark' enableSystem={false} disableTransitionOnChange={true}>
             <JotaiProvider>
               <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>

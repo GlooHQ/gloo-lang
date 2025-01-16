@@ -120,7 +120,7 @@ importers:
         version: 9.0.8
       '@types/webpack':
         specifier: ^5.28.5
-        version: 5.28.5(@swc/core@1.10.6(@swc/helpers@0.5.5))
+        version: 5.28.5(@swc/core@1.10.6(@swc/helpers@0.5.5))(esbuild@0.17.19)
       copyfiles:
         specifier: ^2.4.1
         version: 2.4.1
@@ -281,8 +281,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       posthog-js:
-        specifier: ^1.120.4
-        version: 1.205.0
+        specifier: ^1.205.1
+        version: 1.205.1
       react:
         specifier: ^18
         version: 18.3.1
@@ -295,6 +295,9 @@ importers:
       react-dom:
         specifier: ^18
         version: 18.3.1(react@18.3.1)
+      react-error-boundary:
+        specifier: ^4.0.11
+        version: 4.1.2(react@18.3.1)
       react-hook-form:
         specifier: ^7.51.2
         version: 7.54.2(react@18.3.1)
@@ -470,6 +473,9 @@ importers:
       '@tanstack/react-table':
         specifier: ^8.10.7
         version: 8.20.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/he':
+        specifier: ^1.2.3
+        version: 1.2.3
       '@types/react-slick':
         specifier: ^0.23.13
         version: 0.23.13
@@ -533,6 +539,9 @@ importers:
       hast-util-has-property:
         specifier: ^3.0.0
         version: 3.0.0
+      he:
+        specifier: ^1.2.0
+        version: 1.2.0
       jotai:
         specifier: '*'
         version: 2.11.0(@types/react@18.3.18)(react@18.3.1)
@@ -755,8 +764,8 @@ importers:
         specifier: 0.8.3
         version: 0.8.3
       typescript:
-        specifier: 5.2.2
-        version: 5.2.2
+        specifier: 5.7.2
+        version: 5.7.2
 
   vscode-ext/packages/language-server:
     dependencies:
@@ -1095,6 +1104,9 @@ importers:
       hast-util-has-property:
         specifier: ^3.0.0
         version: 3.0.0
+      he:
+        specifier: ^1.2.0
+        version: 1.2.0
       jotai:
         specifier: ^2.8.0
         version: 2.11.0(@types/react@18.3.18)(react@18.3.1)
@@ -1189,6 +1201,9 @@ importers:
       '@types/hast':
         specifier: ^3.0.4
         version: 3.0.4
+      '@types/he':
+        specifier: ^1.2.3
+        version: 1.2.3
       '@types/node':
         specifier: ^20.12.12
         version: 20.17.12
@@ -3466,6 +3481,9 @@ packages:
 
   '@types/hast@3.0.4':
     resolution: {integrity: sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==}
+
+  '@types/he@1.2.3':
+    resolution: {integrity: sha512-q67/qwlxblDzEDvzHhVkwc1gzVWxaNxeyHUBF4xElrvjL11O+Ytze+1fGpBHlr/H9myiBUaUXNnNPmBHxxfAcA==}
 
   '@types/http-errors@2.0.4':
     resolution: {integrity: sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==}
@@ -6959,8 +6977,8 @@ packages:
     resolution: {integrity: sha512-OCVPnIObs4N29kxTjzLfUryOkvZEq+pf8jTF0lg8E7uETuWHA+v7j3c/xJmiqpX450191LlmZfUKkXxkTry7nA==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.205.0:
-    resolution: {integrity: sha512-zP4SQ9Dg9JwqkEteoAOviAAAMdT/nJ4vk1jqfE6fVudziEa3szkQWd7czk5ehlEdrKFUE85MonCKW4L/uwtybA==}
+  posthog-js@1.205.1:
+    resolution: {integrity: sha512-eFzQsula3zbBeg4XV1MOiYsjrfMx/DHHFIQEvyswv4rx+4ZYOFmA5SHhiATKrzr4uOUN+jdSjl+EHZjURGVVMA==}
 
   posthog-node@3.6.3:
     resolution: {integrity: sha512-JB+ei0LkwE+rKHyW5z79Nd1jUaGxU6TvkfjFqY9vQaHxU5aU8dRl0UUaEmZdZbHwjp3WmXCBQQRNyimwbNQfCw==}
@@ -8143,6 +8161,11 @@ packages:
 
   typescript@5.2.2:
     resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
+  typescript@5.7.2:
+    resolution: {integrity: sha512-i5t66RHxDvVN40HfDd1PsEThGNnlMCMT3jMUuoh9/0TaqWevNontacunWyN02LA9/fIbEWlcHZcgTKb9QoaLfg==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -10966,6 +10989,8 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
 
+  '@types/he@1.2.3': {}
+
   '@types/http-errors@2.0.4': {}
 
   '@types/http-proxy@1.17.15':
@@ -11081,6 +11106,17 @@ snapshots:
       '@types/node': 20.17.12
       tapable: 2.2.1
       webpack: 5.97.1(@swc/core@1.10.6(@swc/helpers@0.5.5))
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - uglify-js
+      - webpack-cli
+
+  '@types/webpack@5.28.5(@swc/core@1.10.6(@swc/helpers@0.5.5))(esbuild@0.17.19)':
+    dependencies:
+      '@types/node': 20.17.12
+      tapable: 2.2.1
+      webpack: 5.97.1(@swc/core@1.10.6(@swc/helpers@0.5.5))(esbuild@0.17.19)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -15596,7 +15632,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.205.0:
+  posthog-js@1.205.1:
     dependencies:
       core-js: 3.40.0
       fflate: 0.4.8
@@ -16714,6 +16750,18 @@ snapshots:
       readable-stream: 3.6.2
     optional: true
 
+  terser-webpack-plugin@5.3.11(@swc/core@1.10.6(@swc/helpers@0.5.5))(esbuild@0.17.19)(webpack@5.97.1(@swc/core@1.10.6(@swc/helpers@0.5.5))(esbuild@0.17.19)):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.25
+      jest-worker: 27.5.1
+      schema-utils: 4.3.0
+      serialize-javascript: 6.0.2
+      terser: 5.37.0
+      webpack: 5.97.1(@swc/core@1.10.6(@swc/helpers@0.5.5))(esbuild@0.17.19)
+    optionalDependencies:
+      '@swc/core': 1.10.6(@swc/helpers@0.5.5)
+      esbuild: 0.17.19
+
   terser-webpack-plugin@5.3.11(@swc/core@1.10.6(@swc/helpers@0.5.5))(webpack@5.97.1(@swc/core@1.10.6(@swc/helpers@0.5.5))):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
@@ -17022,6 +17070,8 @@ snapshots:
   typescript@4.9.5: {}
 
   typescript@5.2.2: {}
+
+  typescript@5.7.2: {}
 
   typescript@5.7.3: {}
 
@@ -17343,6 +17393,36 @@ snapshots:
       schema-utils: 3.3.0
       tapable: 2.2.1
       terser-webpack-plugin: 5.3.11(@swc/core@1.10.6(@swc/helpers@0.5.5))(webpack@5.97.1(@swc/core@1.10.6(@swc/helpers@0.5.5)))
+      watchpack: 2.4.2
+      webpack-sources: 3.2.3
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - uglify-js
+
+  webpack@5.97.1(@swc/core@1.10.6(@swc/helpers@0.5.5))(esbuild@0.17.19):
+    dependencies:
+      '@types/eslint-scope': 3.7.7
+      '@types/estree': 1.0.6
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.14.0
+      browserslist: 4.24.4
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.18.0
+      es-module-lexer: 1.6.0
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      glob-to-regexp: 0.4.1
+      graceful-fs: 4.2.11
+      json-parse-even-better-errors: 2.3.1
+      loader-runner: 4.3.0
+      mime-types: 2.1.35
+      neo-async: 2.6.2
+      schema-utils: 3.3.0
+      tapable: 2.2.1
+      terser-webpack-plugin: 5.3.11(@swc/core@1.10.6(@swc/helpers@0.5.5))(esbuild@0.17.19)(webpack@5.97.1(@swc/core@1.10.6(@swc/helpers@0.5.5))(esbuild@0.17.19))
       watchpack: 2.4.2
       webpack-sources: 3.2.3
     transitivePeerDependencies:
