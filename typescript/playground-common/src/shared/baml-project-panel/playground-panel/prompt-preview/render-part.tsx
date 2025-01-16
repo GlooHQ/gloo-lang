@@ -59,11 +59,11 @@ export const RenderPart: React.FC<{
   }
 
   if (part.is_image()) {
-    return <WebviewMedia bamlMediaType="image" media={media} />
+    return <WebviewMedia bamlMediaType='image' media={media} />
   }
 
   if (part.is_audio()) {
-    return <WebviewMedia bamlMediaType="audio" media={media} />
+    return <WebviewMedia bamlMediaType='audio' media={media} />
   }
 
   return null
