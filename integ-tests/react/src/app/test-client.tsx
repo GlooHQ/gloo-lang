@@ -1,65 +1,148 @@
 'use client'
 
 import * as React from 'react'
-import { useFnClassOptionalOutput, useLLM, useTestAws } from '../../baml_client/react/client'
+import { useAliasWithMultipleAttrs, useBuildLinkedList, useLLM, useTestAws, useTestUniverseQuestion, useUnionTest_Function } from '../../baml_client/react/client'
 import { Loader2 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { TestAwsAction } from '../../baml_client/react/server'
+// import { TestAwsAction } from '../../baml_client/react/server'
+// import { NonStreamableServerActionType, NonStreamingReturnType, StreamableServerActionType, StreamingReturnType } from '../../baml_client/react/types'
 
 export default function TestClient() {
+
+  // const streamingDirectAction = useTestAws({
+  //   stream: true,
+  //   onPartial: (response) => {
+  //     console.log('Got partial response', response)
+  //   },
+  //   onFinal: (response) => {
+  //     console.log('Got final response', response)
+  //   },
+  //   onError: (error) => {
+  //     console.error('Got error', error)
+  //   },
+  // })
+
+  // // Streaming should not have errors
+  // streamingDirectAction satisfies StreamingReturnType<string, [string]>;
+  // streamingDirectAction.data satisfies string | null;
+  // streamingDirectAction.partialData satisfies string | null;
+  // streamingDirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>;
+
+  // // Non-Streaming should have errors
+  // streamingDirectAction satisfies NonStreamingReturnType<string, [string]>;
+  // streamingDirectAction.data satisfies string | null;
+  // streamingDirectAction.partialData satisfies never;
+  // streamingDirectAction.mutate satisfies (input: string) => Promise<string>;
+
+  // const nonStreamingDirectAction = useTestAws({
+  //   onFinal: (response) => {
+  //     console.log('Got final response', response)
+  //   },
+  //   onError: (error) => {
+  //     console.error('Got error', error)
+  //   },
+  // })
+
+  // // Streaming should have errors
+  // nonStreamingDirectAction satisfies StreamingReturnType<string, [string]>;
+  // nonStreamingDirectAction.data satisfies string | null;
+  // nonStreamingDirectAction.partialData satisfies string | null;
+  // nonStreamingDirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>;
+
+  // // Non-Streaming should not have errors
+  // nonStreamingDirectAction satisfies NonStreamingReturnType<string, [string]>;
+  // nonStreamingDirectAction.data satisfies string | null;
+  // nonStreamingDirectAction.partialData satisfies never;
+  // nonStreamingDirectAction.mutate satisfies (input: string) => Promise<string>;
+
+  // const streamingIndirectAction = useLLM(TestAwsAction, {
+  //   stream: true,
+  //   onPartial: (response) => {
+  //     console.log('Got partial response', response)
+  //   },
+  //   onFinal: (response) => {
+  //     console.log('Got final response', response)
+  //   },
+  //   onError: (error) => {
+  //     console.error('Got error', error)
+  //   },
+  // })
+
+  // // Streaming should not have errors
+  // streamingIndirectAction satisfies StreamingReturnType<string, [string]>;
+  // streamingIndirectAction.data satisfies string | null;
+  // streamingIndirectAction.partialData satisfies string | null;
+  // streamingIndirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>;
+
+  // // Non-Streaming should have errors
+  // streamingIndirectAction satisfies NonStreamingReturnType<string, [string]>;
+  // streamingIndirectAction.data satisfies string | null;
+  // streamingIndirectAction.partialData satisfies never;
+  // streamingIndirectAction.mutate satisfies (input: string) => Promise<string>;
+
+  // const nonStreamingIndirectAction = useLLM(TestAwsAction, {
+  //   onFinal: (response) => {
+  //     console.log('Got final response', response)
+  //   },
+  //   onError: (error) => {
+  //     console.error('Got error', error)
+  //   },
+  // })
+
+  // // Streaming should have errors
+  // nonStreamingIndirectAction satisfies StreamingReturnType<string, [string]>;
+  // nonStreamingIndirectAction.data satisfies string | null;
+  // nonStreamingIndirectAction.partialData satisfies string | null;
+  // nonStreamingIndirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>;
+
+  // // Non-Streaming should not have errors
+  // nonStreamingIndirectAction satisfies NonStreamingReturnType<string, [string]>;
+  // nonStreamingIndirectAction.data satisfies string | null;
+  // nonStreamingIndirectAction.partialData satisfies never;
+  // nonStreamingIndirectAction.mutate satisfies (input: string) => Promise<string>;
+
+  //  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //  TestAwsAction satisfies StreamableServerActionType<string, [string]>;
+  //  TestAwsAction satisfies NonStreamableServerActionType<string, [string]>;
+
+  //  React.useEffect(() => {
+  //   const foo3 = TestAwsAction('foo', { })
+  //   console.log('foo3', foo3)
+  //  }, [])
+
   const {
     data: finalResponse,
     partialData: streamingResponse,
     isLoading,
     isError,
-    // isSuccess,
     status,
     error,
     mutate
-  } = useTestAws({
+  } = useTestUniverseQuestion({
     stream: true,
-    onPartial: (partial) => {
-      console.log('Got partial response', partial)
+    onPartial: (response) => {
+      console.log('Got partial response', response)
     },
-    onFinal: (final) => {
-      console.log('Got final response', final)
+    onFinal: (response) => {
+      console.log('Got final response', response)
     },
     onError: (error) => {
       console.error('Got error', error)
     },
   })
 
-  const {
-    data: data2,
-    partialData: partialData2,
-  } = useLLM(TestAwsAction,{
-    stream: true,
-    onPartial: (partial) => {
-      console.log('Got partial response', partial)
-    },
-    onFinal: (final) => {
-      console.log('Got final response', final)
-    },
-    onError: (error) => {
-      console.error('Got error', error)
-    },
-  })
-
-  console.log('data2', data2)
-  console.log('partialData2', partialData2)
   const response = isLoading ? streamingResponse : finalResponse
   const [prompt, setPrompt] = React.useState('')
-  console.log('response', response)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!prompt.trim()) return
 
-    await mutate(prompt)
+    await mutate({ question: prompt })
     setPrompt('')
   }
 
@@ -109,11 +192,10 @@ export default function TestClient() {
             <Card>
               <CardContent className="pt-6">
                 <pre className="whitespace-pre-wrap font-mono text-sm bg-muted p-4 rounded-lg">
-                  {response}
+                  {typeof response === 'string' ? response : JSON.stringify(response, null, 2)}
                 </pre>
               </CardContent>
             </Card>
-
           </div>
         )}
         <CardFooter className="text-sm text-muted-foreground text-center">
