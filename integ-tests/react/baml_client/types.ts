@@ -661,6 +661,17 @@ export interface UnionTest_ReturnType {
   
 }
 
+export interface UniverseQuestion {
+  question: string
+  answer: string
+  
+}
+
+export interface UniverseQuestionInput {
+  question: string
+  
+}
+
 export interface WithReasoning {
   value: string
   reasoning: string

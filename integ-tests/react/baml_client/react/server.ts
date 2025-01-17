@@ -18,10 +18,9 @@ $ pnpm add @boundaryml/baml
 'use server'
 
 import { b } from '../index';
-import type { StreamedObject } from './types';
 import { Check, Checked, RecursivePartialNull } from "../types"
 import { Image, Audio } from "@boundaryml/baml"
-import {BigNumbers, BinaryNode, Blah, BlockConstraint, BlockConstraintForParam, BookOrder, ClassOptionalOutput, ClassOptionalOutput2, ClassToRecAlias, ClassWithImage, CompoundBigNumbers, ContactInfo, CustomTaskResult, DummyOutput, DynInputOutput, DynamicClassOne, DynamicClassTwo, DynamicOutput, Earthling, Education, Email, EmailAddress, Event, FakeImage, FlightConfirmation, FooAny, Forest, FormatterTest0, FormatterTest1, FormatterTest2, FormatterTest3, GroceryReceipt, InnerClass, InnerClass2, InputClass, InputClassNested, LinkedList, LinkedListAliasNode, LiteralClassHello, LiteralClassOne, LiteralClassTwo, MalformedConstraints, MalformedConstraints2, Martian, MergeAttrs, NamedArgsSingleClass, Nested, Nested2, NestedBlockConstraint, NestedBlockConstraintForParam, Node, NodeWithAliasIndirection, OptionalListAndMap, OptionalTest_Prop1, OptionalTest_ReturnType, OrderInfo, OriginalA, OriginalB, Person, PhoneNumber, Quantity, RaysData, ReceiptInfo, ReceiptItem, Recipe, Resume, Schema, SearchParams, SomeClassNestedDynamic, StringToClassEntry, TestClassAlias, TestClassNested, TestClassWithEnum, TestOutputClass, Tree, TwoStoriesOneTitle, UnionTest_ReturnType, WithReasoning, AliasedEnum, Category, Category2, Category3, Color, DataType, DynEnumOne, DynEnumTwo, EnumInClass, EnumOutput, Hobby, MapKey, NamedArgsSingleEnum, NamedArgsSingleEnumList, OptionalTest_CategoryType, OrderStatus, Tag, TestEnum} from "../types"
+import {BigNumbers, BinaryNode, Blah, BlockConstraint, BlockConstraintForParam, BookOrder, ClassOptionalOutput, ClassOptionalOutput2, ClassToRecAlias, ClassWithImage, CompoundBigNumbers, ContactInfo, CustomTaskResult, DummyOutput, DynInputOutput, DynamicClassOne, DynamicClassTwo, DynamicOutput, Earthling, Education, Email, EmailAddress, Event, FakeImage, FlightConfirmation, FooAny, Forest, FormatterTest0, FormatterTest1, FormatterTest2, FormatterTest3, GroceryReceipt, InnerClass, InnerClass2, InputClass, InputClassNested, LinkedList, LinkedListAliasNode, LiteralClassHello, LiteralClassOne, LiteralClassTwo, MalformedConstraints, MalformedConstraints2, Martian, MergeAttrs, NamedArgsSingleClass, Nested, Nested2, NestedBlockConstraint, NestedBlockConstraintForParam, Node, NodeWithAliasIndirection, OptionalListAndMap, OptionalTest_Prop1, OptionalTest_ReturnType, OrderInfo, OriginalA, OriginalB, Person, PhoneNumber, Quantity, RaysData, ReceiptInfo, ReceiptItem, Recipe, Resume, Schema, SearchParams, SomeClassNestedDynamic, StringToClassEntry, TestClassAlias, TestClassNested, TestClassWithEnum, TestOutputClass, Tree, TwoStoriesOneTitle, UnionTest_ReturnType, UniverseQuestion, UniverseQuestionInput, WithReasoning, AliasedEnum, Category, Category2, Category3, Color, DataType, DynEnumOne, DynEnumTwo, EnumInClass, EnumOutput, Hobby, MapKey, NamedArgsSingleEnum, NamedArgsSingleEnumList, OptionalTest_CategoryType, OrderStatus, Tag, TestEnum} from "../types"
 /**
  * Server action for the AaaSamOutputFormat BAML function.
  *
@@ -34,10 +33,20 @@ import {BigNumbers, BinaryNode, Blah, BlockConstraint, BlockConstraintForParam, 
  * - Non-streaming: Recipe
  * - Streaming: ReadableStream
  */
-export const AaaSamOutputFormatAction = async (
+ export async function AaaSamOutputFormatAction<Options extends { stream: true }>(
   recipe: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function AaaSamOutputFormatAction<Options extends { stream?: false }>(
+  recipe: string,
+  options?: Options
+): Promise<Recipe>;
+
+export async function AaaSamOutputFormatAction<Options extends { stream?: boolean }>(
+  recipe: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Recipe> {
   if (options?.stream) {
     const stream = b.stream.AaaSamOutputFormat(
       recipe,
@@ -61,10 +70,20 @@ export const AaaSamOutputFormatAction = async (
  * - Non-streaming: LinkedListAliasNode
  * - Streaming: ReadableStream
  */
-export const AliasThatPointsToRecursiveTypeAction = async (
+ export async function AliasThatPointsToRecursiveTypeAction<Options extends { stream: true }>(
   list: LinkedListAliasNode,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function AliasThatPointsToRecursiveTypeAction<Options extends { stream?: false }>(
+  list: LinkedListAliasNode,
+  options?: Options
+): Promise<LinkedListAliasNode>;
+
+export async function AliasThatPointsToRecursiveTypeAction<Options extends { stream?: boolean }>(
+  list: LinkedListAliasNode,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : LinkedListAliasNode> {
   if (options?.stream) {
     const stream = b.stream.AliasThatPointsToRecursiveType(
       list,
@@ -88,10 +107,20 @@ export const AliasThatPointsToRecursiveTypeAction = async (
  * - Non-streaming: Checked<number,"gt_ten">
  * - Streaming: ReadableStream
  */
-export const AliasWithMultipleAttrsAction = async (
+ export async function AliasWithMultipleAttrsAction<Options extends { stream: true }>(
   money: Checked<number,"gt_ten">,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function AliasWithMultipleAttrsAction<Options extends { stream?: false }>(
+  money: Checked<number,"gt_ten">,
+  options?: Options
+): Promise<Checked<number,"gt_ten">>;
+
+export async function AliasWithMultipleAttrsAction<Options extends { stream?: boolean }>(
+  money: Checked<number,"gt_ten">,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Checked<number,"gt_ten">> {
   if (options?.stream) {
     const stream = b.stream.AliasWithMultipleAttrs(
       money,
@@ -115,10 +144,20 @@ export const AliasWithMultipleAttrsAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const AliasedInputClassAction = async (
+ export async function AliasedInputClassAction<Options extends { stream: true }>(
   input: InputClass,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function AliasedInputClassAction<Options extends { stream?: false }>(
+  input: InputClass,
+  options?: Options
+): Promise<string>;
+
+export async function AliasedInputClassAction<Options extends { stream?: boolean }>(
+  input: InputClass,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.AliasedInputClass(
       input,
@@ -142,10 +181,20 @@ export const AliasedInputClassAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const AliasedInputClass2Action = async (
+ export async function AliasedInputClass2Action<Options extends { stream: true }>(
   input: InputClass,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function AliasedInputClass2Action<Options extends { stream?: false }>(
+  input: InputClass,
+  options?: Options
+): Promise<string>;
+
+export async function AliasedInputClass2Action<Options extends { stream?: boolean }>(
+  input: InputClass,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.AliasedInputClass2(
       input,
@@ -169,10 +218,20 @@ export const AliasedInputClass2Action = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const AliasedInputClassNestedAction = async (
+ export async function AliasedInputClassNestedAction<Options extends { stream: true }>(
   input: InputClassNested,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function AliasedInputClassNestedAction<Options extends { stream?: false }>(
+  input: InputClassNested,
+  options?: Options
+): Promise<string>;
+
+export async function AliasedInputClassNestedAction<Options extends { stream?: boolean }>(
+  input: InputClassNested,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.AliasedInputClassNested(
       input,
@@ -196,10 +255,20 @@ export const AliasedInputClassNestedAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const AliasedInputEnumAction = async (
+ export async function AliasedInputEnumAction<Options extends { stream: true }>(
   input: AliasedEnum,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function AliasedInputEnumAction<Options extends { stream?: false }>(
+  input: AliasedEnum,
+  options?: Options
+): Promise<string>;
+
+export async function AliasedInputEnumAction<Options extends { stream?: boolean }>(
+  input: AliasedEnum,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.AliasedInputEnum(
       input,
@@ -223,10 +292,20 @@ export const AliasedInputEnumAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const AliasedInputListAction = async (
+ export async function AliasedInputListAction<Options extends { stream: true }>(
   input: AliasedEnum[],
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function AliasedInputListAction<Options extends { stream?: false }>(
+  input: AliasedEnum[],
+  options?: Options
+): Promise<string>;
+
+export async function AliasedInputListAction<Options extends { stream?: boolean }>(
+  input: AliasedEnum[],
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.AliasedInputList(
       input,
@@ -250,10 +329,20 @@ export const AliasedInputListAction = async (
  * - Non-streaming: OptionalListAndMap
  * - Streaming: ReadableStream
  */
-export const AllowedOptionalsAction = async (
+ export async function AllowedOptionalsAction<Options extends { stream: true }>(
   optionals: OptionalListAndMap,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function AllowedOptionalsAction<Options extends { stream?: false }>(
+  optionals: OptionalListAndMap,
+  options?: Options
+): Promise<OptionalListAndMap>;
+
+export async function AllowedOptionalsAction<Options extends { stream?: boolean }>(
+  optionals: OptionalListAndMap,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : OptionalListAndMap> {
   if (options?.stream) {
     const stream = b.stream.AllowedOptionals(
       optionals,
@@ -277,10 +366,20 @@ export const AllowedOptionalsAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const AudioInputAction = async (
+ export async function AudioInputAction<Options extends { stream: true }>(
   aud: Audio,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function AudioInputAction<Options extends { stream?: false }>(
+  aud: Audio,
+  options?: Options
+): Promise<string>;
+
+export async function AudioInputAction<Options extends { stream?: boolean }>(
+  aud: Audio,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.AudioInput(
       aud,
@@ -304,10 +403,20 @@ export const AudioInputAction = async (
  * - Non-streaming: LinkedList
  * - Streaming: ReadableStream
  */
-export const BuildLinkedListAction = async (
+ export async function BuildLinkedListAction<Options extends { stream: true }>(
   input: number[],
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function BuildLinkedListAction<Options extends { stream?: false }>(
+  input: number[],
+  options?: Options
+): Promise<LinkedList>;
+
+export async function BuildLinkedListAction<Options extends { stream?: boolean }>(
+  input: number[],
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : LinkedList> {
   if (options?.stream) {
     const stream = b.stream.BuildLinkedList(
       input,
@@ -331,10 +440,20 @@ export const BuildLinkedListAction = async (
  * - Non-streaming: Tree
  * - Streaming: ReadableStream
  */
-export const BuildTreeAction = async (
+ export async function BuildTreeAction<Options extends { stream: true }>(
   input: BinaryNode,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function BuildTreeAction<Options extends { stream?: false }>(
+  input: BinaryNode,
+  options?: Options
+): Promise<Tree>;
+
+export async function BuildTreeAction<Options extends { stream?: boolean }>(
+  input: BinaryNode,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Tree> {
   if (options?.stream) {
     const stream = b.stream.BuildTree(
       input,
@@ -358,10 +477,20 @@ export const BuildTreeAction = async (
  * - Non-streaming: ClassToRecAlias
  * - Streaming: ReadableStream
  */
-export const ClassThatPointsToRecursiveClassThroughAliasAction = async (
+ export async function ClassThatPointsToRecursiveClassThroughAliasAction<Options extends { stream: true }>(
   cls: ClassToRecAlias,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ClassThatPointsToRecursiveClassThroughAliasAction<Options extends { stream?: false }>(
+  cls: ClassToRecAlias,
+  options?: Options
+): Promise<ClassToRecAlias>;
+
+export async function ClassThatPointsToRecursiveClassThroughAliasAction<Options extends { stream?: boolean }>(
+  cls: ClassToRecAlias,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : ClassToRecAlias> {
   if (options?.stream) {
     const stream = b.stream.ClassThatPointsToRecursiveClassThroughAlias(
       cls,
@@ -385,10 +514,20 @@ export const ClassThatPointsToRecursiveClassThroughAliasAction = async (
  * - Non-streaming: (string | DynEnumTwo)
  * - Streaming: ReadableStream
  */
-export const ClassifyDynEnumTwoAction = async (
+ export async function ClassifyDynEnumTwoAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ClassifyDynEnumTwoAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<(string | DynEnumTwo)>;
+
+export async function ClassifyDynEnumTwoAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : (string | DynEnumTwo)> {
   if (options?.stream) {
     const stream = b.stream.ClassifyDynEnumTwo(
       input,
@@ -412,10 +551,20 @@ export const ClassifyDynEnumTwoAction = async (
  * - Non-streaming: Category
  * - Streaming: ReadableStream
  */
-export const ClassifyMessageAction = async (
+ export async function ClassifyMessageAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ClassifyMessageAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<Category>;
+
+export async function ClassifyMessageAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Category> {
   if (options?.stream) {
     const stream = b.stream.ClassifyMessage(
       input,
@@ -439,10 +588,20 @@ export const ClassifyMessageAction = async (
  * - Non-streaming: Category
  * - Streaming: ReadableStream
  */
-export const ClassifyMessage2Action = async (
+ export async function ClassifyMessage2Action<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ClassifyMessage2Action<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<Category>;
+
+export async function ClassifyMessage2Action<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Category> {
   if (options?.stream) {
     const stream = b.stream.ClassifyMessage2(
       input,
@@ -466,10 +625,20 @@ export const ClassifyMessage2Action = async (
  * - Non-streaming: Category
  * - Streaming: ReadableStream
  */
-export const ClassifyMessage3Action = async (
+ export async function ClassifyMessage3Action<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ClassifyMessage3Action<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<Category>;
+
+export async function ClassifyMessage3Action<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Category> {
   if (options?.stream) {
     const stream = b.stream.ClassifyMessage3(
       input,
@@ -497,12 +666,26 @@ export const ClassifyMessage3Action = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const CompletionAction = async (
+ export async function CompletionAction<Options extends { stream: true }>(
   prefix: string,
   suffix: string,
   language: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function CompletionAction<Options extends { stream?: false }>(
+  prefix: string,
+  suffix: string,
+  language: string,
+  options?: Options
+): Promise<string>;
+
+export async function CompletionAction<Options extends { stream?: boolean }>(
+  prefix: string,
+  suffix: string,
+  language: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.Completion(
       prefix,
@@ -530,10 +713,20 @@ export const CompletionAction = async (
  * - Non-streaming: BookOrder | FlightConfirmation | GroceryReceipt
  * - Streaming: ReadableStream
  */
-export const CustomTaskAction = async (
+ export async function CustomTaskAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function CustomTaskAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<BookOrder | FlightConfirmation | GroceryReceipt>;
+
+export async function CustomTaskAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : BookOrder | FlightConfirmation | GroceryReceipt> {
   if (options?.stream) {
     const stream = b.stream.CustomTask(
       input,
@@ -557,10 +750,20 @@ export const CustomTaskAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const DescribeImageAction = async (
+ export async function DescribeImageAction<Options extends { stream: true }>(
   img: Image,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function DescribeImageAction<Options extends { stream?: false }>(
+  img: Image,
+  options?: Options
+): Promise<string>;
+
+export async function DescribeImageAction<Options extends { stream?: boolean }>(
+  img: Image,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.DescribeImage(
       img,
@@ -586,11 +789,23 @@ export const DescribeImageAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const DescribeImage2Action = async (
+ export async function DescribeImage2Action<Options extends { stream: true }>(
   classWithImage: ClassWithImage,
   img2: Image,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function DescribeImage2Action<Options extends { stream?: false }>(
+  classWithImage: ClassWithImage,
+  img2: Image,
+  options?: Options
+): Promise<string>;
+
+export async function DescribeImage2Action<Options extends { stream?: boolean }>(
+  classWithImage: ClassWithImage,
+  img2: Image,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.DescribeImage2(
       classWithImage,
@@ -618,11 +833,23 @@ export const DescribeImage2Action = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const DescribeImage3Action = async (
+ export async function DescribeImage3Action<Options extends { stream: true }>(
   classWithImage: ClassWithImage,
   img2: Image,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function DescribeImage3Action<Options extends { stream?: false }>(
+  classWithImage: ClassWithImage,
+  img2: Image,
+  options?: Options
+): Promise<string>;
+
+export async function DescribeImage3Action<Options extends { stream?: boolean }>(
+  classWithImage: ClassWithImage,
+  img2: Image,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.DescribeImage3(
       classWithImage,
@@ -650,11 +877,23 @@ export const DescribeImage3Action = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const DescribeImage4Action = async (
+ export async function DescribeImage4Action<Options extends { stream: true }>(
   classWithImage: ClassWithImage,
   img2: Image,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function DescribeImage4Action<Options extends { stream?: false }>(
+  classWithImage: ClassWithImage,
+  img2: Image,
+  options?: Options
+): Promise<string>;
+
+export async function DescribeImage4Action<Options extends { stream?: boolean }>(
+  classWithImage: ClassWithImage,
+  img2: Image,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.DescribeImage4(
       classWithImage,
@@ -678,9 +917,17 @@ export const DescribeImage4Action = async (
  * - Non-streaming: OriginalA | OriginalB
  * - Streaming: ReadableStream
  */
-export const DifferentiateUnionsAction = async (
-  options?: { stream?: boolean }
-) => {
+ export async function DifferentiateUnionsAction<Options extends { stream: true }>(
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function DifferentiateUnionsAction<Options extends { stream?: false }>(
+  options?: Options
+): Promise<OriginalA | OriginalB>;
+
+export async function DifferentiateUnionsAction<Options extends { stream?: boolean }>(
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : OriginalA | OriginalB> {
   if (options?.stream) {
     const stream = b.stream.DifferentiateUnions(
     );
@@ -702,10 +949,20 @@ export const DifferentiateUnionsAction = async (
  * - Non-streaming: DummyOutput
  * - Streaming: ReadableStream
  */
-export const DummyOutputFunctionAction = async (
+ export async function DummyOutputFunctionAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function DummyOutputFunctionAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<DummyOutput>;
+
+export async function DummyOutputFunctionAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : DummyOutput> {
   if (options?.stream) {
     const stream = b.stream.DummyOutputFunction(
       input,
@@ -729,10 +986,20 @@ export const DummyOutputFunctionAction = async (
  * - Non-streaming: DynamicClassTwo
  * - Streaming: ReadableStream
  */
-export const DynamicFuncAction = async (
+ export async function DynamicFuncAction<Options extends { stream: true }>(
   input: DynamicClassOne,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function DynamicFuncAction<Options extends { stream?: false }>(
+  input: DynamicClassOne,
+  options?: Options
+): Promise<DynamicClassTwo>;
+
+export async function DynamicFuncAction<Options extends { stream?: boolean }>(
+  input: DynamicClassOne,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : DynamicClassTwo> {
   if (options?.stream) {
     const stream = b.stream.DynamicFunc(
       input,
@@ -756,10 +1023,20 @@ export const DynamicFuncAction = async (
  * - Non-streaming: DynInputOutput
  * - Streaming: ReadableStream
  */
-export const DynamicInputOutputAction = async (
+ export async function DynamicInputOutputAction<Options extends { stream: true }>(
   input: DynInputOutput,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function DynamicInputOutputAction<Options extends { stream?: false }>(
+  input: DynInputOutput,
+  options?: Options
+): Promise<DynInputOutput>;
+
+export async function DynamicInputOutputAction<Options extends { stream?: boolean }>(
+  input: DynInputOutput,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : DynInputOutput> {
   if (options?.stream) {
     const stream = b.stream.DynamicInputOutput(
       input,
@@ -783,10 +1060,20 @@ export const DynamicInputOutputAction = async (
  * - Non-streaming: DynInputOutput[]
  * - Streaming: ReadableStream
  */
-export const DynamicListInputOutputAction = async (
+ export async function DynamicListInputOutputAction<Options extends { stream: true }>(
   input: DynInputOutput[],
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function DynamicListInputOutputAction<Options extends { stream?: false }>(
+  input: DynInputOutput[],
+  options?: Options
+): Promise<DynInputOutput[]>;
+
+export async function DynamicListInputOutputAction<Options extends { stream?: boolean }>(
+  input: DynInputOutput[],
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : DynInputOutput[]> {
   if (options?.stream) {
     const stream = b.stream.DynamicListInputOutput(
       input,
@@ -808,9 +1095,17 @@ export const DynamicListInputOutputAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const ExpectFailureAction = async (
-  options?: { stream?: boolean }
-) => {
+ export async function ExpectFailureAction<Options extends { stream: true }>(
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ExpectFailureAction<Options extends { stream?: false }>(
+  options?: Options
+): Promise<string>;
+
+export async function ExpectFailureAction<Options extends { stream?: boolean }>(
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.ExpectFailure(
     );
@@ -832,10 +1127,20 @@ export const ExpectFailureAction = async (
  * - Non-streaming: ContactInfo
  * - Streaming: ReadableStream
  */
-export const ExtractContactInfoAction = async (
+ export async function ExtractContactInfoAction<Options extends { stream: true }>(
   document: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ExtractContactInfoAction<Options extends { stream?: false }>(
+  document: string,
+  options?: Options
+): Promise<ContactInfo>;
+
+export async function ExtractContactInfoAction<Options extends { stream?: boolean }>(
+  document: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : ContactInfo> {
   if (options?.stream) {
     const stream = b.stream.ExtractContactInfo(
       document,
@@ -859,10 +1164,20 @@ export const ExtractContactInfoAction = async (
  * - Non-streaming: (string | Hobby)[]
  * - Streaming: ReadableStream
  */
-export const ExtractHobbyAction = async (
+ export async function ExtractHobbyAction<Options extends { stream: true }>(
   text: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ExtractHobbyAction<Options extends { stream?: false }>(
+  text: string,
+  options?: Options
+): Promise<(string | Hobby)[]>;
+
+export async function ExtractHobbyAction<Options extends { stream?: boolean }>(
+  text: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : (string | Hobby)[]> {
   if (options?.stream) {
     const stream = b.stream.ExtractHobby(
       text,
@@ -886,10 +1201,20 @@ export const ExtractHobbyAction = async (
  * - Non-streaming: string[]
  * - Streaming: ReadableStream
  */
-export const ExtractNamesAction = async (
+ export async function ExtractNamesAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ExtractNamesAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string[]>;
+
+export async function ExtractNamesAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string[]> {
   if (options?.stream) {
     const stream = b.stream.ExtractNames(
       input,
@@ -913,10 +1238,20 @@ export const ExtractNamesAction = async (
  * - Non-streaming: Person[]
  * - Streaming: ReadableStream
  */
-export const ExtractPeopleAction = async (
+ export async function ExtractPeopleAction<Options extends { stream: true }>(
   text: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ExtractPeopleAction<Options extends { stream?: false }>(
+  text: string,
+  options?: Options
+): Promise<Person[]>;
+
+export async function ExtractPeopleAction<Options extends { stream?: boolean }>(
+  text: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Person[]> {
   if (options?.stream) {
     const stream = b.stream.ExtractPeople(
       text,
@@ -942,11 +1277,23 @@ export const ExtractPeopleAction = async (
  * - Non-streaming: ReceiptInfo
  * - Streaming: ReadableStream
  */
-export const ExtractReceiptInfoAction = async (
+ export async function ExtractReceiptInfoAction<Options extends { stream: true }>(
   email: string,
   reason: "curiosity" | "personal_finance",
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ExtractReceiptInfoAction<Options extends { stream?: false }>(
+  email: string,
+  reason: "curiosity" | "personal_finance",
+  options?: Options
+): Promise<ReceiptInfo>;
+
+export async function ExtractReceiptInfoAction<Options extends { stream?: boolean }>(
+  email: string,
+  reason: "curiosity" | "personal_finance",
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : ReceiptInfo> {
   if (options?.stream) {
     const stream = b.stream.ExtractReceiptInfo(
       email,
@@ -974,11 +1321,23 @@ export const ExtractReceiptInfoAction = async (
  * - Non-streaming: Resume
  * - Streaming: ReadableStream
  */
-export const ExtractResumeAction = async (
+ export async function ExtractResumeAction<Options extends { stream: true }>(
   resume: string,
   img?: Image | null,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ExtractResumeAction<Options extends { stream?: false }>(
+  resume: string,
+  img?: Image | null,
+  options?: Options
+): Promise<Resume>;
+
+export async function ExtractResumeAction<Options extends { stream?: boolean }>(
+  resume: string,
+  img?: Image | null,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Resume> {
   if (options?.stream) {
     const stream = b.stream.ExtractResume(
       resume,
@@ -1004,10 +1363,20 @@ export const ExtractResumeAction = async (
  * - Non-streaming: Resume
  * - Streaming: ReadableStream
  */
-export const ExtractResume2Action = async (
+ export async function ExtractResume2Action<Options extends { stream: true }>(
   resume: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ExtractResume2Action<Options extends { stream?: false }>(
+  resume: string,
+  options?: Options
+): Promise<Resume>;
+
+export async function ExtractResume2Action<Options extends { stream?: boolean }>(
+  resume: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Resume> {
   if (options?.stream) {
     const stream = b.stream.ExtractResume2(
       resume,
@@ -1031,10 +1400,20 @@ export const ExtractResume2Action = async (
  * - Non-streaming: ClassOptionalOutput | null
  * - Streaming: ReadableStream
  */
-export const FnClassOptionalOutputAction = async (
+ export async function FnClassOptionalOutputAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnClassOptionalOutputAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<ClassOptionalOutput | null>;
+
+export async function FnClassOptionalOutputAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : ClassOptionalOutput | null> {
   if (options?.stream) {
     const stream = b.stream.FnClassOptionalOutput(
       input,
@@ -1058,10 +1437,20 @@ export const FnClassOptionalOutputAction = async (
  * - Non-streaming: ClassOptionalOutput2 | null
  * - Streaming: ReadableStream
  */
-export const FnClassOptionalOutput2Action = async (
+ export async function FnClassOptionalOutput2Action<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnClassOptionalOutput2Action<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<ClassOptionalOutput2 | null>;
+
+export async function FnClassOptionalOutput2Action<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : ClassOptionalOutput2 | null> {
   if (options?.stream) {
     const stream = b.stream.FnClassOptionalOutput2(
       input,
@@ -1085,10 +1474,20 @@ export const FnClassOptionalOutput2Action = async (
  * - Non-streaming: EnumOutput[]
  * - Streaming: ReadableStream
  */
-export const FnEnumListOutputAction = async (
+ export async function FnEnumListOutputAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnEnumListOutputAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<EnumOutput[]>;
+
+export async function FnEnumListOutputAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : EnumOutput[]> {
   if (options?.stream) {
     const stream = b.stream.FnEnumListOutput(
       input,
@@ -1112,10 +1511,20 @@ export const FnEnumListOutputAction = async (
  * - Non-streaming: EnumOutput
  * - Streaming: ReadableStream
  */
-export const FnEnumOutputAction = async (
+ export async function FnEnumOutputAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnEnumOutputAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<EnumOutput>;
+
+export async function FnEnumOutputAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : EnumOutput> {
   if (options?.stream) {
     const stream = b.stream.FnEnumOutput(
       input,
@@ -1139,10 +1548,20 @@ export const FnEnumOutputAction = async (
  * - Non-streaming: LiteralClassHello
  * - Streaming: ReadableStream
  */
-export const FnLiteralClassInputOutputAction = async (
+ export async function FnLiteralClassInputOutputAction<Options extends { stream: true }>(
   input: LiteralClassHello,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnLiteralClassInputOutputAction<Options extends { stream?: false }>(
+  input: LiteralClassHello,
+  options?: Options
+): Promise<LiteralClassHello>;
+
+export async function FnLiteralClassInputOutputAction<Options extends { stream?: boolean }>(
+  input: LiteralClassHello,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : LiteralClassHello> {
   if (options?.stream) {
     const stream = b.stream.FnLiteralClassInputOutput(
       input,
@@ -1166,10 +1585,20 @@ export const FnLiteralClassInputOutputAction = async (
  * - Non-streaming: LiteralClassOne | LiteralClassTwo
  * - Streaming: ReadableStream
  */
-export const FnLiteralUnionClassInputOutputAction = async (
+ export async function FnLiteralUnionClassInputOutputAction<Options extends { stream: true }>(
   input: LiteralClassOne | LiteralClassTwo,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnLiteralUnionClassInputOutputAction<Options extends { stream?: false }>(
+  input: LiteralClassOne | LiteralClassTwo,
+  options?: Options
+): Promise<LiteralClassOne | LiteralClassTwo>;
+
+export async function FnLiteralUnionClassInputOutputAction<Options extends { stream?: boolean }>(
+  input: LiteralClassOne | LiteralClassTwo,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : LiteralClassOne | LiteralClassTwo> {
   if (options?.stream) {
     const stream = b.stream.FnLiteralUnionClassInputOutput(
       input,
@@ -1193,10 +1622,20 @@ export const FnLiteralUnionClassInputOutputAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const FnNamedArgsSingleStringOptionalAction = async (
+ export async function FnNamedArgsSingleStringOptionalAction<Options extends { stream: true }>(
   myString?: string | null,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnNamedArgsSingleStringOptionalAction<Options extends { stream?: false }>(
+  myString?: string | null,
+  options?: Options
+): Promise<string>;
+
+export async function FnNamedArgsSingleStringOptionalAction<Options extends { stream?: boolean }>(
+  myString?: string | null,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.FnNamedArgsSingleStringOptional(
       myString,
@@ -1220,10 +1659,20 @@ export const FnNamedArgsSingleStringOptionalAction = async (
  * - Non-streaming: boolean
  * - Streaming: ReadableStream
  */
-export const FnOutputBoolAction = async (
+ export async function FnOutputBoolAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnOutputBoolAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<boolean>;
+
+export async function FnOutputBoolAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : boolean> {
   if (options?.stream) {
     const stream = b.stream.FnOutputBool(
       input,
@@ -1247,10 +1696,20 @@ export const FnOutputBoolAction = async (
  * - Non-streaming: TestOutputClass
  * - Streaming: ReadableStream
  */
-export const FnOutputClassAction = async (
+ export async function FnOutputClassAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnOutputClassAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<TestOutputClass>;
+
+export async function FnOutputClassAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : TestOutputClass> {
   if (options?.stream) {
     const stream = b.stream.FnOutputClass(
       input,
@@ -1274,10 +1733,20 @@ export const FnOutputClassAction = async (
  * - Non-streaming: TestOutputClass[]
  * - Streaming: ReadableStream
  */
-export const FnOutputClassListAction = async (
+ export async function FnOutputClassListAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnOutputClassListAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<TestOutputClass[]>;
+
+export async function FnOutputClassListAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : TestOutputClass[]> {
   if (options?.stream) {
     const stream = b.stream.FnOutputClassList(
       input,
@@ -1301,10 +1770,20 @@ export const FnOutputClassListAction = async (
  * - Non-streaming: TestClassNested
  * - Streaming: ReadableStream
  */
-export const FnOutputClassNestedAction = async (
+ export async function FnOutputClassNestedAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnOutputClassNestedAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<TestClassNested>;
+
+export async function FnOutputClassNestedAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : TestClassNested> {
   if (options?.stream) {
     const stream = b.stream.FnOutputClassNested(
       input,
@@ -1328,10 +1807,20 @@ export const FnOutputClassNestedAction = async (
  * - Non-streaming: TestClassWithEnum
  * - Streaming: ReadableStream
  */
-export const FnOutputClassWithEnumAction = async (
+ export async function FnOutputClassWithEnumAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnOutputClassWithEnumAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<TestClassWithEnum>;
+
+export async function FnOutputClassWithEnumAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : TestClassWithEnum> {
   if (options?.stream) {
     const stream = b.stream.FnOutputClassWithEnum(
       input,
@@ -1355,10 +1844,20 @@ export const FnOutputClassWithEnumAction = async (
  * - Non-streaming: number
  * - Streaming: ReadableStream
  */
-export const FnOutputIntAction = async (
+ export async function FnOutputIntAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnOutputIntAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<number>;
+
+export async function FnOutputIntAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : number> {
   if (options?.stream) {
     const stream = b.stream.FnOutputInt(
       input,
@@ -1382,10 +1881,20 @@ export const FnOutputIntAction = async (
  * - Non-streaming: false
  * - Streaming: ReadableStream
  */
-export const FnOutputLiteralBoolAction = async (
+ export async function FnOutputLiteralBoolAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnOutputLiteralBoolAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<false>;
+
+export async function FnOutputLiteralBoolAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : false> {
   if (options?.stream) {
     const stream = b.stream.FnOutputLiteralBool(
       input,
@@ -1409,10 +1918,20 @@ export const FnOutputLiteralBoolAction = async (
  * - Non-streaming: 5
  * - Streaming: ReadableStream
  */
-export const FnOutputLiteralIntAction = async (
+ export async function FnOutputLiteralIntAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnOutputLiteralIntAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<5>;
+
+export async function FnOutputLiteralIntAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : 5> {
   if (options?.stream) {
     const stream = b.stream.FnOutputLiteralInt(
       input,
@@ -1436,10 +1955,20 @@ export const FnOutputLiteralIntAction = async (
  * - Non-streaming: "example output"
  * - Streaming: ReadableStream
  */
-export const FnOutputLiteralStringAction = async (
+ export async function FnOutputLiteralStringAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnOutputLiteralStringAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<"example output">;
+
+export async function FnOutputLiteralStringAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : "example output"> {
   if (options?.stream) {
     const stream = b.stream.FnOutputLiteralString(
       input,
@@ -1463,10 +1992,20 @@ export const FnOutputLiteralStringAction = async (
  * - Non-streaming: string[]
  * - Streaming: ReadableStream
  */
-export const FnOutputStringListAction = async (
+ export async function FnOutputStringListAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnOutputStringListAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string[]>;
+
+export async function FnOutputStringListAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string[]> {
   if (options?.stream) {
     const stream = b.stream.FnOutputStringList(
       input,
@@ -1490,10 +2029,20 @@ export const FnOutputStringListAction = async (
  * - Non-streaming: TestEnum
  * - Streaming: ReadableStream
  */
-export const FnTestAliasedEnumOutputAction = async (
+ export async function FnTestAliasedEnumOutputAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnTestAliasedEnumOutputAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<TestEnum>;
+
+export async function FnTestAliasedEnumOutputAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : TestEnum> {
   if (options?.stream) {
     const stream = b.stream.FnTestAliasedEnumOutput(
       input,
@@ -1517,10 +2066,20 @@ export const FnTestAliasedEnumOutputAction = async (
  * - Non-streaming: TestClassAlias
  * - Streaming: ReadableStream
  */
-export const FnTestClassAliasAction = async (
+ export async function FnTestClassAliasAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnTestClassAliasAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<TestClassAlias>;
+
+export async function FnTestClassAliasAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : TestClassAlias> {
   if (options?.stream) {
     const stream = b.stream.FnTestClassAlias(
       input,
@@ -1544,10 +2103,20 @@ export const FnTestClassAliasAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const FnTestNamedArgsSingleEnumAction = async (
+ export async function FnTestNamedArgsSingleEnumAction<Options extends { stream: true }>(
   myArg: NamedArgsSingleEnum,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function FnTestNamedArgsSingleEnumAction<Options extends { stream?: false }>(
+  myArg: NamedArgsSingleEnum,
+  options?: Options
+): Promise<string>;
+
+export async function FnTestNamedArgsSingleEnumAction<Options extends { stream?: boolean }>(
+  myArg: NamedArgsSingleEnum,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.FnTestNamedArgsSingleEnum(
       myArg,
@@ -1571,10 +2140,20 @@ export const FnTestNamedArgsSingleEnumAction = async (
  * - Non-streaming: RaysData
  * - Streaming: ReadableStream
  */
-export const GetDataTypeAction = async (
+ export async function GetDataTypeAction<Options extends { stream: true }>(
   text: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function GetDataTypeAction<Options extends { stream?: false }>(
+  text: string,
+  options?: Options
+): Promise<RaysData>;
+
+export async function GetDataTypeAction<Options extends { stream?: boolean }>(
+  text: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : RaysData> {
   if (options?.stream) {
     const stream = b.stream.GetDataType(
       text,
@@ -1598,10 +2177,20 @@ export const GetDataTypeAction = async (
  * - Non-streaming: OrderInfo
  * - Streaming: ReadableStream
  */
-export const GetOrderInfoAction = async (
+ export async function GetOrderInfoAction<Options extends { stream: true }>(
   email: Email,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function GetOrderInfoAction<Options extends { stream?: false }>(
+  email: Email,
+  options?: Options
+): Promise<OrderInfo>;
+
+export async function GetOrderInfoAction<Options extends { stream?: boolean }>(
+  email: Email,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : OrderInfo> {
   if (options?.stream) {
     const stream = b.stream.GetOrderInfo(
       email,
@@ -1625,10 +2214,20 @@ export const GetOrderInfoAction = async (
  * - Non-streaming: SearchParams
  * - Streaming: ReadableStream
  */
-export const GetQueryAction = async (
+ export async function GetQueryAction<Options extends { stream: true }>(
   query: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function GetQueryAction<Options extends { stream?: false }>(
+  query: string,
+  options?: Options
+): Promise<SearchParams>;
+
+export async function GetQueryAction<Options extends { stream?: boolean }>(
+  query: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : SearchParams> {
   if (options?.stream) {
     const stream = b.stream.GetQuery(
       query,
@@ -1654,11 +2253,23 @@ export const GetQueryAction = async (
  * - Non-streaming: Partial<Record<MapKey, string>>
  * - Streaming: ReadableStream
  */
-export const InOutEnumMapKeyAction = async (
+ export async function InOutEnumMapKeyAction<Options extends { stream: true }>(
   i1: Partial<Record<MapKey, string>>,
   i2: Partial<Record<MapKey, string>>,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function InOutEnumMapKeyAction<Options extends { stream?: false }>(
+  i1: Partial<Record<MapKey, string>>,
+  i2: Partial<Record<MapKey, string>>,
+  options?: Options
+): Promise<Partial<Record<MapKey, string>>>;
+
+export async function InOutEnumMapKeyAction<Options extends { stream?: boolean }>(
+  i1: Partial<Record<MapKey, string>>,
+  i2: Partial<Record<MapKey, string>>,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Partial<Record<MapKey, string>>> {
   if (options?.stream) {
     const stream = b.stream.InOutEnumMapKey(
       i1,
@@ -1686,11 +2297,23 @@ export const InOutEnumMapKeyAction = async (
  * - Non-streaming: Partial<Record<"one" | "two" | "three" | "four", string>>
  * - Streaming: ReadableStream
  */
-export const InOutLiteralStringUnionMapKeyAction = async (
+ export async function InOutLiteralStringUnionMapKeyAction<Options extends { stream: true }>(
   i1: Partial<Record<"one" | "two" | "three" | "four", string>>,
   i2: Partial<Record<"one" | "two" | "three" | "four", string>>,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function InOutLiteralStringUnionMapKeyAction<Options extends { stream?: false }>(
+  i1: Partial<Record<"one" | "two" | "three" | "four", string>>,
+  i2: Partial<Record<"one" | "two" | "three" | "four", string>>,
+  options?: Options
+): Promise<Partial<Record<"one" | "two" | "three" | "four", string>>>;
+
+export async function InOutLiteralStringUnionMapKeyAction<Options extends { stream?: boolean }>(
+  i1: Partial<Record<"one" | "two" | "three" | "four", string>>,
+  i2: Partial<Record<"one" | "two" | "three" | "four", string>>,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Partial<Record<"one" | "two" | "three" | "four", string>>> {
   if (options?.stream) {
     const stream = b.stream.InOutLiteralStringUnionMapKey(
       i1,
@@ -1716,10 +2339,20 @@ export const InOutLiteralStringUnionMapKeyAction = async (
  * - Non-streaming: Partial<Record<"key", string>>
  * - Streaming: ReadableStream
  */
-export const InOutSingleLiteralStringMapKeyAction = async (
+ export async function InOutSingleLiteralStringMapKeyAction<Options extends { stream: true }>(
   m: Partial<Record<"key", string>>,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function InOutSingleLiteralStringMapKeyAction<Options extends { stream?: false }>(
+  m: Partial<Record<"key", string>>,
+  options?: Options
+): Promise<Partial<Record<"key", string>>>;
+
+export async function InOutSingleLiteralStringMapKeyAction<Options extends { stream?: boolean }>(
+  m: Partial<Record<"key", string>>,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Partial<Record<"key", string>>> {
   if (options?.stream) {
     const stream = b.stream.InOutSingleLiteralStringMapKey(
       m,
@@ -1743,10 +2376,20 @@ export const InOutSingleLiteralStringMapKeyAction = async (
  * - Non-streaming: JsonValue
  * - Streaming: ReadableStream
  */
-export const JsonTypeAliasCycleAction = async (
+ export async function JsonTypeAliasCycleAction<Options extends { stream: true }>(
   input: JsonValue,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function JsonTypeAliasCycleAction<Options extends { stream?: false }>(
+  input: JsonValue,
+  options?: Options
+): Promise<JsonValue>;
+
+export async function JsonTypeAliasCycleAction<Options extends { stream?: boolean }>(
+  input: JsonValue,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : JsonValue> {
   if (options?.stream) {
     const stream = b.stream.JsonTypeAliasCycle(
       input,
@@ -1770,10 +2413,20 @@ export const JsonTypeAliasCycleAction = async (
  * - Non-streaming: 1 | true | "string output"
  * - Streaming: ReadableStream
  */
-export const LiteralUnionsTestAction = async (
+ export async function LiteralUnionsTestAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function LiteralUnionsTestAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<1 | true | "string output">;
+
+export async function LiteralUnionsTestAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : 1 | true | "string output"> {
   if (options?.stream) {
     const stream = b.stream.LiteralUnionsTest(
       input,
@@ -1795,9 +2448,17 @@ export const LiteralUnionsTestAction = async (
  * - Non-streaming: Checked<BlockConstraint,"cross_field">
  * - Streaming: ReadableStream
  */
-export const MakeBlockConstraintAction = async (
-  options?: { stream?: boolean }
-) => {
+ export async function MakeBlockConstraintAction<Options extends { stream: true }>(
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function MakeBlockConstraintAction<Options extends { stream?: false }>(
+  options?: Options
+): Promise<Checked<BlockConstraint,"cross_field">>;
+
+export async function MakeBlockConstraintAction<Options extends { stream?: boolean }>(
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Checked<BlockConstraint,"cross_field">> {
   if (options?.stream) {
     const stream = b.stream.MakeBlockConstraint(
     );
@@ -1817,9 +2478,17 @@ export const MakeBlockConstraintAction = async (
  * - Non-streaming: NestedBlockConstraint
  * - Streaming: ReadableStream
  */
-export const MakeNestedBlockConstraintAction = async (
-  options?: { stream?: boolean }
-) => {
+ export async function MakeNestedBlockConstraintAction<Options extends { stream: true }>(
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function MakeNestedBlockConstraintAction<Options extends { stream?: false }>(
+  options?: Options
+): Promise<NestedBlockConstraint>;
+
+export async function MakeNestedBlockConstraintAction<Options extends { stream?: boolean }>(
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : NestedBlockConstraint> {
   if (options?.stream) {
     const stream = b.stream.MakeNestedBlockConstraint(
     );
@@ -1841,10 +2510,20 @@ export const MakeNestedBlockConstraintAction = async (
  * - Non-streaming: Record<string, string[]>
  * - Streaming: ReadableStream
  */
-export const MapAliasAction = async (
+ export async function MapAliasAction<Options extends { stream: true }>(
   m: Record<string, string[]>,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function MapAliasAction<Options extends { stream?: false }>(
+  m: Record<string, string[]>,
+  options?: Options
+): Promise<Record<string, string[]>>;
+
+export async function MapAliasAction<Options extends { stream?: boolean }>(
+  m: Record<string, string[]>,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Record<string, string[]>> {
   if (options?.stream) {
     const stream = b.stream.MapAlias(
       m,
@@ -1868,10 +2547,20 @@ export const MapAliasAction = async (
  * - Non-streaming: MergeAttrs
  * - Streaming: ReadableStream
  */
-export const MergeAliasAttributesAction = async (
+ export async function MergeAliasAttributesAction<Options extends { stream: true }>(
   money: number,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function MergeAliasAttributesAction<Options extends { stream?: false }>(
+  money: number,
+  options?: Options
+): Promise<MergeAttrs>;
+
+export async function MergeAliasAttributesAction<Options extends { stream?: boolean }>(
+  money: number,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : MergeAttrs> {
   if (options?.stream) {
     const stream = b.stream.MergeAliasAttributes(
       money,
@@ -1895,10 +2584,20 @@ export const MergeAliasAttributesAction = async (
  * - Non-streaming: DynamicOutput
  * - Streaming: ReadableStream
  */
-export const MyFuncAction = async (
+ export async function MyFuncAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function MyFuncAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<DynamicOutput>;
+
+export async function MyFuncAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : DynamicOutput> {
   if (options?.stream) {
     const stream = b.stream.MyFunc(
       input,
@@ -1922,10 +2621,20 @@ export const MyFuncAction = async (
  * - Non-streaming: number | string | boolean | number | string[] | Record<string, string[]>
  * - Streaming: ReadableStream
  */
-export const NestedAliasAction = async (
+ export async function NestedAliasAction<Options extends { stream: true }>(
   c: number | string | boolean | number | string[] | Record<string, string[]>,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function NestedAliasAction<Options extends { stream?: false }>(
+  c: number | string | boolean | number | string[] | Record<string, string[]>,
+  options?: Options
+): Promise<number | string | boolean | number | string[] | Record<string, string[]>>;
+
+export async function NestedAliasAction<Options extends { stream?: boolean }>(
+  c: number | string | boolean | number | string[] | Record<string, string[]>,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : number | string | boolean | number | string[] | Record<string, string[]>> {
   if (options?.stream) {
     const stream = b.stream.NestedAlias(
       c,
@@ -1949,10 +2658,20 @@ export const NestedAliasAction = async (
  * - Non-streaming: (OptionalTest_ReturnType | null)[]
  * - Streaming: ReadableStream
  */
-export const OptionalTest_FunctionAction = async (
+ export async function OptionalTest_FunctionAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function OptionalTest_FunctionAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<(OptionalTest_ReturnType | null)[]>;
+
+export async function OptionalTest_FunctionAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : (OptionalTest_ReturnType | null)[]> {
   if (options?.stream) {
     const stream = b.stream.OptionalTest_Function(
       input,
@@ -1976,10 +2695,20 @@ export const OptionalTest_FunctionAction = async (
  * - Non-streaming: FooAny
  * - Streaming: ReadableStream
  */
-export const PredictAgeAction = async (
+ export async function PredictAgeAction<Options extends { stream: true }>(
   name: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function PredictAgeAction<Options extends { stream?: false }>(
+  name: string,
+  options?: Options
+): Promise<FooAny>;
+
+export async function PredictAgeAction<Options extends { stream?: boolean }>(
+  name: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : FooAny> {
   if (options?.stream) {
     const stream = b.stream.PredictAge(
       name,
@@ -2003,10 +2732,20 @@ export const PredictAgeAction = async (
  * - Non-streaming: Checked<number,"too_big">
  * - Streaming: ReadableStream
  */
-export const PredictAgeBareAction = async (
+ export async function PredictAgeBareAction<Options extends { stream: true }>(
   inp: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function PredictAgeBareAction<Options extends { stream?: false }>(
+  inp: string,
+  options?: Options
+): Promise<Checked<number,"too_big">>;
+
+export async function PredictAgeBareAction<Options extends { stream?: boolean }>(
+  inp: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Checked<number,"too_big">> {
   if (options?.stream) {
     const stream = b.stream.PredictAgeBare(
       inp,
@@ -2030,10 +2769,20 @@ export const PredictAgeBareAction = async (
  * - Non-streaming: number | string | boolean | number
  * - Streaming: ReadableStream
  */
-export const PrimitiveAliasAction = async (
+ export async function PrimitiveAliasAction<Options extends { stream: true }>(
   p: number | string | boolean | number,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function PrimitiveAliasAction<Options extends { stream?: false }>(
+  p: number | string | boolean | number,
+  options?: Options
+): Promise<number | string | boolean | number>;
+
+export async function PrimitiveAliasAction<Options extends { stream?: boolean }>(
+  p: number | string | boolean | number,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : number | string | boolean | number> {
   if (options?.stream) {
     const stream = b.stream.PrimitiveAlias(
       p,
@@ -2057,10 +2806,20 @@ export const PrimitiveAliasAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const PromptTestClaudeAction = async (
+ export async function PromptTestClaudeAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function PromptTestClaudeAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function PromptTestClaudeAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.PromptTestClaude(
       input,
@@ -2084,10 +2843,20 @@ export const PromptTestClaudeAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const PromptTestClaudeChatAction = async (
+ export async function PromptTestClaudeChatAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function PromptTestClaudeChatAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function PromptTestClaudeChatAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.PromptTestClaudeChat(
       input,
@@ -2111,10 +2880,20 @@ export const PromptTestClaudeChatAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const PromptTestClaudeChatNoSystemAction = async (
+ export async function PromptTestClaudeChatNoSystemAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function PromptTestClaudeChatNoSystemAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function PromptTestClaudeChatNoSystemAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.PromptTestClaudeChatNoSystem(
       input,
@@ -2138,10 +2917,20 @@ export const PromptTestClaudeChatNoSystemAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const PromptTestOpenAIAction = async (
+ export async function PromptTestOpenAIAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function PromptTestOpenAIAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function PromptTestOpenAIAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.PromptTestOpenAI(
       input,
@@ -2165,10 +2954,20 @@ export const PromptTestOpenAIAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const PromptTestOpenAIChatAction = async (
+ export async function PromptTestOpenAIChatAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function PromptTestOpenAIChatAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function PromptTestOpenAIChatAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.PromptTestOpenAIChat(
       input,
@@ -2192,10 +2991,20 @@ export const PromptTestOpenAIChatAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const PromptTestOpenAIChatNoSystemAction = async (
+ export async function PromptTestOpenAIChatNoSystemAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function PromptTestOpenAIChatNoSystemAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function PromptTestOpenAIChatNoSystemAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.PromptTestOpenAIChatNoSystem(
       input,
@@ -2219,10 +3028,20 @@ export const PromptTestOpenAIChatNoSystemAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const PromptTestStreamingAction = async (
+ export async function PromptTestStreamingAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function PromptTestStreamingAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function PromptTestStreamingAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.PromptTestStreaming(
       input,
@@ -2246,10 +3065,20 @@ export const PromptTestStreamingAction = async (
  * - Non-streaming: RecAliasOne
  * - Streaming: ReadableStream
  */
-export const RecursiveAliasCycleAction = async (
+ export async function RecursiveAliasCycleAction<Options extends { stream: true }>(
   input: RecAliasOne,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function RecursiveAliasCycleAction<Options extends { stream?: false }>(
+  input: RecAliasOne,
+  options?: Options
+): Promise<RecAliasOne>;
+
+export async function RecursiveAliasCycleAction<Options extends { stream?: boolean }>(
+  input: RecAliasOne,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : RecAliasOne> {
   if (options?.stream) {
     const stream = b.stream.RecursiveAliasCycle(
       input,
@@ -2273,10 +3102,20 @@ export const RecursiveAliasCycleAction = async (
  * - Non-streaming: NodeWithAliasIndirection
  * - Streaming: ReadableStream
  */
-export const RecursiveClassWithAliasIndirectionAction = async (
+ export async function RecursiveClassWithAliasIndirectionAction<Options extends { stream: true }>(
   cls: NodeWithAliasIndirection,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function RecursiveClassWithAliasIndirectionAction<Options extends { stream?: false }>(
+  cls: NodeWithAliasIndirection,
+  options?: Options
+): Promise<NodeWithAliasIndirection>;
+
+export async function RecursiveClassWithAliasIndirectionAction<Options extends { stream?: boolean }>(
+  cls: NodeWithAliasIndirection,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : NodeWithAliasIndirection> {
   if (options?.stream) {
     const stream = b.stream.RecursiveClassWithAliasIndirection(
       cls,
@@ -2300,10 +3139,20 @@ export const RecursiveClassWithAliasIndirectionAction = async (
  * - Non-streaming: Checked<number,"gt_ten">
  * - Streaming: ReadableStream
  */
-export const ReturnAliasWithMergedAttributesAction = async (
+ export async function ReturnAliasWithMergedAttributesAction<Options extends { stream: true }>(
   money: Checked<number,"gt_ten">,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ReturnAliasWithMergedAttributesAction<Options extends { stream?: false }>(
+  money: Checked<number,"gt_ten">,
+  options?: Options
+): Promise<Checked<number,"gt_ten">>;
+
+export async function ReturnAliasWithMergedAttributesAction<Options extends { stream?: boolean }>(
+  money: Checked<number,"gt_ten">,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Checked<number,"gt_ten">> {
   if (options?.stream) {
     const stream = b.stream.ReturnAliasWithMergedAttributes(
       money,
@@ -2327,10 +3176,20 @@ export const ReturnAliasWithMergedAttributesAction = async (
  * - Non-streaming: number
  * - Streaming: ReadableStream
  */
-export const ReturnFailingAssertAction = async (
+ export async function ReturnFailingAssertAction<Options extends { stream: true }>(
   inp: number,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ReturnFailingAssertAction<Options extends { stream?: false }>(
+  inp: number,
+  options?: Options
+): Promise<number>;
+
+export async function ReturnFailingAssertAction<Options extends { stream?: boolean }>(
+  inp: number,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : number> {
   if (options?.stream) {
     const stream = b.stream.ReturnFailingAssert(
       inp,
@@ -2354,10 +3213,20 @@ export const ReturnFailingAssertAction = async (
  * - Non-streaming: MalformedConstraints
  * - Streaming: ReadableStream
  */
-export const ReturnMalformedConstraintsAction = async (
+ export async function ReturnMalformedConstraintsAction<Options extends { stream: true }>(
   a: number,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function ReturnMalformedConstraintsAction<Options extends { stream?: false }>(
+  a: number,
+  options?: Options
+): Promise<MalformedConstraints>;
+
+export async function ReturnMalformedConstraintsAction<Options extends { stream?: boolean }>(
+  a: number,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : MalformedConstraints> {
   if (options?.stream) {
     const stream = b.stream.ReturnMalformedConstraints(
       a,
@@ -2381,10 +3250,20 @@ export const ReturnMalformedConstraintsAction = async (
  * - Non-streaming: Schema
  * - Streaming: ReadableStream
  */
-export const SchemaDescriptionsAction = async (
+ export async function SchemaDescriptionsAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function SchemaDescriptionsAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<Schema>;
+
+export async function SchemaDescriptionsAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Schema> {
   if (options?.stream) {
     const stream = b.stream.SchemaDescriptions(
       input,
@@ -2408,10 +3287,20 @@ export const SchemaDescriptionsAction = async (
  * - Non-streaming: RecursiveListAlias
  * - Streaming: ReadableStream
  */
-export const SimpleRecursiveListAliasAction = async (
+ export async function SimpleRecursiveListAliasAction<Options extends { stream: true }>(
   input: RecursiveListAlias,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function SimpleRecursiveListAliasAction<Options extends { stream?: false }>(
+  input: RecursiveListAlias,
+  options?: Options
+): Promise<RecursiveListAlias>;
+
+export async function SimpleRecursiveListAliasAction<Options extends { stream?: boolean }>(
+  input: RecursiveListAlias,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : RecursiveListAlias> {
   if (options?.stream) {
     const stream = b.stream.SimpleRecursiveListAlias(
       input,
@@ -2435,10 +3324,20 @@ export const SimpleRecursiveListAliasAction = async (
  * - Non-streaming: RecursiveMapAlias
  * - Streaming: ReadableStream
  */
-export const SimpleRecursiveMapAliasAction = async (
+ export async function SimpleRecursiveMapAliasAction<Options extends { stream: true }>(
   input: RecursiveMapAlias,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function SimpleRecursiveMapAliasAction<Options extends { stream?: false }>(
+  input: RecursiveMapAlias,
+  options?: Options
+): Promise<RecursiveMapAlias>;
+
+export async function SimpleRecursiveMapAliasAction<Options extends { stream?: boolean }>(
+  input: RecursiveMapAlias,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : RecursiveMapAlias> {
   if (options?.stream) {
     const stream = b.stream.SimpleRecursiveMapAlias(
       input,
@@ -2462,10 +3361,20 @@ export const SimpleRecursiveMapAliasAction = async (
  * - Non-streaming: BigNumbers
  * - Streaming: ReadableStream
  */
-export const StreamBigNumbersAction = async (
+ export async function StreamBigNumbersAction<Options extends { stream: true }>(
   digits: number,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function StreamBigNumbersAction<Options extends { stream?: false }>(
+  digits: number,
+  options?: Options
+): Promise<BigNumbers>;
+
+export async function StreamBigNumbersAction<Options extends { stream?: boolean }>(
+  digits: number,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : BigNumbers> {
   if (options?.stream) {
     const stream = b.stream.StreamBigNumbers(
       digits,
@@ -2491,11 +3400,23 @@ export const StreamBigNumbersAction = async (
  * - Non-streaming: TwoStoriesOneTitle
  * - Streaming: ReadableStream
  */
-export const StreamFailingAssertionAction = async (
+ export async function StreamFailingAssertionAction<Options extends { stream: true }>(
   theme: string,
   length: number,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function StreamFailingAssertionAction<Options extends { stream?: false }>(
+  theme: string,
+  length: number,
+  options?: Options
+): Promise<TwoStoriesOneTitle>;
+
+export async function StreamFailingAssertionAction<Options extends { stream?: boolean }>(
+  theme: string,
+  length: number,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : TwoStoriesOneTitle> {
   if (options?.stream) {
     const stream = b.stream.StreamFailingAssertion(
       theme,
@@ -2521,10 +3442,20 @@ export const StreamFailingAssertionAction = async (
  * - Non-streaming: number
  * - Streaming: ReadableStream
  */
-export const StreamOneBigNumberAction = async (
+ export async function StreamOneBigNumberAction<Options extends { stream: true }>(
   digits: number,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function StreamOneBigNumberAction<Options extends { stream?: false }>(
+  digits: number,
+  options?: Options
+): Promise<number>;
+
+export async function StreamOneBigNumberAction<Options extends { stream?: boolean }>(
+  digits: number,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : number> {
   if (options?.stream) {
     const stream = b.stream.StreamOneBigNumber(
       digits,
@@ -2548,10 +3479,20 @@ export const StreamOneBigNumberAction = async (
  * - Non-streaming: (number | string)[]
  * - Streaming: ReadableStream
  */
-export const StreamUnionIntegersAction = async (
+ export async function StreamUnionIntegersAction<Options extends { stream: true }>(
   digits: number,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function StreamUnionIntegersAction<Options extends { stream?: false }>(
+  digits: number,
+  options?: Options
+): Promise<(number | string)[]>;
+
+export async function StreamUnionIntegersAction<Options extends { stream?: boolean }>(
+  digits: number,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : (number | string)[]> {
   if (options?.stream) {
     const stream = b.stream.StreamUnionIntegers(
       digits,
@@ -2577,11 +3518,23 @@ export const StreamUnionIntegersAction = async (
  * - Non-streaming: CompoundBigNumbers
  * - Streaming: ReadableStream
  */
-export const StreamingCompoundNumbersAction = async (
+ export async function StreamingCompoundNumbersAction<Options extends { stream: true }>(
   digits: number,
   yapping: boolean,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function StreamingCompoundNumbersAction<Options extends { stream?: false }>(
+  digits: number,
+  yapping: boolean,
+  options?: Options
+): Promise<CompoundBigNumbers>;
+
+export async function StreamingCompoundNumbersAction<Options extends { stream?: boolean }>(
+  digits: number,
+  yapping: boolean,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : CompoundBigNumbers> {
   if (options?.stream) {
     const stream = b.stream.StreamingCompoundNumbers(
       digits,
@@ -2607,10 +3560,20 @@ export const StreamingCompoundNumbersAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestAnthropicAction = async (
+ export async function TestAnthropicAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestAnthropicAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestAnthropicAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestAnthropic(
       input,
@@ -2634,10 +3597,20 @@ export const TestAnthropicAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestAnthropicShorthandAction = async (
+ export async function TestAnthropicShorthandAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestAnthropicShorthandAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestAnthropicShorthandAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestAnthropicShorthand(
       input,
@@ -2661,10 +3634,20 @@ export const TestAnthropicShorthandAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestAwsAction = async (
+ export async function TestAwsAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestAwsAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestAwsAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestAws(
       input,
@@ -2688,10 +3671,20 @@ export const TestAwsAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestAwsInvalidAccessKeyAction = async (
+ export async function TestAwsInvalidAccessKeyAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestAwsInvalidAccessKeyAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestAwsInvalidAccessKeyAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestAwsInvalidAccessKey(
       input,
@@ -2715,10 +3708,20 @@ export const TestAwsInvalidAccessKeyAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestAwsInvalidProfileAction = async (
+ export async function TestAwsInvalidProfileAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestAwsInvalidProfileAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestAwsInvalidProfileAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestAwsInvalidProfile(
       input,
@@ -2742,10 +3745,20 @@ export const TestAwsInvalidProfileAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestAwsInvalidRegionAction = async (
+ export async function TestAwsInvalidRegionAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestAwsInvalidRegionAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestAwsInvalidRegionAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestAwsInvalidRegion(
       input,
@@ -2769,10 +3782,20 @@ export const TestAwsInvalidRegionAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestAwsInvalidSessionTokenAction = async (
+ export async function TestAwsInvalidSessionTokenAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestAwsInvalidSessionTokenAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestAwsInvalidSessionTokenAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestAwsInvalidSessionToken(
       input,
@@ -2796,10 +3819,20 @@ export const TestAwsInvalidSessionTokenAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestAzureAction = async (
+ export async function TestAzureAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestAzureAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestAzureAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestAzure(
       input,
@@ -2823,10 +3856,20 @@ export const TestAzureAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestAzureFailureAction = async (
+ export async function TestAzureFailureAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestAzureFailureAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestAzureFailureAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestAzureFailure(
       input,
@@ -2852,11 +3895,23 @@ export const TestAzureFailureAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestCachingAction = async (
+ export async function TestCachingAction<Options extends { stream: true }>(
   input: string,
   not_cached: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestCachingAction<Options extends { stream?: false }>(
+  input: string,
+  not_cached: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestCachingAction<Options extends { stream?: boolean }>(
+  input: string,
+  not_cached: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestCaching(
       input,
@@ -2880,9 +3935,17 @@ export const TestCachingAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestFallbackClientAction = async (
-  options?: { stream?: boolean }
-) => {
+ export async function TestFallbackClientAction<Options extends { stream: true }>(
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFallbackClientAction<Options extends { stream?: false }>(
+  options?: Options
+): Promise<string>;
+
+export async function TestFallbackClientAction<Options extends { stream?: boolean }>(
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestFallbackClient(
     );
@@ -2904,10 +3967,20 @@ export const TestFallbackClientAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestFallbackToShorthandAction = async (
+ export async function TestFallbackToShorthandAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFallbackToShorthandAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestFallbackToShorthandAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestFallbackToShorthand(
       input,
@@ -2931,10 +4004,20 @@ export const TestFallbackToShorthandAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleBoolAction = async (
+ export async function TestFnNamedArgsSingleBoolAction<Options extends { stream: true }>(
   myBool: boolean,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleBoolAction<Options extends { stream?: false }>(
+  myBool: boolean,
+  options?: Options
+): Promise<string>;
+
+export async function TestFnNamedArgsSingleBoolAction<Options extends { stream?: boolean }>(
+  myBool: boolean,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleBool(
       myBool,
@@ -2958,10 +4041,20 @@ export const TestFnNamedArgsSingleBoolAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleClassAction = async (
+ export async function TestFnNamedArgsSingleClassAction<Options extends { stream: true }>(
   myArg: NamedArgsSingleClass,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleClassAction<Options extends { stream?: false }>(
+  myArg: NamedArgsSingleClass,
+  options?: Options
+): Promise<string>;
+
+export async function TestFnNamedArgsSingleClassAction<Options extends { stream?: boolean }>(
+  myArg: NamedArgsSingleClass,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleClass(
       myArg,
@@ -2985,10 +4078,20 @@ export const TestFnNamedArgsSingleClassAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleEnumListAction = async (
+ export async function TestFnNamedArgsSingleEnumListAction<Options extends { stream: true }>(
   myArg: NamedArgsSingleEnumList[],
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleEnumListAction<Options extends { stream?: false }>(
+  myArg: NamedArgsSingleEnumList[],
+  options?: Options
+): Promise<string>;
+
+export async function TestFnNamedArgsSingleEnumListAction<Options extends { stream?: boolean }>(
+  myArg: NamedArgsSingleEnumList[],
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleEnumList(
       myArg,
@@ -3012,10 +4115,20 @@ export const TestFnNamedArgsSingleEnumListAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleFloatAction = async (
+ export async function TestFnNamedArgsSingleFloatAction<Options extends { stream: true }>(
   myFloat: number,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleFloatAction<Options extends { stream?: false }>(
+  myFloat: number,
+  options?: Options
+): Promise<string>;
+
+export async function TestFnNamedArgsSingleFloatAction<Options extends { stream?: boolean }>(
+  myFloat: number,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleFloat(
       myFloat,
@@ -3039,10 +4152,20 @@ export const TestFnNamedArgsSingleFloatAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleIntAction = async (
+ export async function TestFnNamedArgsSingleIntAction<Options extends { stream: true }>(
   myInt: number,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleIntAction<Options extends { stream?: false }>(
+  myInt: number,
+  options?: Options
+): Promise<string>;
+
+export async function TestFnNamedArgsSingleIntAction<Options extends { stream?: boolean }>(
+  myInt: number,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleInt(
       myInt,
@@ -3066,10 +4189,20 @@ export const TestFnNamedArgsSingleIntAction = async (
  * - Non-streaming: Record<string, StringToClassEntry>
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleMapStringToClassAction = async (
+ export async function TestFnNamedArgsSingleMapStringToClassAction<Options extends { stream: true }>(
   myMap: Record<string, StringToClassEntry>,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleMapStringToClassAction<Options extends { stream?: false }>(
+  myMap: Record<string, StringToClassEntry>,
+  options?: Options
+): Promise<Record<string, StringToClassEntry>>;
+
+export async function TestFnNamedArgsSingleMapStringToClassAction<Options extends { stream?: boolean }>(
+  myMap: Record<string, StringToClassEntry>,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Record<string, StringToClassEntry>> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleMapStringToClass(
       myMap,
@@ -3093,10 +4226,20 @@ export const TestFnNamedArgsSingleMapStringToClassAction = async (
  * - Non-streaming: Record<string, Record<string, string>>
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleMapStringToMapAction = async (
+ export async function TestFnNamedArgsSingleMapStringToMapAction<Options extends { stream: true }>(
   myMap: Record<string, Record<string, string>>,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleMapStringToMapAction<Options extends { stream?: false }>(
+  myMap: Record<string, Record<string, string>>,
+  options?: Options
+): Promise<Record<string, Record<string, string>>>;
+
+export async function TestFnNamedArgsSingleMapStringToMapAction<Options extends { stream?: boolean }>(
+  myMap: Record<string, Record<string, string>>,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Record<string, Record<string, string>>> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleMapStringToMap(
       myMap,
@@ -3120,10 +4263,20 @@ export const TestFnNamedArgsSingleMapStringToMapAction = async (
  * - Non-streaming: Record<string, string>
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleMapStringToStringAction = async (
+ export async function TestFnNamedArgsSingleMapStringToStringAction<Options extends { stream: true }>(
   myMap: Record<string, string>,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleMapStringToStringAction<Options extends { stream?: false }>(
+  myMap: Record<string, string>,
+  options?: Options
+): Promise<Record<string, string>>;
+
+export async function TestFnNamedArgsSingleMapStringToStringAction<Options extends { stream?: boolean }>(
+  myMap: Record<string, string>,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : Record<string, string>> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleMapStringToString(
       myMap,
@@ -3147,10 +4300,20 @@ export const TestFnNamedArgsSingleMapStringToStringAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleStringAction = async (
+ export async function TestFnNamedArgsSingleStringAction<Options extends { stream: true }>(
   myString: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleStringAction<Options extends { stream?: false }>(
+  myString: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestFnNamedArgsSingleStringAction<Options extends { stream?: boolean }>(
+  myString: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleString(
       myString,
@@ -3174,10 +4337,20 @@ export const TestFnNamedArgsSingleStringAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleStringArrayAction = async (
+ export async function TestFnNamedArgsSingleStringArrayAction<Options extends { stream: true }>(
   myStringArray: string[],
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleStringArrayAction<Options extends { stream?: false }>(
+  myStringArray: string[],
+  options?: Options
+): Promise<string>;
+
+export async function TestFnNamedArgsSingleStringArrayAction<Options extends { stream?: boolean }>(
+  myStringArray: string[],
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleStringArray(
       myStringArray,
@@ -3201,10 +4374,20 @@ export const TestFnNamedArgsSingleStringArrayAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestFnNamedArgsSingleStringListAction = async (
+ export async function TestFnNamedArgsSingleStringListAction<Options extends { stream: true }>(
   myArg: string[],
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestFnNamedArgsSingleStringListAction<Options extends { stream?: false }>(
+  myArg: string[],
+  options?: Options
+): Promise<string>;
+
+export async function TestFnNamedArgsSingleStringListAction<Options extends { stream?: boolean }>(
+  myArg: string[],
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestFnNamedArgsSingleStringList(
       myArg,
@@ -3228,10 +4411,20 @@ export const TestFnNamedArgsSingleStringListAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestGeminiAction = async (
+ export async function TestGeminiAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestGeminiAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestGeminiAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestGemini(
       input,
@@ -3255,10 +4448,20 @@ export const TestGeminiAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestImageInputAction = async (
+ export async function TestImageInputAction<Options extends { stream: true }>(
   img: Image,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestImageInputAction<Options extends { stream?: false }>(
+  img: Image,
+  options?: Options
+): Promise<string>;
+
+export async function TestImageInputAction<Options extends { stream?: boolean }>(
+  img: Image,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestImageInput(
       img,
@@ -3282,10 +4485,20 @@ export const TestImageInputAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestImageInputAnthropicAction = async (
+ export async function TestImageInputAnthropicAction<Options extends { stream: true }>(
   img: Image,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestImageInputAnthropicAction<Options extends { stream?: false }>(
+  img: Image,
+  options?: Options
+): Promise<string>;
+
+export async function TestImageInputAnthropicAction<Options extends { stream?: boolean }>(
+  img: Image,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestImageInputAnthropic(
       img,
@@ -3309,10 +4522,20 @@ export const TestImageInputAnthropicAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestImageListInputAction = async (
+ export async function TestImageListInputAction<Options extends { stream: true }>(
   imgs: Image[],
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestImageListInputAction<Options extends { stream?: false }>(
+  imgs: Image[],
+  options?: Options
+): Promise<string>;
+
+export async function TestImageListInputAction<Options extends { stream?: boolean }>(
+  imgs: Image[],
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestImageListInput(
       imgs,
@@ -3338,11 +4561,23 @@ export const TestImageListInputAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestMulticlassNamedArgsAction = async (
+ export async function TestMulticlassNamedArgsAction<Options extends { stream: true }>(
   myArg: NamedArgsSingleClass,
   myArg2: NamedArgsSingleClass,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestMulticlassNamedArgsAction<Options extends { stream?: false }>(
+  myArg: NamedArgsSingleClass,
+  myArg2: NamedArgsSingleClass,
+  options?: Options
+): Promise<string>;
+
+export async function TestMulticlassNamedArgsAction<Options extends { stream?: boolean }>(
+  myArg: NamedArgsSingleClass,
+  myArg2: NamedArgsSingleClass,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestMulticlassNamedArgs(
       myArg,
@@ -3368,10 +4603,20 @@ export const TestMulticlassNamedArgsAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestNamedArgsLiteralBoolAction = async (
+ export async function TestNamedArgsLiteralBoolAction<Options extends { stream: true }>(
   myBool: true,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestNamedArgsLiteralBoolAction<Options extends { stream?: false }>(
+  myBool: true,
+  options?: Options
+): Promise<string>;
+
+export async function TestNamedArgsLiteralBoolAction<Options extends { stream?: boolean }>(
+  myBool: true,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestNamedArgsLiteralBool(
       myBool,
@@ -3395,10 +4640,20 @@ export const TestNamedArgsLiteralBoolAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestNamedArgsLiteralIntAction = async (
+ export async function TestNamedArgsLiteralIntAction<Options extends { stream: true }>(
   myInt: 1,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestNamedArgsLiteralIntAction<Options extends { stream?: false }>(
+  myInt: 1,
+  options?: Options
+): Promise<string>;
+
+export async function TestNamedArgsLiteralIntAction<Options extends { stream?: boolean }>(
+  myInt: 1,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestNamedArgsLiteralInt(
       myInt,
@@ -3422,10 +4677,20 @@ export const TestNamedArgsLiteralIntAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestNamedArgsLiteralStringAction = async (
+ export async function TestNamedArgsLiteralStringAction<Options extends { stream: true }>(
   myString: "My String",
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestNamedArgsLiteralStringAction<Options extends { stream?: false }>(
+  myString: "My String",
+  options?: Options
+): Promise<string>;
+
+export async function TestNamedArgsLiteralStringAction<Options extends { stream?: boolean }>(
+  myString: "My String",
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestNamedArgsLiteralString(
       myString,
@@ -3449,10 +4714,20 @@ export const TestNamedArgsLiteralStringAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestOllamaAction = async (
+ export async function TestOllamaAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestOllamaAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestOllamaAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestOllama(
       input,
@@ -3476,10 +4751,20 @@ export const TestOllamaAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestOpenAILegacyProviderAction = async (
+ export async function TestOpenAILegacyProviderAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestOpenAILegacyProviderAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestOpenAILegacyProviderAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestOpenAILegacyProvider(
       input,
@@ -3503,10 +4788,20 @@ export const TestOpenAILegacyProviderAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestOpenAIShorthandAction = async (
+ export async function TestOpenAIShorthandAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestOpenAIShorthandAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestOpenAIShorthandAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestOpenAIShorthand(
       input,
@@ -3528,9 +4823,17 @@ export const TestOpenAIShorthandAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestRetryConstantAction = async (
-  options?: { stream?: boolean }
-) => {
+ export async function TestRetryConstantAction<Options extends { stream: true }>(
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestRetryConstantAction<Options extends { stream?: false }>(
+  options?: Options
+): Promise<string>;
+
+export async function TestRetryConstantAction<Options extends { stream?: boolean }>(
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestRetryConstant(
     );
@@ -3550,9 +4853,17 @@ export const TestRetryConstantAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestRetryExponentialAction = async (
-  options?: { stream?: boolean }
-) => {
+ export async function TestRetryExponentialAction<Options extends { stream: true }>(
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestRetryExponentialAction<Options extends { stream?: false }>(
+  options?: Options
+): Promise<string>;
+
+export async function TestRetryExponentialAction<Options extends { stream?: boolean }>(
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestRetryExponential(
     );
@@ -3572,15 +4883,60 @@ export const TestRetryExponentialAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestSingleFallbackClientAction = async (
-  options?: { stream?: boolean }
-) => {
+ export async function TestSingleFallbackClientAction<Options extends { stream: true }>(
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestSingleFallbackClientAction<Options extends { stream?: false }>(
+  options?: Options
+): Promise<string>;
+
+export async function TestSingleFallbackClientAction<Options extends { stream?: boolean }>(
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestSingleFallbackClient(
     );
     return stream.toStreamable();
   }
   return b.TestSingleFallbackClient(
+  );
+};
+
+/**
+ * Server action for the TestUniverseQuestion BAML function.
+ *
+ * Input Types:
+ *
+ * - question: UniverseQuestionInput
+ *
+ *
+ * Return Type:
+ * - Non-streaming: UniverseQuestion
+ * - Streaming: ReadableStream
+ */
+ export async function TestUniverseQuestionAction<Options extends { stream: true }>(
+  question: UniverseQuestionInput,
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestUniverseQuestionAction<Options extends { stream?: false }>(
+  question: UniverseQuestionInput,
+  options?: Options
+): Promise<UniverseQuestion>;
+
+export async function TestUniverseQuestionAction<Options extends { stream?: boolean }>(
+  question: UniverseQuestionInput,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : UniverseQuestion> {
+  if (options?.stream) {
+    const stream = b.stream.TestUniverseQuestion(
+      question,
+    );
+    return stream.toStreamable();
+  }
+  return b.TestUniverseQuestion(
+    question,
   );
 };
 
@@ -3596,10 +4952,20 @@ export const TestSingleFallbackClientAction = async (
  * - Non-streaming: string
  * - Streaming: ReadableStream
  */
-export const TestVertexAction = async (
+ export async function TestVertexAction<Options extends { stream: true }>(
   input: string,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function TestVertexAction<Options extends { stream?: false }>(
+  input: string,
+  options?: Options
+): Promise<string>;
+
+export async function TestVertexAction<Options extends { stream?: boolean }>(
+  input: string,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : string> {
   if (options?.stream) {
     const stream = b.stream.TestVertex(
       input,
@@ -3623,10 +4989,20 @@ export const TestVertexAction = async (
  * - Non-streaming: UnionTest_ReturnType
  * - Streaming: ReadableStream
  */
-export const UnionTest_FunctionAction = async (
+ export async function UnionTest_FunctionAction<Options extends { stream: true }>(
   input: string | boolean,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function UnionTest_FunctionAction<Options extends { stream?: false }>(
+  input: string | boolean,
+  options?: Options
+): Promise<UnionTest_ReturnType>;
+
+export async function UnionTest_FunctionAction<Options extends { stream?: boolean }>(
+  input: string | boolean,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : UnionTest_ReturnType> {
   if (options?.stream) {
     const stream = b.stream.UnionTest_Function(
       input,
@@ -3650,10 +5026,20 @@ export const UnionTest_FunctionAction = async (
  * - Non-streaming: number
  * - Streaming: ReadableStream
  */
-export const UseBlockConstraintAction = async (
+ export async function UseBlockConstraintAction<Options extends { stream: true }>(
   inp: BlockConstraintForParam,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function UseBlockConstraintAction<Options extends { stream?: false }>(
+  inp: BlockConstraintForParam,
+  options?: Options
+): Promise<number>;
+
+export async function UseBlockConstraintAction<Options extends { stream?: boolean }>(
+  inp: BlockConstraintForParam,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : number> {
   if (options?.stream) {
     const stream = b.stream.UseBlockConstraint(
       inp,
@@ -3677,10 +5063,20 @@ export const UseBlockConstraintAction = async (
  * - Non-streaming: number
  * - Streaming: ReadableStream
  */
-export const UseMalformedConstraintsAction = async (
+ export async function UseMalformedConstraintsAction<Options extends { stream: true }>(
   a: MalformedConstraints2,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function UseMalformedConstraintsAction<Options extends { stream?: false }>(
+  a: MalformedConstraints2,
+  options?: Options
+): Promise<number>;
+
+export async function UseMalformedConstraintsAction<Options extends { stream?: boolean }>(
+  a: MalformedConstraints2,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : number> {
   if (options?.stream) {
     const stream = b.stream.UseMalformedConstraints(
       a,
@@ -3704,10 +5100,20 @@ export const UseMalformedConstraintsAction = async (
  * - Non-streaming: number
  * - Streaming: ReadableStream
  */
-export const UseNestedBlockConstraintAction = async (
+ export async function UseNestedBlockConstraintAction<Options extends { stream: true }>(
   inp: NestedBlockConstraintForParam,
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function UseNestedBlockConstraintAction<Options extends { stream?: false }>(
+  inp: NestedBlockConstraintForParam,
+  options?: Options
+): Promise<number>;
+
+export async function UseNestedBlockConstraintAction<Options extends { stream?: boolean }>(
+  inp: NestedBlockConstraintForParam,
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : number> {
   if (options?.stream) {
     const stream = b.stream.UseNestedBlockConstraint(
       inp,

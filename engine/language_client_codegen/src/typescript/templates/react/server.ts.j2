@@ -1,7 +1,6 @@
 'use server'
 
 import { b } from '../index';
-import type { StreamedObject } from './types';
 import { Check, Checked, RecursivePartialNull } from "../types"
 import { Image, Audio } from "@boundaryml/baml"
 import {
@@ -21,12 +20,26 @@ import {
  * - Non-streaming: {{ func.return_type }}
  * - Streaming: ReadableStream
  */
-export const {{ func.name }}Action = async (
+ export async function {{ func.name }}Action<Options extends { stream: true }>(
   {%- for (name, optional, type) in func.args %}
   {{ name }}{% if optional %}?{% endif %}: {{ type }},
   {%- endfor %}
-  options?: { stream?: boolean }
-) => {
+  options?: Options
+): Promise<ReadableStream<Uint8Array>>;
+
+export async function {{ func.name }}Action<Options extends { stream?: false }>(
+  {%- for (name, optional, type) in func.args %}
+  {{ name }}{% if optional %}?{% endif %}: {{ type }},
+  {%- endfor %}
+  options?: Options
+): Promise<{{ func.return_type }}>;
+
+export async function {{ func.name }}Action<Options extends { stream?: boolean }>(
+  {%- for (name, optional, type) in func.args %}
+  {{ name }}{% if optional %}?{% endif %}: {{ type }},
+  {%- endfor %}
+  options?: Options
+): Promise<Options['stream'] extends true ? ReadableStream<Uint8Array> : {{ func.return_type }}> {
   if (options?.stream) {
     const stream = b.stream.{{ func.name }}(
       {%- for (name, _, _) in func.args %}

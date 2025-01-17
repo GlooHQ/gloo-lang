@@ -140,10 +140,6 @@ struct TypescriptTracing {}
 #[template(path = "react/types.ts.j2", escape = "none")]
 struct ReactTypes {}
 
-#[derive(askama::Template)]
-#[template(path = "react/utils.ts.j2", escape = "none")]
-struct ReactUtils {}
-
 pub(crate) fn generate(
     ir: &IntermediateRepr,
     generator: &crate::GeneratorArgs,
@@ -165,7 +161,6 @@ pub(crate) fn generate(
     match framework {
         TypescriptFramework::React => {
             collector.add_template::<ReactTypes>("react/types.ts", (ir, generator))?;
-            collector.add_template::<ReactUtils>("react/utils.ts", (ir, generator))?;
             collector.add_template::<ReactServerActions>("react/server.ts", (ir, generator))?;
             collector.add_template::<ReactClientHooks>("react/client.tsx", (ir, generator))?;
         }
@@ -301,14 +296,6 @@ impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for ReactTypes {
 
     fn try_from(_: (&IntermediateRepr, &crate::GeneratorArgs)) -> Result<Self> {
         Ok(ReactTypes {})
-    }
-}
-
-impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for ReactUtils {
-    type Error = anyhow::Error;
-
-    fn try_from(_: (&IntermediateRepr, &crate::GeneratorArgs)) -> Result<Self> {
-        Ok(ReactUtils {})
     }
 }
 

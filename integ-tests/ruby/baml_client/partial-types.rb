@@ -97,6 +97,8 @@ module Baml
     class Tree < T::Struct; end
     class TwoStoriesOneTitle < T::Struct; end
     class UnionTest_ReturnType < T::Struct; end
+    class UniverseQuestion < T::Struct; end
+    class UniverseQuestionInput < T::Struct; end
     class WithReasoning < T::Struct; end
     class BigNumbers < T::Struct
       include Baml::Sorbet::Struct
@@ -1217,6 +1219,32 @@ module Baml
           prop1: props[:prop1],
           prop2: props[:prop2],
           prop3: props[:prop3],
+        )
+
+        @props = props
+      end
+    end
+    class UniverseQuestion < T::Struct
+      include Baml::Sorbet::Struct
+      const :question, T.nilable(String)
+      const :answer, T.nilable(String)
+
+      def initialize(props)
+        super(
+          question: props[:question],
+          answer: props[:answer],
+        )
+
+        @props = props
+      end
+    end
+    class UniverseQuestionInput < T::Struct
+      include Baml::Sorbet::Struct
+      const :question, T.nilable(String)
+
+      def initialize(props)
+        super(
+          question: props[:question],
         )
 
         @props = props

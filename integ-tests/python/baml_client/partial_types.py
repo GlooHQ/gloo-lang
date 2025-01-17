@@ -370,6 +370,13 @@ class UnionTest_ReturnType(BaseModel):
     prop2: List[Optional[Union[Optional[float], Optional[bool]]]]
     prop3: Optional[Union[List[Optional[bool]], List[Optional[int]]]] = None
 
+class UniverseQuestion(BaseModel):
+    question: Optional[str] = None
+    answer: Optional[str] = None
+
+class UniverseQuestionInput(BaseModel):
+    question: Optional[str] = None
+
 class WithReasoning(BaseModel):
     value: Optional[str] = None
     reasoning: Optional[str] = None
