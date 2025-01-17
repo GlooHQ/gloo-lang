@@ -8,9 +8,18 @@ use super::{
     Rule,
 };
 
-use crate::ast::*;
+use crate::{
+    assert_correct_parser,
+    ast::*,
+    parser::{
+        parse_assignment::parse_assignment,
+        parse_type_expression_block::parse_type_expression_block,
+    },
+};
 use internal_baml_diagnostics::{DatamodelError, Diagnostics};
 
+#[derive(Debug)]
+#[allow(dead_code)]
 /// Blocks allowed in `type_builder` blocks.
 pub enum TypeBuilderEntry {
     /// An enum declaration.
@@ -23,13 +32,156 @@ pub enum TypeBuilderEntry {
     Dynamic(TypeExpressionBlock),
 }
 
+#[allow(dead_code)]
 pub struct TypeBuilderBlock {
     pub entries: Vec<TypeBuilderEntry>,
 }
 
+#[allow(dead_code)]
 pub(crate) fn parse_type_builder_block(
     pair: Pair<'_>,
-    doc_comment: Option<Pair<'_>>,
     diagnostics: &mut Diagnostics,
-) -> Result<ValueExprBlock, DatamodelError> {
+) -> Result<TypeBuilderBlock, DatamodelError> {
+    assert_correct_parser!(pair, Rule::type_builder_block);
+
+    let mut entries = Vec::new();
+
+    for current in pair.into_inner() {
+        match current.as_rule() {
+            // Spaces don't do anything.
+            Rule::SPACER_TEXT => {}
+
+            // First token is the `type_builder` keyword.
+            Rule::TYPE_BUILDER_KEYWORD => {}
+
+            // Second token is opening bracket.
+            Rule::BLOCK_OPEN => {}
+
+            // Block content.
+            Rule::type_builder_contents => {
+                let mut pending_block_comment = None;
+
+                for nested in current.into_inner() {
+                    match nested.as_rule() {
+                        Rule::comment_block => pending_block_comment = Some(nested),
+
+                        Rule::type_expression_block => {
+                            let type_expr = parse_type_expression_block(
+                                nested,
+                                pending_block_comment.take(),
+                                diagnostics,
+                            );
+
+                            match type_expr.sub_type {
+                                SubType::Class => entries.push(TypeBuilderEntry::Class(type_expr)),
+                                SubType::Enum => entries.push(TypeBuilderEntry::Enum(type_expr)),
+                                SubType::Dynamic => {
+                                    entries.push(TypeBuilderEntry::Dynamic(type_expr))
+                                }
+                                _ => {} // may need to save other somehow for error propagation
+                            }
+                        }
+
+                        Rule::type_alias => {
+                            let assignment = parse_assignment(nested, diagnostics);
+                            entries.push(TypeBuilderEntry::TypeAlias(assignment));
+                        }
+
+                        _ => parsing_catch_all(nested, "type_builder_block"),
+                    }
+                }
+            }
+
+            // Last token, closing bracket.
+            Rule::BLOCK_CLOSE => {}
+
+            _ => parsing_catch_all(current, "type_builder_block"),
+        }
+    }
+
+    Ok(TypeBuilderBlock { entries })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::{BAMLParser, Rule};
+    use internal_baml_diagnostics::{Diagnostics, SourceFile};
+    use pest::Parser;
+
+    #[test]
+    fn parse_block() {
+        let root_path = "test_file.baml";
+
+        let input = r#"
+            type_builder {
+                class Example {
+                    a string
+                    b int
+                }
+
+                enum Bar {
+                    A
+                    B
+                }
+
+                /// Some doc
+                /// comment
+                dynamic Cls {
+                    e Example
+                    s string
+                }
+
+                dynamic Enm {
+                    C
+                    D
+                }
+            }
+        "#;
+
+        let source = SourceFile::new_static(root_path.into(), input);
+        let mut diagnostics = Diagnostics::new(root_path.into());
+
+        diagnostics.set_source(&source);
+
+        let parsed = BAMLParser::parse(Rule::type_builder_block, input)
+            .unwrap()
+            .next()
+            .unwrap();
+
+        let type_buider_block = parse_type_builder_block(parsed, &mut diagnostics).unwrap();
+
+        assert_eq!(type_buider_block.entries.len(), 4);
+
+        let TypeBuilderEntry::Class(example) = &type_buider_block.entries[0] else {
+            panic!(
+                "Expected class Example, got {:?}",
+                type_buider_block.entries[0]
+            );
+        };
+
+        let TypeBuilderEntry::Enum(bar) = &type_buider_block.entries[1] else {
+            panic!("Expected enum Bar, got {:?}", type_buider_block.entries[1]);
+        };
+
+        let TypeBuilderEntry::Dynamic(cls) = &type_buider_block.entries[2] else {
+            panic!(
+                "Expected dynamic Cls, got {:?}",
+                type_buider_block.entries[2]
+            );
+        };
+
+        let TypeBuilderEntry::Dynamic(enm) = &type_buider_block.entries[3] else {
+            panic!(
+                "Expected dynamic Enm, got {:?}",
+                type_buider_block.entries[3]
+            );
+        };
+
+        assert_eq!(example.name(), "Example");
+        assert_eq!(bar.name(), "Bar");
+        assert_eq!(cls.name(), "Cls");
+        assert_eq!(cls.documentation(), Some("Some doc\ncomment"));
+        assert_eq!(enm.name(), "Enm");
+    }
 }
