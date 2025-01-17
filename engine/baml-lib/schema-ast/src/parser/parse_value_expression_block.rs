@@ -5,6 +5,7 @@ use super::{
     parse_field::parse_value_expr,
     parse_identifier::parse_identifier,
     parse_named_args_list::{parse_function_arg, parse_named_argument_list},
+    parse_type_builder_block::parse_type_builder_block,
     Rule,
 };
 
@@ -21,6 +22,7 @@ pub(crate) fn parse_value_expression_block(
     let mut attributes: Vec<Attribute> = Vec::new();
     let mut input = None;
     let mut output = None;
+    let mut type_builder = None;
     let mut fields: Vec<Field<Expression>> = vec![];
     let mut sub_type: Option<ValueExprBlockType> = None;
     let mut has_arrow = false;
@@ -35,9 +37,7 @@ pub(crate) fn parse_value_expression_block(
                 "generator" => sub_type = Some(ValueExprBlockType::Generator),
                 _ => panic!("Unexpected value expression keyword: {}", current.as_str()),
             },
-            Rule::ARROW => {
-                has_arrow = true;
-            }
+            Rule::ARROW => has_arrow = true,
             Rule::identifier => name = Some(parse_identifier(current, diagnostics)),
             Rule::named_argument_list => match parse_named_argument_list(current, diagnostics) {
                 Ok(arg) => input = Some(arg),
@@ -85,6 +85,10 @@ pub(crate) fn parse_value_expression_block(
                             }
 
                             pending_field_comment = None;
+                        }
+
+                        Rule::type_builder_block => {
+                            type_builder = Some(parse_type_builder_block(item, diagnostics)?);
                         }
 
                         Rule::comment_block => pending_field_comment = Some(item),
@@ -140,6 +144,7 @@ pub(crate) fn parse_value_expression_block(
                             fields,
                             documentation: doc_comment.and_then(parse_comment_block),
                             span: diagnostics.span(pair_span),
+                            type_builder,
                             block_type: sub_type.unwrap_or(ValueExprBlockType::Function), // Unwrap or provide a default
                         });
                     }
@@ -156,6 +161,7 @@ pub(crate) fn parse_value_expression_block(
                     fields,
                     documentation: doc_comment.and_then(parse_comment_block),
                     span: diagnostics.span(pair_span),
+                    type_builder,
                     block_type: sub_type.unwrap_or(ValueExprBlockType::Function), // Unwrap or provide a default
                 });
             };

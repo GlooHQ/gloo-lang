@@ -15,6 +15,7 @@ mod newline_type;
 mod template_string;
 mod top;
 mod traits;
+mod type_builder_block;
 mod type_expression_block;
 mod value_expression_block;
 pub(crate) use self::comment::Comment;
@@ -32,6 +33,7 @@ pub use newline_type::NewlineType;
 pub use template_string::TemplateString;
 pub use top::Top;
 pub use traits::{WithAttributes, WithDocumentation, WithIdentifier, WithName, WithSpan};
+pub use type_builder_block::{TypeBuilderBlock, TypeBuilderEntry};
 pub use type_expression_block::{FieldId, SubType, TypeExpressionBlock};
 pub use value_expression_block::{BlockArg, BlockArgs, ValueExprBlock, ValueExprBlockType};
 

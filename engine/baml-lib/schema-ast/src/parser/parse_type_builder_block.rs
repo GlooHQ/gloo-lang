@@ -13,26 +13,6 @@ use crate::{
 };
 use internal_baml_diagnostics::{DatamodelError, Diagnostics};
 
-#[derive(Debug)]
-#[allow(dead_code)]
-/// Blocks allowed in `type_builder` blocks.
-pub enum TypeBuilderEntry {
-    /// An enum declaration.
-    Enum(TypeExpressionBlock),
-    /// A class declaration.
-    Class(TypeExpressionBlock),
-    /// Type alias expression.
-    TypeAlias(Assignment),
-    /// Dynamic block.
-    Dynamic(TypeExpressionBlock),
-}
-
-#[allow(dead_code)]
-pub struct TypeBuilderBlock {
-    pub entries: Vec<TypeBuilderEntry>,
-}
-
-#[allow(dead_code)]
 pub(crate) fn parse_type_builder_block(
     pair: Pair<'_>,
     diagnostics: &mut Diagnostics,
