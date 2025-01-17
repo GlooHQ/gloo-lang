@@ -32,7 +32,7 @@ value_expression          = { identifier ~ expression? ~ (NEWLINE? ~ field_attri
 // ######################################
 
 type_builder_block = {
-    SPACER_TEXT ~ TYPE_BUILDER_KEYWORD ~ SPACER_TEXT ~ BLOCK_OPEN ~ type_builder_contents ~ BLOCK_CLOSE
+    TYPE_BUILDER_KEYWORD ~ BLOCK_OPEN ~ type_builder_contents ~ BLOCK_CLOSE
 }
 type_builder_contents = { (type_expression_block | type_alias | comment_block | empty_lines | BLOCK_LEVEL_CATCH_ALL)* }
 

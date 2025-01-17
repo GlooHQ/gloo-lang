@@ -1,10 +1,5 @@
 use super::{
     helpers::{parsing_catch_all, Pair},
-    parse_attribute::parse_attribute,
-    parse_comments::*,
-    parse_field::parse_value_expr,
-    parse_identifier::parse_identifier,
-    parse_named_args_list::{parse_function_arg, parse_named_argument_list},
     Rule,
 };
 
@@ -48,9 +43,6 @@ pub(crate) fn parse_type_builder_block(
 
     for current in pair.into_inner() {
         match current.as_rule() {
-            // Spaces don't do anything.
-            Rule::SPACER_TEXT => {}
-
             // First token is the `type_builder` keyword.
             Rule::TYPE_BUILDER_KEYWORD => {}
 
@@ -113,31 +105,29 @@ mod tests {
     fn parse_block() {
         let root_path = "test_file.baml";
 
-        let input = r#"
-            type_builder {
-                class Example {
-                    a string
-                    b int
-                }
-
-                enum Bar {
-                    A
-                    B
-                }
-
-                /// Some doc
-                /// comment
-                dynamic Cls {
-                    e Example
-                    s string
-                }
-
-                dynamic Enm {
-                    C
-                    D
-                }
+        let input = r#"type_builder {
+            class Example {
+                a string
+                b int
             }
-        "#;
+
+            enum Bar {
+                A
+                B
+            }
+
+            /// Some doc
+            /// comment
+            dynamic Cls {
+                e Example
+                s string
+            }
+
+            dynamic Enm {
+                C
+                D
+            }
+        }"#;
 
         let source = SourceFile::new_static(root_path.into(), input);
         let mut diagnostics = Diagnostics::new(root_path.into());
