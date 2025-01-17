@@ -4,6 +4,8 @@
 >
   Which finish reasons are allowed? **Default: `null`**
 
+  <Warning>version 0.73.0 onwards: This is case insensitive.</Warning>
+
   Will raise a `BamlClientFinishReasonError` if the finish reason is not in the allow list. See [Exceptions](/guide/baml-basics/error-handling#bamlclientfinishreasonerror) for more details.
 
   Note, only one of `finish_reason_allow_list` or `finish_reason_deny_list` can be set.
@@ -29,6 +31,8 @@
   type="string[]"
 >
   Which finish reasons are denied? **Default: `null`**
+
+  <Warning>version 0.73.0 onwards: This is case insensitive.</Warning>
 
   Will raise a `BamlClientFinishReasonError` if the finish reason is in the deny list. See [Exceptions](/guide/baml-basics/error-handling#bamlclientfinishreasonerror) for more details.
 

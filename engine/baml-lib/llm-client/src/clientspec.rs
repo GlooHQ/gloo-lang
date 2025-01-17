@@ -251,15 +251,18 @@ impl FinishReasonFilter {
         match self {
             Self::AllowList(allow) => {
                 let Some(reason) = reason.map(|r| r.as_ref().to_string()) else {
-                    return false;
+                    // if no reason is provided, allow all
+                    return true;
                 };
-                allow.contains(&reason)
+                // check case insensitive
+                allow.iter().any(|r| r.eq_ignore_ascii_case(&reason))
             }
             Self::DenyList(deny) => {
                 let Some(reason) = reason.map(|r| r.as_ref().to_string()) else {
+                    // if no reason is provided, allow all
                     return true;
                 };
-                !deny.contains(&reason)
+                !deny.iter().any(|r| r.eq_ignore_ascii_case(&reason))
             }
             Self::All => true,
         }
