@@ -51,6 +51,9 @@ export const BAMLLanguage = LRLanguage.define({
         ClassDecl: t.keyword,
         'ClassDecl/IdentifierDecl': t.typeName,
 
+        TypeAliasDecl: t.keyword,
+        'TypeAliasDecl/IdentifierDecl': t.typeName,
+
         ClientDecl: t.keyword,
         'ClientDecl/IdentifierDecl': t.typeName,
 
@@ -122,6 +125,7 @@ const exampleCompletion = BAMLLanguage.data.of({
     snippetCompletion('template_string MyString(${arg1}: string) #"\n  A jinja string\n"#', {
       label: 'template_string',
     }),
+    snippetCompletion('type ${AliasName} = ${TypeExpr};', { label: 'type alias' }),
   ],
 })
 
