@@ -1,0 +1,150 @@
+# Next.js Environment Setup with BAML
+
+This guide explains how to properly set up and manage environment variables in your Next.js application with BAML. We'll cover development and production environments, type safety, and validation.
+
+## Basic Setup
+
+{/* Include the environment setup snippet */}
+<Markdown src="../../snippets/framework/environment-setup.mdx" />
+
+## Type Safety
+
+Create a type definition file for your environment variables:
+
+```typescript
+// env.d.ts
+declare namespace NodeJS {
+  interface ProcessEnv {
+    BAML_LOG: string;
+    OPENAI_API_KEY: string;
+    ANTHROPIC_API_KEY?: string;
+    COHERE_API_KEY?: string;
+    NODE_ENV: 'development' | 'production' | 'test';
+  }
+}
+```
+
+## Validation
+
+Use `zod` to validate environment variables:
+
+```typescript
+// lib/env.ts
+import { z } from 'zod';
+
+const envSchema = z.object({
+  BAML_LOG: z.string().default('info'),
+  OPENAI_API_KEY: z.string().min(1),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  COHERE_API_KEY: z.string().optional(),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+});
+
+export const env = envSchema.parse(process.env);
+```
+
+## Development Tools
+
+### VSCode Settings
+
+Create `.vscode/settings.json`:
+
+```json
+{
+  "files.associations": {
+    ".env.local": "dotenv",
+    ".env.development": "dotenv",
+    ".env.production": "dotenv"
+  }
+}
+```
+
+### Environment Files
+
+Create environment files for different stages:
+
+```bash
+# .env.development
+BAML_LOG=debug
+NODE_ENV=development
+
+# .env.production
+BAML_LOG=info
+NODE_ENV=production
+```
+
+## Common Issues
+
+### Environment Variables Not Loading
+
+If environment variables aren't loading properly:
+
+1. Check file naming:
+   - `.env.local` for local overrides
+   - `.env.development` for development
+   - `.env.production` for production
+
+2. Verify loading order:
+   ```bash
+   .env.local
+   .env.development
+   .env
+   ```
+
+3. Use `dotenv-cli` for local development:
+   ```json
+   {
+     "scripts": {
+       "dev": "dotenv -e .env.local -- next dev"
+     }
+   }
+   ```
+
+### Provider Configuration
+
+If you're having issues with provider configuration:
+
+1. Check API key format:
+   ```bash
+   # Correct format
+   OPENAI_API_KEY=sk-...
+   ANTHROPIC_API_KEY=sk-ant-...
+   ```
+
+2. Verify environment loading:
+   ```typescript
+   console.log('BAML_LOG:', process.env.BAML_LOG);
+   console.log('NODE_ENV:', process.env.NODE_ENV);
+   ```
+
+## Best Practices
+
+1. **Security**
+   - Never commit `.env` files
+   - Use different keys for development and production
+   - Rotate keys regularly
+   - Implement proper access controls
+
+2. **Organization**
+   - Group related variables
+   - Use consistent naming conventions
+   - Document required variables
+   - Keep environment files clean
+
+3. **Validation**
+   - Validate all environment variables
+   - Provide meaningful error messages
+   - Use type safety
+   - Handle missing variables gracefully
+
+4. **Development**
+   - Use local overrides
+   - Document setup steps
+   - Provide example files
+   - Use environment-specific configurations
+
+## Next Steps
+
+- Learn about [Deployment](./nextjs-deployment) options
+- Explore [Examples](./nextjs-examples) for more use cases
+- Check out [React Server Components](./nextjs-rsc) for advanced usage

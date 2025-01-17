@@ -1,0 +1,151 @@
+---
+title: Next.js Streaming with BAML
+---
+
+This guide explains how to implement streaming responses in your Next.js application using BAML. Streaming allows you to display partial results to users in real-time, improving the perceived performance of your application.
+
+## Overview
+
+BAML provides built-in support for streaming responses from LLM providers. When combined with Next.js's streaming capabilities, you can create responsive applications that update in real-time as responses are generated.
+
+
+## React Integration
+
+<Markdown src="../../snippets/react/streaming-hook.mdx" />
+
+## Error Handling
+
+<Markdown src="../../snippets/react/error-boundary.mdx" />
+
+## Advanced Usage
+
+### Multiple Streams
+
+You can handle multiple streams simultaneously:
+
+```typescript
+'use client'
+
+import { useStream } from "@/app/hooks/useStream";
+import { generateText, generateSummary } from "@/app/actions/ai";
+
+export default function MultiStreamExample() {
+  const textStream = useStream(generateText);
+  const summaryStream = useStream(generateSummary);
+
+  const handleSubmit = async (prompt: string) => {
+    const text = await textStream.mutate(prompt);
+    if (text) {
+      await summaryStream.mutate(text);
+    }
+  };
+
+  return (
+    <div>
+      {/* Render both streams */}
+      <div>
+        <h3>Generated Text:</h3>
+        <pre>{textStream.partialData || textStream.data}</pre>
+      </div>
+      <div>
+        <h3>Summary:</h3>
+        <pre>{summaryStream.partialData || summaryStream.data}</pre>
+      </div>
+    </div>
+  );
+}
+```
+
+### Canceling Streams
+
+You can cancel streams using AbortController:
+
+```typescript
+'use client'
+
+import { useRef } from "react";
+import { useStream } from "@/app/hooks/useStream";
+import { generateText } from "@/app/actions/ai";
+
+export default function CancellableStream() {
+  const abortRef = useRef<AbortController>();
+  const { mutate, isLoading } = useStream(generateText);
+
+  const handleStart = async (prompt: string) => {
+    abortRef.current = new AbortController();
+    await mutate(prompt, { signal: abortRef.current.signal });
+  };
+
+  const handleCancel = () => {
+    abortRef.current?.abort();
+  };
+
+  return (
+    <div>
+      <button onClick={() => handleStart("Your prompt")}>Start</button>
+      <button onClick={handleCancel} disabled={!isLoading}>
+        Cancel
+      </button>
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+1. **Memory Management**
+   - Clean up streams on component unmount
+   - Cancel unused streams
+   - Avoid memory leaks in callbacks
+
+2. **Error Handling**
+   - Implement retry mechanisms
+   - Show meaningful error messages
+   - Handle network interruptions
+
+3. **Performance**
+   - Use debouncing for rapid updates
+   - Implement proper loading states
+   - Monitor memory usage
+
+4. **User Experience**
+   - Show loading indicators
+   - Provide cancel options
+   - Handle partial results gracefully
+
+## Common Issues
+
+### Memory Leaks
+
+Ensure proper cleanup in your components:
+
+```typescript
+useEffect(() => {
+  return () => {
+    // Clean up any active streams
+    abortController.abort();
+  };
+}, []);
+```
+
+### Network Interruptions
+
+Handle network issues gracefully:
+
+```typescript
+try {
+  await stream.mutate(prompt);
+} catch (error) {
+  if (error.name === 'AbortError') {
+    console.log('Stream was cancelled');
+  } else {
+    console.error('Network error:', error);
+  }
+}
+```
+
+## Next Steps
+
+- Learn about [Environment Setup](./nextjs-environment) for configuration
+- Explore [Deployment](./nextjs-deployment) options
+- Check out [Examples](./nextjs-examples) for more use cases

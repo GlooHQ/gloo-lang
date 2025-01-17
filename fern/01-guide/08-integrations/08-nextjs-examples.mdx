@@ -1,0 +1,450 @@
+---
+title: Next.js Examples with BAML
+---
+
+This guide provides practical examples of integrating BAML with Next.js, from basic usage to advanced patterns.
+
+## Basic Examples
+
+### Text Generation
+
+```typescript
+// app/actions/generate.ts
+'use server'
+
+import { b } from "@/baml_client";
+import { streamHelper } from "@/app/utils/streamHelper";
+
+export async function generateText(prompt: string) {
+  const stream = b.chat.stream({
+    messages: [{ role: "user", content: prompt }]
+  });
+  return streamHelper(stream);
+}
+```
+
+```typescript
+// app/components/TextGenerator.tsx
+'use client'
+
+import { generateText } from "@/app/actions/generate";
+import { useStream } from "@/app/hooks/useStream";
+import { BamlErrorBoundary } from "@/app/components/ErrorBoundary";
+
+export default function TextGenerator() {
+  const { data, partialData, isLoading, mutate } = useStream(generateText);
+
+  return (
+    <BamlErrorBoundary>
+      <div className="p-4">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const form = e.target as HTMLFormElement;
+          const input = form.elements.namedItem('prompt') as HTMLInputElement;
+          mutate(input.value);
+          input.value = '';
+        }}>
+          <input
+            name="prompt"
+            className="w-full p-2 border rounded"
+            placeholder="Enter your prompt..."
+          />
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            {isLoading ? 'Generating...' : 'Generate'}
+          </button>
+        </form>
+
+        {partialData && (
+          <div className="mt-4">
+            <h3>Streaming Response:</h3>
+            <pre className="mt-2 p-4 bg-gray-100 rounded">
+              {partialData}
+            </pre>
+          </div>
+        )}
+
+        {data && (
+          <div className="mt-4">
+            <h3>Final Response:</h3>
+            <pre className="mt-2 p-4 bg-gray-100 rounded">
+              {data}
+            </pre>
+          </div>
+        )}
+      </div>
+    </BamlErrorBoundary>
+  );
+}
+```
+
+### Structured Output
+
+```typescript
+// app/actions/extract.ts
+'use server'
+
+import { b } from "@/baml_client";
+import { streamHelper } from "@/app/utils/streamHelper";
+
+export async function extractData(text: string) {
+  const stream = b.functions.extractData.stream({ text });
+  return streamHelper(stream);
+}
+```
+
+```typescript
+// app/components/DataExtractor.tsx
+'use client'
+
+import { extractData } from "@/app/actions/extract";
+import { useStream } from "@/app/hooks/useStream";
+import { BamlErrorBoundary } from "@/app/components/ErrorBoundary";
+
+export default function DataExtractor() {
+  const { data, partialData, isLoading, mutate } = useStream(extractData);
+
+  return (
+    <BamlErrorBoundary>
+      <div className="p-4">
+        <textarea
+          className="w-full p-2 border rounded"
+          placeholder="Enter text to extract data from..."
+          onChange={(e) => mutate(e.target.value)}
+        />
+
+        {isLoading && (
+          <div className="mt-2">
+            <div className="animate-pulse bg-gray-200 h-4 w-24 rounded" />
+          </div>
+        )}
+
+        {partialData && (
+          <div className="mt-4">
+            <h3>Extracted Data (Streaming):</h3>
+            <pre className="mt-2 p-4 bg-gray-100 rounded">
+              {JSON.stringify(partialData, null, 2)}
+            </pre>
+          </div>
+        )}
+
+        {data && (
+          <div className="mt-4">
+            <h3>Final Extracted Data:</h3>
+            <pre className="mt-2 p-4 bg-gray-100 rounded">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
+    </BamlErrorBoundary>
+  );
+}
+```
+
+## Advanced Examples
+
+### Chat Interface
+
+```typescript
+// app/actions/chat.ts
+'use server'
+
+import { b } from "@/baml_client";
+import { streamHelper } from "@/app/utils/streamHelper";
+
+export type Message = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export async function chatStream(messages: Message[]) {
+  const stream = b.chat.stream({ messages });
+  return streamHelper(stream);
+}
+```
+
+```typescript
+// app/components/Chat.tsx
+'use client'
+
+import { useState } from "react";
+import { Message, chatStream } from "@/app/actions/chat";
+import { useStream } from "@/app/hooks/useStream";
+import { BamlErrorBoundary } from "@/app/components/ErrorBoundary";
+
+export default function Chat() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const { partialData, isLoading, mutate } = useStream(chatStream);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const input = form.elements.namedItem('message') as HTMLInputElement;
+    const userMessage = input.value;
+    input.value = '';
+
+    const newMessages = [
+      ...messages,
+      { role: "user", content: userMessage }
+    ];
+    setMessages(newMessages);
+
+    const response = await mutate(newMessages);
+    if (response) {
+      setMessages([
+        ...newMessages,
+        { role: "assistant", content: response }
+      ]);
+    }
+  };
+
+  return (
+    <BamlErrorBoundary>
+      <div className="p-4">
+        <div className="mb-4 space-y-4">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`p-2 rounded ${
+                msg.role === "user" ? "bg-blue-100" : "bg-gray-100"
+              }`}
+            >
+              <strong>{msg.role}:</strong> {msg.content}
+            </div>
+          ))}
+          {partialData && (
+            <div className="p-2 rounded bg-gray-100">
+              <strong>assistant:</strong> {partialData}
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            name="message"
+            className="w-full p-2 border rounded"
+            placeholder="Type your message..."
+            disabled={isLoading}
+          />
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            {isLoading ? 'Sending...' : 'Send'}
+          </button>
+        </form>
+      </div>
+    </BamlErrorBoundary>
+  );
+}
+```
+
+### Multi-Modal Processing
+
+```typescript
+// app/actions/analyze.ts
+'use server'
+
+import { b } from "@/baml_client";
+import { streamHelper } from "@/app/utils/streamHelper";
+
+export async function analyzeImage(imageUrl: string) {
+  const stream = b.functions.analyzeImage.stream({ imageUrl });
+  return streamHelper(stream);
+}
+```
+
+```typescript
+// app/components/ImageAnalyzer.tsx
+'use client'
+
+import { useState } from "react";
+import { analyzeImage } from "@/app/actions/analyze";
+import { useStream } from "@/app/hooks/useStream";
+import { BamlErrorBoundary } from "@/app/components/ErrorBoundary";
+
+export default function ImageAnalyzer() {
+  const [imageUrl, setImageUrl] = useState("");
+  const { data, partialData, isLoading, mutate } = useStream(analyzeImage);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // In a real app, you would upload this to a storage service
+      const url = URL.createObjectURL(file);
+      setImageUrl(url);
+      await mutate(url);
+    }
+  };
+
+  return (
+    <BamlErrorBoundary>
+      <div className="p-4">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          disabled={isLoading}
+          className="mb-4"
+        />
+
+        {imageUrl && (
+          <img
+            src={imageUrl}
+            alt="Uploaded image"
+            className="max-w-md mb-4 rounded"
+          />
+        )}
+
+        {isLoading && (
+          <div className="animate-pulse bg-gray-200 h-4 w-24 rounded" />
+        )}
+
+        {partialData && (
+          <div className="mt-4">
+            <h3>Analysis (Streaming):</h3>
+            <pre className="mt-2 p-4 bg-gray-100 rounded">
+              {JSON.stringify(partialData, null, 2)}
+            </pre>
+          </div>
+        )}
+
+        {data && (
+          <div className="mt-4">
+            <h3>Final Analysis:</h3>
+            <pre className="mt-2 p-4 bg-gray-100 rounded">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
+    </BamlErrorBoundary>
+  );
+}
+```
+
+## Integration Patterns
+
+### Error Boundary Integration
+
+{/* <Markdown src="../../snippets/react/error-boundary.mdx" /> */}
+
+### Loading UI Integration
+
+```typescript
+// app/components/LoadingUI.tsx
+export function LoadingUI() {
+  return (
+    <div className="animate-pulse space-y-4">
+      <div className="h-4 bg-gray-200 rounded w-3/4" />
+      <div className="h-4 bg-gray-200 rounded" />
+      <div className="h-4 bg-gray-200 rounded w-5/6" />
+    </div>
+  );
+}
+```
+
+### Suspense Integration
+
+```typescript
+// app/components/SuspenseExample.tsx
+import { Suspense } from "react";
+import { LoadingUI } from "./LoadingUI";
+
+export default function SuspenseExample() {
+  return (
+    <div className="space-y-4">
+      <Suspense fallback={<LoadingUI />}>
+        <TextGenerator />
+      </Suspense>
+      <Suspense fallback={<LoadingUI />}>
+        <DataExtractor />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+## Monitoring Examples
+
+### Performance Monitoring
+
+```typescript
+// lib/monitoring.ts
+import { b } from "@/baml_client";
+
+export function setupMonitoring() {
+  // Track function calls
+  b.registry.on('functionCall', (event) => {
+    console.log('Function called:', {
+      name: event.functionName,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Track token usage
+  b.registry.on('tokenUsage', (event) => {
+    console.log('Token usage:', {
+      function: event.functionName,
+      totalTokens: event.totalTokens,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Track errors
+  b.registry.on('error', (error) => {
+    console.error('BAML error:', {
+      message: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  });
+}
+```
+
+### Usage Analytics
+
+```typescript
+// lib/analytics.ts
+import { b } from "@/baml_client";
+
+export function trackUsage() {
+  let totalTokens = 0;
+  let functionCalls = 0;
+
+  b.registry.on('tokenUsage', (event) => {
+    totalTokens += event.totalTokens;
+  });
+
+  b.registry.on('functionCall', () => {
+    functionCalls++;
+  });
+
+  // Report usage every hour
+  setInterval(() => {
+    console.log('Usage stats:', {
+      totalTokens,
+      functionCalls,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Reset counters
+    totalTokens = 0;
+    functionCalls = 0;
+  }, 3600000);
+}
+```
+
+## Next Steps
+
+- Learn about [Streaming](./nextjs-streaming) optimizations
+- Explore [Deployment](./nextjs-deployment) options
+- Check out [Environment Setup](./nextjs-environment) for configuration
+
+<Note>
+These examples use Tailwind CSS for styling. Make sure to have Tailwind CSS installed and configured in your Next.js project.
+</Note>

@@ -1,0 +1,41 @@
+{
+	"name": "@boundaryml/baml-darwin-arm64",
+	"version": "0.72.0",
+	"cpu": [
+		"arm64"
+	],
+	"main": "baml.darwin-arm64.node",
+	"files": [
+		"baml.darwin-arm64.node"
+	],
+	"description": "BAML typescript bindings (package.json)",
+	"keywords": [
+		"napi-rs",
+		"NAPI",
+		"N-API",
+		"Rust",
+		"node-addon",
+		"node-addon-api"
+	],
+	"author": "",
+	"homepage": "https://github.com/BoundaryML/baml#readme",
+	"license": "MIT",
+	"engines": {
+		"node": ">= 10"
+	},
+	"publishConfig": {
+		"registry": "https://registry.npmjs.org/",
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/BoundaryML/baml.git",
+		"directory": "engine/language_client_typescript"
+	},
+	"bugs": {
+		"url": "https://github.com/BoundaryML/baml/issues"
+	},
+	"os": [
+		"darwin"
+	]
+}

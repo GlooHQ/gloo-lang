@@ -1,0 +1,279 @@
+---
+title: Next.js App Router Setup
+---
+
+This guide walks you through setting up BAML with Next.js App Router, leveraging Server Actions and React Server Components for optimal performance.
+
+{/* <Steps> */}
+### Install Dependencies
+
+First, install BAML and its dependencies:
+
+<CodeBlocks>
+```bash npm
+npm install @boundaryml/baml
+```
+
+```bash pnpm
+pnpm add @boundaryml/baml
+```
+
+```bash yarn
+yarn add @boundaryml/baml
+```
+</CodeBlocks>
+
+### Configure Next.js
+
+Update your `next.config.mjs` to support BAML's native node addon:
+
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ["@boundaryml/baml"],
+  },
+  webpack: (config, { dev, isServer, webpack, nextRuntime }) => {
+    config.module.rules.push({
+      test: /\.node$/,
+      use: [
+        {
+          loader: "nextjs-node-loader",
+          options: {
+            outputPath: config.output.path,
+          },
+        },
+      ],
+    });
+
+    return config;
+  },
+};
+
+export default nextConfig;
+```
+
+### Initialize BAML
+
+Create a new BAML project in your Next.js application:
+
+<CodeBlocks>
+```bash npm
+npx baml-cli init
+```
+
+```bash pnpm
+pnpm exec baml-cli init
+```
+
+```bash yarn
+yarn baml-cli init
+```
+</CodeBlocks>
+
+This will create a `baml_src` directory with starter code.
+
+### Create Helper Utilities
+
+Create a new file `app/utils/streamableObject.tsx` to handle streaming:
+
+```typescript
+import { createStreamableValue, StreamableValue as BaseStreamableValue } from "ai/rsc";
+import { BamlStream } from "@boundaryml/baml";
+import { b } from "@/baml_client";
+
+type StreamableValue<T extends BamlStream<any, any>> =
+  | { partial: T extends BamlStream<infer StreamRet, any> ? StreamRet : never }
+  | { final: T extends BamlStream<any, infer Ret> ? Ret : never };
+
+export async function streamHelper<T extends BamlStream<any, any>>(
+  bamlStream: T,
+): Promise<{
+  object: BaseStreamableValue<StreamableValue<T>>;
+}> {
+  const stream = createStreamableValue<StreamableValue<T>>();
+
+  (async () => {
+    try {
+      for await (const event of bamlStream) {
+        stream.update({ partial: event });
+      }
+
+      const response = await bamlStream.getFinalResponse();
+      stream.done({ final: response });
+    } catch (err) {
+      stream.error(err);
+    }
+  })();
+
+  return { object: stream.value };
+}
+```
+
+### Create a Custom Hook
+
+Create `app/hooks/useStream.ts` for managing streaming state:
+
+```typescript
+import { useState } from "react";
+import { readStreamableValue, StreamableValue } from "ai/rsc";
+
+export function useStream<PartialRet, Ret, P extends any[]>(
+  serverAction: (...args: P) => Promise<{ object: StreamableValue<{ partial: PartialRet } | { final: Ret }, any> }>
+) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [partialData, setPartialData] = useState<PartialRet | undefined>(undefined);
+  const [streamResult, setData] = useState<Ret | undefined>(undefined);
+
+  const mutate = async (
+    ...params: Parameters<typeof serverAction>
+  ): Promise<Ret | undefined> => {
+    setIsLoading(true);
+    setIsError(false);
+    setError(null);
+
+    try {
+      const { object } = await serverAction(...params);
+      const asyncIterable = readStreamableValue(object);
+
+      for await (const value of asyncIterable) {
+        if (value !== undefined) {
+          if ("partial" in value) {
+            setPartialData(value.partial);
+          } else if ("final" in value) {
+            setData(value.final);
+            setIsComplete(true);
+            return value.final;
+          }
+        }
+      }
+    } catch (err) {
+      setIsError(true);
+      setError(new Error(JSON.stringify(err) ?? "An error occurred"));
+      return undefined;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { data: streamResult, partialData, isLoading, isComplete, isError, error, mutate };
+}
+```
+
+### Create a Server Action
+
+Create `app/actions/streamable_objects.ts`:
+
+```typescript
+'use server'
+
+import { b } from "@/baml_client";
+import { streamHelper } from "@/app/utils/streamableObject";
+
+export async function extractResume(text: string) {
+  const stream = b.functions.extractResume({ text });
+  return streamHelper(stream);
+}
+```
+
+### Use in a Component
+
+Create or update `app/page.tsx`:
+
+```typescript
+'use client'
+
+import { extractResume } from "@/app/actions/streamable_objects";
+import { useStream } from "@/app/hooks/useStream";
+import { Resume } from "@/baml_client";
+
+export default function Home() {
+  const {
+    data: completedData,
+    partialData,
+    isLoading,
+    isError,
+    error,
+    mutate
+  } = useStream(extractResume);
+
+  return (
+    <div>
+      <h1>BAML Next.js Example</h1>
+
+      <button onClick={() => mutate("Sample resume text")}>
+        Extract Resume
+      </button>
+
+      {isLoading && <p>Processing...</p>}
+      {isError && <p>Error: {error?.message}</p>}
+      {partialData && (
+        <div>
+          <h2>Partial Results:</h2>
+          <pre>{JSON.stringify(partialData, null, 2)}</pre>
+        </div>
+      )}
+      {completedData && (
+        <div>
+          <h2>Final Results:</h2>
+          <pre>{JSON.stringify(completedData, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Update Package Scripts
+
+Update your `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "BAML_LOG=info next dev",
+    "build": "baml-cli generate && next build",
+    "start": "next start",
+    "generate": "baml-cli generate"
+  }
+}
+```
+
+{/* </Steps> */}
+
+## Environment Variables
+
+For local development, create a `.env.local` file:
+
+```bash
+BAML_LOG=info
+OPENAI_API_KEY=your_api_key_here
+# Add other provider keys as needed
+```
+
+<Note>
+If you have issues with environment variables not loading, you can use [dotenv-cli](https://www.npmjs.com/package/dotenv-cli):
+
+```bash
+npm install -D dotenv-cli
+```
+
+Then update your dev script:
+```json
+{
+  "scripts": {
+    "dev": "dotenv -- next dev"
+  }
+}
+```
+</Note>
+
+## Next Steps
+
+- Learn about [streaming responses](./nextjs-streaming) in detail
+- Set up your [environment variables](./nextjs-environment)
+- Explore [deployment options](./nextjs-deployment)
+- Check out [example projects](./nextjs-examples)

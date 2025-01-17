@@ -1,0 +1,73 @@
+---
+title: Next.js Integration Overview
+---
+
+BAML provides first-class support for Next.js, allowing you to seamlessly integrate AI capabilities into your Next.js applications. This integration supports both the App Router and Pages Router, with built-in features for streaming responses, type safety, and efficient state management.
+
+## Key Features
+
+- **Full App Router Support**: Native support for React Server Components and Server Actions
+- **Pages Router Compatibility**: Support for traditional Next.js routing with API Routes
+- **Streaming Responses**: Real-time streaming of LLM responses to your UI
+- **Type Safety**: Full TypeScript support with automatic type generation
+- **State Management**: Built-in hooks for managing streaming state
+- **Environment Management**: Seamless handling of environment variables
+- **Production Ready**: Optimized for production deployments
+
+## Getting Started
+
+The fastest way to get started is to use our Next.js starter template:
+
+```bash
+git clone https://github.com/BoundaryML/baml-examples.git
+cd baml-examples/nextjs-starter
+```
+
+Or check out our [live demo](https://baml-examples.vercel.app/) to see it in action.
+
+## Choose Your Setup
+
+BAML supports two main approaches for Next.js integration:
+
+1. **App Router (Recommended)**
+   - Uses React Server Components
+   - Leverages Server Actions for API calls
+   - Provides better performance and SEO
+   - [Get started with App Router →](./nextjs-app-router)
+
+2. **Pages Router**
+   - Uses traditional API Routes
+   - Familiar routing system
+   - Compatible with older Next.js projects
+   - [Get started with Pages Router →](./nextjs-pages-router)
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- Node.js 16.8 or later
+- Next.js 13 or later
+- TypeScript (recommended)
+- BAML CLI and VSCode/Cursor extension installed
+
+## Next Steps
+
+1. Choose your router architecture and follow the setup guide:
+   - [App Router Setup](./nextjs-app-router)
+   - [Pages Router Setup](./nextjs-pages-router)
+
+2. Learn about streaming responses:
+   - [Streaming Guide](./nextjs-streaming)
+
+3. Configure your environment:
+   - [Environment Setup](./nextjs-environment)
+
+4. Deploy your application:
+   - [Deployment Guide](./nextjs-deployment)
+
+5. Explore examples:
+   - [Example Projects](./nextjs-examples)
+
+<Note>
+For the best development experience, we recommend using the App Router with Server Actions. This provides the most seamless integration with BAML's streaming capabilities.
+</Note>

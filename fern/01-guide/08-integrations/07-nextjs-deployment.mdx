@@ -1,0 +1,272 @@
+---
+title: Deploying Next.js with BAML
+---
+
+This guide covers how to deploy your Next.js application with BAML to various platforms, including Vercel, Docker, and AWS.
+
+## Deployment Checklist
+
+Before deploying, ensure you have:
+
+1. Generated BAML client code
+2. Set up environment variables
+3. Configured build settings
+4. Added health checks
+5. Set up monitoring
+6. Configured error handling
+
+## Vercel Deployment
+
+### Setup
+
+1. Push your code to a Git repository
+2. Import your project in Vercel
+3. Configure environment variables in Vercel dashboard
+4. Add build command: `baml-cli generate && next build`
+
+### Environment Variables
+
+In your Vercel project settings:
+
+1. Add required variables:
+   ```bash
+   BAML_LOG=info
+   OPENAI_API_KEY=sk-...
+   ```
+
+2. Configure build-time variables:
+   ```bash
+   BAML_ENV=production
+   ```
+
+### Build Settings
+
+Update `package.json`:
+
+```json
+{
+  "scripts": {
+    "build": "baml-cli generate && next build",
+    "start": "next start"
+  }
+}
+```
+
+## Docker Deployment
+
+{/* Include the Docker deployment snippet */}
+<Markdown src="../../snippets/framework/deployment/docker.mdx" />
+
+## AWS Deployment
+
+### Elastic Beanstalk
+
+1. Create `Procfile`:
+   ```yaml
+   web: npm start
+   ```
+
+2. Configure `.ebextensions/00_commands.config`:
+   ```yaml
+   container_commands:
+     01_generate_baml:
+       command: "npm run generate"
+   ```
+
+3. Set environment variables in EB Console:
+   ```bash
+   BAML_LOG=info
+   NODE_ENV=production
+   ```
+
+### ECS with Docker
+
+1. Create ECR repository
+2. Build and push Docker image
+3. Create ECS task definition
+4. Configure environment variables
+5. Set up load balancer
+6. Deploy service
+
+## Production Optimizations
+
+### Memory Management
+
+```javascript
+// next.config.mjs
+export default {
+  experimental: {
+    serverComponentsExternalPackages: ["@boundaryml/baml"],
+  },
+  webpack: (config) => {
+    // Optimize chunk size
+    config.optimization.splitChunks = {
+      chunks: 'all',
+      minSize: 20000,
+      maxSize: 244000,
+    };
+    return config;
+  },
+}
+```
+
+### Error Handling
+
+{/* Include the error boundary snippet */}
+{/* <Markdown src="../../snippets/react/error-boundary.mdx" /> */}
+
+### Logging Configuration
+
+```typescript
+// lib/logger.ts
+import { b } from "@/baml_client";
+
+export function configureLogging() {
+  b.setTags({
+    environment: process.env.NODE_ENV,
+    version: process.env.NEXT_PUBLIC_VERSION,
+  });
+
+  if (process.env.NODE_ENV === 'production') {
+    // Configure production logging
+    b.registry.configureLogging({
+      level: 'error',
+      handlers: [
+        // Add custom log handlers
+      ],
+    });
+  }
+}
+```
+
+### Headers Configuration
+
+```typescript
+// next.config.mjs
+export default {
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains',
+          },
+        ],
+      },
+    ];
+  },
+}
+```
+
+## Monitoring
+
+### Health Checks
+
+Create `app/api/health/route.ts`:
+
+```typescript
+import { NextResponse } from 'next/server';
+import { b } from "@/baml_client";
+
+export async function GET() {
+  try {
+    // Check BAML client health
+    await b.health.check();
+    return NextResponse.json({ status: 'healthy' });
+  } catch (error) {
+    return NextResponse.json(
+      { status: 'unhealthy', error: error.message },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### Performance Monitoring
+
+```typescript
+// lib/monitoring.ts
+import { b } from "@/baml_client";
+
+export function setupMonitoring() {
+  b.registry.on('functionCall', (event) => {
+    // Track function calls
+    console.log('Function called:', event.functionName);
+  });
+
+  b.registry.on('tokenUsage', (event) => {
+    // Track token usage
+    console.log('Tokens used:', event.totalTokens);
+  });
+}
+```
+
+## Common Issues
+
+### Missing BAML Client Generation
+
+If you see errors about missing BAML types:
+
+1. Verify build command includes generation:
+   ```json
+   {
+     "scripts": {
+       "build": "baml-cli generate && next build"
+     }
+   }
+   ```
+
+2. Check generation output:
+   ```bash
+   BAML_LOG=debug npm run generate
+   ```
+
+### Environment Variable Loading
+
+If environment variables aren't loading:
+
+1. Check platform configuration
+2. Verify environment file names
+3. Validate environment variables
+
+## Best Practices
+
+1. **Security**
+   - Use HTTPS
+   - Configure security headers
+   - Implement rate limiting
+   - Rotate API keys
+
+2. **Performance**
+   - Enable caching
+   - Optimize bundle size
+   - Use streaming responses
+   - Monitor memory usage
+
+3. **Reliability**
+   - Implement health checks
+   - Set up monitoring
+   - Configure logging
+   - Handle errors gracefully
+
+4. **Maintenance**
+   - Document deployment process
+   - Set up CI/CD
+   - Monitor dependencies
+   - Plan for updates
+
+## Next Steps
+
+- Explore [Examples](./nextjs-examples) for more use cases
+- Learn about [Environment Setup](./nextjs-environment) for configuration
+- Check out [React Server Components](./nextjs-rsc) for advanced usage

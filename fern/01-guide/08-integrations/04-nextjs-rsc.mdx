@@ -1,0 +1,301 @@
+---
+title: React Server Components with BAML
+---
+
+React Server Components (RSC) are a powerful feature in Next.js that enable server-side rendering with zero client-side JavaScript. When combined with BAML, they provide an optimal way to integrate AI capabilities into your application with maximum performance and minimal client-side overhead.
+
+## Overview
+
+React Server Components offer several benefits when used with BAML:
+
+- **Zero Client JS Bundle** - BAML functions run entirely on the server
+- **Automatic Streaming** - Results stream directly from the server to the client
+- **Type Safety** - Full type safety across the server-client boundary
+- **Optimal Performance** - No client-side state management or hydration needed
+
+## Basic Usage
+
+Here's a simple example of using BAML in a React Server Component:
+
+```tsx
+// app/components/AiComponent.tsx
+import { b } from '@boundaryml/baml';
+
+async function AiComponent() {
+  // Direct BAML function calls in RSC
+  const result = await b.summarize({
+    text: "Long article text here..."
+  });
+
+  return <div>{result}</div>;
+}
+
+export default AiComponent;
+```
+
+## Streaming Patterns
+
+BAML's streaming capabilities work seamlessly with RSC streaming:
+
+```tsx
+// app/components/StreamingAiComponent.tsx
+import { b } from '@boundaryml/baml';
+import { use } from 'react';
+
+function StreamingAiComponent() {
+  const stream = use(b.chat.stream({
+    messages: [{
+      role: "user",
+      content: "Write a story about..."
+    }]
+  }));
+
+  return (
+    <pre>
+      {stream.content}
+    </pre>
+  );
+}
+
+export default StreamingAiComponent;
+```
+
+## Server Actions Integration
+
+Combine RSC with Server Actions for interactive AI features:
+
+```tsx
+// app/actions.ts
+'use server'
+
+import { b } from '@boundaryml/baml';
+
+export async function generateResponse(prompt: string) {
+  return b.chat({
+    messages: [{
+      role: "user",
+      content: prompt
+    }]
+  });
+}
+
+// app/components/InteractiveAi.tsx
+import { generateResponse } from '../actions';
+
+export default function InteractiveAi() {
+  async function onSubmit(formData: FormData) {
+    'use server'
+    const prompt = formData.get('prompt');
+    const response = await generateResponse(prompt as string);
+    // Handle response...
+  }
+
+  return (
+    <form action={onSubmit}>
+      <input name="prompt" />
+      <button type="submit">Generate</button>
+    </form>
+  );
+}
+```
+
+## Data Fetching Patterns
+
+### Parallel Data Fetching
+
+RSC enables efficient parallel data fetching with BAML:
+
+```tsx
+// app/components/ParallelAi.tsx
+import { b } from '@boundaryml/baml';
+import { Suspense } from 'react';
+
+async function ParallelAiComponent() {
+  // These requests run in parallel
+  const [summary, analysis] = await Promise.all([
+    b.summarize({ text: "Article 1..." }),
+    b.analyze({ text: "Article 2..." })
+  ]);
+
+  return (
+    <div>
+      <div>{summary}</div>
+      <div>{analysis}</div>
+    </div>
+  );
+}
+
+// Wrap with Suspense for loading UI
+export default function ParallelAiWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ParallelAiComponent />
+    </Suspense>
+  );
+}
+```
+
+### Sequential Data Fetching
+
+Sometimes you need results from one BAML call to inform another:
+
+```tsx
+async function SequentialAiComponent() {
+  // First BAML call
+  const summary = await b.summarize({
+    text: "Long article..."
+  });
+
+  // Second call uses results from first
+  const analysis = await b.analyze({
+    text: summary
+  });
+
+  return (
+    <div>
+      <h3>Summary</h3>
+      <p>{summary}</p>
+      <h3>Analysis</h3>
+      <p>{analysis}</p>
+    </div>
+  );
+}
+```
+
+## Error Handling
+
+Implement error boundaries for graceful error handling:
+
+```tsx
+'use client'
+
+import { ErrorBoundary } from 'react-error-boundary';
+
+function ErrorFallback({error}: {error: Error}) {
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <pre>{error.message}</pre>
+    </div>
+  );
+}
+
+export default function AiComponentWithError({children}: {children: React.ReactNode}) {
+  return (
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      {children}
+    </ErrorBoundary>
+  );
+}
+```
+
+## Performance Optimization
+
+### Route Segments
+
+Organize your RSC components into route segments for optimal loading:
+
+```tsx
+// app/ai/loading.tsx
+export default function Loading() {
+  return <div>Loading AI response...</div>;
+}
+
+// app/ai/error.tsx
+'use client'
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button onClick={() => reset()}>Try again</button>
+    </div>
+  );
+}
+
+// app/ai/page.tsx
+import { Suspense } from 'react';
+import AiComponent from './AiComponent';
+
+export default function AiPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <AiComponent />
+    </Suspense>
+  );
+}
+```
+
+### Loading UI Integration
+
+Use React Suspense boundaries strategically:
+
+```tsx
+import { Suspense } from 'react';
+
+function AiPageLayout() {
+  return (
+    <div>
+      <h1>AI Dashboard</h1>
+      <Suspense fallback={<div>Loading summary...</div>}>
+        <SummaryComponent />
+      </Suspense>
+      <Suspense fallback={<div>Loading analysis...</div>}>
+        <AnalysisComponent />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+## Environment Setup
+
+<Markdown src="../../snippets/framework/environment-setup.mdx" />
+
+## Best Practices
+
+1. **Component Organization**
+   - Keep BAML function calls at the top level of RSC
+   - Use Server Actions for interactive features
+   - Implement proper loading and error states
+
+2. **Error Handling**
+   - Use Error Boundaries for graceful degradation
+   - Provide meaningful error messages
+   - Implement retry mechanisms where appropriate
+
+3. **Performance**
+   - Leverage parallel data fetching when possible
+   - Use appropriate Suspense boundaries
+   - Implement proper caching strategies
+
+4. **Security**
+   - Never expose API keys in RSC
+   - Validate user input in Server Actions
+   - Implement proper rate limiting
+
+## Common Pitfalls
+
+1. **Client Components**
+   - Don't call BAML functions directly in client components
+   - Use Server Actions for client-side interactions
+
+2. **State Management**
+   - Avoid unnecessary client-side state
+   - Use Server Actions for state mutations
+
+3. **Error Handling**
+   - Don't forget to implement Error Boundaries
+   - Handle both network and BAML-specific errors
+
+## Next Steps
+
+- Explore the [Streaming Guide](./nextjs-streaming) for advanced streaming patterns
+- Learn about [Environment Setup](./nextjs-environment) for proper configuration
+- Check out the [Examples](./nextjs-examples) for more usage patterns
