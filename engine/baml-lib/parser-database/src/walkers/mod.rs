@@ -73,7 +73,7 @@ impl<'db> crate::ParserDatabase {
         })
     }
 
-    fn find_top_by_str(&'db self, name: &str) -> Option<&TopId> {
+    fn find_top_by_str(&'db self, name: &str) -> Option<&'db TopId> {
         self.interner
             .lookup(name)
             .and_then(|name_id| self.names.tops.get(&name_id))

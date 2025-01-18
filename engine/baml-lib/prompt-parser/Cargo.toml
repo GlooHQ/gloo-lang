@@ -6,6 +6,12 @@ authors.workspace = true
 description.workspace = true
 license-file.workspace = true
 
+[lints.rust]
+dead_code = "deny"
+elided_named_lifetimes = "deny"
+unused_imports = "deny"
+unused_variables = "deny"
+
 [dependencies]
 internal-baml-diagnostics = { path = "../diagnostics" }
 internal-baml-schema-ast = { path = "../schema-ast" }
