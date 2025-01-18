@@ -490,13 +490,32 @@ impl ToProviderMessageExt for VertexClient {
         // merge all adjacent roles of the same type
         let mut res = serde_json::Map::new();
 
-        res.insert(
-            "contents".into(),
-            chat.iter()
-                .map(|c| self.role_to_message(c))
-                .collect::<Result<Vec<_>>>()?
-                .into(),
-        );
+        // https://ai.google.dev/gemini-api/docs/text-generation?lang=rest#system-instructions
+        let mut system_instructions = vec![];
+        let mut contents = vec![];
+
+        for rendered_chat_message in chat {
+            let mut message = self.role_to_message(rendered_chat_message)?;
+
+            if rendered_chat_message.role == "system" {
+                // No role here.
+                message.remove("role");
+                system_instructions.push(message);
+            } else {
+                // User-Model chat.
+                contents.push(message);
+            }
+        }
+
+        if let Some(system_instruction) = system_instructions.pop() {
+            res.insert("system_instruction".into(), system_instruction.into());
+        }
+
+        if !system_instructions.is_empty() {
+            log::warn!("Vertex API only supports one system instruction, using last one and ignoring the rest");
+        }
+
+        res.insert("contents".into(), contents.into());
 
         Ok(res)
     }
