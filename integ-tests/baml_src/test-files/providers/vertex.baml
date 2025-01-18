@@ -11,3 +11,11 @@ function TestVertexWithSystemInstructions() -> string {
   {{_.role("user")}} Write a poem about llamas
   "#
 }
+
+test TestVertex {
+  functions [TestVertex]
+  args {
+    input "a cat"
+
+  }
+}
