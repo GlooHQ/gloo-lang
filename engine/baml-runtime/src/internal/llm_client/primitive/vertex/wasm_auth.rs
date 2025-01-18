@@ -30,7 +30,7 @@ impl VertexAuth {
                 Self(serde_json::from_value(
                     serde_json::to_value(&json).context("Failed to parse service account credentials as GCP service account creds (issue during serialization)")?).context("Failed to parse service account credentials as GCP service account creds (are you using JSON format creds?)")?)
             }
-            ResolvedGcpAuthStrategy::UseSystemDefault => {
+            ResolvedGcpAuthStrategy::SystemDefault => {
                 anyhow::bail!(
                     "Failed to auth - cannot load GCP application default credentials in WASM"
                 )

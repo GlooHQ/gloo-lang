@@ -14,7 +14,6 @@ pub mod google_ai;
 pub mod openai;
 pub mod round_robin;
 pub mod vertex;
-pub mod vertex3;
 
 #[derive(Debug)]
 /// `Meta` is a generic carrying span information, so that if it comes from a .baml file,

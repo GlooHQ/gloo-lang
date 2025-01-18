@@ -22,7 +22,7 @@ enum UnresolvedGcpAuthStrategy<Meta> {
     /// This will always be resolved as JsonString
     CredentialsContentString(StringOr),
     /// This will always be resolved as UseSystemDefault
-    UseSystemDefault,
+    SystemDefault,
 }
 
 #[derive(Debug, Deserialize)]
@@ -47,7 +47,7 @@ pub enum ResolvedGcpAuthStrategy {
     /// See:
     ///   - https://cloud.google.com/docs/authentication/application-default-credentials
     ///   - https://docs.rs/gcp_auth/latest/gcp_auth/fn.provider.html
-    UseSystemDefault,
+    SystemDefault,
 }
 
 impl<Meta> UnresolvedGcpAuthStrategy<Meta> {
@@ -66,9 +66,7 @@ impl<Meta> UnresolvedGcpAuthStrategy<Meta> {
             UnresolvedGcpAuthStrategy::CredentialsContentString(s) => {
                 UnresolvedGcpAuthStrategy::CredentialsContentString(s.clone())
             }
-            UnresolvedGcpAuthStrategy::UseSystemDefault => {
-                UnresolvedGcpAuthStrategy::UseSystemDefault
-            }
+            UnresolvedGcpAuthStrategy::SystemDefault => UnresolvedGcpAuthStrategy::SystemDefault,
         }
     }
 
@@ -80,8 +78,9 @@ impl<Meta> UnresolvedGcpAuthStrategy<Meta> {
                 .flat_map(|(_, v)| v.required_env_vars())
                 .collect(),
             UnresolvedGcpAuthStrategy::CredentialsContentString(s) => s.required_env_vars(),
-            // required_env_vars() is only used for the playground list, I think, so this is safe to set
-            UnresolvedGcpAuthStrategy::UseSystemDefault => {
+            // required_env_vars() is only used for the playground list of "you
+            // should set these env vars", I think, so this should be fine
+            UnresolvedGcpAuthStrategy::SystemDefault => {
                 vec!["GOOGLE_APPLICATION_CREDENTIALS".to_string()]
                     .into_iter()
                     .collect()
@@ -109,7 +108,7 @@ impl<Meta> UnresolvedGcpAuthStrategy<Meta> {
                 let s = s.resolve(ctx)?;
                 ResolvedGcpAuthStrategy::JsonString(s)
             }
-            UnresolvedGcpAuthStrategy::UseSystemDefault => {
+            UnresolvedGcpAuthStrategy::SystemDefault => {
                 log::debug!("Neither options.credentials nor options.credentials_content are set, falling back to env vars");
                 // Without this, for some reason get_env_var() comes back as "$BASH_STYLE_SUBSTITUTION"
                 // I'm sure there's a reason for this, but it doesn't make sense to me right now.
@@ -120,10 +119,7 @@ impl<Meta> UnresolvedGcpAuthStrategy<Meta> {
                         .ok(),
                 ) {
                     (Some(credentials), _) => {
-                        log::debug!(
-                            "Using GOOGLE_APPLICATION_CREDENTIALS from env {:?}",
-                            credentials
-                        );
+                        log::debug!("Using GOOGLE_APPLICATION_CREDENTIALS from env");
                         if credentials.is_empty() {
                             log::warn!("Resolving GOOGLE_APPLICATION_CREDENTIALS from env, but it is an empty string");
                         }
@@ -141,7 +137,7 @@ impl<Meta> UnresolvedGcpAuthStrategy<Meta> {
                     }
                     (None, None) => {
                         log::debug!("Using UseSystemDefault strategy");
-                        ResolvedGcpAuthStrategy::UseSystemDefault
+                        ResolvedGcpAuthStrategy::SystemDefault
                     }
                 }
             }
@@ -321,14 +317,14 @@ impl<Meta: Clone> UnresolvedVertex<Meta> {
                                 ),
                                 other.meta().clone(),
                             );
-                            UnresolvedGcpAuthStrategy::UseSystemDefault
+                            UnresolvedGcpAuthStrategy::SystemDefault
                         }
                     }
                 }
                 (None, Some((_, credentials_content, _))) => {
                     UnresolvedGcpAuthStrategy::CredentialsContentString(credentials_content)
                 }
-                (None, None) => UnresolvedGcpAuthStrategy::UseSystemDefault,
+                (None, None) => UnresolvedGcpAuthStrategy::SystemDefault,
             }
         };
         let model = properties.ensure_string("model", true).map(|(_, v, _)| v);

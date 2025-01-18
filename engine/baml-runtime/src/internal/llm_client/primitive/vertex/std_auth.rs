@@ -33,7 +33,7 @@ impl VertexAuth {
                 )?;
                 Ok(VertexAuth::CustomServiceAccount(authz_user))
             }
-            ResolvedGcpAuthStrategy::UseSystemDefault => {
+            ResolvedGcpAuthStrategy::SystemDefault => {
                 log::debug!("Attempting to auth using SystemDefault strategy");
                 if let Ok(authz_user) = gcp_auth::ConfigDefaultCredentials::new().await {
                     log::debug!(
