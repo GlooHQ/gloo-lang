@@ -81,29 +81,6 @@ impl VertexAuth {
     }
 }
 
-// impl TokenProvider for VertexAuth {
-//     fn token<'life0, 'life1, 'life2, 'async_trait>(
-//         &'life0 self,
-//         scopes: &'life1 [&'life2 str],
-//     ) -> Pin<Box<dyn Future<Output = Result<Arc<Token>, Error>> + Send + 'async_trait>>
-//     where
-//         'life0: 'async_trait,
-//         'life1: 'async_trait,
-//         'life2: 'async_trait,
-//     {
-//         self.0.token(scopes)
-//     }
-
-//     fn project_id<'life0, 'async_trait>(
-//         &'life0 self,
-//     ) -> Pin<Box<dyn Future<Output = Result<Arc<str>, Error>> + Send + 'async_trait>>
-//     where
-//         'life0: 'async_trait,
-//     {
-//         self.0.project_id()
-//     }
-// }
-
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
     iss: String,

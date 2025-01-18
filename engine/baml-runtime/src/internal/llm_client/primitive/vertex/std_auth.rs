@@ -57,8 +57,6 @@ impl VertexAuth {
         }
     }
 
-    // TODO: each method should only fail if the authz method construction fails;
-    // it should not move forward if the authz scopes request fails
     async fn token_impl(&self, scopes: &[&str]) -> Result<Arc<Token>, Error> {
         match self {
             VertexAuth::CustomServiceAccount(authz_user) => authz_user.token(scopes).await,
