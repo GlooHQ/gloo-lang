@@ -100,6 +100,7 @@ client<llm> Vertex {
   options {
     model gemini-1.5-pro
     location us-central1
+    credentials env.INTEG_TESTS_GOOGLE_APPLICATION_CREDENTIALS
   }
 }
 
