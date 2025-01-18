@@ -20,16 +20,18 @@ client<llm> MyClient {
 }
 ```
 
-## Authorization
+## Authentication
 
-The `vertex-ai` provider integrates with Google Cloud [application default
-credentials](https://cloud.google.com/docs/authentication/application-default-credentials)
-and by default will try to authenticate using the following:
+The `vertex-ai` provider by default will try to authenticate using the following strategies:
 
-- if `GOOGLE_APPLICATION_CREDENTIALS` is set, it will use the credentials in that file
+- if `GOOGLE_APPLICATION_CREDENTIALS` is set, it will use the specified service account
 - if you have run `gcloud auth application-default login`, it will use those credentials
 - if running in GCP, it will query the metadata server to use the attached service account
 - if `gcloud` is available on the `PATH`, it will use `gcloud auth print-access-token`
+
+If you're using Google Cloud [application default
+credentials](https://cloud.google.com/docs/authentication/application-default-credentials), you
+can expect authentication to work out of the box.
 
 Setting [`options.credentials`](#credentials) will take precedence and force `vertex-ai` to load
 service account credentials from that file path.
@@ -38,59 +40,77 @@ Setting [`options.credentials_content`](#credentials_content) will also take pre
 `vertex-ai` to load service account credentials from that string.
 
 <Accordion title='Using a `vertex-ai` client in the playground'>
-To use a `vertex-ai` client in the playground, you'll need to create
-`GOOGLE_APPLICATION_CREDENTIALS` 
+
+To use a `vertex-ai` client in the playground, you'll need to create service account credentials.
+
+1. Go to [IAM & Admin > Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts) in the Google Cloud Console.
+2. Choose the project you want to use.
+5. Select an existing service account or create a new one.
+6. Click on the service account, navigate to the `Keys` tab, select `Add Key`, and select `Create new key`.
+7. Confirm that the key type will be `JSON` and click `Create`.
+1. Copy the contents of the downloaded JSON key.
+1. Open the BAML playground, and click `API Keys` in the top right.
+9. Paste the JSON key into the `GOOGLE_APPLICATION_CREDENTIALS` field.
+
+You should now be able to use a `vertex-ai` client in the playground!
 </Accordion>
 
-Setting `options.credentials` or `options.credentials_content` will take
-precedence over the `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
 
-### Implementation
+## Debugging
+
+<Accordion title='Authentication'>
+
+If you're having issues with `vertex-ai` authentication, you can try setting `BAML_LOG=debug` to see more detailed logs.
+
+To understand these logs, it'll help to understand the auth implementation of the `vertex-ai` provider.
 
 The `vertex-ai` provider uses one of 3 strategies to authenticate with Google Cloud:
 
-- `Credentials::JsonString` - parse the provided string as a JSON object, and use that to resolve a service account
-- `Credentials::JsonFile` - parse the provided file as a JSON object, and use that to resolve a service account
-- `Credentials::SystemDefault` - try 3 strategies in order:
+- `AuthStrategy::JsonString(value: String)` - parse `value` as a JSON
+  object, and use that to resolve a service account
+- `AuthStrategy::JsonFile(path: String)` - read the file at `path` (relative to
+  the process' current working directory), parse it as a JSON object, and use that
+  to resolve a service account
+- `AuthStrategy::SystemDefault` - try 3 strategies in order:
     - resolve credentials from `.config/gcloud/application_default_credentials.json`; else
     - use the service account from the GCP compute environment by querying the metadata server; else
     - check if `gcloud` is available on the `PATH` and if so, use `gcloud auth print-access-token`
 
 We choose one of the three strategies based on the following rules, in order:
 
-- if `credentials` is provided, and it looks like a JSON object, we use `Credentials::JsonString` with `credentials`
-  - we use `Credentials::JsonFile` with `credentials`
-- if `credentials_content` is provided, we use `Credentials::JsonString` with `credentials_content`
-- if neither is provided and `GOOGLE_APPLICATION_CREDENTIALS` is set and looks like a JSON object,
-  we use `Credentials::JsonString` with `GOOGLE_APPLICATION_CREDENTIALS`
-- if neither is provided and `GOOGLE_APPLICATION_CREDENTIALS` is set and does not look like a JSON object,
-  we use `Credentials::JsonFile` with `GOOGLE_APPLICATION_CREDENTIALS`
-- if neither is provided and `GOOGLE_APPLICATION_CREDENTIALS_CONTENT` is set,
-  we use `Credentials::JsonString` with `GOOGLE_APPLICATION_CREDENTIALS_CONTENT`
-- if neither is provided, and neither `GOOGLE_APPLICATION_CREDENTIALS_CONTENT` nor `GOOGLE_APPLICATION_CREDENTIALS` are set,
-  we use `Credentials::SystemDefault`
+1. Is `credentials` provided?
+     - If so, and it's a string containing a JSON object, we use `AuthStrategy::JsonFile` with `credentials`.
+     - If so, and it's a JSON object, we use `AuthStrategy::JsonObject` with `credentials` (this is probably only
+       relevant if you're using the [`ClientRegistry`](/ref/baml-client/client-registry) API in `baml_client`).
+     - If so, but it's just a regular string, use `AuthStrategy::JsonFile` with `credentials`.
+1. Is `credentials_content` provided?
+     - If so, we use `AuthStrategy::JsonString` with `credentials_content`
+1. Is `GOOGLE_APPLICATION_CREDENTIALS` set?
+     - If so, and it looks like a JSON object, we use `AuthStrategy::JsonString` with `GOOGLE_APPLICATION_CREDENTIALS`
+     - If so, but it's just a regular string, use `AuthStrategy::JsonFile` with `GOOGLE_APPLICATION_CREDENTIALS`
+1. Is `GOOGLE_APPLICATION_CREDENTIALS_CONTENT` set?
+     - If so, we use `AuthStrategy::JsonString` with `GOOGLE_APPLICATION_CREDENTIALS_CONTENT`
+1. Else, we use `AuthStrategy::SystemDefault`
 
+</Accordion>
 
+<Accordion title='Request protocol'>
+
+We use the REST API to send requests to Vertex AI, and you can debug these using
+the BAML playground and switch from showing "Prompt Preview" to "Raw cURL", which
+will show you the exact request the BAML runtime will construct and send.
+
+Non-streaming requests will use `{base_url}:generateContent`:
 ```
 https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${MODEL_ID}:generateContent
+```
+
+Streaming requests will use `{base_url}:streamGenerateContent?alt=sse`:
+```
 https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${MODEL_ID}:streamGenerateContent
 ```
 
-## Authz (old)
-
-The `vertex-ai` provider uses the Google Cloud SDK to authenticate with a temporary access token. We generate these Google Cloud Authentication Tokens using Google Cloud service account credentials. We do not store this token, and it is only used for the duration of the request.
-
-### Instructions for downloading Google Cloud credentials
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
-2. Click on the project you want to use.
-3. Select the `IAM & Admin` section, and click on `Service Accounts`.
-5. Select an existing service account or create a new one.
-6. Click on the service account and select `Add Key`.
-7. Choose the JSON key type and click `Create`.
-9. Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to the path of the file.
-
-
-See the [Google Cloud Application Default Credentials Docs](https://cloud.google.com/docs/authentication/application-default-credentials) for more information.
+</Accordion>
 
 ## BAML-specific request `options`
 These unique parameters (aka `options`) modify the API request sent to the provider.
@@ -99,9 +119,12 @@ You can use this to modify the `headers` and `base_url` for example.
 
 <ParamField path="base_url" type="string">
   The base URL for the API.
+
+  **Default**: inferred from the `project_id` and `location` using the following format:
   
-  **Default: `https://{LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/{LOCATION}/publishers/google/models/
-`**
+  ```
+  https://{LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/{LOCATION}/publishers/google/models/
+  ```
 
   Can be used in lieu of the **`project_id`** and **`location`** fields, to manually set the request URL.
 </ParamField>
@@ -110,12 +133,10 @@ You can use this to modify the `headers` and `base_url` for example.
 <ParamField
   path="project_id"
   type="string"
-  required
 >
-  Vertex requires a Google Cloud project ID for each request. See the [Google Cloud Project ID Docs](https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects) for more information.
+  The Google Cloud project ID hosting the Vertex AI service you want to call.
 
-    
-
+  **Default**: inferred from the provided credentials (see [`Authentication`](#authentication)).
 </ParamField>
 
 {/*The anchor is placed above "location" and not "credentials" because this will ensure that "credentials" is
@@ -128,7 +149,8 @@ visible on-screen when the user navigates to #credentials, due to how Fern rende
   type="string"
   required
 >
-  Vertex requires a location for each request. Some locations may have different models avaiable.
+  Vertex requires you to specify the location you want to serve your models
+  from. Some models may only be available in certain locations.
   
   Common locations include:
   - `us-central1`
@@ -136,7 +158,8 @@ visible on-screen when the user navigates to #credentials, due to how Fern rende
   - `us-east1`
   - `us-south1`
 
-  See the [Vertex Location Docs](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#united-states) for all locations and supported models.
+  See the [Vertex AI docs](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#united-states)
+  for all locations and supported models.
 
 </ParamField>
 
@@ -149,9 +172,45 @@ visible on-screen when the user navigates to #credentials_content, due to how Fe
   path="credentials"
   type="string | object"
 >
-  Path to a file containing service account credentials in JSON format.
+
+  This field supports any of 3 formats:
+
+    - A string containing service account credentials in JSON format.
+    - Path to a file containing service account credentials in JSON format.
+    - A JSON object containing service account credentials.
+
+  See [Authentication](#authentication) and [Debugging](#debugging) for more information.
 
   **Default: `env.GOOGLE_APPLICATION_CREDENTIALS`**
+
+  <Accordion title='Example: string'>
+    ```baml BAML
+    client<llm> Vertex {
+      provider vertex-ai
+      options {
+        model gemini-1.5-pro
+        location us-central1
+        // credentials can be a block string containing service account credentials in JSON format
+        credentials #"
+          {
+            "type": "service_account",
+            "project_id": "my-project-id",
+            "private_key_id": "string",
+            "private_key": "-----BEGIN PRIVATE KEY-----string\n-----END PRIVATE KEY-----\n",
+            "client_email": "john_doe@gmail.com",
+            "client_id": "123456",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/...",
+            "universe_domain": "googleapis.com"
+          }
+        "#
+      }
+    }
+
+    ```
+  </Accordion>
 
   <Accordion title='Example: file path'>
   In this case, the path is resolved relative to the CWD of your process.
@@ -167,6 +226,33 @@ visible on-screen when the user navigates to #credentials_content, due to how Fe
   }
   ```
   </Accordion>
+
+  <Accordion title='Example: JSON object'>
+    ```baml BAML
+    client<llm> Vertex {
+      provider vertex-ai
+      options {
+        model gemini-1.5-pro
+        location us-central1
+        // credentials can be a block string containing service account credentials in JSON format
+        credentials {
+          type "service_account",
+          project_id "my-project-id",
+          private_key_id "string",
+          private_key "-----BEGIN PRIVATE KEY-----string\n-----END PRIVATE KEY-----\n",
+          client_email "john_doe@gmail.com",
+          client_id "123456",
+          auth_uri "https://accounts.google.com/o/oauth2/auth",
+          token_uri "https://oauth2.googleapis.com/token",
+          auth_provider_x509_cert_url "https://www.googleapis.com/oauth2/v1/certs",
+          client_x509_cert_url "https://www.googleapis.com/robot/v1/metadata/...",
+          universe_domain "googleapis.com"
+        }
+      }
+    }
+    ```
+  </Accordion>
+  
 </ParamField>
 
 <ParamField
@@ -175,9 +261,10 @@ visible on-screen when the user navigates to #credentials_content, due to how Fe
 >
   A string containing service account credentials in JSON format.
 
+  See [Authentication](#authentication) and [Debugging](#debugging) for more information.
+
   **Default: `env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT`**
 
-  
   <Accordion title='Example'>
     ```baml BAML
     client<llm> Vertex {
