@@ -59,7 +59,7 @@ pub(crate) fn parse_type_builder_block(
                             entries.push(TypeBuilderEntry::TypeAlias(assignment));
                         }
 
-                        _ => parsing_catch_all(nested, "type_builder_block"),
+                        _ => parsing_catch_all(nested, "type_builder_contents"),
                     }
                 }
             }
@@ -107,6 +107,8 @@ mod tests {
                 C
                 D
             }
+
+            type Alias = Example
         }"#;
 
         let source = SourceFile::new_static(root_path.into(), input);
@@ -121,7 +123,7 @@ mod tests {
 
         let type_buider_block = parse_type_builder_block(parsed, &mut diagnostics).unwrap();
 
-        assert_eq!(type_buider_block.entries.len(), 4);
+        assert_eq!(type_buider_block.entries.len(), 5);
 
         let TypeBuilderEntry::Class(example) = &type_buider_block.entries[0] else {
             panic!(
@@ -148,10 +150,18 @@ mod tests {
             );
         };
 
+        let TypeBuilderEntry::TypeAlias(alias) = &type_buider_block.entries[4] else {
+            panic!(
+                "Expected type Alias, got {:?}",
+                type_buider_block.entries[4]
+            );
+        };
+
         assert_eq!(example.name(), "Example");
         assert_eq!(bar.name(), "Bar");
         assert_eq!(cls.name(), "Cls");
         assert_eq!(cls.documentation(), Some("Some doc\ncomment"));
         assert_eq!(enm.name(), "Enm");
+        assert_eq!(alias.name(), "Alias");
     }
 }

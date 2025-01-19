@@ -1,7 +1,7 @@
 use super::{Assignment, TypeExpressionBlock};
 
-#[derive(Debug, Clone)]
 /// Blocks allowed in `type_builder` blocks.
+#[derive(Debug, Clone)]
 pub enum TypeBuilderEntry {
     /// An enum declaration.
     Enum(TypeExpressionBlock),
