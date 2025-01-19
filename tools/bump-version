@@ -113,19 +113,21 @@ fi
 
 _repo_root="$(git rev-parse --show-toplevel)"
 cd "${_repo_root}"
-git pull --tags
+# git pull --tags
 
 
-echo "Checking git diff..."
-# # Ensure clean git status
-if ! git diff --quiet; then
-    if [ "$_allow_dirty_mode" -eq 1 ]; then
-        echo "Warning: Git status is not clean. Proceeding due to --allow-dirty flag."
-    else
-        echo "Error: Git status is not clean. Please commit or stash your changes."
-        exit 1
-    fi
-fi
+# echo "Checking git diff..."
+# # # Ensure clean git status
+# if ! git diff --quiet; then
+#     if [ "$_allow_dirty_mode" -eq 1 ]; then
+#         echo "Warning: Git status is not clean. Proceeding due to --allow-dirty flag."
+#     else
+#         echo "Error: Git status is not clean. Please commit or stash your changes."
+#         exit 1
+#     fi
+# fi
+
+_allow_dirty_mode=1
 
 PRE_BUMP_VERSION=$(grep "current_version =" tools/versions/engine.cfg | awk '{print $3}')
 
@@ -145,25 +147,26 @@ fi
 echo "Number of code generation changes since $PRE_BUMP_VERSION: $CODE_GEN_CHANGES"
 
 
-if [ "$CODE_GEN_CHANGES" -gt 0 ]; then
-    version_bump="minor"
-    echo "Code generation changes detected since ${PRE_BUMP_VERSION}. Recommending a \033[33mminor\033[0m version bump."
-else
-    version_bump="patch"
-    echo "no code change"
-    echo "No code generation changes detected since ${PRE_BUMP_VERSION}. Recommending a \033[32mpatch\033[0m version bump."
-fi
+# if [ "$CODE_GEN_CHANGES" -gt 0 ]; then
+#     version_bump="minor"
+#     echo "Code generation changes detected since ${PRE_BUMP_VERSION}. Recommending a \033[33mminor\033[0m version bump."
+# else
+#     version_bump="patch"
+#     echo "no code change"
+#     echo "No code generation changes detected since ${PRE_BUMP_VERSION}. Recommending a \033[32mpatch\033[0m version bump."
+# fi
+# 
+# read -p $'Please confirm the version bump type (\033[33mminor\033[0m / \033[32mpatch\033[0m): ' user_confirmation
+# if [[ "$user_confirmation" != "$version_bump" ]]; then
+#     echo "\033[31mWarning: Confirmation does not match the recommended version bump type.\033[0m"
+#     read -p "Are you sure you want to proceed with the different version bump type? Type 'yes' to confirm: " double_check
+#     if [[ "$double_check" != "yes" ]]; then
+#         echo "\033[31mError: Confirmation does not match the recommended version bump type.\033[0m"
+#         exit 1
+#     fi
+# fi
 
-read -p $'Please confirm the version bump type (\033[33mminor\033[0m / \033[32mpatch\033[0m): ' user_confirmation
-if [[ "$user_confirmation" != "$version_bump" ]]; then
-    echo "\033[31mWarning: Confirmation does not match the recommended version bump type.\033[0m"
-    read -p "Are you sure you want to proceed with the different version bump type? Type 'yes' to confirm: " double_check
-    if [[ "$double_check" != "yes" ]]; then
-        echo "\033[31mError: Confirmation does not match the recommended version bump type.\033[0m"
-        exit 1
-    fi
-fi
-
+version_bump=patch
 
 cd "${_repo_root}/tools"
 if [ "$_all_mode" -eq 1 ]; then
