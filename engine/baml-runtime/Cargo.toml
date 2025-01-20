@@ -14,6 +14,7 @@ anyhow.workspace = true
 
 [lints.rust]
 dead_code = "allow"
+elided_named_lifetimes = "deny"
 unused_imports = "allow"
 unused_variables = "allow"
 
@@ -89,9 +90,14 @@ aws-smithy-json = "0.60.7"
 pretty_assertions = "1.4.0"
 valuable = { version = "0.1.0", features = ["derive"] }
 tracing = { version = "0.1.40", features = ["valuable"] }
-tracing-subscriber = { version = "0.3.18", features = ["json", "env-filter","valuable"] }
+tracing-subscriber = { version = "0.3.18", features = [
+  "json",
+  "env-filter",
+  "valuable",
+] }
 thiserror = "2.0.1"
 log-once = "0.4.1"
+jsonwebtoken = "9.3.0"
 
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
@@ -129,16 +135,15 @@ aws-config = "1.5.3"
 aws-sdk-bedrockruntime = "1.37.0"
 axum = "0.7.5"
 axum-extra = { version = "0.9.3", features = ["erased-json", "typed-header"] }
+gcp_auth = "0.12.3"
 hostname = "0.3.1"
-jsonwebtoken = { version="9.3.0"}
+jsonwebtoken = { version = "9.3.0" }
 notify-debouncer-full = "0.3.1"
 ring = { version = "0.17.4", features = ["std"] }
 tokio = { version = "1", features = ["full"] }
 reqwest.workspace = true
 walkdir = "2.5.0"
 which = "6.0.3"
-
-
 
 
 [features]

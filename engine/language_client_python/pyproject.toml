@@ -3,8 +3,10 @@ name = "baml-py"
 version = "0.72.0"
 description = "BAML python bindings (pyproject.toml)"
 readme = "README.md"
-authors = [["Boundary", "contact@boundaryml.com"]]
-license = "LICENSE"
+authors = [{ "name" = "Boundary", "email" = "contact@boundaryml.com" }]
+
+[project.license]
+file = "LICENSE"
 
 [build-system]
 requires = ["maturin>=1.0,<2.0"]

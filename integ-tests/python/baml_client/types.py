@@ -180,6 +180,9 @@ class BookOrder(BaseModel):
     quantity: int
     price: float
 
+class ClassForNullLiteral(BaseModel):
+    a: Literal["hi"]
+
 class ClassOptionalOutput(BaseModel):
     prop1: str
     prop2: str

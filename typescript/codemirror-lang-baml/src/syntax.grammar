@@ -1,12 +1,17 @@
 @top Baml { Decl* }
 
-Decl { ClassDecl | EnumDecl | FunctionDecl | ClientDecl | TemplateStringDecl | TestDecl }
+Decl { ClassDecl | EnumDecl | FunctionDecl | ClientDecl | TemplateStringDecl | TestDecl | TypeAliasDecl }
 
 ClassDecl { "class" IdentifierDecl "{" (BlockAttribute | ClassField)* "}" }
 
 ClassField {
   IdentifierDecl TypeExpr FieldAttribute*
 }
+
+TypeAliasDecl {
+  "type" IdentifierDecl "=" TypeExpr
+}
+
 TypeExpr { ComplexTypeExpr | UnionTypeExpr }
 ComplexTypeExpr {
   "(" UnionTypeExpr ")" |
@@ -51,7 +56,7 @@ ClientDecl {
 }
 
 TestDecl {
-  "test" IdentifierDecl "{" (BlockAttribute | TupleValue)* "}" 
+  "test" IdentifierDecl "{" (BlockAttribute | TupleValue)* "}"
 }
 
 LiteralDecl { NumericLiteral | QuotedString | UnquotedString }
@@ -87,7 +92,7 @@ TemplateStringDecl {
   whitespace { $[ \n\r\t] }
 
   UnquotedStringChar { ![#@{}()[\]<>,'\n\r\t/ ]}
-  
+
   TrailingComment { "//" ![\n]* }
   MultilineComment { "{//"![]*"//}" }
 
@@ -95,7 +100,7 @@ TemplateStringDecl {
 }
 
 @skip {
-  whitespace | MultilineComment | TrailingComment 
+  whitespace | MultilineComment | TrailingComment
 }
 
 @skip {} {

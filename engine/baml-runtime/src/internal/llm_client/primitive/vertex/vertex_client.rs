@@ -24,18 +24,16 @@ use crate::{
 use anyhow::{Context, Result};
 use chrono::{Duration, Utc};
 use futures::StreamExt;
-use internal_llm_client::vertex::{ResolvedServiceAccountDetails, ResolvedVertex, ServiceAccount};
+#[cfg(not(target_arch = "wasm32"))]
+use gcp_auth::TokenProvider;
+use internal_llm_client::vertex::{
+    BaseUrlOrLocation, ResolvedGcpAuthStrategy, ResolvedVertex, ServiceAccount,
+};
 use internal_llm_client::{
     AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty,
 };
-#[cfg(not(target_arch = "wasm32"))]
-use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-#[cfg(not(target_arch = "wasm32"))]
-use std::fs::File;
-#[cfg(not(target_arch = "wasm32"))]
-use std::io::BufReader;
 
 use baml_types::BamlMediaContent;
 use eventsource_stream::Eventsource;
@@ -52,32 +50,6 @@ pub struct VertexClient {
     pub context: RenderContext_Client,
     pub features: ModelFeatures,
     properties: ResolvedVertex,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    iss: String,
-    scope: String,
-    aud: String,
-    exp: i64,
-    iat: i64,
-}
-
-// This is currently hardcoded, but we could make it a property if we wanted
-// https://developers.google.com/identity/protocols/oauth2/scopes
-const DEFAULT_SCOPE: &str = "https://www.googleapis.com/auth/cloud-platform";
-
-impl Claims {
-    fn from_service_account(service_account: &ServiceAccount) -> Claims {
-        let now = Utc::now();
-        Claims {
-            iss: service_account.client_email.clone(),
-            scope: DEFAULT_SCOPE.to_string(),
-            aud: service_account.token_uri.clone(),
-            exp: (now + Duration::hours(1)).timestamp(),
-            iat: now.timestamp(),
-        }
-    }
 }
 
 fn resolve_properties(
@@ -295,46 +267,6 @@ impl VertexClient {
     }
 }
 
-async fn get_access_token(service_account: &ServiceAccount) -> Result<String> {
-    // Create the JWT
-    let claims = Claims::from_service_account(service_account);
-
-    #[cfg(not(target_arch = "wasm32"))]
-    let jwt = encode(
-        &Header::new(Algorithm::RS256),
-        &claims,
-        &EncodingKey::from_rsa_pem(service_account.private_key.as_bytes())?,
-    )?;
-
-    #[cfg(target_arch = "wasm32")]
-    let jwt = encode_jwt(&serde_json::to_value(claims)?, &service_account.private_key)
-        .await
-        .map_err(|e| anyhow::anyhow!(format!("{e:?}")))?;
-
-    // Make the token request
-    let client = reqwest::Client::new();
-    let params = [
-        ("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer"),
-        ("assertion", &jwt),
-    ];
-    let res: Value = client
-        .post(&service_account.token_uri)
-        .form(&params)
-        .send()
-        .await?
-        .json()
-        .await?;
-
-    Ok(res
-        .as_object()
-        .context("Token exchange did not return a JSON object")?
-        .get("access_token")
-        .context("Access token not found in response")?
-        .as_str()
-        .context("Access token is not a string")?
-        .to_string())
-}
-
 impl RequestBuilder for VertexClient {
     fn http_client(&self) -> &reqwest::Client {
         &self.client
@@ -346,16 +278,29 @@ impl RequestBuilder for VertexClient {
         allow_proxy: bool,
         stream: bool,
     ) -> Result<reqwest::RequestBuilder> {
-        //disabled proxying for testing
+        let vertex_auth = super::auth::VertexAuth::new(&self.properties.auth_strategy).await?;
 
-        let mut should_stream = "generateContent";
-        if stream {
-            should_stream = "streamGenerateContent?alt=sse";
-        }
+        let base_url = match &self.properties.base_url_or_location {
+            BaseUrlOrLocation::BaseUrl(base_url) => base_url.to_string(),
+            BaseUrlOrLocation::Location(location) => format!(
+                "https://{location}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{location}/publishers/google/models",
+                location = location,
+                project_id = match self.properties.project_id.as_ref() {
+                    Some(project_id) => project_id.to_string(),
+                    None => vertex_auth.project_id().await?.to_string(),
+                }
+            ),
+        };
 
-        let base_url = self.properties.base_url.clone();
-        let model = self.properties.model.clone();
-        let baml_original_url = format!("{}/{}:{}", base_url, model, should_stream);
+        let baml_original_url = format!(
+            "{base_url}/{model}:{rpc_and_protocol}",
+            model = self.properties.model,
+            rpc_and_protocol = if stream {
+                "streamGenerateContent?alt=sse"
+            } else {
+                "generateContent"
+            }
+        );
 
         let mut req = match (&self.properties.proxy_url, allow_proxy) {
             (Some(proxy_url), true) => {
@@ -365,30 +310,25 @@ impl RequestBuilder for VertexClient {
             _ => self.client.post(baml_original_url),
         };
 
-        let access_token = match &self.properties.authorization {
-            ResolvedServiceAccountDetails::RawAuthorizationHeader(token) => token.to_string(),
-            ResolvedServiceAccountDetails::Json(token) => get_access_token(token)
-                .await
-                .context("Failed to get access token")?,
-        };
-
-        req = req.header("Authorization", format!("Bearer {}", access_token));
+        // This is currently hardcoded, but we could make it a property if we wanted
+        // https://developers.google.com/identity/protocols/oauth2/scopes
+        const DEFAULT_SCOPE: &str = "https://www.googleapis.com/auth/cloud-platform";
+        req = req.bearer_auth(vertex_auth.token(&[DEFAULT_SCOPE]).await?.as_str());
 
         for (key, value) in &self.properties.headers {
             req = req.header(key, value);
         }
 
-        let mut body = json!(self.properties.properties);
-        let body_obj = body.as_object_mut().unwrap();
+        let mut json_body = self.properties.properties.clone();
 
         match prompt {
             either::Either::Left(prompt) => {
-                body_obj.extend(convert_completion_prompt_to_body(prompt))
+                json_body.extend(convert_completion_prompt_to_body(prompt))
             }
-            either::Either::Right(messages) => body_obj.extend(self.chat_to_message(messages)?),
+            either::Either::Right(messages) => json_body.extend(self.chat_to_message(messages)?),
         }
 
-        let req = req.json(&body);
+        let req = req.json(&json_body);
 
         Ok(req)
     }
@@ -547,6 +487,7 @@ impl ToProviderMessageExt for VertexClient {
         &self,
         chat: &[RenderedChatMessage],
     ) -> Result<serde_json::Map<String, serde_json::Value>> {
+        // merge all adjacent roles of the same type
         let mut res = serde_json::Map::new();
 
         // https://ai.google.dev/gemini-api/docs/text-generation?lang=rest#system-instructions
