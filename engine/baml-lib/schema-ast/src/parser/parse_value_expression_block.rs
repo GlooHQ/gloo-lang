@@ -140,6 +140,16 @@ pub(crate) fn parse_value_expression_block(
         ));
     };
 
+    // Only test blocks can have `type_builder` blocks in them.
+    if let Some(ref t) = type_builder {
+        if sub_type != Some(ValueExprBlockType::Test) {
+            return Err(DatamodelError::new_validation_error(
+                "Only tests may have a type_builder block.",
+                t.span.to_owned(),
+            ));
+        }
+    };
+
     // No arrow means it's not a function. If it's a function then check params
     // and return type. If any of the conditions are met then we're ok.
     if !has_arrow || (input.is_some() && output.is_some()) {
