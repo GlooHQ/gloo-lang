@@ -19,6 +19,7 @@ pub(crate) fn parse_type_builder_block(
 ) -> Result<TypeBuilderBlock, DatamodelError> {
     assert_correct_parser!(pair, Rule::type_builder_block);
 
+    let span = diagnostics.span(pair.as_span());
     let mut entries = Vec::new();
 
     for current in pair.into_inner() {
@@ -71,7 +72,7 @@ pub(crate) fn parse_type_builder_block(
         }
     }
 
-    Ok(TypeBuilderBlock { entries })
+    Ok(TypeBuilderBlock { entries, span })
 }
 
 #[cfg(test)]

@@ -1,3 +1,5 @@
+use internal_baml_diagnostics::Span;
+
 use super::{Assignment, TypeExpressionBlock};
 
 /// Blocks allowed in `type_builder` blocks.
@@ -16,4 +18,5 @@ pub enum TypeBuilderEntry {
 #[derive(Debug, Clone)]
 pub struct TypeBuilderBlock {
     pub entries: Vec<TypeBuilderEntry>,
+    pub span: Span,
 }
