@@ -88,7 +88,16 @@ pub(crate) fn parse_value_expression_block(
                         }
 
                         Rule::type_builder_block => {
-                            type_builder = Some(parse_type_builder_block(item, diagnostics)?);
+                            let block = parse_type_builder_block(item, diagnostics)?;
+
+                            match type_builder {
+                                None => type_builder = Some(block),
+
+                                Some(_) => diagnostics.push_error(DatamodelError::new_validation_error(
+                                    "Definition of multiple `type_builder` blocks in the same parent block",
+                                    block.span
+                                )),
+                            }
                         }
 
                         Rule::comment_block => pending_field_comment = Some(item),
@@ -140,10 +149,11 @@ pub(crate) fn parse_value_expression_block(
         ));
     };
 
-    // Only test blocks can have `type_builder` blocks in them.
+    // Only test blocks can have `type_builder` blocks in them. This is not a
+    // "syntax" error so we won't fail yet.
     if let Some(ref t) = type_builder {
         if sub_type != Some(ValueExprBlockType::Test) {
-            return Err(DatamodelError::new_validation_error(
+            diagnostics.push_error(DatamodelError::new_validation_error(
                 "Only tests may have a type_builder block.",
                 t.span.to_owned(),
             ));
