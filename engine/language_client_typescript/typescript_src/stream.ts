@@ -14,7 +14,7 @@ export class BamlStream<PartialOutputType, FinalOutputType> {
 
   private async driveToCompletion(): Promise<FunctionResult> {
     try {
-      this.ffiStream.onEvent((err, data) => {
+      this.ffiStream.onEvent((err: Error | null, data: FunctionResult | null) => {
         if (err) {
           return
         } else {
@@ -62,5 +62,37 @@ export class BamlStream<PartialOutputType, FinalOutputType> {
     const final = await this.driveToCompletionInBg()
 
     return this.finalCoerce(final.parsed())
+  }
+
+  /**
+   * Converts the BAML stream to a Next.js compatible stream.
+   * This is used for server-side streaming in Next.js API routes and Server Actions.
+   */
+  toStreamable(): ReadableStream<Uint8Array> {
+    const stream = this;
+    return new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder()
+        try {
+          for await (const partial of stream) {
+            controller.enqueue(
+              encoder.encode(
+                JSON.stringify({ partial })
+              )
+            );
+          }
+
+          const final = await stream.getFinalResponse();
+          controller.enqueue(
+            encoder.encode(
+              JSON.stringify({ final: final })
+            )
+          );
+          controller.close();
+        } catch (error) {
+          controller.error(error);
+        }
+      }
+    });
   }
 }

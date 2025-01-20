@@ -1,16 +1,10 @@
 import { BamlRuntime, FunctionResult, BamlCtxManager, BamlStream, Image, ClientRegistry, BamlValidationError, createBamlValidationError } from "@boundaryml/baml"
-import { Checked, Check } from "./types"
+import { Checked, Check, RecursivePartialNull } from "./types"
 import {
   {%- for t in types %}{{ t }}{% if !loop.last %}, {% endif %}{% endfor -%}
 } from "./types"
 import TypeBuilder from "./type_builder"
 import { DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX, DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME } from "./globals"
-
-export type RecursivePartialNull<T> = T extends object
-  ? {
-      [P in keyof T]?: RecursivePartialNull<T[P]>;
-    }
-  : T | null;
 
 export class BamlAsyncClient {
   private runtime: BamlRuntime

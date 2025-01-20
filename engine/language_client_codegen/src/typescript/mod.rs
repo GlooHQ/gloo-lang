@@ -8,12 +8,48 @@ use baml_types::LiteralValue;
 use generate_types::type_name_for_checks;
 use indexmap::IndexMap;
 use internal_baml_core::{
-    configuration::GeneratorDefaultClientMode,
+    configuration::{GeneratorDefaultClientMode, GeneratorOutputType},
     ir::{repr::IntermediateRepr, FieldType, IRHelper},
 };
 
 use self::typescript_language_features::{ToTypescript, TypescriptLanguageFeatures};
 use crate::{dir_writer::FileCollector, field_type_attributes};
+
+mod framework {
+    use internal_baml_core::configuration::GeneratorOutputType;
+
+    #[derive(Debug, Clone, Copy)]
+    pub enum TypescriptFramework {
+        None,
+        React
+    }
+
+    impl TypescriptFramework {
+        pub fn from_generator_type(output_type: Option<GeneratorOutputType>) -> Self {
+            match output_type {
+                Some(GeneratorOutputType::TypescriptReact) => Self::React,
+                Some(GeneratorOutputType::Typescript) | None => Self::None,
+                Some(_) => panic!("Invalid generator type for TypeScript framework"),
+            }
+        }
+    }
+}
+
+use framework::TypescriptFramework;
+
+#[derive(askama::Template)]
+#[template(path = "react/server.ts.j2", escape = "none")]
+struct ReactServerActions {
+    funcs: Vec<TypescriptFunction>,
+    types: Vec<String>,
+}
+
+#[derive(askama::Template)]
+#[template(path = "react/client.tsx.j2", escape = "none")]
+struct ReactClientHooks {
+    funcs: Vec<TypescriptFunction>,
+    types: Vec<String>,
+}
 
 #[derive(askama::Template)]
 #[template(path = "async_client.ts.j2", escape = "none")]
@@ -52,6 +88,24 @@ impl From<TypescriptClient> for SyncTypescriptClient {
     }
 }
 
+impl From<TypescriptClient> for ReactServerActions {
+    fn from(value: TypescriptClient) -> Self {
+        Self {
+            funcs: value.funcs,
+            types: value.types,
+        }
+    }
+}
+
+impl From<TypescriptClient> for ReactClientHooks {
+    fn from(value: TypescriptClient) -> Self {
+        Self {
+            funcs: value.funcs,
+            types: value.types,
+        }
+    }
+}
+
 #[derive(Debug)]
 struct TypescriptFunction {
     name: String,
@@ -82,11 +136,18 @@ struct InlinedBaml {
 #[template(path = "tracing.ts.j2", escape = "none")]
 struct TypescriptTracing {}
 
+#[derive(askama::Template)]
+#[template(path = "react/types.ts.j2", escape = "none")]
+struct ReactTypes {}
+
 pub(crate) fn generate(
     ir: &IntermediateRepr,
     generator: &crate::GeneratorArgs,
 ) -> Result<IndexMap<PathBuf, String>> {
+    let framework = TypescriptFramework::from_generator_type(generator.client_type);
     let mut collector = FileCollector::<TypescriptLanguageFeatures>::new();
+
+    // Add base TypeScript files
     collector.add_template::<generate_types::TypescriptTypes>("types.ts", (ir, generator))?;
     collector.add_template::<generate_types::TypeBuilder>("type_builder.ts", (ir, generator))?;
     collector.add_template::<AsyncTypescriptClient>("async_client.ts", (ir, generator))?;
@@ -95,6 +156,16 @@ pub(crate) fn generate(
     collector.add_template::<TypescriptTracing>("tracing.ts", (ir, generator))?;
     collector.add_template::<TypescriptInit>("index.ts", (ir, generator))?;
     collector.add_template::<InlinedBaml>("inlinedbaml.ts", (ir, generator))?;
+
+    // Add framework-specific files
+    match framework {
+        TypescriptFramework::React => {
+            collector.add_template::<ReactTypes>("react/types.ts", (ir, generator))?;
+            collector.add_template::<ReactServerActions>("react/server.ts", (ir, generator))?;
+            collector.add_template::<ReactClientHooks>("react/client.tsx", (ir, generator))?;
+        }
+        TypescriptFramework::None => {}
+    }
 
     collector.commit(&generator.output_dir())
 }
@@ -199,6 +270,32 @@ impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for TypescriptIni
         Ok(TypescriptInit {
             default_client_mode: gen.default_client_mode.clone(),
         })
+    }
+}
+
+impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for ReactServerActions {
+    type Error = anyhow::Error;
+
+    fn try_from(params: (&'_ IntermediateRepr, &'_ crate::GeneratorArgs)) -> Result<Self> {
+        let typscript_client = TypescriptClient::try_from(params)?;
+        Ok(typscript_client.into())
+    }
+}
+
+impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for ReactClientHooks {
+    type Error = anyhow::Error;
+
+    fn try_from(params: (&'_ IntermediateRepr, &'_ crate::GeneratorArgs)) -> Result<Self> {
+        let typscript_client = TypescriptClient::try_from(params)?;
+        Ok(typscript_client.into())
+    }
+}
+
+impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for ReactTypes {
+    type Error = anyhow::Error;
+
+    fn try_from(_: (&IntermediateRepr, &crate::GeneratorArgs)) -> Result<Self> {
+        Ok(ReactTypes {})
     }
 }
 
