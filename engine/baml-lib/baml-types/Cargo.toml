@@ -25,6 +25,7 @@ serde_json.workspace = true
 strum.workspace = true
 tracing-core.workspace = true
 web-time.workspace = true
+tokio.workspace = true
 
 [dependencies.indexmap]
 workspace = true
