@@ -268,6 +268,31 @@ export class BamlAsyncClient {
     }
   }
   
+  async AssertFn(
+      a: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<number> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "AssertFn",
+        {
+          "a": a
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as number
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   async AudioInput(
       aud: Audio,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -3782,6 +3807,39 @@ class BamlStreamClient {
         raw,
         (a): a is RecursivePartialNull<OptionalListAndMap> => a,
         (a): a is OptionalListAndMap => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  AssertFn(
+      a: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<number>, number> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "AssertFn",
+        {
+          "a": a
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<number>, number>(
+        raw,
+        (a): a is RecursivePartialNull<number> => a,
+        (a): a is number => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
