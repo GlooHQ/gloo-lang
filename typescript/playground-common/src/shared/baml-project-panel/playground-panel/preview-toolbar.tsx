@@ -3,18 +3,17 @@
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { atom, useAtom, useAtomValue } from 'jotai'
-import { Braces, Bug, BugIcon, ChevronDown, FileJson, PlayCircle, Settings, Workflow } from 'lucide-react'
+import { Braces, Bug, BugIcon, ChevronDown, Copy, FileJson, PlayCircle, Settings, Workflow } from 'lucide-react'
 import React from 'react'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { areTestsRunningAtom, selectedItemAtom, showEnvDialogAtom } from './atoms'
 import { FunctionTestName } from './function-test-name'
 import { useRunTests } from './prompt-preview/test-panel/test-runner'
-import { Dialog, DialogContent } from '@radix-ui/react-dialog'
-import EnvVars from './side-bar/env-vars'
 import { cn } from '@/lib/utils'
 import { areEnvVarsMissingAtom } from './atoms'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { renderedPromptAtom } from './prompt-preview/prompt-preview-content'
 export const renderModeAtom = atom<'prompt' | 'curl' | 'tokens'>('prompt')
 
 const RunButton: React.FC = () => {
@@ -25,7 +24,7 @@ const RunButton: React.FC = () => {
     <Button
       variant='default'
       size='sm'
-      className='items-center px-2 space-x-2 h-7 text-sm text-white bg-purple-500 hover:bg-purple-700 disabled:bg-muted disabled:text-muted-foreground dark:bg-purple-700 dark:text-foreground dark:hover:bg-purple-800'
+      className='items-center px-2 space-x-2 h-7 text-sm text-white bg-purple-500 hover:bg-purple-700 disabled:bg-muted disabled:text-muted-foreground dark:bg-purple-600 dark:text-foreground dark:hover:bg-purple-800'
       disabled={isRunning || selected === undefined}
       onClick={() => {
         if (selected) {
@@ -58,10 +57,24 @@ export default function Component() {
 
   const areEnvVarsMissing = useAtomValue(areEnvVarsMissingAtom)
   const [isClientCallGraphEnabled, setIsClientCallGraphEnabled] = useAtom(isClientCallGraphEnabledAtom)
+  const renderedPrompt = useAtomValue(renderedPromptAtom)
+  const [showCopied, setShowCopied] = React.useState(false)
 
   const selectedOption = options.find((opt) => opt.value === renderMode)
 
   const SelectedIcon = selectedOption?.icon || FileJson
+
+  const handleCopy = () => {
+    if (!renderedPrompt) return
+    navigator.clipboard.writeText(
+      renderedPrompt
+        .as_chat()
+        ?.map((msg) => `${msg.role}:\n${msg.parts.map((part) => part.as_text()).join('\n')}`)
+        .join('\n\n') ?? '',
+    )
+    setShowCopied(true)
+    setTimeout(() => setShowCopied(false), 1500)
+  }
 
   return (
     <div className='flex flex-col gap-1'>
@@ -127,6 +140,18 @@ export default function Component() {
             </TooltipTrigger>
             <TooltipContent>
               <p>Show LLM Client Call Graph</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip delayDuration={100}>
+            <TooltipTrigger>
+              <Button variant='ghost' size='sm' className={cn('hover:text-purple-500')} onClick={handleCopy}>
+                {showCopied ? 'Copied!' : <Copy className='w-4 h-4' />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Copy Prompt</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

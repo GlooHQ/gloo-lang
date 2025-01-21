@@ -9,19 +9,30 @@ export type EditorFile = {
   content: string
 }
 
+export async function test() {
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+  console.log('test')
+  return 'test'
+}
+
 export async function createUrl(project: BAMLProject): Promise<string> {
   // Replace spaces, slashes, and other non-alphanumeric characters with dashes
   const projectName = project.name
   const safeProjectName = projectName.replace(/[^a-zA-Z0-9]/g, '-')
   const urlId = `${safeProjectName}-${nanoid(5)}`
-  console.log(project)
-  const urlResponse = await kv.set(urlId, project, {
-    nx: true,
-  })
-  if (!urlResponse) {
+  console.log('Created urlId', urlId)
+  try {
+    const urlResponse = await kv.set(urlId, project, {
+      nx: true,
+    })
+    if (!urlResponse) {
+      throw new Error('Failed to create URL')
+    }
+    return urlId
+  } catch (e) {
+    console.log('Error creating url', e)
     throw new Error('Failed to create URL')
   }
-  return urlId
 }
 
 export async function updateUrl(urlId: string, editorFiles: EditorFile[]): Promise<void> {
