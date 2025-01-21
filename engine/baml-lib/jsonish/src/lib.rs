@@ -1,9 +1,11 @@
+pub mod helpers;
+
 #[cfg(test)]
 mod tests;
 
 use anyhow::Result;
 pub mod deserializer;
-mod jsonish;
+pub mod jsonish;
 
 use baml_types::FieldType;
 use deserializer::coercer::{ParsingContext, TypeCoercer};

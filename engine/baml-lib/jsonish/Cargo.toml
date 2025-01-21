@@ -34,3 +34,8 @@ regex.workspace = true
 
 [dev-dependencies]
 assert-json-diff = "2.0.2"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "jsonish_benchmark"
+harness = false

@@ -2,8 +2,8 @@ macro_rules! test_failing_deserializer {
     ($name:ident, $file_content:expr, $raw_string:expr, $target_type:expr) => {
         #[test_log::test]
         fn $name() {
-            let ir = load_test_ir($file_content);
-            let target = render_output_format(&ir, &$target_type, &Default::default()).unwrap();
+            let ir = crate::helpers::load_test_ir($file_content);
+            let target = crate::helpers::render_output_format(&ir, &$target_type, &Default::default()).unwrap();
 
             let result = from_str(&target, &$target_type, $raw_string, false);
 
@@ -39,8 +39,8 @@ macro_rules! test_deserializer {
     ($name:ident, $file_content:expr, $raw_string:expr, $target_type:expr, $($json:tt)+) => {
         #[test_log::test]
         fn $name() {
-            let ir = load_test_ir($file_content);
-            let target = render_output_format(&ir, &$target_type, &Default::default()).unwrap();
+            let ir = crate::helpers::load_test_ir($file_content);
+            let target = crate::helpers::render_output_format(&ir, &$target_type, &Default::default()).unwrap();
 
             let result = from_str(
                 &target,
@@ -68,8 +68,8 @@ macro_rules! test_deserializer_with_expected_score {
     ($name:ident, $file_content:expr, $raw_string:expr, $target_type:expr, $target_score:expr) => {
         #[test_log::test]
         fn $name() {
-            let ir = load_test_ir($file_content);
-            let target = render_output_format(&ir, &$target_type, &Default::default()).unwrap();
+            let ir = crate::helpers::load_test_ir($file_content);
+            let target = crate::helpers::render_output_format(&ir, &$target_type, &Default::default()).unwrap();
 
             let result = from_str(&target, &$target_type, $raw_string, false);
 
@@ -87,8 +87,8 @@ macro_rules! test_partial_deserializer {
     ($name:ident, $file_content:expr, $raw_string:expr, $target_type:expr, $($json:tt)+) => {
         #[test_log::test]
         fn $name() {
-            let ir = load_test_ir($file_content);
-            let target = render_output_format(&ir, &$target_type, &Default::default()).unwrap();
+            let ir = crate::helpers::load_test_ir($file_content);
+            let target = crate::helpers::render_output_format(&ir, &$target_type, &Default::default()).unwrap();
 
             let result = from_str(
                 &target,
