@@ -46,10 +46,13 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
       console.log('Updating files due: project', project.id)
       setUnsavedChanges(false)
       setFiles(
-        project.files.reduce((acc, f) => {
-          acc[f.path] = f.content
-          return acc
-        }, {} as Record<string, string>),
+        project.files.reduce(
+          (acc, f) => {
+            acc[f.path] = f.content
+            return acc
+          },
+          {} as Record<string, string>,
+        ),
       )
     }
   }, [project.id])
@@ -60,23 +63,23 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
 
   return (
     // firefox wont apply the background color for some reason so we forcefully set it.
-    <div className="flex relative flex-row w-full h-full main-panel overflow-x-clip overflow-y-clip">
-      <CustomErrorBoundary message="Error loading project">
+    <div className='flex relative flex-row w-full h-full main-panel overflow-x-clip overflow-y-clip'>
+      <CustomErrorBoundary message='Error loading project'>
         <EventListener>
           {/* noop for now -- we dont need to nest all the other components in the EventListener since we use jotaiprovider store and we dont want to rerender needlessly */}
           <div></div>
         </EventListener>
         {isMobile && (
-          <div className="absolute bottom-0 left-0 right-0 font-semibold  border-t-[1px] w-full h-[100px] z-50 text-center p-8">
+          <div className='absolute bottom-0 left-0 right-0 font-semibold  border-t-[1px] w-full h-[100px] z-50 text-center p-8'>
             Visit PromptFiddle on Desktop to get the best experience
           </div>
         )}
-        <ResizablePanelGroup className="w-full h-full overflow-clip" direction="horizontal">
+        <ResizablePanelGroup className='w-full h-full overflow-clip' direction='horizontal'>
           {!isMobile && <ProjectSidebar />}
 
-          <ResizableHandle className="" />
+          <ResizableHandle className='' />
           <ResizablePanel defaultSize={88}>
-            <div className="flex-col w-full h-full font-sans">
+            <div className='flex-col w-full h-full font-sans'>
               <TopNavbar
                 project={project}
                 projectName={projectName}
@@ -89,33 +92,33 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                   // the size of the topnavbar
                   height: 'calc(100% - 55px)',
                 }}
-                className="flex flex-row h-full overflow-clip"
+                className='flex flex-row h-full overflow-clip'
               >
-                <ResizablePanelGroup className="min-h-[200px] w-full rounded-lg overflow-clip" direction="horizontal">
+                <ResizablePanelGroup className='min-h-[200px] w-full rounded-lg overflow-clip' direction='horizontal'>
                   <ResizablePanel defaultSize={50}>
-                    <div className="flex flex-col py-1 pl-2 w-full text-xs whitespace-nowrap border-none items-left h-fit">
+                    <div className='flex flex-col py-1 pl-2 w-full text-xs whitespace-nowrap border-none items-left h-fit'>
                       <Editable
                         text={description}
-                        placeholder="Write a task name"
-                        type="input"
+                        placeholder='Write a task name'
+                        type='input'
                         childRef={descriptionInputRef}
-                        className="px-2 py-2 w-full text-sm font-normal text-left border-none text-foreground"
+                        className='px-2 py-2 w-full text-sm font-normal text-left border-none text-foreground'
                       >
                         <textarea
-                          className="w-[95%] ml-2 px-2 text-sm border-none"
+                          className='w-[95%] ml-2 px-2 text-sm border-none'
                           ref={descriptionInputRef}
-                          name="task"
-                          placeholder="Write a description"
+                          name='task'
+                          placeholder='Write a description'
                           value={description}
                           onChange={(e) => setDescription(e.target.value)}
                         />
                       </Editable>
                     </div>
-                    <div className="flex pl-1 w-full h-full tour-editor dark:bg-muted/70">
-                      <ScrollArea className="w-full h-full">
+                    <div className='flex pl-1 w-full h-full tour-editor dark:bg-muted/70'>
+                      <ScrollArea className='w-full h-full'>
                         {activeFileName && (
                           <CodeMirrorViewer
-                            lang="baml"
+                            lang='baml'
                             fileContent={{
                               code: files[activeFileName],
                               language: 'baml',
@@ -135,10 +138,10 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
                       </ScrollArea>
                     </div>
                   </ResizablePanel>
-                  <ResizableHandle className="" />
+                  <ResizableHandle className='' />
                   {!isMobile && (
-                    <ResizablePanel defaultSize={50} className="tour-playground">
-                      <div className="flex flex-row h-full">
+                    <ResizablePanel defaultSize={50} className='tour-playground'>
+                      <div className='flex flex-row h-full'>
                         <PlaygroundView />
                       </div>
                     </ResizablePanel>
@@ -173,20 +176,20 @@ export const FunctionSelectorProvider = () => {
 
 export const ProjectSidebar = () => {
   return (
-    <ResizablePanel defaultSize={16} className=" h-full dark:bg-[#020309] bg-muted">
-      <div className="flex flex-row justify-center items-center pt-4 w-full">
-        <a href={'/'} className="flex flex-row items-center text-lg font-semibold text-center w-fit text-foreground">
-          <Image src="/baml-lamb-white.png" alt="Prompt Fiddle" width={40} height={40} />
+    <ResizablePanel defaultSize={16} className=' h-full dark:bg-[#020309] bg-muted'>
+      <div className='flex flex-row justify-center items-center pt-4 w-full'>
+        <a href={'/'} className='flex flex-row items-center text-lg font-semibold text-center w-fit text-foreground'>
+          <Image src='/baml-lamb-white.png' alt='Prompt Fiddle' width={40} height={40} />
           Prompt Fiddle
         </a>
       </div>
 
-      <ResizablePanelGroup className="pb-4 h-full" direction="vertical">
-        <ResizablePanel defaultSize={100} className="h-full">
-          <div className="px-2 pt-4 w-full text-xs font-normal text-center uppercase text-muted-foreground">
+      <ResizablePanelGroup className='pb-4 h-full' direction='vertical'>
+        <ResizablePanel defaultSize={100} className='h-full'>
+          <div className='px-2 pt-4 w-full text-xs font-normal text-center uppercase text-muted-foreground'>
             project files
           </div>
-          <div className="flex flex-col pb-8 w-full h-full tour-file-view">
+          <div className='flex flex-col pb-8 w-full h-full tour-file-view'>
             <FileViewer />
           </div>
         </ResizablePanel>
@@ -206,9 +209,9 @@ export const ProjectView = ({ project }: { project: BAMLProject }) => {
 const PlaygroundView = () => {
   return (
     <>
-      <CustomErrorBoundary message="Error loading playground">
+      <CustomErrorBoundary message='Error loading playground'>
         <Suspense fallback={<div>Loading...</div>}>
-          <div className="flex flex-col w-full h-full">
+          <div className='flex flex-col w-full h-full'>
             <PromptPreview />
           </div>
 

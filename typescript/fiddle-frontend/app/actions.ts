@@ -33,7 +33,6 @@ export async function createUrl(project: BAMLProject): Promise<string> {
     console.log('Error creating url', e)
     throw new Error('Failed to create URL')
   }
-  
 }
 
 export async function updateUrl(urlId: string, editorFiles: EditorFile[]): Promise<void> {
