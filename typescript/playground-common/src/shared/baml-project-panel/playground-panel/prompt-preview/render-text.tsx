@@ -47,16 +47,22 @@ export const RenderPromptPart: React.FC<{
     // Only do highlighting if we're not tokenizing
     if (!highlightChunks?.length) return text
 
-    let result = text
-    highlightChunks.forEach((chunk) => {
-      if (!chunk) return
-      const regex = new RegExp(`(${chunk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g')
-      result = result.replace(
-        regex,
-        '<mark class="bg-yellow-100/70 text-yellow-900 dark:bg-yellow-800/30 dark:text-yellow-100 rounded-sm px-0.5">$1</mark>',
-      )
-    })
-    return result
+    try {
+      let result = text
+      highlightChunks.forEach((chunk) => {
+        if (!chunk) return
+        if (chunk.length > 30000) return
+        const regex = new RegExp(`(${chunk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g')
+        result = result.replace(
+          regex,
+          '<mark class="bg-yellow-100/70 text-yellow-900 dark:bg-yellow-800/30 dark:text-yellow-100 rounded-sm px-0.5">$1</mark>',
+        )
+      })
+      return result
+    } catch (e) {
+      console.error('Error highlighting text', e)
+      return text
+    }
   }, [text, highlightChunks, tokenizer])
 
   return (

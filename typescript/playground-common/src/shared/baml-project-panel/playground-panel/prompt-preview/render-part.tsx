@@ -34,7 +34,12 @@ export const RenderPart: React.FC<{
 
     // this makes it so that we can escape html
     const text = he.encode(part.as_text() ?? '')
-    const allChunks = extractStringValues(testCase?.inputs ?? [])
+    // Skip processing if any input value is too large
+    const hasLargeInput = (testCase?.inputs ?? []).some(
+      (input) => typeof input.value === 'string' && input.value.length > 20000,
+    )
+
+    const allChunks = hasLargeInput ? [] : extractStringValues(testCase?.inputs ?? [])
     const highlightChunks = allChunks.filter((chunk) => {
       if (!chunk || !text) return false
       try {
@@ -46,6 +51,7 @@ export const RenderPart: React.FC<{
         // Only include chunks that appear at least once in the text
         return matches && matches.length === 1
       } catch (e) {
+        console.error('Error highlighting text part', e)
         return false
       }
     })
