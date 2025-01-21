@@ -57,24 +57,6 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   const projectNameInputRef = useRef(null)
   const [description, setDescription] = useState(project.description)
   const descriptionInputRef = useRef(null)
-  const setOpenExplorePanel = useSetAtom(exploreProjectsOpenAtom)
-  const setSelectedFunction = useSetAtom(selectedFunctionAtom)
-  const { functions } = useAtomValue(runtimeStateAtom)
-  const editorFiles = useAtomValue(currentEditorFilesAtom)
-  const stringifiedEditorFilePaths = JSON.stringify(editorFiles.map((f) => f.path))
-
-  useEffect(() => {
-    const func = functions.find((f) => f.span.file_path === activeFileName)
-    if (func) {
-      setSelectedFunction(func.name)
-    }
-  }, [stringifiedEditorFilePaths, activeFileName, functions])
-
-  useEffect(() => {
-    console.log('activeFileName', activeFileName)
-    if (activeFileName) {
-    }
-  }, [activeFileName])
 
   return (
     // firefox wont apply the background color for some reason so we forcefully set it.
@@ -166,9 +148,27 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
+        <FunctionSelectorProvider />
       </CustomErrorBoundary>
     </div>
   )
+}
+
+export const FunctionSelectorProvider = () => {
+  const activeFileName = useAtomValue(activeFileNameAtom)
+
+  const { functions } = useAtomValue(runtimeStateAtom)
+  const editorFiles = useAtomValue(currentEditorFilesAtom)
+  const stringifiedEditorFilePaths = JSON.stringify(editorFiles.map((f) => f.path))
+  const setSelectedFunction = useSetAtom(selectedFunctionAtom)
+
+  useEffect(() => {
+    const func = functions.find((f) => f.span.file_path === activeFileName)
+    if (func) {
+      setSelectedFunction(func.name)
+    }
+  }, [stringifiedEditorFilePaths, activeFileName, functions])
+  return null
 }
 
 export const ProjectSidebar = () => {
