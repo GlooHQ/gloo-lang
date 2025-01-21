@@ -112,9 +112,13 @@ class VSCodeAPIWrapper {
   }
 
   public async markInitialized() {
-    await this.rpc<InitializedRequest, InitializedResponse>({
-      vscodeCommand: 'INITIALIZED',
-    })
+    try {
+      await this.rpc<InitializedRequest, InitializedResponse>({
+        vscodeCommand: 'INITIALIZED',
+      })
+    } catch (e) {
+      console.log('Error marking initialized', e)
+    }
   }
 
   public rpc<TRequest, TResponse>(data: TRequest): Promise<TResponse> {

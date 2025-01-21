@@ -6,27 +6,45 @@ import { useTheme } from 'next-themes'
 import { RenderPromptPart } from '../../render-text'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
+const ErrorText = ({ text }: { text: string }) => {
+  return <pre className='text-xs text-red-500 whitespace-pre-wrap'>{text}</pre>
+}
+
 // Renders the parsed response only
 export const ParsedResponseRenderer: React.FC<{
   response?: WasmFunctionResponse | WasmTestResponse
 }> = ({ response }) => {
-  if (!response || !response.parsed_response()) {
+  if (!response) {
     return <div className='text-xs text-muted-foreground'>Waiting for response...</div>
   }
 
-  const parsedResponse = response.parsed_response()
-  if (parsedResponse === undefined) {
-    return null
-  }
-  if (typeof parsedResponse === 'string') {
-    return <ParsedResponseRender response={parsedResponse} />
+  const llmFailure = response.llm_failure()
+  const failureMessage = 'failure_message' in response ? response.failure_message() : undefined
+
+  if (llmFailure) {
+    return <ErrorText text={llmFailure.message} />
   }
 
-  return <ParsedResponseRender response={parsedResponse.value} />
+  const parsedResponse = response.parsed_response()
+
+  return (
+    <div>
+      {typeof parsedResponse === 'string' ? (
+        <ParsedResponseRender response={parsedResponse} />
+      ) : (
+        <ParsedResponseRender response={parsedResponse?.value} />
+      )}
+      {failureMessage && <ErrorText text={failureMessage} />}
+    </div>
+  )
 }
 
-const ParsedResponseRender = ({ response }: { response: string }) => {
+const ParsedResponseRender = ({ response }: { response: string | undefined }) => {
   const { theme } = useTheme()
+
+  if (!response) {
+    return
+  }
 
   let parsedResponseObj
   try {

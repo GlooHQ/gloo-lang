@@ -1,7 +1,7 @@
 import type { BAMLProject } from '@/lib/exampleProjects'
 import { loadProject } from '@/lib/loadProject'
 import dynamic from 'next/dynamic'
-const ProjectView = dynamic(() => import('./[project_id]/_components/ProjectView'), { ssr: false })
+const ProjectView = dynamic(() => import('./[project_id]/_components/ProjectView'), { ssr: true })
 
 type SearchParams = {
   id: string
@@ -18,12 +18,12 @@ export default async function Home({
   params,
 }: {
   searchParams: SearchParams
-  params: { project_id: string }
+  params: Promise<{ project_id: string }>
 }) {
-  const data: BAMLProject = await loadProject(params, true)
+  const data: BAMLProject = await loadProject(Promise.resolve(params), true)
   return (
-    <main className='flex flex-col justify-between items-center min-h-screen font-sans'>
-      <div className='w-screen h-screen'>
+    <main className="flex flex-col justify-between items-center min-h-screen font-sans">
+      <div className="w-screen h-screen">
         <ProjectView project={data} />
         {/* <Suspense fallback={<div>Loading...</div>}>{children}</Suspense> */}
       </div>
