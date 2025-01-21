@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="51" failures="4" errors="0" time="35.543">
+  <testsuite name="Error Handling Tests" errors="0" failures="0" skipped="0" timestamp="2025-01-21T22:39:19" time="5.139" tests="4">
+    <testcase classname="Error Handling Tests should raise an error for invalid argument types" name="Error Handling Tests should raise an error for invalid argument types" time="0.038">
+    </testcase>
+    <testcase classname="Error Handling Tests should raise an error for invalid client configuration" name="Error Handling Tests should raise an error for invalid client configuration" time="0.227">
+    </testcase>
+    <testcase classname="Error Handling Tests should raise a BAMLValidationError with proper details" name="Error Handling Tests should raise a BAMLValidationError with proper details" time="0.441">
+    </testcase>
+    <testcase classname="Error Handling Tests should handle client HTTP errors" name="Error Handling Tests should handle client HTTP errors" time="0.154">
+    </testcase>
+  </testsuite>
+  <testsuite name="Tracing Tests" errors="0" failures="0" skipped="0" timestamp="2025-01-21T22:39:19" time="7.25" tests="2">
+    <testcase classname="Tracing Tests Sync Tracing supports tracing sync" name="Tracing Tests Sync Tracing supports tracing sync" time="0.002">
+    </testcase>
+    <testcase classname="Tracing Tests Async Tracing supports tracing async" name="Tracing Tests Async Tracing supports tracing async" time="3.207">
+    </testcase>
+  </testsuite>
+  <testsuite name="Anthropic Provider" errors="0" failures="0" skipped="0" timestamp="2025-01-21T22:39:19" time="7.85" tests="2">
+    <testcase classname="Anthropic Provider should support anthropic shorthand" name="Anthropic Provider should support anthropic shorthand" time="2.463">
+    </testcase>
+    <testcase classname="Anthropic Provider Streaming should support streaming in Claude" name="Anthropic Provider Streaming should support streaming in Claude" time="1.127">
+    </testcase>
+  </testsuite>
+  <testsuite name="Constraint Tests" errors="0" failures="0" skipped="0" timestamp="2025-01-21T22:39:19" time="8.15" tests="4">
+    <testcase classname="Constraint Tests should handle checks in return types" name="Constraint Tests should handle checks in return types" time="1.235">
+    </testcase>
+    <testcase classname="Constraint Tests should handle checks in returned unions" name="Constraint Tests should handle checks in returned unions" time="1.332">
+    </testcase>
+    <testcase classname="Constraint Tests should handle block-level checks" name="Constraint Tests should handle block-level checks" time="0.595">
+    </testcase>
+    <testcase classname="Constraint Tests should handle nested-block-level checks" name="Constraint Tests should handle nested-block-level checks" time="0.802">
+    </testcase>
+  </testsuite>
+  <testsuite name="Azure Provider" errors="0" failures="1" skipped="0" timestamp="2025-01-21T22:39:26" time="0.935" tests="2">
+    <testcase classname="Azure Provider should support azure" name="Azure Provider should support azure" time="0.459">
+      <failure>Error: expect(received).toContain(expected) // indexOf
+
+Expected substring: &quot;donkey&quot;
+Received string:    &quot;barrel-throwing ape
+scaling heights with grace and strength
+king of the jungle&quot;
+    at Object.&lt;anonymous&gt; (/Users/aaronvillalpando/Projects/baml/integ-tests/typescript/tests/providers/azure.test.ts:6:31)</failure>
+    </testcase>
+    <testcase classname="Azure Provider should fail if azure is not configured" name="Azure Provider should fail if azure is not configured" time="0.072">
+    </testcase>
+  </testsuite>
+  <testsuite name="Recursive Type Tests" errors="0" failures="0" skipped="0" timestamp="2025-01-21T22:39:19" time="10.745" tests="2">
+    <testcase classname="Recursive Type Tests simple recursive type" name="Recursive Type Tests simple recursive type" time="3.026">
+    </testcase>
+    <testcase classname="Recursive Type Tests mutually recursive type" name="Recursive Type Tests mutually recursive type" time="3.438">
+    </testcase>
+  </testsuite>
+  <testsuite name="Basic Input/Output Tests" errors="0" failures="0" skipped="0" timestamp="2025-01-21T22:39:19" time="12.116" tests="8">
+    <testcase classname="Basic Input/Output Tests Input Types single bool" name="Basic Input/Output Tests Input Types single bool" time="1.008">
+    </testcase>
+    <testcase classname="Basic Input/Output Tests Input Types single string list" name="Basic Input/Output Tests Input Types single string list" time="0.447">
+    </testcase>
+    <testcase classname="Basic Input/Output Tests Input Types single class" name="Basic Input/Output Tests Input Types single class" time="0.595">
+    </testcase>
+    <testcase classname="Basic Input/Output Tests Input Types multiple classes" name="Basic Input/Output Tests Input Types multiple classes" time="0.606">
+    </testcase>
+    <testcase classname="Basic Input/Output Tests Input Types single enum list" name="Basic Input/Output Tests Input Types single enum list" time="0.407">
+    </testcase>
+    <testcase classname="Basic Input/Output Tests Input Types single float" name="Basic Input/Output Tests Input Types single float" time="0.478">
+    </testcase>
+    <testcase classname="Basic Input/Output Tests Input Types single int" name="Basic Input/Output Tests Input Types single int" time="0.672">
+    </testcase>
+    <testcase classname="Basic Input/Output Tests Output Types should work for all outputs" name="Basic Input/Output Tests Output Types should work for all outputs" time="3.754">
+    </testcase>
+  </testsuite>
+  <testsuite name="Dynamic Type Tests" errors="0" failures="0" skipped="0" timestamp="2025-01-21T22:39:19" time="13.387" tests="4">
+    <testcase classname="Dynamic Type Tests Basic Dynamic Types should work with dynamic types single" name="Dynamic Type Tests Basic Dynamic Types should work with dynamic types single" time="2.211">
+    </testcase>
+    <testcase classname="Dynamic Type Tests Basic Dynamic Types should work with dynamic types enum" name="Dynamic Type Tests Basic Dynamic Types should work with dynamic types enum" time="1.342">
+    </testcase>
+    <testcase classname="Dynamic Type Tests Complex Dynamic Types should work with dynamic output map" name="Dynamic Type Tests Complex Dynamic Types should work with dynamic output map" time="3.041">
+    </testcase>
+    <testcase classname="Dynamic Type Tests Complex Dynamic Types should work with dynamic output union" name="Dynamic Type Tests Complex Dynamic Types should work with dynamic output union" time="2.5">
+    </testcase>
+  </testsuite>
+  <testsuite name="Gemini Provider" errors="0" failures="0" skipped="0" timestamp="2025-01-21T22:39:24" time="9.004" tests="1">
+    <testcase classname="Gemini Provider Streaming should support streaming in Gemini" name="Gemini Provider Streaming should support streaming in Gemini" time="8.596">
+    </testcase>
+  </testsuite>
+  <testsuite name="Vertex Provider" errors="0" failures="0" skipped="0" timestamp="2025-01-21T22:39:27" time="15.065" tests="2">
+    <testcase classname="Vertex Provider should support vertex" name="Vertex Provider should support vertex" time="10.725">
+    </testcase>
+    <testcase classname="Vertex Provider should support vertex with system instructions" name="Vertex Provider should support vertex with system instructions" time="3.95">
+    </testcase>
+  </testsuite>
+  <testsuite name="OpenAI Provider" errors="0" failures="0" skipped="0" timestamp="2025-01-21T22:39:19" time="28.808" tests="3">
+    <testcase classname="OpenAI Provider should support OpenAI shorthand" name="OpenAI Provider should support OpenAI shorthand" time="10.03">
+    </testcase>
+    <testcase classname="OpenAI Provider Streaming should support streaming in OpenAI" name="OpenAI Provider Streaming should support streaming in OpenAI" time="7.149">
+    </testcase>
+    <testcase classname="OpenAI Provider Streaming should support streaming without iterating" name="OpenAI Provider Streaming should support streaming without iterating" time="7.341">
+    </testcase>
+  </testsuite>
+  <testsuite name="AWS Provider" errors="0" failures="3" skipped="0" timestamp="2025-01-21T22:39:19" time="35.298" tests="17">
+    <testcase classname="AWS Provider should support AWS" name="AWS Provider should support AWS" time="1.734">
+    </testcase>
+    <testcase classname="AWS Provider should handle invalid AWS region gracefully" name="AWS Provider should handle invalid AWS region gracefully" time="0.935">
+    </testcase>
+    <testcase classname="AWS Provider should handle invalid AWS access key gracefully" name="AWS Provider should handle invalid AWS access key gracefully" time="0.396">
+    </testcase>
+    <testcase classname="AWS Provider Streaming should support streaming in AWS" name="AWS Provider Streaming should support streaming in AWS" time="1.527">
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry Credential Resolution should handle session credentials correctly" name="AWS Provider Dynamic Client Registry Credential Resolution should handle session credentials correctly" time="0.442">
+      <failure>InvalidClientTokenId: The security token included in the request is invalid.
+    at throwDefaultError (/Users/aaronvillalpando/Projects/baml/integ-tests/typescript/node_modules/.pnpm/@smithy+smithy-client@3.7.0/node_modules/@smithy/smithy-client/dist-cjs/index.js:844:20)
+    at /Users/aaronvillalpando/Projects/baml/integ-tests/typescript/node_modules/.pnpm/@smithy+smithy-client@3.7.0/node_modules/@smithy/smithy-client/dist-cjs/index.js:853:5
+    at de_CommandError (/Users/aaronvillalpando/Projects/baml/integ-tests/typescript/node_modules/.pnpm/@aws-sdk+client-sts@3.721.0/node_modules/@aws-sdk/client-sts/dist-cjs/index.js:505:14)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at /Users/aaronvillalpando/Projects/baml/integ-tests/typescript/node_modules/.pnpm/@smithy+middleware-serde@3.0.11/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
+    at /Users/aaronvillalpando/Projects/baml/integ-tests/typescript/node_modules/.pnpm/@smithy+core@2.5.7/node_modules/@smithy/core/dist-cjs/index.js:168:18
+    at /Users/aaronvillalpando/Projects/baml/integ-tests/typescript/node_modules/.pnpm/@smithy+middleware-retry@3.0.34/node_modules/@smithy/middleware-retry/dist-cjs/index.js:320:38
+    at /Users/aaronvillalpando/Projects/baml/integ-tests/typescript/node_modules/.pnpm/@aws-sdk+middleware-logger@3.714.0/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:34:22
+    at Object.&lt;anonymous&gt; (/Users/aaronvillalpando/Projects/baml/integ-tests/typescript/tests/providers/aws.test.ts:147:33)</failure>
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry Credential Resolution should require region in all environments" name="AWS Provider Dynamic Client Registry Credential Resolution should require region in all environments" time="0.398">
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry Credential Resolution should throw error when region is empty or AWS_REGION is unset" name="AWS Provider Dynamic Client Registry Credential Resolution should throw error when region is empty or AWS_REGION is unset" time="0.359">
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry should support dynamic client configuration" name="AWS Provider Dynamic Client Registry should support dynamic client configuration" time="1.405">
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry should support AWS credentials configuration" name="AWS Provider Dynamic Client Registry should support AWS credentials configuration" time="0.387">
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry should support AWS profile configuration" name="AWS Provider Dynamic Client Registry should support AWS profile configuration" time="1.46">
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry should support both model and model_id parameters" name="AWS Provider Dynamic Client Registry should support both model and model_id parameters" time="2.962">
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry should handle invalid configuration gracefully" name="AWS Provider Dynamic Client Registry should handle invalid configuration gracefully" time="2.263">
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry should handle non-existent model gracefully" name="AWS Provider Dynamic Client Registry should handle non-existent model gracefully" time="0.36">
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry should throw error when using temporary credentials without session token" name="AWS Provider Dynamic Client Registry should throw error when using temporary credentials without session token" time="0.715">
+      <failure>Error: expect(received).rejects.toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 0
+
+  Object {
+    &quot;code&quot;: &quot;GenericFailure&quot;,
+-   &quot;message&quot;: StringContaining &quot;Session token is required&quot;,
+  }
+    at Object.toMatchObject (/Users/aaronvillalpando/Projects/baml/integ-tests/typescript/node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:218:22)
+    at Object.&lt;anonymous&gt; (/Users/aaronvillalpando/Projects/baml/integ-tests/typescript/tests/providers/aws.test.ts:395:18)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)</failure>
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry should throw error when region is not provided" name="AWS Provider Dynamic Client Registry should throw error when region is not provided" time="4.849">
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry should throw error when using invalid profile" name="AWS Provider Dynamic Client Registry should throw error when using invalid profile" time="5.996">
+      <failure>Error: expect(received).toBeDefined()
+
+Received: undefined
+    at Object.&lt;anonymous&gt; (/Users/aaronvillalpando/Projects/baml/integ-tests/typescript/tests/providers/aws.test.ts:446:21)</failure>
+    </testcase>
+    <testcase classname="AWS Provider Dynamic Client Registry should support both AWS_REGION and AWS_DEFAULT_REGION environment variables" name="AWS Provider Dynamic Client Registry should support both AWS_REGION and AWS_DEFAULT_REGION environment variables" time="4.399">
+    </testcase>
+  </testsuite>
+</testsuites>

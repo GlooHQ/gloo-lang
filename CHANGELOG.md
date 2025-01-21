@@ -1,5 +1,58 @@
 # Changelog
 
+All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
+
+## [0.73.0](https://github.com/boundaryml/baml/compare/0.72.1..0.73.0) - 2025-01-21
+
+## High-level Overview
+This release includes V2 of our VSCode Playground!
+It includes
+- dark mode
+- test history
+- better rendering of errors, including markdown output renderer
+- cleaner UI
+- highlighting of inputs in prompts
+- Condensed table view to see results
+- Test navigation sidebar, to more quickly jump to different tests
+- many bugfixes and stability issues!
+
+See below for what we fixed and improved across all parts of BAML
+
+### Documentation
+
+- gemini generationConfig (#1348) - ([d3c7e1c](https://github.com/boundaryml/baml/commit/d3c7e1ca272ec191c60eb0a17e46c654db438217)) - Abhishek Tripathi
+- add baml-cli fmt docs (#1299) - ([a25e2bc](https://github.com/boundaryml/baml/commit/a25e2bc9389dffce633a8c1cdfa77456998d82fa)) - hellovai
+- Add more info on what forwarded options vs nonforwarded means (#1321) - ([9f39cb7](https://github.com/boundaryml/baml/commit/9f39cb7b3c6d9d9d7a53c73ac374458a0f56e7d8)) - aaronvg
+- Update cursor IDE instructions (#1331) - ([98b7783](https://github.com/boundaryml/baml/commit/98b778397feb6bfeca9fd88a808546469c9f173b)) - aaronvg
+
+### Features
+- New Playground V2 (#1304) - ([fa22c4f](https://github.com/boundaryml/baml/commit/fa22c4f741dd939bc5b2122a6625f998c8071625)) - aaronvg
+- update aws provider docs with credentials information (#1298) - ([aee52a3](https://github.com/boundaryml/baml/commit/aee52a3dc8417a32bc68cfdd43208ae1a5e3fd6e)) - Chris Watts
+- implement a gcp auth chain for vertex-ai clients (#1328) - ([6dfa23b](https://github.com/boundaryml/baml/commit/6dfa23b1005fce7ba662cfe8efd666cf0b0a8d0b)) - Samuel Lijin
+
+### Miscellaneous Chores
+
+- (dx) split out integ tests into provider specific  (#1296) - ([2c6279c](https://github.com/boundaryml/baml/commit/2c6279c53a5d9baea5317d5c25d8a9d3b4899c02)) - Samuel Lijin
+- add readmes for all relevant folders (#1302) - ([7165331](https://github.com/boundaryml/baml/commit/7165331fed459d2d3d2618774c2a6f9ec01d7fab)) - Chris Watts
+- remove ai generated readme (#1306) - ([e0bf112](https://github.com/boundaryml/baml/commit/e0bf11278761777284c6e157fdd0bbf3354e8b98)) - Chris Watts
+- fix elided-named-lifetimes and ban it (#1341) - ([ba303f0](https://github.com/boundaryml/baml/commit/ba303f0b44ecfcea248e17f3b9dedf558b28f63c)) - Samuel Lijin
+
+### Bug
+- update 404 link on docs (#1309) - ([65e2a1a](https://github.com/boundaryml/baml/commit/65e2a1ac2b2a158ea6f42193634dd21ff77d35b5)) - hellovai
+- finish_reason_allow_list and finish_reason_deny_list should be case insensitive (#1333) - ([1cbb268](https://github.com/boundaryml/baml/commit/1cbb268be01b5f46e59e696cc83424ffe814c81c)) - hellovai
+- windows generator bugfix (#1311) - ([ab64540](https://github.com/boundaryml/baml/commit/ab64540327f38a5bb8ca3452ad2c5a52d481bb9b)) - aaronvg
+- Type-narrowing for `if` blocks (#1313) - ([546f58f](https://github.com/boundaryml/baml/commit/546f58f1bde022501e32e353ba432026bc4b7423)) - Greg Hale
+- Enable ALPN feature in `reqwest` crate (#1318) - ([1ea1d8b](https://github.com/boundaryml/baml/commit/1ea1d8b37f20d0b1b63c14a24be10df1f00f1830)) - Antonio Sarosi
+- Fix Vertex system prompt (#1319) - ([4b7db0f](https://github.com/boundaryml/baml/commit/4b7db0f2f4c7e829455f8f695be912db08a4cb74)) - Antonio Sarosi
+- Add error boundary around posthog, add react-error-boundary dependency (#1327) - ([5c4acb4](https://github.com/boundaryml/baml/commit/5c4acb4e71d08386633c1c1a3149f6c779fd4aa2)) - aaronvg
+- Make literals nullable in generated python (#1334) - ([68745d0](https://github.com/boundaryml/baml/commit/68745d0ae9ab4c3c59097e6930ae984fea9283ab)) - Greg Hale
+- Fix type alias highlighting in promptfiddle (#1344) - ([81ab2ba](https://github.com/boundaryml/baml/commit/81ab2ba3dfe3679987572e4ce97170da0e06d767)) - Antonio Sarosi
+- Fix field type parsing (#1349) - ([d08445f](https://github.com/boundaryml/baml/commit/d08445f6ffcafcdf0758cff398c14ffa4f14d311)) - hellovai
+- Fix syntax highlighting for @@assert expressions with commas (#1357) - ([e5d595e](https://github.com/boundaryml/baml/commit/e5d595e311088574f4bbf94ddf95feb9abf727c9)) - aaronvg
+
+
+# Changelog
+
 <info>BAML generally gets an update every Monday.</info>
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
