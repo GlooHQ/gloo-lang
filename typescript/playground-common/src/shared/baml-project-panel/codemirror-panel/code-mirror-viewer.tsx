@@ -76,7 +76,7 @@ export const CodeMirrorViewer = ({
             return []
           }
         },
-        { delay: 200 },
+        { delay: 300 },
       )
     } else if (lang === 'python') {
       // use ruff wasm here
@@ -300,7 +300,7 @@ export const CodeMirrorViewer = ({
             onContentChange?.(value)
           }}
           readOnly={false}
-          extensions={[...extensions, ...inlineCopilotExtension]}
+          extensions={[...extensions]}
           theme={editorTheme}
           className="text-xs border-none"
           height="100%"

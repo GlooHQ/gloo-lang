@@ -79,7 +79,11 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   return (
     // firefox wont apply the background color for some reason so we forcefully set it.
     <div className="flex relative flex-row w-full h-full main-panel overflow-x-clip overflow-y-clip">
-      <EventListener>
+      <CustomErrorBoundary message="Error loading project">
+        <EventListener>
+          {/* noop for now -- we dont need to nest all the other components in the EventListener since we use jotaiprovider store and we dont want to rerender needlessly */}
+          <div></div>
+        </EventListener>
         {isMobile && (
           <div className="absolute bottom-0 left-0 right-0 font-semibold  border-t-[1px] w-full h-[100px] z-50 text-center p-8">
             Visit PromptFiddle on Desktop to get the best experience
@@ -162,7 +166,7 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
-      </EventListener>
+      </CustomErrorBoundary>
     </div>
   )
 }
