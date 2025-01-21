@@ -4,7 +4,15 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-## [0.72.0](https://github.com/boundaryml/baml/compare/0.71.1..0.71.2) - 2025-01-07
+## [0.72.1](https://github.com/boundaryml/baml/compare/0.72.0..0.72.1) - 2025-01-07
+
+Patch release to cherry-pick #1334 onto 0.72.0.
+
+### Bug Fixes
+ - Fix partial types containing literals in generated python (#1334) - ([4b30022](https://github.com/boundaryml/baml/commit/4b3002256a7556f95ef3342998b334709f7c145a)) - Greg Hale
+
+
+## [0.72.0](https://github.com/boundaryml/baml/compare/0.71.1..0.72.0) - 2025-01-07
 
 ### Bug Fixes
 
