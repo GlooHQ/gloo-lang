@@ -268,6 +268,31 @@ export class BamlSyncClient {
     }
   }
   
+  AssertFn(
+      a: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): number {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "AssertFn",
+      {
+        "a": a
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as number
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   AudioInput(
       aud: Audio,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
