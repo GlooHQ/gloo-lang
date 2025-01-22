@@ -82,7 +82,7 @@ const ResponseContent = ({
 
   return (
     <div className=''>
-      {failureMessage && <pre className='pb-2 text-xs text-red-500 text-balance'>Error: {failureMessage}</pre>}
+      {/* todo: render the failure if pretty or raw is selected. */}
       {responseViewType === 'parsed' && (
         <>
           <ParsedResponseRenderer response={getTestStateResponse(state)} />

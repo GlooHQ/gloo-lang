@@ -88,6 +88,7 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.0.7",
+    "@react-hook/debounce": "^4.0.0",
     "@rjsf/core": "^5.15.0",
     "@rjsf/utils": "^5.15.0",
     "@rjsf/validator-ajv8": "^5.15.0",
