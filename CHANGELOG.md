@@ -2,17 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+<info>BAML generally gets an update every Monday.</info>
+
+
+## [0.73.4](https://github.com/boundaryml/baml/compare/0.73.3..0.73.4) - 2025-01-22
+Fix another issue where playground could rerender over and over
+
 ## [0.73.3](https://github.com/boundaryml/baml/compare/0.73.2..0.73.3) - 2025-01-22
+Fix issue where playground could rerender over and over
 
 ### Bug Fixes
 
 - fix rerendering of component causing performance issue in the playground (#1368)
-  
-# Changelog
 
-<info>BAML generally gets an update every Monday.</info>
-
-All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 ## [0.73.2](https://github.com/boundaryml/baml/compare/0.73.1..0.73.2) - 2025-01-22
 
 
