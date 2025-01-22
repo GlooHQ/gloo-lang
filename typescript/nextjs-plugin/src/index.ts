@@ -45,7 +45,7 @@ export function withBaml(bamlConfig: BamlNextConfig = {}) {
         ? {
             serverExternalPackages: [
               ...((nextConfig as any)?.serverExternalPackages || []),
-              "@boundaryml/baml"
+              "@boundaryml/baml",
             ],
           }
         : {
@@ -53,7 +53,7 @@ export function withBaml(bamlConfig: BamlNextConfig = {}) {
               ...nextConfig.experimental,
               serverComponentsExternalPackages: [
                 ...((nextConfig.experimental as any)?.serverComponentsExternalPackages || []),
-                "@boundaryml/baml"
+                "@boundaryml/baml",
               ],
             },
           }),
@@ -63,6 +63,14 @@ export function withBaml(bamlConfig: BamlNextConfig = {}) {
         }
         if (typeof bamlConfig.webpack === 'function') {
           config = bamlConfig.webpack(config, context);
+        }
+
+        if (context.isServer) {
+          // Externalize the native module
+          config.externals = [
+            ...(Array.isArray(config.externals) ? config.externals : []),
+            '@boundaryml/baml',
+          ];
         }
 
         config.module = config.module || {};
