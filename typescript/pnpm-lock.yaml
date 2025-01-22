@@ -1050,6 +1050,9 @@ importers:
       '@uiw/codemirror-extensions-langs':
         specifier: ^4.23.7
         version: 4.23.7(@codemirror/autocomplete@6.18.4)(@codemirror/language-data@6.5.1)(@codemirror/language@6.10.8)(@codemirror/legacy-modes@6.4.2)(@codemirror/state@6.5.0)(@codemirror/view@6.36.1)(@lezer/common@1.2.3)(@lezer/highlight@1.2.1)(@lezer/javascript@1.4.21)(@lezer/lr@1.4.2)
+      '@uiw/codemirror-theme-github':
+        specifier: ^4.23.7
+        version: 4.23.7(@codemirror/language@6.10.8)(@codemirror/state@6.5.0)(@codemirror/view@6.36.1)
       '@uiw/codemirror-theme-vscode':
         specifier: ^4.21.25
         version: 4.23.7(@codemirror/language@6.10.8)(@codemirror/state@6.5.0)(@codemirror/view@6.36.1)
@@ -1095,9 +1098,6 @@ importers:
       fast-deep-equal:
         specifier: ^3.1.3
         version: 3.1.3
-      githubLight:
-        specifier: link:@uiw/react-json-view/githubLight
-        version: link:@uiw/react-json-view/githubLight
       hast:
         specifier: ^1.0.0
         version: 1.0.0
@@ -3823,6 +3823,9 @@ packages:
     peerDependencies:
       '@codemirror/language-data': '>=6.0.0'
       '@codemirror/legacy-modes': '>=6.0.0'
+
+  '@uiw/codemirror-theme-github@4.23.7':
+    resolution: {integrity: sha512-r9SstBZD7Ow1sQ8F0EpsRGx9b11K552M2FayvyLWTkal64YJmQMKW0S2KcWykgCMKLWhmDFi7LX+h8cg6nek8g==}
 
   '@uiw/codemirror-theme-vscode@4.23.7':
     resolution: {integrity: sha512-KDTeBWsLY9L0jBXFZXovuNJeDxR2B7qR5jKDptGT0M4sLCq8XG6jYGZbWDCgR8cq0CUvmrw+26xeTKcnA1BJOA==}
@@ -11514,6 +11517,14 @@ snapshots:
       - '@lezer/highlight'
       - '@lezer/javascript'
       - '@lezer/lr'
+
+  '@uiw/codemirror-theme-github@4.23.7(@codemirror/language@6.10.8)(@codemirror/state@6.5.0)(@codemirror/view@6.36.1)':
+    dependencies:
+      '@uiw/codemirror-themes': 4.23.7(@codemirror/language@6.10.8)(@codemirror/state@6.5.0)(@codemirror/view@6.36.1)
+    transitivePeerDependencies:
+      - '@codemirror/language'
+      - '@codemirror/state'
+      - '@codemirror/view'
 
   '@uiw/codemirror-theme-vscode@4.23.7(@codemirror/language@6.10.8)(@codemirror/state@6.5.0)(@codemirror/view@6.36.1)':
     dependencies:
