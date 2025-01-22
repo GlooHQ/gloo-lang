@@ -13,8 +13,6 @@ The way it works is:
 
 It's common for people to think of "function calling" or "tool use" separately from "structured outputs" (even OpenAI has separate parameters for them), but at BAML, we think it's simpler and more impactful to think of them equivalently. This is because, at the end of the day, you are looking to get something processable back from your LLM. Whether it's extracting data from a document or calling the Weather API, you need a standard representation of that output, which is where BAML lives.
 
-<control flow image>
-
 In BAML, you can get represent a `tool` or a `function` you want to call as a BAML `class`, and make the function output be that class definition.
 
 ```baml BAML
@@ -24,17 +22,14 @@ class WeatherAPI {
 }
 
 function UseTool(user_message: string) -> WeatherAPI {
-  client GPT4Turbo
+  client "openai/gpt-4o-mini"
   prompt #"
-    Extract the info from this message
-    ---
-    {{ user_message }}
-    ---
-
-    {# special macro to print the output schema. #}
+    Given a message, extract info.
+    {# special macro to print the functions return type. #}
     {{ ctx.output_format }}
 
-    JSON:
+    {{ _.role('user') }}
+    {{ user_message }}
   "#
 }
 ```
@@ -175,7 +170,15 @@ main
 To choose many tools, you can use a union of a list:
 ```baml BAML
 function UseTool(user_message: string) -> (WeatherAPI | MyOtherAPI)[] {
-  .... // same thing
+  client "openai/gpt-4o-mini"
+  prompt #"
+    Given a message, extract info.
+    {# special macro to print the functions return type. #}
+    {{ ctx.output_format }}
+
+    {{ _.role('user') }}
+    {{ user_message }}
+  "#
 }
 ```
 
@@ -255,14 +258,22 @@ main
 
 
 ## Dynamically Generate the tool signature
-It might be cumbersome to define schemas in baml and code, so you can define them from code as well. Read more about dynamic types [here](https://docs.boundaryml.com/guide/baml-advanced/dynamic-runtime-types)
+It might be cumbersome to define schemas in baml and code, so you can define them from code as well. Read more about dynamic types [here](/guide/baml-advanced/dynamic-runtime-types)
 ```baml BAML
 class WeatherAPI {
   @@dynamic // params defined from code
 }
 
 function UseTool(user_message: string) -> WeatherAPI {
-  .... // same thing
+  client "openai/gpt-4o-mini"
+  prompt #"
+    Given a message, extract info.
+    {# special macro to print the functions return type. #}
+    {{ ctx.output_format }}
+
+    {{ _.role('user') }}
+    {{ user_message }}
+  "#
 }
 ```
 
@@ -295,15 +306,9 @@ async def main():
 if __name__ == '__main__':
     asyncio.run(main())
 ```
-
-```typescript TypeScript
-...
-```
-
-```ruby Ruby
-...
-```
 </CodeGroup>
+
+<Warning>Note that the above approach is not fully generic. Recommended you read: [Dynamic JSON Schema](https://www.boundaryml.com/blog/dynamic-json-schemas)</Warning>
 
 ## Function-calling APIs vs Prompting
 Injecting your function schemas into the prompt, as BAML does, outperforms function-calling across all benchmarks for major providers ([see our Berkeley FC Benchmark results with BAML](https://www.boundaryml.com/blog/sota-function-calling?q=0)).
