@@ -137,7 +137,7 @@ export default function EnvVars() {
                   <motion.div
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    transition={{ delay: index * 0.02 }}
                     className='group relative flex items-center gap-2 rounded-sm px-1 py-0.5 transition-colors hover:bg-muted/30'
                   >
                     <div className='flex relative gap-2 items-center w-fit'>

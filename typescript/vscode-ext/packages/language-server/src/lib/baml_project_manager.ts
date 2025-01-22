@@ -160,6 +160,7 @@ class Project {
   }
 
   requestDiagnostics() {
+    console.log('requesting diagnostics')
     if (this.current_runtime) {
       const files = this.wasmProject.files()
       const fileMap = Object.fromEntries(
@@ -705,6 +706,10 @@ class BamlProjectManager {
   }
 
   getProjectById(id: URI): Project | undefined {
+    // if the file extension is not baml, return undefined
+    if (id.fsPath.split('.').pop() !== 'baml') {
+      return undefined
+    }
     try {
       return this.get_project(uriToRootPath(id))
     } catch (e) {
