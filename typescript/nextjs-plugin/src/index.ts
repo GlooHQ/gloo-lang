@@ -25,15 +25,15 @@ type GenericNextConfig = {
     serverComponentsExternalPackages?: string[];
   };
   serverExternalPackages?: string[];
-  webpack?: (config: Configuration, context: any) => Configuration;
+  webpack?: ((config: Configuration, context: any) => Configuration) | null;
 };
 
 export interface BamlNextConfig {
-  webpack?: (config: Configuration, context: any) => Configuration;
+  webpack?: ((config: Configuration, context: any) => Configuration) | null;
 }
 
 export function withBaml(bamlConfig: BamlNextConfig = {}) {
-  return function withBamlConfig(nextConfig: GenericNextConfig = {}): GenericNextConfig {
+  return function withBamlConfig<T extends GenericNextConfig>(nextConfig: T = {} as T): T {
     const nextVersion = getNextJsVersion();
     // Default to new config (>= 14) if version can't be determined
     const majorVersion = nextVersion ? parseInt(nextVersion.split('.')[0], 10) : 14;
@@ -81,6 +81,6 @@ export function withBaml(bamlConfig: BamlNextConfig = {}) {
 
         return config;
       },
-    };
+    } as T;
   };
 }
