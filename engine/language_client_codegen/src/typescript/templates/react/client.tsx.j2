@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useReducer } from 'react';
+import { useCallback, useMemo, useReducer, useTransition } from 'react';
 import type {
   ServerActionType,
   PartialResponse,
@@ -9,8 +9,14 @@ import type {
   UseLLMReturnType,
   StreamingInputProps,
   NonStreamingInputProps,
-  NonStreamableServerActionType,
-  StreamableServerActionType
+  NonStreamingReturnType,
+  StreamingReturnType,
+  StreamableServerActionType,
+  ServerActionOptions,
+  ServerActionReturnType,
+  ServerAction,
+  StreamingServerAction,
+  NonStreamingServerAction
 } from './types';
 import { RecursivePartialNull } from '../types';
 import { Image, Audio } from "@boundaryml/baml"
@@ -40,9 +46,7 @@ export function isStreamingOptions<Output>(
   return options.stream === true;
 }
 
-
 interface LLMState<TPartial, TFinal> {
-  isLoading: boolean;
   isSuccess: boolean;
   error: Error | null;
   data: TFinal | null;
@@ -63,7 +67,7 @@ function llmReducer<TPartial, TFinal>(
   switch (action.type) {
     case 'START_REQUEST':
       return {
-        isLoading: true,
+        ...state,
         isSuccess: false,
         error: null,
         data: null,
@@ -72,7 +76,6 @@ function llmReducer<TPartial, TFinal>(
     case 'SET_ERROR':
       return {
         ...state,
-        isLoading: false,
         error: action.payload,
       };
     case 'SET_PARTIAL':
@@ -83,13 +86,11 @@ function llmReducer<TPartial, TFinal>(
     case 'SET_FINAL':
       return {
         ...state,
-        isLoading: false,
         isSuccess: true,
         data: action.payload,
       };
     case 'RESET':
       return {
-        isLoading: false,
         isSuccess: false,
         error: null,
         data: null,
@@ -143,25 +144,25 @@ function llmReducer<TPartial, TFinal>(
  * await mutate({ text: "Some text to process" });
  * ```
  */
-export function useLLM<Output, Input extends unknown[]>(
-  action: StreamableServerActionType<Output, Input>,
+export function useLLM<Input, Output>(
+  action: ServerAction<Input, Output>,
   options: StreamingInputProps<Output>
-): UseLLMReturnType<Output, Input, StreamingInputProps<Output>>;
+): StreamingReturnType<Output, [Input]>;
 
-export function useLLM<Output, Input extends unknown[]>(
-  action: NonStreamableServerActionType<Output, Input>,
-  options: NonStreamingInputProps<Output>
-): UseLLMReturnType<Output, Input, NonStreamingInputProps<Output>>;
+export function useLLM<Input, Output>(
+  action: ServerAction<Input, Output>,
+  options?: NonStreamingInputProps<Output>
+): NonStreamingReturnType<Output, [Input]>;
 
-export function useLLM<Output, Input extends unknown[]>(
-  serverAction: ServerActionType<Output, Input>,
+export function useLLM<Input, Output>(
+  serverAction: ServerAction<Input, Output>,
   options: UseLLMOptions<Output> = {},
-): UseLLMReturnType<Output, Input, typeof options> {
+): UseLLMReturnType<Output, [Input], typeof options> {
   const { onFinal, onError, onPartial } = options;
   const isStreaming = isStreamingOptions(options);
+  const [isPending, startTransition] = useTransition();
 
   const [state, dispatch] = useReducer(llmReducer<RecursivePartialNull<Output>, Output>, {
-    isLoading: false,
     isSuccess: false,
     error: null,
     data: null,
@@ -169,54 +170,57 @@ export function useLLM<Output, Input extends unknown[]>(
   });
 
   const mutate = useCallback(
-    async (...params: Input) => {
+    async (input: Input) => {
       dispatch({ type: 'START_REQUEST' });
 
       try {
-        const response = await serverAction(...params, { stream: true});
+        let response;
+        await startTransition(async () => {
+          response = await serverAction(input, { stream: options.stream });
 
-        if (isStreaming && response instanceof ReadableStream) {
-          const reader = response.getReader();
-          const decoder = new TextDecoder();
+          if (isStreaming && response instanceof ReadableStream) {
+            const reader = response.getReader();
+            const decoder = new TextDecoder();
 
-          try {
-            while (true) {
-              const { value, done } = await reader.read();
+            try {
+              while (true) {
+                const { value, done } = await reader.read();
 
-              if (done) break;
+                if (done) break;
 
-              if (value) {
-                const chunk = decoder.decode(value, { stream: true }).trim();
-                try {
-                  const parsed = JSON.parse(chunk);
-                  if (isPartialResponse<Output>(parsed) && parsed.partial !== null) {
-                    const partialValue = parsed.partial;
-                    dispatch({ type: 'SET_PARTIAL', payload: partialValue });
-                    onPartial?.(partialValue);
-                  } else if (isFinalResponse<Output>(parsed)) {
-                    const finalValue = parsed.final;
-                    dispatch({ type: 'SET_FINAL', payload: finalValue });
-                    onFinal?.(finalValue);
-                    return finalValue;
+                if (value) {
+                  const chunk = decoder.decode(value, { stream: true }).trim();
+                  try {
+                    const parsed = JSON.parse(chunk);
+                    if (isPartialResponse<Output>(parsed) && parsed.partial !== null) {
+                      const partialValue = parsed.partial;
+                      dispatch({ type: 'SET_PARTIAL', payload: partialValue });
+                      onPartial?.(partialValue);
+                    } else if (isFinalResponse<Output>(parsed)) {
+                      const finalValue = parsed.final;
+                      dispatch({ type: 'SET_FINAL', payload: finalValue });
+                      onFinal?.(finalValue);
+                      return finalValue;
+                    }
+                  } catch (err) {
+                    // If JSON parsing fails, treat the chunk as a raw string partial update
+                    dispatch({ type: 'SET_PARTIAL', payload: chunk});
+                    onPartial?.(chunk);
                   }
-                } catch (err) {
-                  // If JSON parsing fails, treat the chunk as a raw string partial update
-                  dispatch({ type: 'SET_PARTIAL', payload: chunk});
-                  onPartial?.(chunk);
                 }
               }
+            } catch (err) {
+              throw err instanceof Error ? err : new Error(String(err));
+            } finally {
+              reader.releaseLock();
             }
-          } catch (err) {
-            throw err instanceof Error ? err : new Error(String(err));
-          } finally {
-            reader.releaseLock();
+            return response;
           }
-          return response;
-        }
 
-        // Non-streaming case
-        dispatch({ type: 'SET_FINAL', payload: response });
-        onFinal?.(response);
+          // Non-streaming case
+          dispatch({ type: 'SET_FINAL', payload: response });
+          onFinal?.(response);
+        });
         return response;
       } catch (error_) {
         const error = error_ instanceof Error ? error_ : new Error(String(error_));
@@ -228,19 +232,19 @@ export function useLLM<Output, Input extends unknown[]>(
     [serverAction, isStreaming, onPartial, onFinal, onError],
   );
 
-  const status = useMemo<"idle" | "loading" | "success" | "error">(() => {
-    if (state.isLoading) return "loading";
+  const status = useMemo<"idle" | "pending" | "success" | "error">(() => {
+    if (isPending) return "pending";
     if (state.error) return "error";
     if (state.isSuccess) return "success";
     return "idle";
-  }, [state.isLoading, state.error, state.isSuccess]);
+  }, [isPending, state.error, state.isSuccess]);
 
   const result = {
     data: state.data,
     error: state.error,
     isError: state.error !== null,
-    isLoading: state.isLoading,
     isSuccess: state.isSuccess,
+    isPending,
     mutate,
     status,
   };
@@ -248,7 +252,7 @@ export function useLLM<Output, Input extends unknown[]>(
   return {
     ...result,
     partialData: isStreaming ? state.partialData : undefined,
-  }
+  } as UseLLMReturnType<Output, [Input], typeof options>;
 }
 
 {%- for func in funcs %}
@@ -377,54 +381,35 @@ export function useLLM<Output, Input extends unknown[]>(
  * };
  * ```
  */
- export function use{{ func.name }}(
-    options?: StreamingInputProps<{{ func.return_type }}>
-): UseLLMReturnType<
-    {{ func.return_type }},
-    [
-        {%- for (name, optional, type) in func.args %}
-        {{ name }}: {{ type }}{% if !loop.last %},{% endif %}
-        {%- endfor %}
-    ],
-    StreamingInputProps<{{ func.return_type }}>
->;
+export function use{{ func.name }}(
+  options: StreamingInputProps<{{ func.return_type }}>
+): StreamingReturnType<{{ func.return_type }}, [
+  {%- for (name, optional, type) in func.args %}
+  {{ type }}{% if !loop.last %},{% endif %}
+  {%- endfor %}
+]>;
 
 export function use{{ func.name }}(
-    options?: NonStreamingInputProps<{{ func.return_type }}>
-): UseLLMReturnType<
-    {{ func.return_type }},
-    [
-        {%- for (name, optional, type) in func.args %}
-        {{ name }}: {{ type }}{% if !loop.last %},{% endif %}
-        {%- endfor %}
-    ],
-    NonStreamingInputProps<{{ func.return_type }}>
->;
+  options?: NonStreamingInputProps<{{ func.return_type }}>
+): NonStreamingReturnType<{{ func.return_type }}, [
+  {%- for (name, optional, type) in func.args %}
+  {{ type }}{% if !loop.last %},{% endif %}
+  {%- endfor %}
+]>;
 
 export function use{{ func.name }}(
-    options: UseLLMOptions<{{ func.return_type }}> = {}
-): UseLLMReturnType<
-    {{ func.return_type }},
-    [
-        {%- for (name, optional, type) in func.args %}
-        {{ name }}: {{ type }}{% if !loop.last %},{% endif %}
-        {%- endfor %}
-    ],
-    typeof options
-> {
-   // NOTE: This is a hack to get the type inference to work.
-    if (isStreamingOptions(options)) {
-      return useLLM<{{ func.return_type }}, [
-        {%- for (name, optional, type) in func.args %}
-        {{ name }}: {{ type }}{% if !loop.last %},{% endif %}
-        {%- endfor %}
-      ]>(ServerActions.{{ func.name }}Action, options);
-    }
-
-    return useLLM<{{ func.return_type }}, [
-        {%- for (name, optional, type) in func.args %}
-        {{ name }}: {{ type }}{% if !loop.last %},{% endif %}
-        {%- endfor %}
-    ]>(ServerActions.{{ func.name }}Action, options);
+  options: UseLLMOptions<{{ func.return_type }}> = {},
+): UseLLMReturnType<{{ func.return_type }}, [
+  {%- for (name, optional, type) in func.args %}
+  {{ type }}{% if !loop.last %},{% endif %}
+  {%- endfor %}
+], typeof options> {
+  return useLLM<
+    {%- for (name, optional, type) in func.args %}
+    {{ type }}{% if !loop.last %}, {% endif %}
+    {%- endfor %}
+    {%- if func.args|length > 0 %}, {% endif -%}
+    {{ func.return_type }}
+  >(ServerActions.{{ func.name }}Action, options);
 }
 {% endfor -%}

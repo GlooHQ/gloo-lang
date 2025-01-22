@@ -37,6 +37,12 @@ mod framework {
 
 use framework::TypescriptFramework;
 
+mod filters {
+    pub fn length<T>(v: &Vec<T>) -> Result<usize, askama::Error> {
+        Ok(v.len())
+    }
+}
+
 #[derive(askama::Template)]
 #[template(path = "react/server.ts.j2", escape = "none")]
 struct ReactServerActions {

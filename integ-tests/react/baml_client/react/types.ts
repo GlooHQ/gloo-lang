@@ -44,8 +44,8 @@ export type FinalResponse<Output> = {
  */
 export type StreamingInputProps<Output> = {
   stream: true
-  onPartial?: (response: RecursivePartialNull<Output>) => void
-  onFinal?: (response: Output) => void
+  onPartial?: (response?: RecursivePartialNull<Output>) => void
+  onFinal?: (response?: Output) => void
    /** Called if the operation fails */
   onError?: (error: Error) => void
 }
@@ -57,7 +57,7 @@ export type StreamingInputProps<Output> = {
 export type NonStreamingInputProps<Output> = {
   stream?: false
   onPartial?: never
-  onFinal?: (response: Output) => void
+  onFinal?: (response?: Output) => void
    /** Called if the operation fails */
   onError?: (error: Error) => void
 }
@@ -68,114 +68,84 @@ export type NonStreamingInputProps<Output> = {
  */
 export type UseLLMOptions<Output> = StreamingInputProps<Output> | NonStreamingInputProps<Output>
 
-/**
- * Type definition for a streaming server action.
- * @template Input The type of input parameters
- * @template Output The type of the response data
- */
-export type StreamableServerActionType<Output, Input extends unknown[]> = (...input: Input) => Promise<ReadableStream<Uint8Array>>
+export type ServerAction<Input, Output> = {
+  (input: Input, options: { stream: true }): Promise<ReadableStream<Uint8Array>>;
+  (input: Input, options?: { stream?: false }): Promise<Output>;
+  (input: Input, options?: { stream?: boolean }): Promise<Output | ReadableStream<Uint8Array>>;
+};
 
-/**
- * Type definition for a non-streaming server action.
- * @template Input The type of input parameters
- * @template Output The type of the response data
- */
-export type NonStreamableServerActionType<Output, Input extends unknown[]> = (...input: Input) => Promise<Output>
-
-/**
- * Type definition for a streaming server action.
- * @template Input The type of input parameters
- * @template Output The type of the response data
- */
-export type ServerActionType<Output, Input extends unknown[]> = StreamableServerActionType<Output, Input> | NonStreamableServerActionType<Output, Input>
-
-/**
- * The complete state and controls for a BAML operation.
- * Contains everything needed to track progress and handle results.
- */
-export interface BaseReturnType<Output> {
-  /**
+export type BaseReturnType<Output> = {
+   /**
    * The complete, final result of the operation.
    * Only available after successful completion (when isSuccess is true).
    * Null during loading or if an error occurred.
    */
-  data: Output | null;
-  /**
-   * Error details if the operation failed.
-   * Check this when isError is true to handle the failure.
-   */
-  error: Error | null;
-  /**
-   * True if the operation failed.
-   * Use this to conditionally render error states or retry options.
-   */
-  isError: boolean;
-  /**
-   * True while the operation is in progress.
-   * Use this to show loading states, spinners, or disable controls.
-   */
-  isLoading: boolean;
-  /**
-   * True if the operation completed successfully.
-   * Check this before accessing the final data.
-   */
-  isSuccess: boolean;
-  /**
-   * The current phase of the operation:
-   * - idle: Initial state, ready to start
-   * - loading: Operation in progress
-   * - success: Completed successfully
-   * - error: Failed with an error
-   */
-  status: "idle" | "loading" | "success" | "error";
+   data?: Output;
+   /**
+    * Error details if the operation failed.
+    * Check this when isError is true to handle the failure.
+    */
+   error: Error | null;
+   /**
+    * True if the operation failed.
+    * Use this to conditionally render error states or retry options.
+    */
+   isError: boolean;
+   /**
+    * True while the operation is in progress.
+    * Use this to show loading states, spinners, or disable controls.
+    */
+   isPending: boolean;
+   /**
+    * True if the operation completed successfully.
+    * Check this before accessing the final data.
+    */
+   isSuccess: boolean;
+   /**
+    * The current phase of the operation:
+    * - idle: Initial state, ready to start
+    * - loading: Operation in progress
+    * - success: Completed successfully
+    * - error: Failed with an error
+    */
+   status: "idle" | "pending" | "success" | "error";
 }
 
 /**
- * Additional state available in streaming mode.
- * Use this to handle incremental updates during processing.
+ * Return type for streaming mode, extends base return type.
  */
-export type StreamingReturnType<Output, Input extends unknown[]> =
-  BaseReturnType<Output> & {
-    /**
-     * The most recent partial result from the stream.
-     * Updates continuously while streaming, showing interim progress.
-     * Use this to implement real-time UI updates, typing effects,
-     * or progress indicators.
-     */
-    partialData: RecursivePartialNull<Output>;
-
+export type StreamingReturnType<Output, Input extends unknown[]> = BaseReturnType<Output> & {
      /**
-     * Call this function to start the operation.
-     * Returns a promise that resolves with the final result or null if it failed.
-     * If the last parameter of Input is the options object, it will be omitted.
-     */
-    mutate: Input extends [...infer Rest, { stream: boolean }]
-      ? (...args: Rest) => Promise<ReadableStream<Uint8Array>>
-      : (...args: Input) => Promise<ReadableStream<Uint8Array>>;
-}
+      * The most recent partial result from the stream.
+      * Updates continuously while streaming, showing interim progress.
+      * Use this to implement real-time UI updates, typing effects,
+      * or progress indicators.
+      */
+     partialData?: RecursivePartialNull<Output> | null;
+
+      /**
+      * Call this function to start the operation.
+      * Returns a promise that resolves with the final result or null if it failed.
+      * If the last parameter of Input is the options object, it will be omitted.
+      */
+     mutate: Input extends [...infer Rest, { stream?: true }]
+       ? (...args: Rest) => Promise<ReadableStream<Uint8Array>>
+       : (...args: Input) => Promise<ReadableStream<Uint8Array>>;
+};
 
 /**
  * Return type for non-streaming mode, extends base return type.
- * @template Output The type of the final response data
- * @template Input Tuple type of function parameters
  */
-export type NonStreamingReturnType<Output, Input extends unknown[]> =
-  BaseReturnType<Output> & {
-    /** Not available in non-streaming mode */
-    partialData: never;
+export type NonStreamingReturnType<Output, Input extends unknown[]> = BaseReturnType<Output> & {
+   /** Not available in non-streaming mode */
+   partialData?: never;
+   mutate: Input extends [...infer Rest, { stream?: false }]
+   ? (...args: Rest) => Promise<Output>
+   : (...args: Input) => Promise<Output>;
+};
 
-     /**
-     * Call this function to start the operation.
-     * Returns a promise that resolves with the final result or null if it failed.
-     * If the last parameter of Input is the options object, it will be omitted.
-     */
-    mutate: Input extends [...infer Rest, { stream: boolean }]
-      ? (...args: Rest) => Promise<Output>
-      : (...args: Input) => Promise<Output>;
-  }
 /**
  * Conditional return type based on the options provided.
- * Returns StreamingReturnType if streaming is enabled, otherwise NonStreamingReturnType.
  */
 export type UseLLMReturnType<Output, Input extends unknown[], TOptions extends UseLLMOptions<Output>> =
   TOptions extends { stream: true }

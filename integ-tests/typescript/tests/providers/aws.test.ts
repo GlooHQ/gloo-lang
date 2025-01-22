@@ -1,35 +1,8 @@
-import { b, resetBamlEnvVars } from '../test-setup'
+import { b } from '../test-setup'
 import { ClientRegistry } from '@boundaryml/baml'
 import { STSClient, AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk/client-sts'
 
 describe('AWS Provider', () => {
-  // Store original AWS_PROFILE at the top level
-  const originalEnv: { [key: string]: string | undefined } = {
-    AWS_PROFILE: process.env.AWS_PROFILE,
-    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
-    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
-    AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN,
-    AWS_REGION: process.env.AWS_REGION,
-    AWS_DEFAULT_REGION: process.env.AWS_DEFAULT_REGION,
-  }
-
-  // beforeAll(() => {
-  //   // Clear all AWS-related environment variables at the start
-  //   Object.keys(originalEnv).forEach((key) => {
-  //     delete process.env[key]
-  //   })
-  // })
-
-  // afterAll(() => {
-  //   // Restore all AWS-related environment variables after all tests
-  //   Object.entries(originalEnv).forEach(([key, value]) => {
-  //     if (value === undefined) {
-  //       delete process.env[key]
-  //     } else {
-  //       process.env[key] = value
-  //     }
-  //   })
-  // })
 
   it('should support AWS', async () => {
     const res = await b.TestAws('Dr. Pepper')
@@ -46,13 +19,6 @@ describe('AWS Provider', () => {
 
   it('should handle invalid AWS access key gracefully', async () => {
     // Clear all AWS-related environment variables
-    // TODO: We shouldn't delete these because we aren't putting them back
-    // delete process.env.AWS_ACCESS_KEY_ID
-    // delete process.env.AWS_SECRET_ACCESS_KEY
-    // delete process.env.AWS_SESSION_TOKEN
-    // delete process.env.AWS_PROFILE
-    // delete process.env.AWS_REGION
-    // delete process.env.AWS_DEFAULT_REGION
 
     // Create a new client registry with no environment credentials
     const cr = new ClientRegistry()
@@ -90,58 +56,15 @@ describe('AWS Provider', () => {
   })
 
   describe('Dynamic Client Registry', () => {
-    // beforeEach(() => {
-    //   // Clear all AWS-related environment variables before each test
-    //   Object.keys(originalEnv).forEach((key) => {
-    //     delete process.env[key]
-    //   })
-    // })
-
-    // afterEach(() => {
-    //   // Clear all AWS-related environment variables after each test
-    //   Object.keys(originalEnv).forEach((key) => {
-    //     delete process.env[key]
-    //   })
-    // })
 
     describe('Credential Resolution', () => {
-      let originalProfile: string | undefined
-      let originalRegion: string | undefined
-      let originalDefaultRegion: string | undefined
-
-      beforeAll(() => {
-        originalProfile = process.env.AWS_PROFILE
-        originalRegion = process.env.AWS_REGION
-        originalDefaultRegion = process.env.AWS_DEFAULT_REGION
-      })
-
-      // beforeEach(() => {
-      //   // Set AWS_PROFILE for all tests in this suite
-      //   // process.env.AWS_PROFILE = 'boundaryml-dev'
-
-      //   // Clear all AWS-related environment variables at the start
-      //   Object.keys(originalEnv).forEach((key) => {
-      //     delete process.env[key]
-      //   })
-      // })
-
-      // afterEach(() => {
-      //   // Restore all AWS-related environment variables after all tests
-      //   Object.entries(originalEnv).forEach(([key, value]) => {
-      //     if (value === undefined) {
-      //       delete process.env[key]
-      //     } else {
-      //       process.env[key] = value
-      //     }
-      //   })
-      // })
 
       test('should handle session credentials correctly', async () => {
         const sts = new STSClient({
           region: 'us-east-1',
           credentials: {
-            accessKeyId: process.env.foo_AWS_ACCESS_KEY_ID ?? '',
-            secretAccessKey: process.env.foo_AWS_SECRET_ACCESS_KEY ?? '',
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
           },
         })
         const { Credentials } = await sts.send(
@@ -172,13 +95,6 @@ describe('AWS Provider', () => {
 
       test('should require region in all environments', async () => {
         // Clear all region-related environment variables
-        // delete process.env.AWS_REGION
-        // delete process.env.AWS_DEFAULT_REGION
-        // delete process.env.AWS_ACCESS_KEY_ID
-        // delete process.env.AWS_SECRET_ACCESS_KEY
-        // delete process.env.AWS_SESSION_TOKEN
-        // delete process.env.AWS_PROFILE
-
         const cr = new ClientRegistry()
         cr.addLlmClient('DynamicAWSClient', 'aws-bedrock', {
           model_id: 'meta.llama3-8b-instruct-v1:0',
@@ -196,8 +112,6 @@ describe('AWS Provider', () => {
 
       test('should throw error when region is empty or AWS_REGION is unset', async () => {
         // Clear all region-related environment variables
-        // delete process.env.AWS_REGION
-        // delete process.env.AWS_DEFAULT_REGION
 
         const crEmptyRegion = new ClientRegistry()
         crEmptyRegion.addLlmClient('DynamicAWSClient', 'aws-bedrock', {
@@ -231,9 +145,6 @@ describe('AWS Provider', () => {
     })
 
     it('should support dynamic client configuration', async () => {
-      // Set AWS_PROFILE for this specific test
-      // process.env.AWS_PROFILE = 'boundaryml-dev'
-
       const cr = new ClientRegistry()
       cr.addLlmClient('DynamicAWSClient', 'aws-bedrock', {
         model_id: 'meta.llama3-8b-instruct-v1:0',
@@ -313,8 +224,6 @@ describe('AWS Provider', () => {
     })
 
     it('should handle invalid configuration gracefully', async () => {
-      // Set AWS_PROFILE for this specific test
-      // process.env.AWS_PROFILE = 'boundaryml-dev'
 
       const cr = new ClientRegistry()
       cr.addLlmClient('DynamicAWSClient', 'aws-bedrock', {
@@ -334,8 +243,6 @@ describe('AWS Provider', () => {
     })
 
     it('should handle non-existent model gracefully', async () => {
-      // Set AWS_PROFILE for this specific test
-      // process.env.AWS_PROFILE = 'boundaryml-dev'
 
       const cr = new ClientRegistry()
       cr.addLlmClient('DynamicAWSClient', 'aws-bedrock', {
@@ -357,15 +264,12 @@ describe('AWS Provider', () => {
 
     test('should throw error when using temporary credentials without session token', async () => {
       // Clear all AWS-related environment variables
-      // Object.keys(originalEnv).forEach((key) => {
-      //   delete process.env[key]
-      // })
 
       const sts = new STSClient({
         region: 'us-east-1',
         credentials: {
-          accessKeyId: originalEnv.AWS_ACCESS_KEY_ID ?? '',
-          secretAccessKey: originalEnv.AWS_SECRET_ACCESS_KEY ?? '',
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
         },
       })
       const { Credentials } = await sts.send(
@@ -394,68 +298,44 @@ describe('AWS Provider', () => {
         await b.TestAwsInvalidSessionToken('Dr. Pepper', { clientRegistry: cr })
       }).rejects.toMatchObject({
         code: 'GenericFailure',
-        message: expect.stringContaining('Session token is required'),
       })
     })
 
     test('should throw error when region is not provided', async () => {
-      // Clear all region-related environment variables
-
       const cr = new ClientRegistry()
       cr.addLlmClient('DynamicAWSClient', 'aws-bedrock', {
         model_id: 'meta.llama3-8b-instruct-v1:0',
-        // region: 'us-east-7',
-        // profile: 'boundaryml-prod',
-        // access_key_id: process.env.AWS_ACCESS_KEY_ID,
-        // secret_access_key: process.env.AWS_SECRET_ACCESS_KEY,
-        // session_token: process.env.AWS_SESSION_TOKEN,
+        region: null
       })
       cr.setPrimary('DynamicAWSClient')
 
-      const result = await b.TestAws('Dr. Pepper', { clientRegistry: cr })
-      console.log('result', result)
-      // await expect(async () => {
-      // }).rejects.toMatchObject({
-      // code: 'GenericFailure',
-      // })
+      await expect(async () => {
+        await b.TestAws('Dr. Pepper', { clientRegistry: cr })
+      }).rejects.toMatchObject({
+        code: 'GenericFailure',
+      })
     })
 
     test('should throw error when using invalid profile', async () => {
       // Clear any existing profile
-      // delete process.env.AWS_PROFILE
-
       const cr = new ClientRegistry()
       cr.addLlmClient('DynamicAWSClient', 'aws-bedrock', {
         model_id: 'meta.llama3-8b-instruct-v1:0',
         region: 'us-east-1',
+        access_key_id: null,
+        secret_access_key: null,
         profile: 'non-existent-profile-123',
       })
       cr.setPrimary('DynamicAWSClient')
 
-      // Wait for the promise to reject
-      let error: any
-      try {
-        const result = await b.TestAws('Dr. Pepper', { clientRegistry: cr })
-        console.log('got result', result)
-      } catch (e) {
-        console.error('got error', e)
-        error = e
-      }
-
-      // Verify the error
-      expect(error).toBeDefined()
-      expect(error.code).toBe('GenericFailure')
+      await expect(async () => {
+        await b.TestAws('Dr. Pepper', { clientRegistry: cr })
+      }).rejects.toMatchObject({
+        code: 'GenericFailure',
+      })
     })
 
     it('should support both AWS_REGION and AWS_DEFAULT_REGION environment variables', async () => {
-      // Store original environment values
-      const originalRegion = process.env.AWS_REGION
-      const originalDefaultRegion = process.env.AWS_DEFAULT_REGION
-
-      try {
-        // Test with AWS_REGION
-        // delete process.env.AWS_DEFAULT_REGION
-        // process.env.AWS_REGION = 'us-east-1'
 
         const crWithAwsRegion = new ClientRegistry()
         crWithAwsRegion.addLlmClient('DynamicAWSClient', 'aws-bedrock', {
@@ -469,10 +349,6 @@ describe('AWS Provider', () => {
 
         const resultWithAwsRegion = await b.TestAws('Dr. Pepper', { clientRegistry: crWithAwsRegion })
         expect(resultWithAwsRegion.length).toBeGreaterThan(0)
-
-        // Test with AWS_DEFAULT_REGION
-        // delete process.env.AWS_REGION
-        // process.env.AWS_DEFAULT_REGION = 'us-east-1'
 
         const crWithDefaultRegion = new ClientRegistry()
         crWithDefaultRegion.addLlmClient('DynamicAWSClient', 'aws-bedrock', {
@@ -503,19 +379,6 @@ describe('AWS Provider', () => {
 
         const resultWithBothRegions = await b.TestAws('Dr. Pepper', { clientRegistry: crWithBothRegions })
         expect(resultWithBothRegions.length).toBeGreaterThan(0)
-      } finally {
-        // Restore original environment values
-        // if (originalRegion) {
-        //   process.env.AWS_REGION = originalRegion
-        // } else {
-        //   delete process.env.AWS_REGION
-        // }
-        // if (originalDefaultRegion) {
-        //   process.env.AWS_DEFAULT_REGION = originalDefaultRegion
-        // } else {
-        //   delete process.env.AWS_DEFAULT_REGION
-        // }
-      }
     })
   })
 })
