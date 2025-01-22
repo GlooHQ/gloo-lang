@@ -2,6 +2,7 @@ import { ChevronRight, FlaskConical, FunctionSquare } from 'lucide-react'
 import { vscode } from '../vscode'
 import { functionObjectAtom, testcaseObjectAtom } from './atoms'
 import { useAtomValue } from 'jotai'
+import { useMemo } from 'react'
 
 interface FunctionTestNameProps {
   functionName: string
@@ -17,8 +18,13 @@ interface StringSpan {
 }
 
 export const FunctionTestName: React.FC<FunctionTestNameProps> = ({ functionName, testName, selected }) => {
-  const fn = useAtomValue(functionObjectAtom(functionName))
-  const tc = useAtomValue(testcaseObjectAtom({ functionName, testcaseName: testName }))
+  const functionAtom = useMemo(() => functionObjectAtom(functionName), [functionName])
+  const testcaseAtom = useMemo(
+    () => testcaseObjectAtom({ functionName, testcaseName: testName }),
+    [functionName, testName],
+  )
+  const fn = useAtomValue(functionAtom)
+  const tc = useAtomValue(testcaseAtom)
   const createSpan = (span: { start: number; end: number; file_path: string; start_line: number }) => ({
     start: span.start,
     end: span.end,
