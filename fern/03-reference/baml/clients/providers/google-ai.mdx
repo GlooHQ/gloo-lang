@@ -59,6 +59,10 @@ You can use this to modify the `headers` and `base_url` for example.
 See the [Google Model Docs](https://ai.google.dev/gemini-api/docs/models/gemini) for the latest models.
 </ParamField>
 
+<Tip>
+  Some parameters, like temperature, for Gemini Models are specified in the `generationConfig` object. [See Docs](https://ai.google.dev/api/generate-content)
+</Tip>
+
 <ParamField path="headers" type="object">
   Additional headers to send with the request.
 
@@ -70,6 +74,9 @@ client<llm> MyClient {
     model "gemini-1.5-flash"
     headers {
       "X-My-Header" "my-value"
+    }
+    generationConfig {
+      temperature 0.5
     }
   }
 }

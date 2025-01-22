@@ -1,4 +1,6 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-misused-promises */
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { BAMLProject } from '@/lib/exampleProjects'
@@ -7,7 +9,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Editable } from '../../_components/EditableText'
 import { GithubStars } from './GithubStars'
-import { createUrl } from '@/app/actions'
+import { createUrl, test } from '@/app/actions'
 import { unsavedChangesAtom } from '../_atoms/atoms'
 import { useAtom } from 'jotai'
 import { useAtomValue } from 'jotai'
@@ -17,6 +19,7 @@ import { useState } from 'react'
 import posthog from 'posthog-js'
 import { toast } from '@/hooks/use-toast'
 import { SiDiscord } from 'react-icons/si'
+import { Loader } from '@/shared/baml-project-panel/playground-panel/prompt-preview/components'
 
 const ShareButton = ({ project, projectName }: { project: BAMLProject; projectName: string }) => {
   const [loading, setLoading] = useState(false)
@@ -27,27 +30,28 @@ const ShareButton = ({ project, projectName }: { project: BAMLProject; projectNa
   return (
     <Button
       variant={'default'}
-      className='gap-x-2 py-1 h-full whitespace-nowrap bg-transparent text-secondary-foreground hover:bg-purple-600 w-fit'
+      className='gap-x-2 py-1 h-full whitespace-nowrap bg-transparent text-secondary-foreground hover:bg-purple-600 w-fit disabled:opacity-50'
       disabled={loading}
       onClick={async () => {
         setLoading(true)
         try {
           let urlId = pathname?.split('/')[1]
-          if (!urlId) {
-            urlId = await createUrl({
-              ...project,
-              name: projectName,
-              files: editorFiles,
-              // TODO: @hellovai use runTestOutput
-              testRunOutput: undefined,
-            })
+          // if (!urlId || urlId === 'new-project') {
+          //   console.log('creating url')
+          urlId = await createUrl({
+            ...project,
+            name: projectName,
+            files: editorFiles,
+            // TODO: @hellovai use runTestOutput
+            testRunOutput: undefined,
+          })
 
-            posthog.capture('share_url', { id: urlId })
+          posthog.capture('share_url', { id: urlId })
 
-            const newUrl = `${window.location.origin}/${urlId}`
-            window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl)
-            setUnsavedChanges(false)
-          }
+          const newUrl = `${window.location.origin}/${urlId}`
+          window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl)
+          setUnsavedChanges(false)
+          // }
 
           navigator.clipboard.writeText(`${window.location.origin}/${urlId}`)
 
@@ -69,6 +73,7 @@ const ShareButton = ({ project, projectName }: { project: BAMLProject; projectNa
     >
       {unsavedChanges ? <GitForkIcon size={14} /> : <LinkIcon size={14} />}
       <span>{unsavedChanges ? 'Fork & Share' : 'Share'}</span>
+      {loading && <Loader />}
     </Button>
   )
 }
@@ -90,10 +95,10 @@ export const TopNavbar = ({
 }: ProjectHeaderProps) => {
   return (
     <div className='flex flex-row items-center gap-x-12 border-b-[0px] min-h-[55px]'>
-      <div className='flex flex-col items-center py-1 h-full whitespace-nowrap lg:pr-12 tour-title'>
+      <div className='flex flex-col items-center py-1 h-full whitespace-nowrap lg:pr-4 tour-title w-[200px] '>
         <Editable text={projectName} placeholder='Write a task name' type='input' childRef={projectNameInputRef}>
           <input
-            className='px-2 text-lg border-none text-foreground'
+            className='px-1 text-lg border-none text-foreground w-[140px]'
             type='text'
             ref={projectNameInputRef}
             name='task'

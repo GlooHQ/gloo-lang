@@ -48,9 +48,10 @@ export const ResponseRenderer: React.FC<ResponseRendererProps> = ({ response, st
 
   // Helper to determine if we should show parsed response separately
   const shouldShowParsedSeparately = () => {
-    if (!parsedResponse || !llmResponse) return false
-    const parsedValue = typeof parsedResponse === 'string' ? parsedResponse : parsedResponse.value
-    return parsedValue && JSON.stringify(JSON.parse(parsedValue)) !== JSON.stringify(llmResponse.content)
+    // if (!parsedResponse || !llmResponse) return false
+    // const parsedValue = typeof parsedResponse === 'string' ? parsedResponse : parsedResponse.value
+    // return parsedValue && JSON.stringify(JSON.parse(parsedValue)) !== JSON.stringify(llmResponse.content)
+    return true
   }
 
   return (

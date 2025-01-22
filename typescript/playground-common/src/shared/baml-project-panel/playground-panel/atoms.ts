@@ -28,6 +28,34 @@ export const selectedItemAtom = atom(
   },
 )
 
+export const functionObjectAtom = atomFamily((functionName: string) =>
+  atom((get) => {
+    const { functions } = get(runtimeStateAtom)
+    const fn = functions.find((f) => f.name === functionName)
+    if (!fn) {
+      return undefined
+    }
+    get(selectedFunctionAtom) // Update selected function atom
+    return fn
+  }),
+)
+
+export const testcaseObjectAtom = atomFamily((params: { functionName: string; testcaseName: string }) =>
+  atom((get) => {
+    const { functions } = get(runtimeStateAtom)
+    const fn = functions.find((f) => f.name === params.functionName)
+    if (!fn) {
+      return undefined
+    }
+    const tc = fn.test_cases.find((tc) => tc.name === params.testcaseName)
+    if (!tc) {
+      return undefined
+    }
+    get(selectedTestcaseAtom) // Update selected testcase atom
+    return tc
+  }),
+)
+
 export const updateCursorAtom = atom(
   null,
   (get, set, cursor: { fileName: string; fileText: string; line: number; column: number }) => {

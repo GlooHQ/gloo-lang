@@ -3,11 +3,12 @@
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { useKeybindingOverrides } from '@/hooks/command-s'
 import type { BAMLProject } from '@/lib/exampleProjects'
-import { CodeMirrorViewer, CustomErrorBoundary, PromptPreview } from '@baml/playground-common'
+import { CustomErrorBoundary } from '@baml/playground-common'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { isMobile } from 'react-device-detect'
 import { Editable } from '../../_components/EditableText'
+import { JotaiProvider } from '@baml/playground-common'
 import {
   activeFileNameAtom,
   currentEditorFilesAtom,
@@ -15,7 +16,6 @@ import {
   unsavedChangesAtom,
 } from '../_atoms/atoms'
 
-import { EventListener } from '@baml/playground-common/baml_wasm_web/EventListener'
 import FileViewer from './Tree/FileViewer'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { filesAtom } from '@/shared/baml-project-panel/atoms'
@@ -23,6 +23,16 @@ import { runtimeStateAtom, selectedFunctionAtom } from '@/shared/baml-project-pa
 import { useFeedbackWidget } from '@baml/playground-common/lib/feedback_widget'
 import { TopNavbar } from './TopNavbar'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
+const CodeMirrorViewer = dynamic(() => import('@baml/playground-common').then((mod) => mod.CodeMirrorViewer), {
+  ssr: false,
+})
+const PromptPreview = dynamic(() => import('@baml/playground-common').then((mod) => mod.PromptPreview), {
+  ssr: false,
+})
+const EventListener = dynamic(() => import('@baml/playground-common').then((mod) => mod.EventListener), {
+  ssr: false,
+})
 
 const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   useFeedbackWidget()
@@ -51,29 +61,15 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
   const projectNameInputRef = useRef(null)
   const [description, setDescription] = useState(project.description)
   const descriptionInputRef = useRef(null)
-  const setOpenExplorePanel = useSetAtom(exploreProjectsOpenAtom)
-  const setSelectedFunction = useSetAtom(selectedFunctionAtom)
-  const { functions } = useAtomValue(runtimeStateAtom)
-  const editorFiles = useAtomValue(currentEditorFilesAtom)
-  const stringifiedEditorFilePaths = JSON.stringify(editorFiles.map((f) => f.path))
-
-  useEffect(() => {
-    const func = functions.find((f) => f.span.file_path === activeFileName)
-    if (func) {
-      setSelectedFunction(func.name)
-    }
-  }, [stringifiedEditorFilePaths, activeFileName, functions])
-
-  useEffect(() => {
-    console.log('activeFileName', activeFileName)
-    if (activeFileName) {
-    }
-  }, [activeFileName])
 
   return (
     // firefox wont apply the background color for some reason so we forcefully set it.
     <div className='flex relative flex-row w-full h-full main-panel overflow-x-clip overflow-y-clip'>
-      <EventListener>
+      <CustomErrorBoundary message='Error loading project'>
+        <EventListener>
+          {/* noop for now -- we dont need to nest all the other components in the EventListener since we use jotaiprovider store and we dont want to rerender needlessly */}
+          <div></div>
+        </EventListener>
         {isMobile && (
           <div className='absolute bottom-0 left-0 right-0 font-semibold  border-t-[1px] w-full h-[100px] z-50 text-center p-8'>
             Visit PromptFiddle on Desktop to get the best experience
@@ -156,9 +152,27 @@ const ProjectViewImpl = ({ project }: { project: BAMLProject }) => {
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
-      </EventListener>
+        <FunctionSelectorProvider />
+      </CustomErrorBoundary>
     </div>
   )
+}
+
+export const FunctionSelectorProvider = () => {
+  const activeFileName = useAtomValue(activeFileNameAtom)
+
+  const { functions } = useAtomValue(runtimeStateAtom)
+  const editorFiles = useAtomValue(currentEditorFilesAtom)
+  const stringifiedEditorFilePaths = JSON.stringify(editorFiles.map((f) => f.path))
+  const setSelectedFunction = useSetAtom(selectedFunctionAtom)
+
+  useEffect(() => {
+    const func = functions.find((f) => f.span.file_path === activeFileName)
+    if (func) {
+      setSelectedFunction(func.name)
+    }
+  }, [stringifiedEditorFilePaths, activeFileName, functions])
+  return null
 }
 
 export const ProjectSidebar = () => {
@@ -188,7 +202,9 @@ export const ProjectSidebar = () => {
 export const ProjectView = ({ project }: { project: BAMLProject }) => {
   return (
     <>
-      <ProjectViewImpl project={project} />
+      <JotaiProvider>
+        <ProjectViewImpl project={project} />
+      </JotaiProvider>
     </>
   )
 }

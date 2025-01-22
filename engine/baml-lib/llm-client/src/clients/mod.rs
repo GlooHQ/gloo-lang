@@ -16,6 +16,9 @@ pub mod round_robin;
 pub mod vertex;
 
 #[derive(Debug)]
+/// `Meta` is a generic carrying span information, so that if it comes from a .baml file,
+/// we can trace it back to the original location in said .baml file. In dynamic clients,
+/// though, we can't do that, so we just pass in `()`.
 pub enum UnresolvedClientProperty<Meta> {
     OpenAI(openai::UnresolvedOpenAI<Meta>),
     Anthropic(anthropic::UnresolvedAnthropic<Meta>),
@@ -121,6 +124,8 @@ impl<Meta: Clone> UnresolvedClientProperty<Meta> {
 }
 
 impl crate::ClientProvider {
+    /// This codepath is common to both static clients (defined in a .baml file) and dynamic clients
+    /// (defined in user's python/ts code).
     pub fn parse_client_property<Meta: Clone>(
         &self,
         properties: PropertyHandler<Meta>,

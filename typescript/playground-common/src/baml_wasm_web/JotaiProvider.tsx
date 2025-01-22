@@ -73,7 +73,7 @@ export const vscodeLocalStorageStore: SyncStorage<any> = createJSONStorage(() =>
 // }))
 export const sessionStore: SyncStorage<any> = createJSONStorage(() => sessionStorage)
 
-export default function JotaiProvider({ children }: { children: React.ReactNode }) {
+export function JotaiProvider({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={atomStore}>
       {/* <DevTools store={atomStore} /> */}

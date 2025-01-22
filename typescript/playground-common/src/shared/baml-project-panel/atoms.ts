@@ -226,6 +226,9 @@ export const envKeyValuesAtom = atom(
 )
 export const envVarsAtom = atom(
   (get) => {
+    if (typeof window === 'undefined') {
+      return {}
+    }
     if ((window as any).next?.version) {
       // NextJS environment doesnt have vscode settings, and proxy is always enabled
       return Object.fromEntries(defaultEnvKeyValues.map(([k, v]) => [k, v]))
@@ -273,6 +276,9 @@ export const requiredEnvVarsAtom = atom((get) => {
 })
 
 const defaultEnvKeyValues: [string, string][] = (() => {
+  if (typeof window === 'undefined') {
+    return []
+  }
   if ((window as any).next?.version) {
     console.log('Running in nextjs')
 
