@@ -1,18 +1,13 @@
+import { Toaster } from '@/components/ui/toaster'
+import { JotaiProvider } from '@baml/playground-common'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import './globals.css'
-import { Toaster } from '@/components/ui/toaster'
-import JotaiProvider from '@baml/playground-common/baml_wasm_web/JotaiProvider'
-import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
-import { BrowseSheet } from './_components/BrowseSheet'
+import { ErrorBoundary } from 'react-error-boundary'
 import { PHProvider, RB2BElement } from './_components/PosthogProvider'
 import { ThemeProvider } from './_components/ThemeProvider'
-import { AppStateProvider } from '@baml/playground-common/shared/AppStateContext'
-
-const PostHogPageView = dynamic(() => import('./PostHogPageView'), {
-  ssr: false,
-})
+import './globals.css'
+import PostHogPageView from './PostHogPageView'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -30,15 +25,18 @@ export default function RootLayout({
     <html lang='en'>
       <RB2BElement />
       <PHProvider>
-        <body className={inter.className}>
-          <PostHogPageView />
+        <body className={'bg-background'}>
+          <ErrorBoundary fallback={<div></div>}>
+            <PostHogPageView />
+          </ErrorBoundary>
           <ThemeProvider attribute='class' defaultTheme='dark' enableSystem={false} disableTransitionOnChange={true}>
-            <JotaiProvider>
-              <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-              {/* <div className='fixed left-0 bottom-1/2 w-[12%] px-1 items-center justify-center flex'>
+            {/* <JotaiProvider> */}
+            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+            {/* <div className="fixed left-0 bottom-1/2 w-[12%] px-1 items-center justify-center flex">
                 <BrowseSheet />
               </div> */}
-            </JotaiProvider>
+            {/* <PromptPreview /> */}
+            {/* </JotaiProvider> */}
             <Toaster />
           </ThemeProvider>
         </body>

@@ -438,7 +438,10 @@ To restrict access to specific models:
 
 ## Configuration Options
 
-### Non-forwarded Options
+### BAML-specific request `options`
+These unique parameters (aka `options`) are modify the API request sent to the provider.
+
+You can use this to modify the `region`, `access_key_id`, `secret_access_key`, and `session_token` sent to the provider.
 
 <ParamField path="region" type="string">
   The AWS region to use. **Default: `AWS_REGION` environment variable**
@@ -465,7 +468,10 @@ To restrict access to specific models:
 <Markdown src="/snippets/supports-streaming.mdx" />
 <Markdown src="/snippets/finish-reason.mdx" />
 
-### Forwarded Options
+## Provider request parameters
+These are other `options` that are passed through to the provider, without modification by BAML. For example if the request has a `temperature` field, you can define it in the client here so every call has that set.
+
+Consult the specific provider's documentation for more information.
 
 <ParamField path="model (or model_id)" type="string" required>
   The model to use.

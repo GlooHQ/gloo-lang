@@ -257,7 +257,7 @@ impl ToTypeReferenceInClientDefinition for FieldType {
             }
             FieldType::Class(name) => format!("partial_types.{name}"),
             FieldType::RecursiveTypeAlias(name) => format!("types.{name}"),
-            FieldType::Literal(value) => to_python_literal(value),
+            FieldType::Literal(value) => format!("Optional[{}]", to_python_literal(value)),
             FieldType::List(inner) => {
                 format!("List[{}]", inner.to_partial_type_ref(ir, with_checked))
             }

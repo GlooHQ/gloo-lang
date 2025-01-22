@@ -20,15 +20,17 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@gloo-ai/baml-schema-wasm-web': path.resolve(__dirname, '../../../baml-schema-wasm-web/dist'),
+      '~': path.resolve(__dirname, './src'),
+      baml_wasm_web: path.resolve(__dirname, '../../../baml-schema-wasm-web/dist'),
     },
   },
   mode: isWatchMode ? 'development' : 'production',
   build: {
-    minify: isWatchMode ? false : true,
+    minify: isWatchMode ? false : 'esbuild',
     outDir: 'dist',
-    sourcemap: isWatchMode ? 'inline' : undefined,
+    sourcemap: isWatchMode ? 'inline' : false,
     rollupOptions: {
-      // external: ['allotment/dist/index.css'],
+      external: ['baml_wasm_web/rpc'],
       output: {
         entryFileNames: `assets/[name].js`,
         chunkFileNames: `assets/[name].js`,

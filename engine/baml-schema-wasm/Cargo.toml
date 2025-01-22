@@ -9,6 +9,9 @@ license-file.workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[lints.rust]
+elided_named_lifetimes = "deny"
+
 [dependencies]
 anyhow.workspace = true
 baml-runtime = { path = "../baml-runtime", features = [

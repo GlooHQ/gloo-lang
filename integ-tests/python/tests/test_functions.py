@@ -448,6 +448,12 @@ async def test_should_work_with_vertex():
 
 
 @pytest.mark.asyncio
+async def test_should_work_with_vertex_adding_system_instructions():
+    res = await b.TestVertexWithSystemInstructions()
+    assert_that(len(res) > 0)
+
+
+@pytest.mark.asyncio
 async def test_should_work_with_image_base64():
     res = await b.TestImageInput(img=baml_py.Image.from_base64("image/png", image_b64))
     assert_that(res.lower()).matches(r"(green|yellow|shrek|ogre)")
@@ -602,7 +608,7 @@ async def test_streaming_uniterated():
         input="The color blue makes me sad"
     ).get_final_response()
     assert len(final) > 0, "Expected non-empty final but got empty."
-
+    
 
 def test_streaming_sync():
     stream = sync_b.stream.PromptTestStreaming(
@@ -1637,3 +1643,10 @@ async def test_block_constraint_arguments():
         nested_block_constraint = NestedBlockConstraintForParam(nbcfp=block_constraint)
         await b.UseNestedBlockConstraint(nested_block_constraint)
     assert "Failed assert: hi" in str(e)
+
+
+@pytest.mark.asyncio
+async def test_null_literal_class_hello():
+    stream = b.stream.NullLiteralClassHello(s="unused")
+    async for msg in stream:
+        msg.a is None

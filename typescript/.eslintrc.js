@@ -33,6 +33,16 @@ module.exports = {
         // no require imports
         '@typescript-eslint/no-var-requires': 'warn',
         '@typescript-eslint/no-require-imports': 'warn',
+        '@typescript-eslint/no-unsafe-assignment': 'warn',
+        '@typescript-eslint/no-unsafe-call': 'warn',
+        '@typescript-eslint/no-unsafe-member-access': 'warn',
+        '@typescript-eslint/no-unsafe-return': 'warn',
+        '@typescript-eslint/no-unsafe-argument': 'warn',
+        '@typescript-eslint/no-unsafe-call': 'warn',
+        '@typescript-eslint/no-explicit-any': 'warn',
+        'react/react-in-jsx-scope': 'off',
+        'react/jsx-uses-react': 'off',
+        'react/prop-types': 'off',
       },
     },
     {

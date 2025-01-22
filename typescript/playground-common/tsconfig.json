@@ -25,12 +25,7 @@
   // }
   "compilerOptions": {
     "target": "esnext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext",
-      "ES2015"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext", "ES2015"],
     "useDefineForClassFields": true,
     "allowJs": true,
     "skipLibCheck": true,
@@ -50,19 +45,11 @@
     //   "@/*": ["./src/*"]
     // }
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@gloo-ai/baml-schema-wasm-web/*": [
-        "../baml-schema-wasm-web/dist/*"
-      ]
+      "@/*": ["./src/*"],
+      "~/*": ["./src/*"],
+      "@gloo-ai/baml-schema-wasm-web/*": ["../baml-schema-wasm-web/dist/*"]
     }
   },
-  "include": [
-    "./src"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["./src"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -60,11 +60,11 @@ pub mod coerce_opt {
         expr.as_raw_string_value()
     }
 
-    pub fn string_with_span<'a>(expr: &'a ast::Expression) -> Option<(&'a str, &ast::Span)> {
+    pub fn string_with_span<'a>(expr: &'a ast::Expression) -> Option<(&'a str, &'a ast::Span)> {
         expr.as_string_value()
     }
 
-    pub fn constant_with_span<'a>(expr: &'a ast::Expression) -> Option<(&'a str, &ast::Span)> {
+    pub fn constant_with_span<'a>(expr: &'a ast::Expression) -> Option<(&'a str, &'a ast::Span)> {
         expr.as_constant_value()
     }
 

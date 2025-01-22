@@ -6,16 +6,18 @@ import { getUri } from '../utils/getUri'
 import {
   EchoResponse,
   GetBamlSrcResponse,
+  GetPlaygroundPortResponse,
   GetVSCodeSettingsResponse,
   GetWebviewUriResponse,
   WebviewToVscodeRpc,
   encodeBuffer,
-} from '../rpc'
+} from '../vscode-rpc'
 
 import { type Config, adjectives, animals, colors, uniqueNamesGenerator } from 'unique-names-generator'
 import { URI } from 'vscode-uri'
 import { bamlConfig, requestDiagnostics } from '../plugins/language-server'
 import TelemetryReporter from '../telemetryReporter'
+import { getCurrentOpenedFile } from '../helpers/get-open-file'
 
 const customConfig: Config = {
   dictionaries: [adjectives, colors, animals],
@@ -184,6 +186,16 @@ export class WebPanelView {
    * @param context A reference to the extension context
    */
   private _setWebviewMessageListener(webview: Webview) {
+    const addProject = async () => {
+      await requestDiagnostics()
+      console.log('last opened func', openPlaygroundConfig.lastOpenedFunction)
+      this.postMessage('select_function', {
+        root_path: 'default',
+        function_name: openPlaygroundConfig.lastOpenedFunction,
+      })
+      this.postMessage('baml_cli_version', bamlConfig.cliVersion)
+    }
+
     webview.onDidReceiveMessage(
       async (
         message:
@@ -208,45 +220,11 @@ export class WebPanelView {
       ) => {
         if ('command' in message) {
           switch (message.command) {
-            case 'get_port':
-              // Code that should run in response to the hello message command
-              console.log(`Sending port from WebPanelView: ${this._port()}`)
-              this.postMessage('port_number', {
-                port: this._port(),
-              })
-              return
-
             case 'add_project':
-              ;(async () => {
-                await requestDiagnostics()
-                console.log('last opened func', openPlaygroundConfig.lastOpenedFunction)
-                this.postMessage('select_function', {
-                  root_path: 'default',
-                  function_name: openPlaygroundConfig.lastOpenedFunction,
-                })
-                this.postMessage('baml_cli_version', bamlConfig.cliVersion)
-              })()
+              console.log('webview add_project')
+              addProject()
 
               return
-            case 'cancelTestRun': {
-              // testExecutor.cancelExistingTestRun()
-              return
-            }
-            case 'removeTest': {
-              // const removeTestRequest: {
-              //   root_path: string
-              //   funcName: string
-              //   testCaseName: StringSpan
-              // } = message.data
-              // const uri = vscode.Uri.file(removeTestRequest.testCaseName.source_file)
-              // try {
-              //   await vscode.workspace.fs.delete(uri)
-              //   WebPanelView.currentPanel?.postMessage('setDb', Array.from(BamlDB.entries()))
-              // } catch (e: any) {
-              //   console.log(e)
-              // }
-              return
-            }
             case 'jumpToFile': {
               try {
                 console.log('jumpToFile', message.span)
@@ -272,6 +250,10 @@ export class WebPanelView {
               return
             }
           }
+        }
+
+        if (!('rpcId' in message)) {
+          return
         }
 
         // console.log('message from webview, after above handlers:', message)
@@ -321,6 +303,19 @@ export class WebPanelView {
               enablePlaygroundProxy: bamlConfig.config?.enablePlaygroundProxy ?? true,
             }
             this._panel.webview.postMessage({ rpcId: message.rpcId, rpcMethod: vscodeCommand, data: responseData })
+            return
+          case 'GET_PLAYGROUND_PORT':
+            const response: GetPlaygroundPortResponse = {
+              port: this._port(),
+            }
+            this._panel.webview.postMessage({ rpcId: message.rpcId, rpcMethod: vscodeCommand, data: response })
+            return
+          case 'INITIALIZED': // when the playground is initialized and listening for file changes, we should resend all project files.
+            // request diagnostics, which updates the runtime and triggers a new project files update.
+            addProject()
+            console.log('initialized webview')
+            this._panel.webview.postMessage({ rpcId: message.rpcId, rpcMethod: vscodeCommand, data: { ack: true } })
+            return
         }
       },
       undefined,

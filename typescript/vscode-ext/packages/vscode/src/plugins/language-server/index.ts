@@ -15,6 +15,7 @@ import { checkForMinimalColorTheme, createLanguageServer, isDebugOrTestSession, 
 import type { BamlVSCodePlugin } from '../types'
 import { URI } from 'vscode-uri'
 import StatusBarPanel from '../../panels/StatusBarPanel'
+import { getCurrentOpenedFile } from '../../helpers/get-open-file'
 
 const packageJson = require('../../../../package.json') // eslint-disable-line
 
@@ -48,7 +49,16 @@ export const generateTestRequest = async (test_request: TestRequest): Promise<st
 }
 
 export const requestDiagnostics = async () => {
-  await client?.sendRequest('requestDiagnostics')
+  const currentFile = getCurrentOpenedFile()
+  if (!currentFile) {
+    console.warn('no current baml file')
+    return
+  }
+  // if not a baml file return
+  if (!currentFile.endsWith('.baml')) {
+    return
+  }
+  await client?.sendRequest('requestDiagnostics', { projectId: currentFile })
 }
 
 export const requestBamlCLIVersion = async () => {
@@ -239,10 +249,23 @@ const activateClient = (
     })
 
     client.onRequest('runtime_updated', (params: { root_path: string; files: Record<string, string> }) => {
-      WebPanelView.currentPanel?.postMessage('add_project', {
-        ...params,
-        root_path: URI.file(params.root_path).toString(),
-      })
+      // Only send message if current file is part of this root path
+      const activeEditor = vscode.window.activeTextEditor
+      if (activeEditor) {
+        const currentFilePath = URI.parse(activeEditor.document.uri.toString()).fsPath
+        const rootPathUri = URI.file(params.root_path).fsPath
+        if (currentFilePath.startsWith(rootPathUri)) {
+          console.log('sending add_project message')
+          WebPanelView.currentPanel?.postMessage('add_project', {
+            ...params,
+            root_path: URI.file(params.root_path).toString(),
+          })
+        } else {
+          console.log('root path doesnt match current file', currentFilePath, rootPathUri)
+        }
+      } else {
+        console.log('no active editor')
+      }
     })
 
     // this will fail otherwise in dev mode if the config where the baml path is hasnt been picked up yet. TODO: pass the config to the server to avoid this.

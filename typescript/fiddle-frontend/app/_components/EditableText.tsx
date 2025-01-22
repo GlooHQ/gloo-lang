@@ -38,7 +38,7 @@ export const Editable = ({ text, type, placeholder, children, childRef, classNam
       ) : (
         <div
           className={cn(
-            `pt-1 pl-4 text-lg hover:text-muted-foreground font-semibold text-foreground editable-${type}`,
+            `pt-1 pl-4 text-lg font-semibold hover:text-muted-foreground text-foreground editable-${type}`,
             className,
           )}
           onClick={() => setEditing(true)}

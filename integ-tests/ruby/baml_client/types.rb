@@ -151,6 +151,7 @@ module Baml
     class BlockConstraint < T::Struct; end
     class BlockConstraintForParam < T::Struct; end
     class BookOrder < T::Struct; end
+    class ClassForNullLiteral < T::Struct; end
     class ClassOptionalOutput < T::Struct; end
     class ClassOptionalOutput2 < T::Struct; end
     class ClassToRecAlias < T::Struct; end
@@ -306,6 +307,18 @@ module Baml
           title: props[:title],
           quantity: props[:quantity],
           price: props[:price],
+        )
+
+        @props = props
+      end
+    end
+    class ClassForNullLiteral < T::Struct
+      include Baml::Sorbet::Struct
+      const :a, String
+
+      def initialize(props)
+        super(
+          a: props[:a],
         )
 
         @props = props

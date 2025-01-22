@@ -2,40 +2,43 @@ import type { BAMLProject } from '@/lib/exampleProjects'
 import { loadProject } from '@/lib/loadProject'
 import type { Metadata, ResolvingMetadata } from 'next'
 import dynamic from 'next/dynamic'
-const ProjectView = dynamic(() => import('./_components/ProjectView'), { ssr: false })
+// const ProjectView = dynamic(() => import('./_components/ProjectView'), { ssr: true })
+import ProjectView from './_components/ProjectView'
 
-type Props = {
-  params: { project_id: string }
-  searchParams: { [key: string]: string | string[] | undefined }
-}
-export async function generateMetadata({ params, searchParams }: Props, parent: ResolvingMetadata): Promise<Metadata> {
+type Params = Promise<{ project_id: string }>
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
+
+export async function generateMetadata(
+  props: {
+    params: Params
+    searchParams: SearchParams
+  },
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
   // read route params
-  const project = await loadProject({ project_id: params.project_id })
-  return {
-    title: `${project.name} — Prompt Fiddle`,
-    description: project.description,
+  try {
+    const project = await loadProject(Promise.resolve(props.params))
+    return {
+      title: `${project.name} — Prompt Fiddle`,
+      description: project.description,
+    }
+  } catch (e) {
+    console.log('Error generating metadata', e)
+    return {
+      title: 'Prompt Fiddle',
+      description: 'An LLM prompt playground for structured prompting',
+    }
   }
 }
 
-type SearchParams = {
-  id: string
-}
-
-export default async function Home({
-  searchParams,
-  params,
-}: {
-  searchParams: SearchParams
-  params: { project_id: string }
-}) {
-  const data: BAMLProject = await loadProject(params)
+export default async function Home({ searchParams, params }: { searchParams: SearchParams; params: Params }) {
+  const data: BAMLProject = await loadProject(Promise.resolve(params))
   // console.log(data)
   return (
-    <main className='flex flex-col items-center justify-between min-h-screen font-sans'>
+    <main className='flex flex-col justify-between items-center min-h-screen font-sans'>
       <div className='w-screen h-screen dark:bg-black'>
         <ProjectView project={data} />
       </div>
-      {/* </div> */}
     </main>
   )
 }

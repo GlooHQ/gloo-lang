@@ -22,20 +22,20 @@ export const GithubStars = () => {
   return (
     <div>
       <Link
-        className='flex flex-row items-center p-1 text-sm text-base font-light leading-6 group text-zinc-300 gap-x-2 hover:text-gray-100 '
+        className='flex flex-row gap-x-2 items-center p-1 text-sm font-light leading-6 group hover:text-foreground/80'
         href='https://github.com/boundaryml/baml'
         target='_blank'
       >
         <Image
           src='/github-mark.svg'
-          className='text-white fill-slate-400 hover:fill-slate-50 opacity-70 hover:opacity-100'
+          className='opacity-60 invert hover:opacity-100 dark:invert-0 dark:fill-white'
           width={18}
           height={18}
           alt='Github'
         />
-        <span className='hidden whitespace-nowrap 2xl:block'>Star us on Github</span>
-        <Separator orientation='vertical' className=' border-zinc-100 w-[1px] h-[24px] bg-zinc-700 hidden 2xl:block' />
-        <Star className='hidden group-hover:fill-slate-50 2xl:block' size={16} />
+        {/* <span className="hidden whitespace-nowrap text-primary-foreground/50 2xl:block">Star us on Github</span>
+        <Separator orientation="vertical" className=" w-[1px] h-[24px] hidden" />
+        <Star className="hidden" size={16} /> */}
       </Link>
     </div>
   )
