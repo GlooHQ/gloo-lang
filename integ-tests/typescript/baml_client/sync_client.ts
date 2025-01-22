@@ -3043,6 +3043,31 @@ export class BamlSyncClient {
     }
   }
   
+  TestGeminiSystem(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): string {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "TestGeminiSystem",
+      {
+        "input": input
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   TestImageInput(
       img: Image,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }

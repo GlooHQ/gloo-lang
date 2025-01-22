@@ -219,7 +219,7 @@ impl GoogleAIClient {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: false,
+                max_one_system_prompt: true,
                 resolve_media_urls: ResolveMediaUrls::Always,
                 allowed_metadata: properties.allowed_metadata.clone(),
             },
@@ -247,7 +247,7 @@ impl GoogleAIClient {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: false,
+                max_one_system_prompt: true,
                 resolve_media_urls: ResolveMediaUrls::Always,
                 allowed_metadata: properties.allowed_metadata.clone(),
             },
@@ -399,6 +399,24 @@ impl ToProviderMessageExt for GoogleAIClient {
         chat: &[RenderedChatMessage],
     ) -> Result<serde_json::Map<String, serde_json::Value>> {
         let mut res = serde_json::Map::new();
+        let (first, others) = chat.split_at(1);
+        if let Some(content) = first.first() {
+            if content.role == "system" {
+                res.insert(
+                    "system_instructions".into(),
+                    json!(self.parts_to_message(&content.parts)?),
+                );
+                res.insert(
+                    "messages".into(),
+                    others
+                        .iter()
+                        .map(|c| self.role_to_message(c))
+                        .collect::<Result<Vec<_>>>()?
+                        .into(),
+                );
+                return Ok(res);
+            }
+        }
         res.insert(
             "contents".into(),
             chat.iter()

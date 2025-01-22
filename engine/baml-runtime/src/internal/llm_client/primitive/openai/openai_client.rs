@@ -411,7 +411,7 @@ macro_rules! make_openai_client {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: false,
+                max_one_system_prompt: false,
                 resolve_media_urls: ResolveMediaUrls::Never,
                 allowed_metadata: $properties.allowed_metadata.clone(),
             },
@@ -433,7 +433,7 @@ macro_rules! make_openai_client {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: false,
+                max_one_system_prompt: false,
                 resolve_media_urls: ResolveMediaUrls::Never,
                 allowed_metadata: $properties.allowed_metadata.clone(),
             },
