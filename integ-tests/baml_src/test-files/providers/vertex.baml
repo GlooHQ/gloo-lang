@@ -13,7 +13,7 @@ function TestVertexWithSystemInstructions() -> string {
 }
 
 test TestVertex {
-  functions [TestVertex]
+  functions [TestVertex, TestVertexWithSystemInstructions]
   args {
     input "a cat"
 
