@@ -12,7 +12,22 @@ use crate::jsonish::{
 
 use super::ParseOptions;
 
-pub fn parse(str: &str, mut options: ParseOptions) -> Result<Value> {
+
+/// Normalizes Unicode quotes in a string to standard ASCII double quotes.
+///
+/// This function handles the following conversions:
+/// - Left double quotation mark (U+201C) → Basic quotation mark (U+0022)
+/// - Right double quotation mark (U+201D) → Basic quotation mark (U+0022)
+///
+/// This normalization is necessary because LLMs may output JSON with curly quotes
+/// that would otherwise be valid JSON if using standard quotes.
+
+fn normalize_quotes(s: &str) -> String {
+    // Convert both left (U+201C) and right (U+201D) curly quotes to straight quotes (U+0022)
+    s.replace('\u{201C}', "\u{0022}").replace('\u{201D}', "\u{0022}")
+}
+
+pub fn parse<'a>(str: &'a str, mut options: ParseOptions) -> Result<Value> {
     log::debug!("Parsing:\n{:?}\n-------\n{}\n-------", options, str);
 
     options.depth += 1;
@@ -22,7 +37,10 @@ pub fn parse(str: &str, mut options: ParseOptions) -> Result<Value> {
         ));
     }
 
-    match serde_json::from_str(str) {
+    // First normalize any curly quotes
+    let normalized = normalize_quotes(str);
+
+    match serde_json::from_str(&normalized) {
         Ok(v) => return Ok(Value::AnyOf(vec![v], str.to_string())),
         Err(e) => {
             log::debug!("Invalid JSON: {:?}", e);
@@ -30,7 +48,7 @@ pub fn parse(str: &str, mut options: ParseOptions) -> Result<Value> {
     };
 
     if options.allow_markdown_json {
-        match markdown_parser::parse(str, &options) {
+        match markdown_parser::parse(&normalized, &options) {
             Ok(items) => match items.len() {
                 0 => {}
                 1 => {
@@ -103,7 +121,7 @@ pub fn parse(str: &str, mut options: ParseOptions) -> Result<Value> {
     }
 
     if options.all_finding_all_json_objects {
-        match multi_json_parser::parse(str, &options) {
+        match multi_json_parser::parse(&normalized, &options) {
             Ok(items) => match items.len() {
                 0 => {}
                 1 => {
@@ -136,7 +154,7 @@ pub fn parse(str: &str, mut options: ParseOptions) -> Result<Value> {
     }
 
     if options.allow_fixes {
-        match fixing_parser::parse(str, &options) {
+        match fixing_parser::parse(&normalized, &options) {
             Ok(items) => {
                 match items.len() {
                     0 => {}
