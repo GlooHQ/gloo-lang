@@ -19,6 +19,7 @@ import { ParsedResponseRenderer } from './ParsedResponseRender'
 import { TestStatus } from './TestStatus'
 import { ScrollArea } from '~/components/ui/scroll-area'
 import { vscode } from '@/shared/baml-project-panel/vscode'
+import { useMemo } from 'react'
 interface TabularViewProps {
   currentRun: TestHistoryRun
 }
@@ -123,9 +124,11 @@ export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
     }))
   }
 
-  const tc = useAtomValue(
-    testcaseObjectAtom({ functionName: selectedItem?.[0] ?? '', testcaseName: selectedItem?.[1] ?? '' }),
+  const testAtom = useMemo(
+    () => testcaseObjectAtom({ functionName: selectedItem?.[0] ?? '', testcaseName: selectedItem?.[1] ?? '' }),
+    [selectedItem],
   )
+  const tc = useAtomValue(testAtom)
 
   const createSpan = (span: { start: number; end: number; file_path: string; start_line: number }) => ({
     start: span.start,
