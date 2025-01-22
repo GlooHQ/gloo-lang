@@ -73,7 +73,7 @@ pub enum ResolveMediaUrls {
 pub struct ModelFeatures {
     pub completion: bool,
     pub chat: bool,
-    pub anthropic_system_constraints: bool,
+    pub max_one_system_prompt: bool,
     pub resolve_media_urls: ResolveMediaUrls,
     pub allowed_metadata: AllowedRoleMetadata,
 }

@@ -6,7 +6,7 @@ describe('Vertex Provider', () => {
     expect(res.toLowerCase()).toContain('donkey')
   })
 
-  it('should support vertex with system instructions', async () => {
+  it('should support vertex with system_instructions', async () => {
     const res = await b.TestVertexWithSystemInstructions()
     expect(res.length).toBeGreaterThan(0)
   })

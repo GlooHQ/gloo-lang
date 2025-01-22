@@ -273,7 +273,7 @@ impl AnthropicClient {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: true,
+                max_one_system_prompt: true,
                 resolve_media_urls: ResolveMediaUrls::Always,
                 allowed_metadata: properties.allowed_metadata.clone(),
             },
@@ -296,7 +296,7 @@ impl AnthropicClient {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: true,
+                max_one_system_prompt: true,
                 resolve_media_urls: ResolveMediaUrls::Always,
                 allowed_metadata: properties.allowed_metadata.clone(),
             },

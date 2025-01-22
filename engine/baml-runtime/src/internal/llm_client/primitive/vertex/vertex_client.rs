@@ -228,7 +228,7 @@ impl VertexClient {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: false,
+                max_one_system_prompt: true,
                 resolve_media_urls: ResolveMediaUrls::EnsureMime,
                 allowed_metadata: properties.allowed_metadata.clone(),
             },
@@ -256,7 +256,7 @@ impl VertexClient {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: false,
+                max_one_system_prompt: true,
                 resolve_media_urls: ResolveMediaUrls::EnsureMime,
                 allowed_metadata: properties.allowed_metadata.clone(),
             },
@@ -491,32 +491,33 @@ impl ToProviderMessageExt for VertexClient {
         let mut res = serde_json::Map::new();
 
         // https://ai.google.dev/gemini-api/docs/text-generation?lang=rest#system-instructions
-        let mut system_instructions = vec![];
-        let mut contents = vec![];
-
-        for rendered_chat_message in chat {
-            let mut message = self.role_to_message(rendered_chat_message)?;
-
-            if rendered_chat_message.role == "system" {
-                // No role here.
-                message.remove("role");
-                system_instructions.push(message);
-            } else {
-                // User-Model chat.
-                contents.push(message);
+        let (first, others) = chat.split_at(1);
+        if let Some(content) = first.first() {
+            if content.role == "system" {
+                res.insert(
+                    "system_instruction".into(),
+                    json!({
+                        "parts": self.parts_to_message(&content.parts)?
+                    }),
+                );
+                res.insert(
+                    "contents".into(),
+                    others
+                        .iter()
+                        .map(|c| self.role_to_message(c))
+                        .collect::<Result<Vec<_>>>()?
+                        .into(),
+                );
+                return Ok(res);
             }
         }
-
-        if let Some(system_instruction) = system_instructions.pop() {
-            res.insert("system_instruction".into(), system_instruction.into());
-        }
-
-        if !system_instructions.is_empty() {
-            log::warn!("Vertex API only supports one system instruction, using last one and ignoring the rest");
-        }
-
-        res.insert("contents".into(), contents.into());
-
+        res.insert(
+            "contents".into(),
+            chat.iter()
+                .map(|c| self.role_to_message(c))
+                .collect::<Result<Vec<_>>>()?
+                .into(),
+        );
         Ok(res)
     }
 }
