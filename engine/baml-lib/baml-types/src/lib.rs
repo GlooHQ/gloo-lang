@@ -16,3 +16,12 @@ pub use map::Map as BamlMap;
 pub use media::{BamlMedia, BamlMediaContent, BamlMediaType, MediaBase64, MediaUrl};
 pub use minijinja::JinjaExpression;
 pub use value_expr::{EvaluationContext, GetEnvVar, ResolvedValue, StringOr, UnresolvedValue};
+
+impl BamlValue {
+    pub fn as_string(&self) -> Option<&str> {
+        match self {
+            BamlValue::String(s) => Some(s),
+            _ => None,
+        }
+    }
+}
