@@ -1,6 +1,16 @@
 # Changelog
 
+<info>BAML generally gets an update every Monday.</info>
+
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
+## [0.73.2](https://github.com/boundaryml/baml/compare/0.73.1..0.73.2) - 2025-01-22
+
+
+### Bugfixes
+- Gemini should use system message (#1364) - ([b29fb18](https://github.com/boundaryml/baml/commit/b29fb18386634e6e75cc9149b09592889619ba22)) - hellovai
+- Add more explanations to the tool use doc (#1324) - ([bf048a6](https://github.com/boundaryml/baml/commit/bf048a6871f4073807ce1acbe39a411ace42406e)) - Ben Epstein
+- Improve playground performance in vscode (#1366) - ([ba2b0f1](https://github.com/boundaryml/baml/commit/ba2b0f17f8db321705f8c037c6ede5e6a34e2590)) - aaronvg
+- Bump version to 0.73.2 - ([a877ca9](https://github.com/boundaryml/baml/commit/a877ca9b35ec7d643f80c1225d8de4b1b244486f)) - Aaron Villalpando
 
 ## [0.73.1](https://github.com/boundaryml/baml/compare/0.73.0..0.73.1) - 2025-01-22
 
@@ -50,12 +60,6 @@ See below for what we fixed and improved across all parts of BAML
 - Fix field type parsing (#1349) - ([d08445f](https://github.com/boundaryml/baml/commit/d08445f6ffcafcdf0758cff398c14ffa4f14d311)) - hellovai
 - Fix syntax highlighting for @@assert expressions with commas (#1357) - ([e5d595e](https://github.com/boundaryml/baml/commit/e5d595e311088574f4bbf94ddf95feb9abf727c9)) - aaronvg
 
-
-# Changelog
-
-<info>BAML generally gets an update every Monday.</info>
-
-All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ## [0.72.0](https://github.com/boundaryml/baml/compare/0.71.1..0.71.2) - 2025-01-07
 
