@@ -534,7 +534,7 @@ mod tests {
         let output = builder.to_string();
         assert_eq!(
             output,
-            "TypeBuilder(\n  Classes: [\n    User {\n      name set (alias='username', description='The user's full name'),\n      age set (description='User's age in years'),\n      email set\n    }\n  ],\n  Enums: [\n    Status {\n      ACTIVE (alias='active', description='User is active'),\n      INACTIVE (alias='inactive'),\n      PENDING\n    }\n  ]\n)"
+            "TypeBuilder(\n  Classes: [\n    User {\n      name set (alias=String(\"username\"), description=String(\"The user's full name\")),\n      age set (description=String(\"User's age in years\")),\n      email set\n    }\n  ],\n  Enums: [\n    Status {\n      ACTIVE (alias=String(\"active\"), description=String(\"User is active\")),\n      INACTIVE (alias=String(\"inactive\")),\n      PENDING\n    }\n  ]\n)"
         );
     }
 
@@ -623,7 +623,7 @@ mod tests {
         let output = builder.to_string();
         assert_eq!(
             output,
-            "TypeBuilder(\n  Classes: [\n    Address {\n      street set (alias='streetAddress', description='Street address including number'),\n      unit set (description='Apartment/unit number if applicable'),\n      tags set (alias='labels'),\n      is_primary set,\n      coordinates set (skip=true)\n    },\n    EmptyClass {}\n  ],\n  Enums: [\n    Priority {\n      HIGH (alias='urgent', description='Needs immediate attention', skip=false),\n      MEDIUM (description='Standard priority'),\n      LOW (skip=true),\n      NONE\n    },\n    EmptyEnum {}\n  ]\n)"
+             "TypeBuilder(\n  Classes: [\n    Address {\n      street set (alias=String(\"streetAddress\"), description=String(\"Street address including number\")),\n      unit set (description=String(\"Apartment/unit number if applicable\")),\n      tags set (alias=String(\"labels\")),\n      is_primary set,\n      coordinates set (skip=Bool(true))\n    },\n    EmptyClass {}\n  ],\n  Enums: [\n    Priority {\n      HIGH (alias=String(\"urgent\"), description=String(\"Needs immediate attention\"), skip=Bool(false)),\n      MEDIUM (description=String(\"Standard priority\")),\n      LOW (skip=Bool(true)),\n      NONE\n    },\n    EmptyEnum {}\n  ]\n)"
         );
 
         // Test to_overrides()
