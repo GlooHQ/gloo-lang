@@ -21,6 +21,11 @@ pydantic = "^2.7.1"
 python-dotenv = "^1.0.1"
 assertpy = "^1.1"
 requests = "^2.32.3"
+openai = "^1.54.3"
+prettytable = { version = "^3.12.0", python = ">=3.9" }
+matplotlib = { version = "*", python = ">=3.9" }
+ipykernel = "^6.29.5"
+baml-py = "^0.68.0"
 
 [tool.poetry.group.dev.dependencies]
 types-assertpy = "^1.1.0.20240712"

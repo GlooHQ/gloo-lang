@@ -831,7 +831,7 @@ class BamlSyncClient:
     
     def ExtractReceiptInfo(
         self,
-        email: str,reason: Union[Literal["curiosity"], Literal["personal_finance"]],
+        email: str,idx: int,
         baml_options: BamlCallOptions = {},
     ) -> types.ReceiptInfo:
       __tb__ = baml_options.get("tb", None)
@@ -844,7 +844,7 @@ class BamlSyncClient:
       raw = self.__runtime.call_function_sync(
         "ExtractReceiptInfo",
         {
-          "email": email,"reason": reason,
+          "email": email,"idx": idx,
         },
         self.__ctx_manager.get(),
         tb,
@@ -4281,7 +4281,7 @@ class BamlStreamClient:
     
     def ExtractReceiptInfo(
         self,
-        email: str,reason: Union[Literal["curiosity"], Literal["personal_finance"]],
+        email: str,idx: int,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[partial_types.ReceiptInfo, types.ReceiptInfo]:
       __tb__ = baml_options.get("tb", None)
@@ -4295,7 +4295,7 @@ class BamlStreamClient:
         "ExtractReceiptInfo",
         {
           "email": email,
-          "reason": reason,
+          "idx": idx,
         },
         None,
         self.__ctx_manager.get(),

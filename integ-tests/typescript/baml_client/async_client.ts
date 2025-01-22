@@ -894,14 +894,14 @@ export class BamlAsyncClient {
   }
   
   async ExtractReceiptInfo(
-      email: string,reason: "curiosity" | "personal_finance",
+      email: string,idx: number,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<ReceiptInfo> {
     try {
       const raw = await this.runtime.callFunction(
         "ExtractReceiptInfo",
         {
-          "email": email,"reason": reason
+          "email": email,"idx": idx
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -4647,14 +4647,14 @@ class BamlStreamClient {
   }
   
   ExtractReceiptInfo(
-      email: string,reason: "curiosity" | "personal_finance",
+      email: string,idx: number,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<RecursivePartialNull<ReceiptInfo>, ReceiptInfo> {
     try {
       const raw = this.runtime.streamFunction(
         "ExtractReceiptInfo",
         {
-          "email": email,"reason": reason
+          "email": email,"idx": idx
         },
         undefined,
         this.ctx_manager.cloneContext(),

@@ -35,6 +35,7 @@ impl APIConfig {
             Self::LocalOnly(config) => config.api_key.as_deref(),
             Self::Web(config) => Some(config.api_key.as_str()),
         }
+        .map(|s| s.trim()).filter(|s| !s.is_empty())
     }
 
     pub fn stage(&self) -> &str {
@@ -335,6 +336,7 @@ impl APIWrapper {
 
     pub fn project_id(&self) -> Option<&str> {
         self.config.project_id()
+        .map(|s| s.trim()).filter(|s| !s.is_empty())
     }
 
     pub fn session_id(&self) -> &str {

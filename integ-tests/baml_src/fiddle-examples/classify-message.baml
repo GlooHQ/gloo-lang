@@ -8,7 +8,7 @@ enum Category {
 }
 
 function ClassifyMessage(input: string) -> Category {
-  client GPT4
+  client "openai/gpt-4o"
 
   prompt #"
     Classify the following INPUT into ONE
@@ -20,4 +20,13 @@ function ClassifyMessage(input: string) -> Category {
 
     Response:
   "#
+}
+
+test TestName {
+  functions [ClassifyMessage]
+  args {
+    input #"
+      hello world
+    "#
+  }
 }
