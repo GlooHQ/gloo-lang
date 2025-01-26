@@ -95,6 +95,15 @@ client<llm> Gemini {
   }
 }
 
+client<llm> GeminiOpenAiGeneric {
+  provider "openai-generic"
+  options {
+    base_url "https://generativelanguage.googleapis.com/v1beta/"
+    model "gemini-1.5-flash"
+    api_key env.GOOGLE_API_KEY
+  }
+}
+
 client<llm> Vertex {
   provider vertex-ai
   options {

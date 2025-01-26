@@ -403,11 +403,13 @@ impl ToProviderMessageExt for GoogleAIClient {
         if let Some(content) = first.first() {
             if content.role == "system" {
                 res.insert(
-                    "system_instructions".into(),
-                    json!(self.parts_to_message(&content.parts)?),
+                    "system_instruction".into(),
+                    json!({
+                        "parts": self.parts_to_message(&content.parts)?
+                    }),
                 );
                 res.insert(
-                    "messages".into(),
+                    "contents".into(),
                     others
                         .iter()
                         .map(|c| self.role_to_message(c))
