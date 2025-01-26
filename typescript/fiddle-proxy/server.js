@@ -1,10 +1,12 @@
-const cors = require('cors')
-const { createProxyMiddleware } = require('http-proxy-middleware')
 const assert = require('assert')
-const app = require('express')()
-require('dotenv').config()
+const cors = require('cors');
+const express = require('express');
+const http2 = require('http2');
+const { URL } = require('url');
+require('dotenv').config();
 
-app.use(cors())
+const app = express();
+app.use(cors());
 
 // From https://nodejs.org/api/url.html#url-strings-and-url-objects:
 // ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -37,9 +39,9 @@ app.use(cors())
 const API_KEY_INJECTION_ALLOWED = {
   'https://api.openai.com': { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
   'https://api.anthropic.com': { 'x-api-key': process.env.ANTHROPIC_API_KEY },
-  'https://generativelanguage.googleapis.com': { 'x-goog-api-key': process.env.GOOGLE_API_KEY },
+  'https://generativelanguage.googleapis.com': { Authorization: `Bearer ${process.env.GOOGLE_API_KEY}` },
   'https://openrouter.ai': { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` },
-}
+};
 
 // Consult sam@ before changing this.
 for (const url of Object.keys(API_KEY_INJECTION_ALLOWED)) {
@@ -49,62 +51,83 @@ for (const url of Object.keys(API_KEY_INJECTION_ALLOWED)) {
   )
 }
 
-app.use(
-  createProxyMiddleware({
-    changeOrigin: true,
-    pathRewrite: (path, req) => {
-      // Ensure the URL does not end with a slash
-      if (path.endsWith('/')) {
-        return path.slice(0, -1)
-      }
-      return path
-    },
-    router: (req) => {
-      // Extract the original target URL from the custom header
-      const originalUrl = req.headers['baml-original-url']
+// Middleware to handle proxy requests.
+app.use(async (req, res) => {
+  const originalUrl = req.headers['baml-original-url'];
+  if (!originalUrl) {
+    res.status(400).send('Missing baml-original-url header');
+    return;
+  }
 
-      if (typeof originalUrl === 'string') {
-        return originalUrl
-      } else {
-        throw new Error('baml-original-url header is missing or invalid')
-      }
-    },
-    logger: console,
-    on: {
-      proxyReq: (proxyReq, req, res) => {
-        try {
-          const bamlOriginalUrl = req.headers['baml-original-url']
-          if (bamlOriginalUrl === undefined) {
-            return
-          }
-          const proxyOrigin = new URL(bamlOriginalUrl).origin
-          // It is very important that we ONLY resolve against API_KEY_INJECTION_ALLOWED
-          // by using the URL origin! (i.e. NOT using str.startsWith - the latter can still
-          // leak API keys to malicious subdomains e.g. https://api.openai.com.evil.com)
-          const headers = API_KEY_INJECTION_ALLOWED[proxyOrigin]
-          if (headers === undefined) {
-            return
-          }
-          for (const [header, value] of Object.entries(headers)) {
-            proxyReq.setHeader(header, value)
-          }
-          proxyReq.removeHeader('origin')
-        } catch (err) {
-          // This is not console.warn because it's not important
-          console.log('baml-original-url is not parsable', err)
-        }
-      },
-      proxyRes: (proxyRes, req, res) => {
-        proxyRes.headers['Access-Control-Allow-Origin'] = '*'
-      },
-      error: (error) => {
-        console.error('proxy error:', error)
-      },
-    },
-  }),
-)
+  try {
+    // Parse the original URL and append the request path.
+    const targetUrl = new URL(originalUrl);
 
-// Start web server on port 3000
+    const removeTrailingSlash = req.path.endsWith('/')
+      ? req.path.slice(0, -1) // Remove trailing slash
+      : req.path;
+
+    targetUrl.pathname = `${targetUrl.pathname}${removeTrailingSlash}`;
+
+    const proxyReqHeaders = { ...req.headers }; // Clone incoming headers
+    delete proxyReqHeaders.host; // Remove host header for upstream requests
+    delete proxyReqHeaders.origin; // Remove origin header for upstream requests
+
+    // It is very important that we ONLY resolve against API_KEY_INJECTION_ALLOWED
+    // by using the URL origin! (i.e. NOT using str.startsWith - the latter can still
+    // leak API keys to malicious subdomains e.g. https://api.openai.com.evil.com)
+    const allowedHeaders = API_KEY_INJECTION_ALLOWED[targetUrl.origin];
+
+    if (allowedHeaders) {
+      // Override headers.
+      for ([header, value] of Object.entries(allowedHeaders)) {
+        proxyReqHeaders[header.toLowerCase()] = value;
+      }
+    }
+
+    // Establish HTTP/2 connection
+    const client = http2.connect(targetUrl.origin);
+
+    const proxyReq = client.request({
+      ':method': req.method,
+      ':path': `${targetUrl.pathname}${targetUrl.search}`,
+      ...proxyReqHeaders,
+    });
+
+    // Pipe the request body to the upstream server.
+    req.pipe(proxyReq);
+
+    // Handle the response from the upstream server.
+    proxyReq.on('response', (headers) => {
+      // Set response headers
+      for (const [key, value] of Object.entries(headers)) {
+        if (key.startsWith(':')) continue; // Skip pseudo-headers
+        res.setHeader(key, value);
+      }
+      res.statusCode = headers[':status'];
+    });
+
+    proxyReq.on('data', (chunk) => {
+      res.write(chunk); // Forward the data to the client
+    });
+
+    proxyReq.on('end', () => {
+      res.end(); // End the response
+      client.close(); // Close the HTTP/2 connection
+    });
+
+    proxyReq.on('error', (err) => {
+      console.error('Proxy request error:', err);
+      res.status(500).send('Internal Server Error');
+      client.close();
+    });
+  } catch (err) {
+    console.error('Proxy error:', err);
+    res.status(500).send('Failed to process request');
+  }
+});
+
+// Start the server
 app.listen(3000, () => {
-  console.log('Server is listening on port 3000')
-})
+  console.log('Server is listening on port 3000');
+});
