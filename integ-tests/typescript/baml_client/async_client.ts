@@ -3043,6 +3043,31 @@ export class BamlAsyncClient {
     }
   }
   
+  async TestGeminiOpenAiGeneric(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "TestGeminiOpenAiGeneric",
+        {
+          
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   async TestGeminiSystem(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -3050,6 +3075,31 @@ export class BamlAsyncClient {
     try {
       const raw = await this.runtime.callFunction(
         "TestGeminiSystem",
+        {
+          "input": input
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  async TestGeminiSystemAsChat(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "TestGeminiSystemAsChat",
         {
           "input": input
         },
@@ -7509,6 +7559,39 @@ class BamlStreamClient {
     }
   }
   
+  TestGeminiOpenAiGeneric(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<string>, string> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "TestGeminiOpenAiGeneric",
+        {
+          
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<string>, string>(
+        raw,
+        (a): a is RecursivePartialNull<string> => a,
+        (a): a is string => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
   TestGeminiSystem(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
@@ -7516,6 +7599,39 @@ class BamlStreamClient {
     try {
       const raw = this.runtime.streamFunction(
         "TestGeminiSystem",
+        {
+          "input": input
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<RecursivePartialNull<string>, string>(
+        raw,
+        (a): a is RecursivePartialNull<string> => a,
+        (a): a is string => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  TestGeminiSystemAsChat(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<RecursivePartialNull<string>, string> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "TestGeminiSystemAsChat",
         {
           "input": input
         },

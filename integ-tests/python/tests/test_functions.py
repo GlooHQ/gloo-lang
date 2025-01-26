@@ -511,11 +511,29 @@ async def test_gemini():
 
 
 @pytest.mark.asyncio
+async def test_gemini_system_prompt():
+    geminiRes = await b.TestGeminiSystem(input="Dr. Pepper")
+    print(f"LLM output from Gemini: {geminiRes}")
+    assert len(geminiRes) > 0, "Expected non-empty result but got empty."
+
+@pytest.mark.asyncio
+async def test_gemini_system_prompt_as_chat():
+    geminiRes = await b.TestGeminiSystemAsChat(input="Dr. Pepper")
+    print(f"LLM output from Gemini: {geminiRes}")
+    assert len(geminiRes) > 0, "Expected non-empty result but got empty."
+
+@pytest.mark.asyncio
 async def test_gemini_streaming():
     geminiRes = await b.stream.TestGemini(input="Dr. Pepper").get_final_response()
     print(f"LLM output from Gemini: {geminiRes}")
 
     assert len(geminiRes) > 0, "Expected non-empty result but got empty."
+
+
+@pytest.mark.asyncio
+async def test_gemini_openai_generic_system_prompt():
+    res = await b.TestGeminiOpenAiGeneric()
+    assert len(res) > 0, "Expected non-empty result but got empty."
 
 
 @pytest.mark.asyncio
@@ -608,7 +626,7 @@ async def test_streaming_uniterated():
         input="The color blue makes me sad"
     ).get_final_response()
     assert len(final) > 0, "Expected non-empty final but got empty."
-    
+
 
 def test_streaming_sync():
     stream = sync_b.stream.PromptTestStreaming(
