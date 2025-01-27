@@ -9,6 +9,7 @@ import { telemetry } from './plugins/language-server'
 import cors from 'cors'
 import { createProxyMiddleware } from 'http-proxy-middleware'
 import { type LanguageClient, type ServerOptions, TransportKind } from 'vscode-languageclient/node'
+import http2 from "node:http2";
 
 let client: LanguageClient
 
@@ -191,77 +192,155 @@ export function activate(context: vscode.ExtensionContext) {
     return addr.port
   }
 
-  app.use(
-    createProxyMiddleware({
-      changeOrigin: true,
-      pathRewrite: (path, req) => {
-        console.log('reqmethod', req.method)
+  app.use(async (req, res) => {
+    const originalUrl = req.headers['baml-original-url'];
+    if (typeof originalUrl !== 'string') {
+      console.log('baml-original-url header is missing or invalid')
+      throw new Error('baml-original-url header is missing or invalid')
+    }
 
-        // Remove the path in the case of images. Since we request things differently for image GET requests, where we add the url to localhost:4500/actual-url.png
-        // to prevent caching issues with Rust reqwest.
-        // But for normal completion POST requests, we always call localhost:4500.
-        // The original url is always in baml-original-url header.
+    try {
+      // Parse the original URL and append the request path.
+      const targetUrl = new URL(originalUrl);
 
-        // Check for file extensions and set path to empty string.
-        if (/\.[a-zA-Z0-9]+$/.test(path) && req.method === 'GET') {
-          return ''
+      let pathRewrite = req.path;
+
+      // Remove the path in the case of images. Since we request things differently for image GET requests, where we add the url to localhost:4500/actual-url.png
+      // to prevent caching issues with Rust reqwest.
+      // But for normal completion POST requests, we always call localhost:4500.
+      // The original url is always in baml-original-url header.
+
+      // Check for file extensions and set path to empty string.
+      if (/\.[a-zA-Z0-9]+$/.test(req.path) && req.method === 'GET') {
+        pathRewrite = '';
+      }
+
+      // Remove trailing slash
+      if (req.path.endsWith('/')) {
+        pathRewrite = req.path.slice(0, -1)
+      }
+
+      targetUrl.pathname = `${targetUrl.pathname}${pathRewrite}`;
+
+      const proxyReqHeaders = { ...req.headers }; // Clone incoming headers
+      delete proxyReqHeaders.host; // Remove host header for upstream requests
+      delete proxyReqHeaders.origin; // Remove origin header for upstream requests
+      delete req.headers['baml-original-url']; // Remove the custom header
+
+      // Establish HTTP/2 connection
+      const client = http2.connect(targetUrl.origin);
+
+      const proxyReq = client.request({
+        ':method': req.method,
+        ':path': `${targetUrl.pathname}${targetUrl.search}`,
+        ...proxyReqHeaders,
+      });
+
+      // Pipe the request body to the upstream server.
+      req.pipe(proxyReq);
+
+      // Handle the response from the upstream server.
+      proxyReq.on('response', (headers) => {
+        // Set response headers
+        for (const [key, value] of Object.entries(headers)) {
+          if (key.startsWith(':')) continue; // Skip pseudo-headers
+          res.setHeader(key, value as any);
         }
-        // Remove trailing slash
-        if (path.endsWith('/')) {
-          return path.slice(0, -1)
-        }
-        return path
-      },
-      router: (req) => {
-        // Extract the original target URL from the custom header
-        let originalUrl = req.headers['baml-original-url']
-        if (typeof originalUrl === 'string') {
-          // For some reason, Node doesn't like deleting headers in the proxyReq function.
-          delete req.headers['baml-original-url']
-          delete req.headers['origin']
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.statusCode = headers[':status'] as number;
+      });
 
-          // Ensure the URL does not end with a slash
-          console.log('originalUrl1', originalUrl)
-          if (originalUrl.endsWith('/')) {
-            originalUrl = originalUrl.slice(0, -1)
-          }
-          console.log('returning original url', originalUrl)
-          // return new URL(originalUrl).toString()
+      proxyReq.on('data', (chunk) => {
+        res.write(chunk); // Forward the data to the client
+      });
 
-          return originalUrl
-        } else {
-          console.log('baml-original-url header is missing or invalid')
-          throw new Error('baml-original-url header is missing or invalid')
-        }
-      },
-      logger: console,
-      on: {
-        proxyReq: (proxyReq, req, res) => {
-          // const bamlOriginalUrl = req.headers['baml-original-url']
-          // if (typeof bamlOriginalUrl === 'string') {
-          //   const targetUrl = new URL(bamlOriginalUrl)
-          //   // Copy all original headers except those we want to modify/remove
-          //   Object.entries(req.headers).forEach(([key, value]) => {
-          //     if (key !== 'host' && key !== 'origin' && key !== 'baml-original-url') {
-          //       proxyReq.setHeader(key, value)
-          //     }
-          //   })
-          //   // Set the correct origin and host headers
-          //   proxyReq.setHeader('origin', targetUrl.origin)
-          //   proxyReq.setHeader('host', targetUrl.host)
-          // }
-        },
-        proxyRes: (proxyRes, req, res) => {
-          proxyRes.headers['Access-Control-Allow-Origin'] = '*'
-        },
-        error: (error, req, res) => {
-          console.error('proxy error:', error)
+      proxyReq.on('end', () => {
+        res.end(); // End the response
+        client.close(); // Close the HTTP/2 connection
+      });
 
-          res.end(JSON.stringify({ error: error }))
-        },
-      },
-    }),
-  )
+      proxyReq.on('error', (err) => {
+        console.error('Proxy request error:', err);
+        res.status(500).send('Internal Server Error');
+        client.close();
+      });
+    } catch (err) {
+      console.error('Proxy error:', err);
+      res.status(500).send('Failed to process request');
+    }
+  });
+
+  // app.use(
+  //   createProxyMiddleware({
+  //     changeOrigin: true,
+  //     pathRewrite: (path, req) => {
+  //       console.log('reqmethod', req.method)
+
+  //       // Remove the path in the case of images. Since we request things differently for image GET requests, where we add the url to localhost:4500/actual-url.png
+  //       // to prevent caching issues with Rust reqwest.
+  //       // But for normal completion POST requests, we always call localhost:4500.
+  //       // The original url is always in baml-original-url header.
+
+  //       // Check for file extensions and set path to empty string.
+  //       if (/\.[a-zA-Z0-9]+$/.test(path) && req.method === 'GET') {
+  //         return ''
+  //       }
+  //       // Remove trailing slash
+  //       if (path.endsWith('/')) {
+  //         return path.slice(0, -1)
+  //       }
+  //       return path
+  //     },
+  //     router: (req) => {
+  //       // Extract the original target URL from the custom header
+  //       let originalUrl = req.headers['baml-original-url']
+  //       if (typeof originalUrl === 'string') {
+  //         // For some reason, Node doesn't like deleting headers in the proxyReq function.
+  //         delete req.headers['baml-original-url']
+  //         delete req.headers['origin']
+
+  //         // Ensure the URL does not end with a slash
+  //         console.log('originalUrl1', originalUrl)
+  //         if (originalUrl.endsWith('/')) {
+  //           originalUrl = originalUrl.slice(0, -1)
+  //         }
+  //         console.log('returning original url', originalUrl)
+  //         // return new URL(originalUrl).toString()
+
+  //         return originalUrl
+  //       } else {
+  //         console.log('baml-original-url header is missing or invalid')
+  //         throw new Error('baml-original-url header is missing or invalid')
+  //       }
+  //     },
+  //     logger: console,
+  //     on: {
+  //       proxyReq: (proxyReq, req, res) => {
+  //         // const bamlOriginalUrl = req.headers['baml-original-url']
+  //         // if (typeof bamlOriginalUrl === 'string') {
+  //         //   const targetUrl = new URL(bamlOriginalUrl)
+  //         //   // Copy all original headers except those we want to modify/remove
+  //         //   Object.entries(req.headers).forEach(([key, value]) => {
+  //         //     if (key !== 'host' && key !== 'origin' && key !== 'baml-original-url') {
+  //         //       proxyReq.setHeader(key, value)
+  //         //     }
+  //         //   })
+  //         //   // Set the correct origin and host headers
+  //         //   proxyReq.setHeader('origin', targetUrl.origin)
+  //         //   proxyReq.setHeader('host', targetUrl.host)
+  //         // }
+  //       },
+  //       proxyRes: (proxyRes, req, res) => {
+  //         proxyRes.headers['Access-Control-Allow-Origin'] = '*'
+  //       },
+  //       error: (error, req, res) => {
+  //         console.error('proxy error:', error)
+
+  //         res.end(JSON.stringify({ error: error }))
+  //       },
+  //     },
+  //   }),
+  // )
 
   const bamlPlaygroundCommand = vscode.commands.registerCommand(
     'baml.openBamlPanel',
