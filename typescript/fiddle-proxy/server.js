@@ -80,7 +80,7 @@ app.use(async (req, res) => {
 
     if (allowedHeaders) {
       // Override headers.
-      for ([header, value] of Object.entries(allowedHeaders)) {
+      for (const [header, value] of Object.entries(allowedHeaders)) {
         proxyReqHeaders[header.toLowerCase()] = value;
       }
     }
