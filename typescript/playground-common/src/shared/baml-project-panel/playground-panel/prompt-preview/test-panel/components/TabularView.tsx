@@ -89,7 +89,10 @@ const ResponseContent = ({
           <ParsedResponseRenderer response={getTestStateResponse(state)} />
 
           {getExplanation(state) && (
-            <div className='mt-2 text-xs text-muted-foreground/80'>{getExplanation(state)}</div>
+            <div className='flex flex-col gap-2 mt-2 text-xs text-muted-foreground/80'>
+              <div>BAML parser fixed the following issues:</div>
+              <pre>{getExplanation(state)}</pre>
+            </div>
           )}
         </>
       )}
