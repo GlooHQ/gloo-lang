@@ -104,6 +104,7 @@ app.use(async (req, res) => {
         if (key.startsWith(':')) continue; // Skip pseudo-headers
         res.setHeader(key, value);
       }
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.statusCode = headers[':status'];
     });
 
