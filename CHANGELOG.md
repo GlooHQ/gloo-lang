@@ -2,8 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-<info>BAML generally gets an update every Monday.</info>
+## [0.73.5](https://github.com/boundaryml/baml/compare/0.73.4..0.73.5) - 2025-01-27
 
+
+### Bugfixes
+- Fix Google AI system prompt JSON (#1374) - ([fe366fe](https://github.com/boundaryml/baml/commit/fe366fe4036b2c9d6863a0d3246df2526bdcb3a4)) - Antonio Sarosi
+- show token usage in the playground card view (#1376) - ([0500a87](https://github.com/boundaryml/baml/commit/0500a87d98c6198807a04268f23a436fb260bec3)) - aaronvg
+- Bump version to 0.73.5 - ([a32aebf](https://github.com/boundaryml/baml/commit/a32aebf51d0f6b5471fe884fa8a0da21aa45c753)) - Aaron Villalpando
 
 ## [0.73.4](https://github.com/boundaryml/baml/compare/0.73.3..0.73.4) - 2025-01-22
 Fix another issue where playground could rerender over and over
