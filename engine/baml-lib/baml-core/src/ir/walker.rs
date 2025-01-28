@@ -9,7 +9,7 @@ use internal_llm_client::ClientSpec;
 use std::collections::{HashMap, HashSet};
 
 use super::{
-    repr::{self, FunctionConfig, WithRepr},
+    repr::{self, FunctionConfig, TypeBuilderEntry, WithRepr},
     Class, Client, Enum, EnumValue, Field, FunctionNode, IRHelper, Impl, RetryPolicy,
     TemplateString, TestCase, TypeAlias, Walker,
 };
@@ -222,6 +222,10 @@ impl<'a> Walker<'a, (&'a FunctionNode, &'a TestCase)> {
             .iter()
             .map(|(k, v)| Ok((k.clone(), v.resolve_serde::<BamlValue>(ctx))))
             .collect()
+    }
+
+    pub fn type_builder_contents(&self) -> &[TypeBuilderEntry] {
+        &self.item.1.elem.type_builder
     }
 
     pub fn function(&'a self) -> Walker<'a, &'a FunctionNode> {
