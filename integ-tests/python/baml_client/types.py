@@ -38,6 +38,7 @@ def all_succeeded(checks: Dict[CheckName, Check]) -> bool:
     return all(check.status == "succeeded" for check in get_checks(checks))
 
 
+
 class AliasedEnum(str, Enum):
     
     KEY_ONE = "KEY_ONE"
