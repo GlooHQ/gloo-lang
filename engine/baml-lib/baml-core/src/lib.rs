@@ -3,8 +3,10 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
 pub use internal_baml_diagnostics;
+use internal_baml_parser_database::TypeWalker;
 pub use internal_baml_parser_database::{self};
 
+use internal_baml_schema_ast::ast::{Identifier, WithName};
 pub use internal_baml_schema_ast::{self, ast};
 
 use rayon::prelude::*;
@@ -97,6 +99,89 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
 
     // Some last linker stuff can only happen post validation.
     db.finalize(&mut diagnostics);
+
+    // TODO: This is a very ugly hack to implement scoping for type builder
+    // blocks in test cases. Type builder blocks support all the type
+    // definitions (class, enum, type alias), and all these definitions have
+    // access to both the global and local scope but not the scope of other
+    // test cases.
+    //
+    // This codebase was not designed with scoping in mind, so there's no simple
+    // way of implementing scopes in the AST and IR.
+    let mut test_case_scoped_dbs = Vec::new();
+    for test in db.walk_test_cases() {
+        let mut scoped_db = internal_baml_parser_database::ParserDatabase::new();
+        scoped_db.add_ast(db.ast().to_owned());
+
+        let Some(type_builder) = test.test_case().type_builder.as_ref() else {
+            continue;
+        };
+
+        let mut ast = ast::SchemaAst::new();
+        for type_def in &type_builder.entries {
+            ast.tops.push(match type_def {
+                ast::TypeBuilderEntry::Class(c) => ast::Top::Class(c.to_owned()),
+                ast::TypeBuilderEntry::Enum(e) => ast::Top::Enum(e.to_owned()),
+                ast::TypeBuilderEntry::Dynamic(d) => {
+                    let mut dyn_type = d.to_owned();
+
+                    // TODO: Extemely ugly hack to avoid collisions in the name
+                    // interner.
+                    dyn_type.name = Identifier::Local(
+                        format!("Dynamic{}", dyn_type.name()),
+                        dyn_type.span.to_owned(),
+                    );
+
+                    dyn_type.is_dynamic = true;
+
+                    match db.find_type_by_str(d.name()) {
+                        Some(t) => match t {
+                            TypeWalker::Class(_) => ast::Top::Class(dyn_type),
+                            TypeWalker::Enum(_) => ast::Top::Enum(dyn_type),
+                            _ => todo!(),
+                        },
+                        None => {
+                            diagnostics.push_error(DatamodelError::new_validation_error(
+                                &format!("Type '{}' not found", dyn_type.name()),
+                                dyn_type.span.to_owned(),
+                            ));
+                            continue;
+                        }
+                    }
+                }
+                _ => todo!(),
+            });
+        }
+
+        scoped_db.add_ast(ast);
+
+        if let Err(d) = scoped_db.validate(&mut diagnostics) {
+            eprintln!("Error in scoped db: {:?}", d);
+            return ValidatedSchema {
+                db: scoped_db,
+                diagnostics,
+                configuration: Configuration::new(),
+            };
+        }
+        validate::validate(
+            &scoped_db,
+            configuration.preview_features(),
+            &mut diagnostics,
+        );
+        if diagnostics.has_errors() {
+            return ValidatedSchema {
+                db: scoped_db,
+                diagnostics,
+                configuration,
+            };
+        }
+        scoped_db.finalize(&mut diagnostics);
+
+        test_case_scoped_dbs.push((test.id.0, scoped_db));
+    }
+    for (test_id, scoped_db) in test_case_scoped_dbs.into_iter() {
+        db.add_test_case_db(test_id, scoped_db);
+    }
 
     ValidatedSchema {
         db,

@@ -15,6 +15,15 @@ pub enum TypeBuilderEntry {
     Dynamic(TypeExpressionBlock),
 }
 
+/// The `type_builder` block.
+///
+/// ```ignore
+/// test SomeTest {
+///     type_builder {
+///         // Contents
+///     }
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub struct TypeBuilderBlock {
     pub entries: Vec<TypeBuilderEntry>,

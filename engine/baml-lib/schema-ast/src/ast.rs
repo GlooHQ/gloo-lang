@@ -47,7 +47,7 @@ pub use value_expression_block::{BlockArg, BlockArgs, ValueExprBlock, ValueExprB
 /// node is annotated with its location in the text representation.
 /// Basically, the AST is an object oriented representation of the datamodel's
 /// text. Schema = Datamodel + Generators + Datasources
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SchemaAst {
     /// All models, enums, composite types, datasources, generators and type aliases.
     pub tops: Vec<Top>,

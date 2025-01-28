@@ -177,6 +177,9 @@ impl IntermediateRepr {
         db: &ParserDatabase,
         configuration: Configuration,
     ) -> Result<IntermediateRepr> {
+        // TODO: We're iterating over the AST tops once for every property in
+        // the IR. Easy performance optimization here by iterating only one time
+        // and distributing the tops to the appropriate IR properties.
         let mut repr = IntermediateRepr {
             enums: db
                 .walk_enums()
@@ -527,30 +530,6 @@ impl WithRepr<FieldType> for ast::FieldType {
     }
 }
 
-// #[derive(serde::Serialize, Debug)]
-// pub enum Identifier {
-//     /// Starts with env.*
-//     ENV(String),
-//     /// The path to a Local Identifer + the local identifer. Separated by '.'
-//     #[allow(dead_code)]
-//     Ref(Vec<String>),
-//     /// A string without spaces or '.' Always starts with a letter. May contain numbers
-//     Local(String),
-//     /// Special types (always lowercase).
-//     Primitive(baml_types::TypeValue),
-// }
-
-// impl Identifier {
-//     pub fn name(&self) -> String {
-//         match self {
-//             Identifier::ENV(k) => k.clone(),
-//             Identifier::Ref(r) => r.join("."),
-//             Identifier::Local(l) => l.clone(),
-//             Identifier::Primitive(p) => p.to_string(),
-//         }
-//     }
-// }
-
 type TemplateStringId = String;
 
 #[derive(Debug)]
@@ -635,7 +614,11 @@ impl WithRepr<Enum> for EnumWalker<'_> {
 
     fn repr(&self, db: &ParserDatabase) -> Result<Enum> {
         Ok(Enum {
-            name: self.name().to_string(),
+            name: if self.ast_type_block().is_dynamic {
+                self.name().strip_prefix("Dynamic").unwrap().to_string()
+            } else {
+                self.name().to_string()
+            },
             values: self
                 .values()
                 .map(|w| {
@@ -723,7 +706,11 @@ impl WithRepr<Class> for ClassWalker<'_> {
 
     fn repr(&self, db: &ParserDatabase) -> Result<Class> {
         Ok(Class {
-            name: self.name().to_string(),
+            name: if self.ast_type_block().is_dynamic {
+                self.name().strip_prefix("Dynamic").unwrap().to_string()
+            } else {
+                self.name().to_string()
+            },
             static_fields: self
                 .static_fields()
                 .map(|e| e.node(db))
@@ -1038,6 +1025,13 @@ impl WithRepr<RetryPolicy> for ConfigurationWalker<'_> {
     }
 }
 
+#[derive(Debug)]
+pub enum TypeBuilderEntry {
+    Enum(Node<Enum>),
+    Class(Node<Class>),
+    TypeAlias(Node<TypeAlias>),
+}
+
 #[derive(serde::Serialize, Debug)]
 pub struct TestCaseFunction(String);
 
@@ -1053,6 +1047,7 @@ pub struct TestCase {
     pub functions: Vec<Node<TestCaseFunction>>,
     pub args: IndexMap<String, UnresolvedValue<()>>,
     pub constraints: Vec<Constraint>,
+    pub type_builder: Vec<TypeBuilderEntry>,
 }
 
 impl WithRepr<TestCaseFunction> for (&ConfigurationWalker<'_>, usize) {
@@ -1100,6 +1095,47 @@ impl WithRepr<TestCase> for ConfigurationWalker<'_> {
         let functions = (0..self.test_case().functions.len())
             .map(|i| (self, i).node(db))
             .collect::<Result<Vec<_>>>()?;
+
+        // TODO: Temporary solution until we implement scoping in the AST.
+        let enums = self
+            .test_case()
+            .type_builder_scoped_db
+            .walk_enums()
+            .filter(|e| {
+                self.test_case().type_builder_scoped_db.ast()[e.id].is_dynamic
+                    || db.find_type_by_str(e.name()).is_none()
+            })
+            .map(|e| e.node(&self.test_case().type_builder_scoped_db))
+            .collect::<Result<Vec<Node<Enum>>>>()?;
+        let classes = self
+            .test_case()
+            .type_builder_scoped_db
+            .walk_classes()
+            .filter(|c| {
+                self.test_case().type_builder_scoped_db.ast()[c.id].is_dynamic
+                    || db.find_type_by_str(c.name()).is_none()
+            })
+            .map(|c| c.node(&self.test_case().type_builder_scoped_db))
+            .collect::<Result<Vec<Node<Class>>>>()?;
+        let type_aliases = self
+            .test_case()
+            .type_builder_scoped_db
+            .walk_type_aliases()
+            .filter(|a| db.find_type_by_str(a.name()).is_none())
+            .map(|a| a.node(&self.test_case().type_builder_scoped_db))
+            .collect::<Result<Vec<Node<TypeAlias>>>>()?;
+        let mut type_builder = Vec::new();
+
+        for e in enums {
+            type_builder.push(TypeBuilderEntry::Enum(e));
+        }
+        for c in classes {
+            type_builder.push(TypeBuilderEntry::Class(c));
+        }
+        for a in type_aliases {
+            type_builder.push(TypeBuilderEntry::TypeAlias(a));
+        }
+
         Ok(TestCase {
             name: self.name().to_string(),
             args: self
@@ -1115,9 +1151,11 @@ impl WithRepr<TestCase> for ConfigurationWalker<'_> {
             .constraints
             .into_iter()
             .collect::<Vec<_>>(),
+            type_builder,
         })
     }
 }
+
 #[derive(Debug, Clone, Serialize)]
 pub enum Prompt {
     // The prompt stirng, and a list of input replacer keys (raw key w/ magic string, and key to replace with)
@@ -1281,8 +1319,8 @@ mod tests {
     fn test_resolve_type_alias() {
         let ir = make_test_ir(
             r##"
-            type One = int 
-            type Two = One 
+            type One = int
+            type Two = One
             type Three = Two
 
             class Test {
