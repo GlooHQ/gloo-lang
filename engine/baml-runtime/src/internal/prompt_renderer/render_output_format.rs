@@ -96,7 +96,7 @@ fn find_new_class_field(
     let name = Name::new_with_alias(field_name.to_string(), alias.value());
     let desc = desc.value();
 
-    Ok((name, field_overrides.0.clone(), desc, false)) // TODO: Field overrides are not "stream.not_nul". Should this be configurable?
+    Ok((name, field_overrides.0.clone(), desc, false)) // TODO: Field overrides are not "stream.not_null". Should this be configurable?
 }
 
 fn find_existing_class_field(

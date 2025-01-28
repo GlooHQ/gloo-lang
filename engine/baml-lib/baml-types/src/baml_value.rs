@@ -673,7 +673,7 @@ impl<T> From<BamlValueWithMeta<T>> for BamlValue {
     }
 }
 
-/// This special-purpose serializer is used for the public-facing API.
+/// This special-purpose serializer is used for jinja.
 /// When we want to extend the orchestrator with BamlValues packing more
 /// metadata than just a `Vec<ResponseCheck>`, `
 impl Serialize for BamlValueWithMeta<Vec<ResponseCheck>> {
@@ -747,156 +747,8 @@ fn add_checks<'a, S: SerializeMap>(
     Ok(())
 }
 
-// impl <T> Serialize for BamlValueWithMeta<T>
-//   where T: SerializeMetadata + std::fmt::Debug,
-// {
-// 
-//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-//     where
-//         S: Serializer,
-//     {
-//         let bare_value = self.value();
-//         let metadata_fields = &self.meta().metadata_fields(&bare_value)?;
-//         match self {
-//            BamlValueWithMeta::String(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
-//            BamlValueWithMeta::Int(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
-//            BamlValueWithMeta::Float(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
-//            BamlValueWithMeta::Bool(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
-//            BamlValueWithMeta::Map(v, _metadata) => {
-//                let mut map = serializer.serialize_map(None)?;
-//                for (key, value) in v {
-//                    map.serialize_entry::<String, BamlValueWithMeta<T>>(key, value)?;
-//                }
-//                add_checks(&mut map, &self.meta().metadata_fields(&bare_value)?)?;
-//                map.end()
-//            }
-//            BamlValueWithMeta::List(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
-//            BamlValueWithMeta::Media(v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
-//            BamlValueWithMeta::Enum(_enum_name, v, _metadata) => serialize_with_checks(v, metadata_fields, serializer),
-//            BamlValueWithMeta::Class(_class_name, v, _metadata) => {
-//                let metadata_fields = self.meta().metadata_fields(&bare_value);
-//                if metadata_fields.is_empty() {
-//                    let mut map = serializer.serialize_map(None)?;
-//                    v.into_iter().try_for_each(|(key, value)| {
-//                     map.serialize_entry(key, value)
-//                    })?;
-//                    add_checks(&mut map, &metadata_fields)?;
-//                    map.end()
-//                } else {
-//                    let mut checked_value = serializer.serialize_map(Some(2))?;
-//                    checked_value.serialize_entry("value", &v)?;
-//                    add_checks(&mut checked_value, &metadata_fields)?;
-//                    checked_value.end()
-//                }
-//            }
-//            BamlValueWithMeta::Null(_) => serialize_with_checks(&(), &self.meta().metadata_fields(), serializer),
-//        }
-//     }
-// }
-// 
-// fn serialize_with_checks<S, T: Serialize>(
-//     value: &T,
-//     metadata_fields: &Vec<(String, serde_json::Value)>,
-//     serializer: S,
-// ) -> Result<S::Ok, S::Error>
-// where
-//     S: Serializer,
-// {
-//     if !metadata_fields.is_empty() {
-//         let mut map = serializer.serialize_map(Some(2))?;
-//         map.serialize_entry("value", value)?;
-//         add_checks(&mut map, metadata_fields)?;
-//         map.end()
-//     } else {
-//         value.serialize(serializer)
-//     }
-// }
-// 
-// fn add_checks<'a, S: SerializeMap>(
-//     map: &'a mut S,
-//     metadata_fields: &Vec<(String, serde_json::Value)>,
-// ) -> Result<(), S::Error>
-// {
-//     metadata_fields.iter().try_for_each(|(field_name, value)| {
-//         map.serialize_entry(&field_name, &value)
-//     })?;
-//     Ok(())
-// }
-// 
-// pub trait SerializeMetadata {
-//     fn metadata_fields(&self, bare_value: &BamlValue) -> Result<Vec<(&str, serde_json::Value)>, serde_json::Error>;
-// }
-// 
-// // This instance is used in constraint tests.
-// // Consider modifying that test and deleting this instance.
-// impl SerializeMetadata for Vec<ResponseCheck> {
-//     fn metadata_fields(&self, _bare_value: &serde_json::Value) -> Result<Vec<(&str, serde_json::Value)>, serde_json::Error> {
-//         if !self.is_empty() {
-//             let checks_map: HashMap<_,_> = self.iter().map(|check| (check.name.clone(), check)).collect();
-//             let json_checks_map = serde_json::to_value(checks_map).expect("serialization of checks is safe");
-//             Ok(vec![("checks", json_checks_map)])
-//         } else {
-//             Ok(Vec::new())
-//         }
-//     }
-// }
-// 
-// impl <T> SerializeMetadata for (T, Vec<ResponseCheck>, Option<CompletionState>) {
-// 
-//     // If there are only checks:
-//     //   [("checks", checks), ("value", value)]
-//     // If there is completion state:
-//     //   [("state", state), ("value", value)]
-//     // If there are checks and completion state:
-//     //  [("state", state), ("value": { "checks": checks, "value": value })]
-//     // If there are neither checks nor completion state:
-//     // [("value", value)]
-//     fn metadata_fields(&self, bare_value: &BamlValue) -> Result<Vec<(&str, serde_json::Value)>, serde_json::Error> {
-//         let checks: Vec<(&str, &ResponseCheck)> = self.1.iter().map(|check| (check.name.as_str(), check)).collect();
-//         let completion_state: Option<&CompletionState> = self.2.as_ref();
-// 
-//         let checks_json = serde_json::to_value(&checks)?;
-//         let bare_value_json = serde_json::to_value(bare_value)?;
-// 
-//         match (checks.len(), completion_state) {
-//             (0, None) => Ok(vec![("value", bare_value_json)]),
-//             (_, None) => Ok(vec![("value", bare_value_json), ("checks", checks_json)]),
-//             (0, Some(state)) => Ok(vec![("value", bare_value_json), ("state", serde_json::to_value(state)?)]),
-//             (_, Some(state)) => Ok(vec![
-//                     ("state", serde_json::to_value(state)?),
-//                     ("value", serde_json::to_value(&vec![
-//                         ("value", bare_value_json),
-//                         ("checks", checks_json)
-//                     ].into_iter().collect::<HashMap<_,_>>())?)
-//                 ]),
-// 
-//         }
-//         // if !checks.is_empty() {
-//         //     let checks_json = serde_json::to_value(checks).expect("Serializing checks is safe.");
-//         //     fields.push(("checks".to_string(), checks_json));
-//         // }
-// 
-//         // let value_considering_checks = if checks.is_empty() {
-//         //     serde_json::to_value(bare_value)?
-//         // } else {
-//         //     let object = vec![
-//         //         ("value", serde_json::to_value(bare_value)?),
-//         //         ("checks", serde_json::to_value(fields)?),
-//         //     ].into_iter().collect::<HashMap<_,_>>();
-//         //     serde_json::to_value(object)?
-//         // };
-// 
-//         // let value_considering_completion_state = if let Some(state) = completion_state {
-//         //     vec![ ("state", serde_json::to_value(&state)?) ]
-//         // } else {
-//         //     value_considering_checks
-//         // }
-// 
-//         // Ok(value_considering_completion_state)
-//     }
-// 
-// }
-
+/// This type is used in `BamlResponseValue` to summarize data about the
+/// completion state and completion behavior of a BamlValueWithMeta node.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Completion {
     pub state: CompletionState,
@@ -913,7 +765,6 @@ pub enum CompletionState {
 
 impl Default for Completion {
     fn default() -> Self {
-        panic!("I hope we don't use this default");
         Completion {
             state: CompletionState::Complete,
             display: false,

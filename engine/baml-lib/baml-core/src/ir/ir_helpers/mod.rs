@@ -624,7 +624,7 @@ impl IRHelper for IntermediateRepr {
                     .into_iter()
                     .map(|i| {
                         item_type(self, &field_type, &i)
-                            .ok_or({ anyhow::anyhow!("Could not infer child type") })
+                            .ok_or(anyhow::anyhow!("Could not infer child type"))
                             .and_then(|item_type| self.distribute_type_with_meta(i, item_type))
                     })
                     .collect::<Result<Vec<_>>>()?;
@@ -829,7 +829,6 @@ fn item_type<T: std::fmt::Debug>(
     };
     res
 }
-
 
 /// Like item_type, but specialized for maps.
 fn map_types<'ir, 'a>(

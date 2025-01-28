@@ -41,12 +41,12 @@ pub fn validate_streaming_state(
     let baml_value_with_streaming_state_and_behavior =
         typed_baml_value.map_meta(|(flags, r#type)| (completion_state(&flags), r#type));
 
-    let res = process_node(
+    let top_level_node = process_node(
         ir,
         baml_value_with_streaming_state_and_behavior,
         allow_partials,
-    );
-    res
+    )?;
+    Ok(top_level_node)
 }
 
 /// Consider a node's type, streaming state, and streaming behavior annotations. Return
@@ -57,8 +57,9 @@ pub fn validate_streaming_state(
 /// This function descends into child nodes when the argument is a compound value.
 /// 
 /// Params:
-///   value: A done in the BamlValue tree.
-///   allow_partials: 
+///   value: A node in the BamlValue tree.
+///   allow_partials: Whether this node may contain partial values. (Once we
+///                   see a false, all child nodes will also get false). 
 fn process_node(
     ir: &IntermediateRepr,
     value: BamlValueWithMeta<(CompletionState, &FieldType)>,
@@ -103,27 +104,21 @@ fn process_node(
                 .collect();
             let needed_fields: HashSet<String> = needed_fields(ir, field_type, allow_partials_in_sub_nodes)?;
 
-            let present_nonnull_fields: HashSet<String> = value_fields.iter().filter_map(|(field_name, field_value)| {
-                if matches!(field_value, BamlValueWithMeta::Null(_)) {
-                    None
-                } else {
-                    Some(field_name.to_string())
-                }
-            }).collect();
-            let missing_needed_fields: Vec<_> = needed_fields.difference(&present_nonnull_fields).into_iter().collect();
-
-
             // The fields that need to be filled in by Null are initially the
             // fields in the Class type that are not present in the input
             // value.
             let fields_needing_null =
                 fields_needing_null_filler(ir, field_type, value_field_names, allow_partials)?;
 
-            let mut deleted_fields: HashMap<String, BamlValueWithMeta<Completion>> =
+            // We might later delete fields from 'value_fields`, (e.g. if they
+            // were incomplete but required `done`). These deleted fields will
+            // need to be replaced with nulls. We initialize a hashmap to hold
+            // these nulls here.
+            let mut deletion_nulls: HashMap<String, BamlValueWithMeta<Completion>> =
                 HashMap::new();
 
-            // let unneeded_fields = field_names.difference(&needed_fields);
-            let needed_nulls = fields_needing_null
+            // Null values used to fill gaps in the input hashmap.
+            let filler_nulls = fields_needing_null
                 .into_iter()
                 .filter_map(|ref null_field_name| {
                     let field = value_fields
@@ -142,6 +137,8 @@ fn process_node(
                 })
                 .collect::<IndexMap<String, BamlValueWithMeta<Completion>>>();
 
+            // Fields of the input hashmap, transformed by running the
+            // semantic-streaming algorithm, and deleted if appropriate.
             let mut new_fields = value_fields
                 .into_iter()
                 .filter_map(|(field_name, field_value)| {
@@ -161,13 +158,14 @@ fn process_node(
                                 required_done: false,
                             };
                             let null = BamlValueWithMeta::Null(state);
-                            deleted_fields.insert(field_name, null);
+                            deletion_nulls.insert(field_name, null);
                             None
                         }
                     }
                 })
                 .collect::<IndexMap<String, BamlValueWithMeta<_>>>();
 
+            // Names of fields from the input hashmap that survived semantic streaming.
             let derived_present_nonnull_fields: HashSet<String> = new_fields.iter().filter_map(|(field_name, field_value)| {
                 if matches!(field_value, BamlValueWithMeta::Null(_)) {
                     None
@@ -177,8 +175,8 @@ fn process_node(
             }).collect();
             let missing_needed_fields: Vec<_> = needed_fields.difference(&derived_present_nonnull_fields).into_iter().collect();
 
-            new_fields.extend(needed_nulls);
-            new_fields.extend(deleted_fields);
+            new_fields.extend(filler_nulls);
+            new_fields.extend(deletion_nulls);
 
             let res = BamlValueWithMeta::Class(class_name.clone(), new_fields, new_meta);
             if missing_needed_fields.clone().len() == 0 {
@@ -203,6 +201,9 @@ fn process_node(
 }
 
 
+/// Given a type and an input hashmap, if that type is a class, determine what
+/// fields in the class need to be filled in by a null. A field needs to be
+/// filled by a null if it is not present in the hashmap value.
 fn fields_needing_null_filler<'a>(
     ir: &'a IntermediateRepr,
     field_type: &'a FieldType,
@@ -238,13 +239,11 @@ fn fields_needing_null_filler<'a>(
 
 /// For a given type, assume that it is a class, and list the fields of that
 /// class that were marked `@stream.not_null`.
-/// The parameter must have already been passed through `distribute_metadata`,
-/// it's an error to call this function with undistributed metadata.
 ///
 /// When allow_partials==false, we are in a context where we are done with
 /// streaming, so we override the normal implemenation of this function
-/// and return an empty set (because we are ignoring the "needed" property,
-/// which only applies to mid-stream messages).
+/// and return an empty set (because we are ignoring the "@stream.not_null" property,
+/// which only applies when `allow_partials==true`).
 fn needed_fields(
     ir: &IntermediateRepr,
     field_type: &FieldType,

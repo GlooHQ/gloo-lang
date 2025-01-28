@@ -23,6 +23,7 @@ def get_checks(checks: Dict[CheckName, Check]) -> List[Check]:
 def all_succeeded(checks: Dict[CheckName, Check]) -> bool:
     return all(check.status == "succeeded" for check in get_checks(checks))
 
+
 {# Enums -#}
 {% for enum in enums %}
 class {{enum.name}}(str, Enum):

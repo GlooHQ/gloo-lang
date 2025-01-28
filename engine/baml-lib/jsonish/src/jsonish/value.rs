@@ -29,7 +29,7 @@ pub enum Value {
 
     // Fixed types
     Markdown(String, Box<Value>, CompletionState),
-    FixedJson(Box<Value>, Vec<Fixes>), // TODO: Does this really need a CompletionState?
+    FixedJson(Box<Value>, Vec<Fixes>),
     AnyOf(Vec<Value>, String),
 }
 
@@ -160,25 +160,6 @@ impl Value {
         }
     }
 
-    pub fn completed_deeply(self) -> Self {
-        match self {
-            Value::String(v, _) => Value::String(v, CompletionState::Complete),
-            Value::Number(v, _) => Value::Number(v, CompletionState::Complete),
-            Value::Boolean(v) => Value::Boolean(v),
-            Value::Null => Value::Null,
-            Value::Object(v, _) => Value::Object(v, CompletionState::Complete),
-            Value::Array(v, _) => Value::Array(
-                v.into_iter().map(|v| v.completed_deeply()).collect(),
-                CompletionState::Complete,
-            ),
-            Value::Markdown(x, y, _) => Value::Markdown(x, y, CompletionState::Complete),
-            Value::FixedJson(x, y) => Value::FixedJson(x, y),
-            Value::AnyOf(choices, s) => Value::AnyOf(
-                choices.into_iter().map(|v| v.completed_deeply()).collect(),
-                s,
-            ),
-        }
-    }
 }
 
 impl std::fmt::Display for Value {
@@ -226,14 +207,14 @@ impl std::fmt::Display for Value {
 // true for nested values, because serde will call the same `deserialize`
 // method on children of a serde container.
 //
-// Numbers and strings should be considered Incomplete if they are encountered
+// Numbers should be considered Incomplete if they are encountered
 // at the top level. Therefore the non-recursive callsite of `deserialize`
 // is responsible for setting completion state to Incomplete for top-level
 // strings and numbers.
 //
-// Lists and objects at the top level are necessarily complete, because
-// serde will not parse an array or an object unless the closing delimiter
-// is present.
+// Lists, strings and objects at the top level are necessarily complete, because
+// serde will not parse an array, string or an object unless the closing
+// delimiter is present.
 impl<'de> serde::Deserialize<'de> for Value {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -242,7 +223,7 @@ impl<'de> serde::Deserialize<'de> for Value {
         let value = serde_json::Value::deserialize(deserializer)?;
         match value {
             serde_json::Value::String(s) => Ok(Value::String(s, CompletionState::Complete)),
-            serde_json::Value::Number(n) => Ok(Value::Number(n, CompletionState::Complete)),
+            serde_json::Value::Number(n) => Ok(Value::Number(n, CompletionState::Incomplete)),
             serde_json::Value::Bool(b) => Ok(Value::Boolean(b)),
             serde_json::Value::Null => Ok(Value::Null),
             serde_json::Value::Object(o) => {

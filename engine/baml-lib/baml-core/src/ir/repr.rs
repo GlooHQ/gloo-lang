@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use anyhow::{anyhow, Result};
 use baml_types::{
-    Constraint, ConstraintLevel, FieldType, JinjaExpression, Resolvable, StreamingBehavior, StringOr,
-    UnresolvedValue,
+    Constraint, ConstraintLevel, FieldType, JinjaExpression, Resolvable, StreamingBehavior,
+    StringOr, UnresolvedValue,
 };
 use either::Either;
 use indexmap::{IndexMap, IndexSet};
@@ -15,7 +15,9 @@ use internal_baml_parser_database::{
     Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy, TypeWalker,
 };
 
-use internal_baml_schema_ast::ast::{self, Attribute, FieldArity, SubType, ValExpId, WithName, WithSpan};
+use internal_baml_schema_ast::ast::{
+    self, Attribute, FieldArity, SubType, ValExpId, WithName, WithSpan,
+};
 use internal_llm_client::{ClientProvider, ClientSpec, UnresolvedClientProperty};
 use serde::Serialize;
 
@@ -347,10 +349,7 @@ fn to_ir_attributes(
         });
         let streaming_done = streaming_done.as_ref().and_then(|v| {
             if *v {
-                Some((
-                    "stream.done".to_string(),
-                    UnresolvedValue::Bool(true, ()),
-                ))
+                Some(("stream.done".to_string(), UnresolvedValue::Bool(true, ())))
             } else {
                 None
             }
@@ -430,7 +429,7 @@ fn type_with_arity(t: FieldType, arity: &FieldArity) -> FieldType {
 impl WithRepr<FieldType> for ast::FieldType {
     // TODO: (Greg) This code only extracts constraints, and ignores any
     // other types of attributes attached to the type directly.
-    fn attributes(&self, db: &ParserDatabase) -> NodeAttributes {
+    fn attributes(&self, _db: &ParserDatabase) -> NodeAttributes {
         let constraints = self
             .attributes()
             .iter()
@@ -593,7 +592,6 @@ impl WithRepr<FieldType> for ast::FieldType {
                 arity,
             ),
         };
-
 
         let use_metadata = has_constraints || has_special_streaming_behavior;
         let with_constraints = if use_metadata {
@@ -1440,7 +1438,6 @@ mod tests {
         let alias = class.find_field("field").unwrap();
 
         assert_eq!(*alias.r#type(), FieldType::Primitive(TypeValue::Int));
-
     }
 
     #[test]
@@ -1461,7 +1458,10 @@ mod tests {
         let class = ir.find_class("Test").unwrap();
         let alias = class.find_field("field").unwrap();
 
-        let FieldType::WithMetadata { base, constraints, .. } = alias.r#type() else {
+        let FieldType::WithMetadata {
+            base, constraints, ..
+        } = alias.r#type()
+        else {
             panic!(
                 "expected resolved constrained type, found {:?}",
                 alias.r#type()

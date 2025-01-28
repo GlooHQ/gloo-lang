@@ -35,18 +35,17 @@ pub enum SerializeMode {
     Partial,
 }
 
-// impl serde::Serialize for (ResponseBamlValue, SerializeMode) {
-//     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-//         SerializeResponseBamlValue{ value: &self.0.0, serialize_mode: self.1 }.serialize(serializer)
-//     }
-// }
-
+/// A special-purpose wrapper for specifying the serialization format of a
+/// `ResponseBamlValue`. You should construct these from `ResponseBamlValue`
+/// with the `serialize_final` or `serialize_partial` method.
 pub struct SerializeResponseBamlValue<'a>{
     pub value: &'a BamlValueWithMeta<(Vec<Flag>, Vec<ResponseCheck>, Completion)>,
     pub serialize_mode: SerializeMode,
 }
 
 impl ResponseBamlValue {
+    /// Prepare a `ResponseBamlValue` for "final" serialization (serialization
+    /// with no stream-state metadata).
     pub fn serialize_final<'a> (&'a self) -> SerializeResponseBamlValue<'a> {
         SerializeResponseBamlValue {
             value: &self.0,
@@ -54,6 +53,8 @@ impl ResponseBamlValue {
         }
     }
 
+    /// Prepare a `ResponseBamlValue` for "partial" serialization (serialization
+    /// with stream-state metadata).
     pub fn serialize_partial<'a> (&'a self) -> SerializeResponseBamlValue<'a> {
         SerializeResponseBamlValue {
             value: &self.0,
@@ -61,7 +62,6 @@ impl ResponseBamlValue {
         }
     }
 }
-
 
 impl serde::Serialize for SerializeResponseBamlValue<'_> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
@@ -163,25 +163,10 @@ pub fn from_str(
 
     // When the schema is just a string, i should really just return the raw_string w/o parsing it.
     let value = jsonish::parse(raw_string, jsonish::ParseOptions::default())?;
-    // let schema = deserializer::schema::from_jsonish_value(&value, None);
-    // eprintln!("value: {value:?}");
-
-    // See Note [Streaming Number Invalidation]
-    if allow_partials {
-        // invalidate_numbers_in_progress(&mut value, raw_string);
-    }
 
     // Pick the schema that is the most specific.
-    // log::info!("Parsed: {}", schema);
     log::debug!("Parsed JSONish (step 1 of parsing): {:#?}", value);
     let ctx = ParsingContext::new(of, allow_partials);
-    // let res = schema.cast_to(target);
-    // log::info!("Casted: {:?}", res);
-
-    // match res {
-    //     Ok(v) => Ok(v),
-    //     Err(e) => anyhow::bail!("Failed to cast value: {}", e),
-    // }
 
     // Determine the best way to get the desired schema from the parsed schema.
 

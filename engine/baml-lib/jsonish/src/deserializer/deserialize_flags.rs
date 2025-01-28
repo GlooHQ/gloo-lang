@@ -137,7 +137,7 @@ impl std::fmt::Debug for DeserializerConditions {
 
 impl std::fmt::Display for DeserializerConditions {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if true {
+        if self.flags.is_empty() {
             return Ok(());
         }
 

@@ -574,9 +574,6 @@ impl WasmTestResponse {
             _ => Err(anyhow::anyhow!("No parsed value")),
         }
         .context("No parsed value")?;
-        // let baml_value_with_response_checks = parsed_response
-        //     .0
-        //     .map_meta(|(_, response_checks, _)| response_checks.clone());
         let (flattened_checks, check_count) = serialize_value_counting_checks(&parsed_response);
         Ok(WasmParsedTestResponse {
             value: serde_json::to_string(&flattened_checks)?,

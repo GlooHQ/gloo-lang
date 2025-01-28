@@ -2,7 +2,7 @@ pub mod common;
 use std::{collections::HashSet, path::PathBuf};
 
 use anyhow::Result;
-use baml_types::EvaluationContext;
+use baml_types::{EvaluationContext, JinjaExpression};
 use baml_types::{BamlValueWithMeta, ResponseCheck, StreamingBehavior};
 use indexmap::{IndexMap, IndexSet};
 use internal_baml_core::{
@@ -256,34 +256,42 @@ fn relevant_data_models<'a>(
     ))
 }
 
-// /// Validate a parsed value, checking asserts and checks.
-// pub fn parsed_value_to_response(
-//     ir: &IntermediateRepr,
-//     baml_value: BamlValueWithFlags,
-//     field_type: &FieldType,
-//     allow_partials: bool,
-// ) -> Result<ResponseBamlValue> {
-//     let meta_flags: BamlValueWithMeta<Vec<Flag>> = baml_value.into();
-// 
-//     let baml_value_with_streaming = meta_flags.map_meta_owned(|flags| {
-//         let constraint_results = constraint_results(&flags);
-//         let response_checks: Vec<ResponseCheck> = constraint_results
-//             .iter()
-//             .map(|(label, expr, result)| {
-//                 let status = (if *result { "succeeded" } else { "failed" }).to_string();
-//                 ResponseCheck {
-//                     name: label.clone(),
-//                     expression: expr.0.clone(),
-//                     status,
-//                 }
-//             })
-//             .collect();
-//         (flags, response_checks)
-//     });
-// 
-//     let response_value2 =
-//         validate_streaming_state(ir, baml_value_with_streaming, field_type, allow_partials)
-//             .map_err(|s| anyhow::anyhow!("{s}"))?;
-// 
-//     Ok(crate::ResponseBamlValue(response_value))
-// }
+/// Validate a parsed value, checking asserts and checks.
+pub fn parsed_value_to_response(
+    ir: &IntermediateRepr,
+    baml_value: BamlValueWithFlags,
+    field_type: &FieldType,
+    allow_partials: bool,
+) -> Result<ResponseBamlValue> {
+
+    let meta_flags: BamlValueWithMeta<Vec<Flag>> = baml_value.clone().into();
+    let baml_value_with_meta: BamlValueWithMeta<Vec<(String, JinjaExpression, bool)>> =
+        baml_value.clone().into();
+
+    let value_with_response_checks: BamlValueWithMeta<Vec<ResponseCheck>> = baml_value_with_meta
+        .map_meta(|cs| {
+            cs.iter()
+                .map(|(label, expr, result)| {
+                    let status = (if *result { "succeeded" } else { "failed" }).to_string();
+                    ResponseCheck {
+                        name: label.clone(),
+                        expression: expr.0.clone(),
+                        status,
+                    }
+                })
+                .collect()
+        });
+
+    let baml_value_with_streaming =
+        validate_streaming_state(ir, &baml_value, field_type, allow_partials)
+            .map_err(|s| anyhow::anyhow!("{s:?}"))?;
+
+    // Combine the baml_value, its types, the parser flags, and the streaming state
+    // into a final value.
+    // Node that we set the StreamState to `None` unless `allow_partials`.
+    let response_value = baml_value_with_streaming
+        .zip_meta(&value_with_response_checks)?
+        .zip_meta(&meta_flags)?
+        .map_meta(|((x, y), z)| (z.clone(), y.clone(), x.clone() ));
+    Ok(ResponseBamlValue(response_value))
+}
