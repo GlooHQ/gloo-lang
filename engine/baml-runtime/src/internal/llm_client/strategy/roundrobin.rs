@@ -33,6 +33,17 @@ pub struct RoundRobinStrategy {
     current_index: AtomicUsize,
 }
 
+impl Clone for RoundRobinStrategy {
+    fn clone(&self) -> Self {
+        Self {
+            name: self.name.clone(),
+            retry_policy: self.retry_policy.clone(),
+            client_specs: self.client_specs.clone(),
+            current_index: AtomicUsize::new(self.current_index()),
+        }
+    }
+}
+
 fn serialize_atomic<S>(value: &AtomicUsize, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,

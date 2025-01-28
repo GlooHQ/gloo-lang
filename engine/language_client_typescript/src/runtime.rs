@@ -170,7 +170,7 @@ impl BamlRuntime {
         function_name: String,
         #[napi(ts_arg_type = "{ [string]: any }")] args: JsObject,
         #[napi(ts_arg_type = "((err: any, param: FunctionResult) => void) | undefined")] cb: Option<
-            Function<'static, (), ()>,
+            Function<'static, FunctionResult, ()>,
         >,
         ctx: &RuntimeContextManager,
         tb: Option<&TypeBuilder>,
@@ -214,7 +214,7 @@ impl BamlRuntime {
         function_name: String,
         #[napi(ts_arg_type = "{ [string]: any }")] args: JsObject,
         #[napi(ts_arg_type = "((err: any, param: FunctionResult) => void) | undefined")] cb: Option<
-            Function<'static, (), ()>,
+            Function<'static, FunctionResult, ()>,
         >,
         ctx: &RuntimeContextManager,
         tb: Option<&TypeBuilder>,
