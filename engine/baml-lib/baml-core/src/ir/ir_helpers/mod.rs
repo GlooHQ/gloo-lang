@@ -1489,10 +1489,10 @@ mod subtype_tests {
                 &FieldType::RecursiveTypeAlias("JsonValue".to_string()),
                 &example_json
             ),
-            Some(FieldType::Map(
-                Box::new(FieldType::Primitive(TypeValue::String)),
-                Box::new(FieldType::RecursiveTypeAlias("JsonValue".to_string()))
-            ))
+            Some(FieldType::Union(vec![
+                FieldType::RecursiveTypeAlias("JsonValue".to_string()),
+                FieldType::RecursiveTypeAlias("JsonValue".to_string())
+            ]))
         );
     }
 }

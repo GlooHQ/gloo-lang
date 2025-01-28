@@ -223,7 +223,7 @@ impl<'de> serde::Deserialize<'de> for Value {
         let value = serde_json::Value::deserialize(deserializer)?;
         match value {
             serde_json::Value::String(s) => Ok(Value::String(s, CompletionState::Complete)),
-            serde_json::Value::Number(n) => Ok(Value::Number(n, CompletionState::Incomplete)),
+            serde_json::Value::Number(n) => Ok(Value::Number(n, CompletionState::Complete)),
             serde_json::Value::Bool(b) => Ok(Value::Boolean(b)),
             serde_json::Value::Null => Ok(Value::Null),
             serde_json::Value::Object(o) => {
