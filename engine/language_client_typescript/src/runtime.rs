@@ -10,7 +10,7 @@ use baml_runtime::on_log_event::LogEvent;
 use baml_runtime::runtime_interface::ExperimentalTracingInterface;
 use baml_runtime::BamlRuntime as CoreRuntime;
 use baml_types::BamlValue;
-use napi::bindgen_prelude::ObjectFinalize;
+use napi::bindgen_prelude::{Function, ObjectFinalize};
 use napi::threadsafe_function::{ThreadSafeCallContext, ThreadsafeFunctionCallMode};
 use napi::JsObject;
 use napi::{Env, JsUndefined};
@@ -170,7 +170,7 @@ impl BamlRuntime {
         function_name: String,
         #[napi(ts_arg_type = "{ [string]: any }")] args: JsObject,
         #[napi(ts_arg_type = "((err: any, param: FunctionResult) => void) | undefined")] cb: Option<
-            JsFunction,
+            Function<'static, (), ()>,
         >,
         ctx: &RuntimeContextManager,
         tb: Option<&TypeBuilder>,
@@ -214,7 +214,7 @@ impl BamlRuntime {
         function_name: String,
         #[napi(ts_arg_type = "{ [string]: any }")] args: JsObject,
         #[napi(ts_arg_type = "((err: any, param: FunctionResult) => void) | undefined")] cb: Option<
-            JsFunction,
+            Function<'static, (), ()>,
         >,
         ctx: &RuntimeContextManager,
         tb: Option<&TypeBuilder>,
@@ -244,7 +244,7 @@ impl BamlRuntime {
             .map_err(from_anyhow_error)?;
 
         let cb = match cb {
-            Some(cb) => Some(env.create_reference(cb)?),
+            Some(cb) => Some(Ref::new(&env, &cb)?),
             None => None,
         };
 
@@ -256,87 +256,88 @@ impl BamlRuntime {
         &mut self,
         env: Env,
         #[napi(ts_arg_type = "undefined | ((err: any, param: BamlLogEvent) => void)")] func: Option<
-            JsFunction,
+            Function<'static, (), BamlLogEvent>,
         >,
     ) -> napi::Result<JsUndefined> {
-        let prev = self.callback.take();
-        if let Some(mut old_cb) = prev {
-            old_cb.unref(env)?;
-        }
-        self.callback = match func {
-            Some(func) => Some(env.create_reference(func)?),
-            None => None,
-        };
+        // let prev = self.callback.take();
+        // if let Some(mut old_cb) = prev {
+        //     // old_cb.unref(&env)?;
+        // }
+        // self.callback = match func {
+        //     Some(func) => Some(Ref::new(&env, &func)?),
+        //     None => None,
+        // };
 
-        let res = match &self.callback {
-            Some(callback_ref) => {
-                let cb = env.get_reference_value::<JsFunction>(callback_ref)?;
-                let mut tsfn = env.create_threadsafe_function(
-                    &cb,
-                    0,
-                    |ctx: ThreadSafeCallContext<BamlLogEvent>| Ok(vec![ctx.value]),
-                )?;
-                let tsfn_clone = tsfn.clone();
+        // let res = match &self.callback {
+        //     Some(callback_ref) => {
+        //         let cb =
+        //             env.get_reference_value::<Function<'static, (), BamlLogEvent>>(callback_ref)?;
+        //         let mut tsfn = env.create_threadsafe_function(
+        //             &cb,
+        //             0,
+        //             |ctx: ThreadSafeCallContext<BamlLogEvent>| Ok(vec![ctx.value]),
+        //         )?;
+        //         let tsfn_clone = tsfn.clone();
 
-                let cb = Box::new(move |event: LogEvent| {
-                    // let env = callback.env;
-                    let event = BamlLogEvent {
-                        metadata: LogEventMetadata {
-                            event_id: event.metadata.event_id,
-                            parent_id: event.metadata.parent_id,
-                            root_event_id: event.metadata.root_event_id,
-                        },
-                        prompt: event.prompt,
-                        raw_output: event.raw_output,
-                        parsed_output: event.parsed_output,
-                        start_time: event.start_time,
-                    };
+        //         let cb = Box::new(move |event: LogEvent| {
+        //             // let env = callback.env;
+        //             let event = BamlLogEvent {
+        //                 metadata: LogEventMetadata {
+        //                     event_id: event.metadata.event_id,
+        //                     parent_id: event.metadata.parent_id,
+        //                     root_event_id: event.metadata.root_event_id,
+        //                 },
+        //                 prompt: event.prompt,
+        //                 raw_output: event.raw_output,
+        //                 parsed_output: event.parsed_output,
+        //                 start_time: event.start_time,
+        //             };
 
-                    let res = tsfn_clone.call(Ok(event), ThreadsafeFunctionCallMode::Blocking);
-                    if res != napi::Status::Ok {
-                        log::error!("Error calling on_log_event callback: {:?}", res);
-                    }
+        //             let res = tsfn_clone.call(Ok(event), ThreadsafeFunctionCallMode::Blocking);
+        //             if res != napi::Status::Ok {
+        //                 log::error!("Error calling on_log_event callback: {:?}", res);
+        //             }
 
-                    Ok(())
-                });
+        //             Ok(())
+        //         });
 
-                let res = self
-                    .inner
-                    .set_log_event_callback(Some(cb))
-                    .map_err(from_anyhow_error);
-                let _ = tsfn.unref(&env);
+        //         let res = self
+        //             .inner
+        //             .set_log_event_callback(Some(cb))
+        //             .map_err(from_anyhow_error);
+        //         let _ = tsfn.unref(&env);
 
-                match res {
-                    Ok(_) => Ok(()),
-                    Err(e) => {
-                        log::error!("Error setting log_event_callback: {:?}", e);
-                        Err(e)
-                    }
-                }
-            }
-            None => {
-                let res = self
-                    .inner
-                    .set_log_event_callback(None)
-                    .map_err(from_anyhow_error);
+        //         match res {
+        //             Ok(_) => Ok(()),
+        //             Err(e) => {
+        //                 log::error!("Error setting log_event_callback: {:?}", e);
+        //                 Err(e)
+        //             }
+        //         }
+        //     }
+        //     None => {
+        //         let res = self
+        //             .inner
+        //             .set_log_event_callback(None)
+        //             .map_err(from_anyhow_error);
 
-                match res {
-                    Ok(_) => Ok(()),
-                    Err(e) => {
-                        log::error!("Error setting log_event_callback: {:?}", e);
-                        Err(e)
-                    }
-                }
-            }
-        };
+        //         match res {
+        //             Ok(_) => Ok(()),
+        //             Err(e) => {
+        //                 log::error!("Error setting log_event_callback: {:?}", e);
+        //                 Err(e)
+        //             }
+        //         }
+        //     }
+        // };
 
-        let _ = match res {
-            Ok(_) => Ok(env.get_undefined()?),
-            Err(e) => {
-                log::error!("Error setting log_event_callback: {:?}", e);
-                Err(e)
-            }
-        };
+        // let _ = match res {
+        //     Ok(_) => Ok(env.get_undefined()?),
+        //     Err(e) => {
+        //         log::error!("Error setting log_event_callback: {:?}", e);
+        //         Err(e)
+        //     }
+        // };
 
         env.get_undefined()
     }
@@ -355,10 +356,10 @@ impl BamlRuntime {
 impl ObjectFinalize for BamlRuntime {
     fn finalize(mut self, env: Env) -> napi::Result<()> {
         if let Some(mut cb) = self.callback.take() {
-            match cb.unref(env) {
-                Ok(_) => (),
-                Err(e) => log::error!("Error unrefing callback: {:?}", e),
-            }
+            // match cb.unref(env) {
+            //     Ok(_) => (),
+            //     Err(e) => log::error!("Error unrefing callback: {:?}", e),
+            // }
         }
         Ok(())
     }
