@@ -3,7 +3,7 @@ use std::sync::Arc;
 use napi::{
     bindgen_prelude::{Function, ObjectFinalize, PromiseRaw},
     threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode},
-    Env, JsUndefined, Result as NapiResult,
+    Env, JsObject, JsUndefined, JsUnknown, Result as NapiResult,
 };
 use napi_derive::napi;
 
@@ -15,24 +15,22 @@ use super::runtime_ctx_manager::RuntimeContextManager;
 use crate::errors::from_anyhow_error;
 use baml_runtime;
 
-/// A struct exposed to JS.  
-/// We store an Arc<Mutex<...>> for concurrency, and an optional Arc<ThreadsafeFunction<...>> for callbacks.
+/// A struct exposed to JS with an optional multi-event callback (`ThreadsafeFunction`).
 #[napi(custom_finalize)]
 pub struct FunctionResultStream {
-    /// The underlying native handle
+    // Native object in Arc<Mutex<...>> for async usage
     inner: Arc<Mutex<baml_runtime::FunctionResultStream>>,
 
-    /// If set, a JS callback `(err: any, param: FunctionResult) => void`.
-    /// We wrap in `Arc` to allow `.clone()`.
+    // If multiple events are needed, store a `ThreadsafeFunction<T>` in an Arc
+    // so we can call it repeatedly from different threads or during async.
     callback: Option<Arc<ThreadsafeFunction<FunctionResult, JsUndefined, FunctionResult, false>>>,
 
-    /// Additional fields you need:
     tb: Option<baml_runtime::type_builder::TypeBuilder>,
     cb: Option<baml_runtime::client_registry::ClientRegistry>,
 }
 
 impl FunctionResultStream {
-    /// Plain Rust constructor
+    /// Plain Rust constructor, not directly exposed to JS.
     pub fn new(
         native: baml_runtime::FunctionResultStream,
         tb: Option<baml_runtime::type_builder::TypeBuilder>,
@@ -49,8 +47,7 @@ impl FunctionResultStream {
 
 #[napi]
 impl FunctionResultStream {
-    /// Let JS code set a callback for “events”.  
-    /// In TS: `(err: any, param: FunctionResult) => void`
+    /// Let JS provide a callback `(err: any, param: FunctionResult) => void` for repeated “events”.
     #[napi]
     pub fn on_event(
         &mut self,
@@ -60,78 +57,76 @@ impl FunctionResultStream {
             JsUndefined,
         >,
     ) -> NapiResult<JsUndefined> {
-        // Clear any old callback
+        // Clear any existing callback
         self.callback = None;
 
-        // Build a TSFN from the JS function.
-        // By default, that yields `ThreadsafeFunction<FunctionResult, JsUndefined, FunctionResult, false>`.
+        // Build the threadsafe function
         let tsfn = func.build_threadsafe_function().build()?;
-
-        // Store it, wrapped in Arc so we can clone it
+        // Wrap in Arc so we can clone it in async code
         self.callback = Some(Arc::new(tsfn));
 
         env.get_undefined()
     }
 
-    /// Complete the stream. Returns a `Promise<FunctionResult>` to JS.
-    /// Meanwhile, if the callback is set, we invoke it with intermediate events.
+    /// Complete the stream.  
+    /// Returns a JavaScript Promise<FunctionResult> (so from JS: `await stream.done()`).
+    ///
+    /// We do **not** return `PromiseRaw<'env, FunctionResult>` directly, because
+    /// that often triggers lifetime errors in procedural macros.
+    /// Instead, we return a `JsObject` that is a Promise, after converting
+    /// the `PromiseRaw` with `into_js_value(...)`.
     #[napi(ts_return_type = "Promise<FunctionResult>")]
     pub fn done(
         &self,
-        env: Env,
+        env: &Env, // <-- Pass `&Env`
         rctx: &RuntimeContextManager,
     ) -> NapiResult<PromiseRaw<FunctionResult>> {
-        // **Clone** everything we need into `'static` data (Arc clones, etc.) so
-        // the future doesn't borrow local references that would outlive `env`.
+        // Clone everything into `'static` arcs for async
         let inner = self.inner.clone();
+        let callback_opt = self.callback.clone();
         let tb = self.tb.clone();
         let cb = self.cb.clone();
         let ctx_mng = rctx.inner.clone();
-        let callback_opt = self.callback.clone();
 
-        // Build an async future that references only `'static` arcs, not `env`.
+        // Build an async future that references only arcs
         let fut = async move {
+            // Acquire the lock
             let mut guard = inner.lock().await;
 
-            // If we have a callback, define how to handle events:
+            // If we have a TSFN, define how to handle each event
             let on_event = callback_opt.map(|tsfn_arc| {
-                move |native_event: baml_runtime::FunctionResult| {
-                    // Convert the native event to your local `FunctionResult`.
-                    // If there's an error type, you'd pass `Err(...)` instead of `Ok(...)`.
+                move |native_result: baml_runtime::FunctionResult| {
+                    // Convert native type to your `FunctionResult` and pass to TSFN
                     let status = tsfn_arc.call(
-                        FunctionResult::from(native_event),
+                        Ok(FunctionResult::from(native_result)),
                         ThreadsafeFunctionCallMode::NonBlocking,
                     );
                     if status != napi::Status::Ok {
-                        log::error!("Failed to call JS callback: {:?}", status);
+                        log::error!("Failed to call on_event callback: {:?}", status);
                     }
                 }
             });
 
-            // Execute the native `.run(...)`, passing your `on_event` closure
+            // Call your native `run()`, presumably returning `(Result<..., E>, maybe_other)`
             let result = guard
                 .run(on_event, &ctx_mng, tb.as_ref(), cb.as_ref())
                 .await;
 
-            // Suppose `result.0` is `Result<baml_runtime::FunctionResult, anyhow::Error>`.
-            // Convert success to `FunctionResult`, or produce a JS error.
+            // Convert success to `FunctionResult`, or produce a JS error
             result
                 .0
                 .map(FunctionResult::from)
                 .map_err(from_anyhow_error)
         };
 
-        // Spawn the future in Node's event loop, returning a `PromiseRaw<FunctionResult>`.
-        // *We do NOT capture `env` in `fut`, so there's no lifetime conflict.*
+        // Return a `PromiseRaw<FunctionResult>` that the macro will turn into a JS Promise
         env.spawn_future(fut)
-        // env.spawn_future(fut)
     }
 }
-
-/// Called when JS garbage-collects the object.  
-impl napi::bindgen_prelude::ObjectFinalize for FunctionResultStream {
+/// Clean up references on JS garbage-collection
+impl ObjectFinalize for FunctionResultStream {
     fn finalize(mut self, _env: Env) -> NapiResult<()> {
-        // Drop the TSFN so no more events can happen
+        // Drop the TSFN
         self.callback.take();
         Ok(())
     }
