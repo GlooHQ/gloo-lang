@@ -110,17 +110,7 @@ fn process_node(
                     Some(field_name.to_string())
                 }
             }).collect();
-            // let missing_needed_fields = needed_fields.difference(&new_field_names);
             let missing_needed_fields: Vec<_> = needed_fields.difference(&present_nonnull_fields).into_iter().collect();
-            // if (class_name == "SmallThing") {
-            if false {
-                dbg!(class_name);
-                dbg!(&value_field_names);
-                dbg!(&present_nonnull_fields);
-                dbg!(&needed_fields);
-                dbg!(&missing_needed_fields);
-                dbg!(&value_fields);
-            }
 
 
             // The fields that need to be filled in by Null are initially the

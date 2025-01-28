@@ -378,8 +378,6 @@ impl RuntimeInterface for InternalBamlRuntime {
         // Now actually execute the code.
         let (history, _) =
             orchestrate_call(orchestrator, self.ir(), &ctx, &renderer, &baml_args, |s| {
-                // eprintln!("RAW");
-                // eprintln!("{}", s);
                 renderer.parse(self.ir(), s, false)
             })
             .await;

@@ -141,7 +141,6 @@ pub fn parse(str: &str, mut options: ParseOptions) -> Result<Value> {
             Ok(items) => match items.len() {
                 0 => {}
                 1 => {
-                    // eprintln!("MULTI_JSON: {items:?}");
                     let ret =
                       Value::AnyOf(
                         vec![Value::FixedJson(
@@ -154,7 +153,6 @@ pub fn parse(str: &str, mut options: ParseOptions) -> Result<Value> {
                         )],
                         str.to_string(),
                     );
-                    // eprintln!("ret: {ret:?}");
                     return Ok(ret);
                 }
                 n => {

@@ -47,7 +47,6 @@ pub fn parse(str: &str, options: &ParseOptions) -> Result<Vec<MarkdownResult>> {
 
         match res {
             Ok(v) => {
-                // eprintln!("Pushing value {v:?}");
                 // TODO: Add any more additional strings here.
                 values.push(MarkdownResult::CodeBlock(
                     if tag.len() > 3 {

@@ -42,7 +42,6 @@ impl FunctionResult {
             .map_err(BamlError::from_anyhow)?;
 
         let parsed = pythonize_strict(py, parsed.clone(), &enum_module, &cls_module, &partial_cls_module, allow_partials);
-        // eprintln!("parsed result: {:?}", parsed);
 
         Ok(parsed?)
     }
@@ -85,7 +84,6 @@ fn pythonize_strict(
     allow_partials: bool,
 ) -> PyResult<PyObject> {
     let allow_partials = allow_partials && !parsed.0.meta().2.required_done;
-    // eprintln!("pythonize_strict parsed: {:?}", parsed);
     let meta = parsed.0.meta().clone();
     let py_value_without_constraints = match parsed.0 {
         BamlValueWithMeta::String(val, _) => val.into_py_any(py),
@@ -210,7 +208,6 @@ fn pythonize_strict(
 
     let (_, checks, completion_state) = meta;
     if checks.is_empty() && !completion_state.display {
-        // eprintln!("ret1: {:?}", py_value_without_constraints);
         Ok(py_value_without_constraints)
     } else {
 
@@ -254,8 +251,6 @@ fn pythonize_strict(
             let checked_instance =
                 class_checked_type.call_method("model_validate", (properties_dict.clone(),), None).expect("model_validate");
 
-            // eprintln!("ret2: {:?}", checked_instance);
-
             Ok::<Py<PyAny>, PyErr>(checked_instance.into())
         } else {
             Ok(py_value_without_constraints)
@@ -263,7 +258,6 @@ fn pythonize_strict(
     
         let value_with_possible_completion_state = if completion_state.display && allow_partials {
             let value_type = value_with_possible_checks.bind(py).get_type();
-            // eprintln!("value_type: {:?}", value_type);
 
             // Prepare the properties dictionary
             let properties_dict = pyo3::types::PyDict::new(py);
@@ -272,15 +266,12 @@ fn pythonize_strict(
 
             // Prepare type parameters for StreamingState[...]
             let type_parameters_tuple = PyTuple::new(py, [value_type.as_ref()]).expect("PyTuple::new");
-            // dbg!(&type_parameters_tuple);
 
             let class_streaming_state_type_constructor = partial_cls_module.getattr("StreamState").expect("getattr(StreamState)");
             let class_completion_state_type: Bound<'_, PyAny> = class_streaming_state_type_constructor
                 .call_method1("__class_getitem__", (type_parameters_tuple,))
                 .expect("__class_getitem__ for streaming");
-            // dbg!(&class_completion_state_type);
 
-            // eprintln!("properties dict: {:?}", properties_dict);
             let streaming_state_instance = class_completion_state_type
                 .call_method("model_validate", (properties_dict.clone(),), None)
                 .expect("model_validate for streaming");

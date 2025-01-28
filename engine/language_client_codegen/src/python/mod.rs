@@ -351,6 +351,5 @@ class Foo {
         let res = generate(&ir, &generator_args).unwrap();
         let partial_types = res.get(&PathBuf::from("partial_types.py")).unwrap();
         eprintln!("{}", partial_types);
-        assert!(false);
     }
 }

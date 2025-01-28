@@ -605,25 +605,6 @@ impl IRHelper for IntermediateRepr {
                     .collect::<anyhow::Result<BamlMap<String, BamlValueWithMeta<(T, FieldType)>>>>(
                     )?;
 
-                // let item_types: Vec<&FieldType> = mapped_fields
-                //     .values()
-                //     .map(|i| &i.meta().1)
-                //     .dedup()
-                //     .collect();
-                // let items_type = match item_types.len() {
-                //     0 => None,
-                //     1 => Some(item_types[0].clone()),
-                //     _ => Some(FieldType::Union(
-                //         item_types.into_iter().map(|t| t.clone()).collect(),
-                //     )),
-                // };
-                // if let Some((key_ty, value_ty)) = map_types(self, &field_type) {
-                //     let expected_type = FieldType::Map(Box::new(key_ty.clone()), Box::new(value_ty.clone()));
-                //     if !self.is_subtype(&expected_type, &field_base_type) {
-                //         anyhow::bail!("Could not unify {:?} with {:?}", expected_type, field_base_type);
-                //     }
-                // }
-
                 Ok(BamlValueWithMeta::Map(mapped_fields, (meta, field_type)))
             }
 
@@ -631,32 +612,13 @@ impl IRHelper for IntermediateRepr {
                 let new_items = items
                     .into_iter()
                     .map(|i| {
-                        // dbg!(&field_type);
-                        // dbg!(&i);
                         item_type(self, &field_type, &i)
                             .ok_or({
-                                eprintln!("ty: {field_type:?}, i: {i:?}");
                                 anyhow::anyhow!("Could not infer child type")
                             })
                             .and_then(|item_type| self.distribute_type_with_meta(i, item_type))
                     })
                     .collect::<Result<Vec<_>>>()?;
-                // dbg!(&new_items);
-                // let item_types: Vec<&FieldType> =
-                //     new_items.iter().map(|i| &i.meta().1).dedup().collect();
-                // let items_type = match item_types.len() {
-                //     0 => None,
-                //     1 => Some(item_types[0].clone()),
-                //     _ => Some(FieldType::Union(
-                //         item_types.into_iter().map(|t| t.clone()).collect(),
-                //     )),
-                // };
-                // if let Some(ty) = items_type {
-                //     let expected_type = FieldType::List(Box::new(ty));
-                //     if !self.is_subtype(&expected_type, &field_base_type) {
-                //         anyhow::bail!("Could not unify {:?} with {:?}", expected_type, field_base_type);
-                //     }
-                // }
                 Ok(BamlValueWithMeta::List(new_items, (meta, field_type)))
             }
 
@@ -845,8 +807,6 @@ fn item_type<T: std::fmt::Debug>(
     field_type: &FieldType,
     baml_child_values: &BamlValueWithMeta<T>,
 ) -> Option<FieldType> {
-    // dbg!(&baml_child_value);
-    // dbg!(&field_type);
     let res = match ir.distribute_metadata(field_type).0 {
         FieldType::Class(_) => None,
         FieldType::Enum(_) => None,

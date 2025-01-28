@@ -67,11 +67,9 @@ impl<'rb> RubyToJson<'rb> {
         // If we encounter a BamlValue node with check results, serialize it as
         // { value: T, checks: K }. To compute `value`, we strip the metadata
         // off the node and pass it back to `serialize_baml`.
-        eprintln!("SERIALIZE: {:?}", &from);
         let (_flags, checks, completion) = from.0.meta_mut();
 
         if completion.display && allow_partials {
-            eprintln!("... with state");
             let hash = ruby.hash_new();
             let stream_state_class = ruby.eval::<RClass>("Baml::StreamState")?;
             hash.aset(ruby.sym_new("state"), ruby.sym_new(serde_json::to_string(&completion.state).expect("Serializing CompletionState is safe.")))?;
@@ -79,7 +77,6 @@ impl<'rb> RubyToJson<'rb> {
             let serialized_subvalue = RubyToJson::serialize_baml(ruby, types, partial_types, allow_partials, from)?;
             hash.aset(ruby.sym_new("value"), serialized_subvalue)?;
             let res = stream_state_class.funcall("new", (hash,));
-            eprintln!("with_state res: {res:?}");
             Ok(res?)
         }
         // Otherwise encode it directly.
@@ -99,19 +96,15 @@ impl<'rb> RubyToJson<'rb> {
                     hash.aset(ruby.sym_new("checks"), serialized_checks)?;
                 }
                 let res = checked_class.funcall("new", (hash,));
-                dbg!(&res);
-                eprintln!("with_checks res: {res:?}");
                 Ok(res?)
             }
             // Otherwise encode it directly.
             else {
-                eprintln!("...without_state");
                 let res = match from.0 {
                     BamlValueWithMeta::Class(class_name, class_fields, _) => {
                         let hash = ruby.hash_new();
                         for (k, v) in class_fields.into_iter() {
                             let subvalue_allow_partials = allow_partials && !v.meta().2.required_done;
-                            dbg!(&subvalue_allow_partials);
                             let k = ruby.sym_new(k.as_str());
                             let v = RubyToJson::serialize_baml(ruby, types, partial_types, subvalue_allow_partials, ResponseBamlValue(v))?;
                             hash.aset(k, v)?;
@@ -129,11 +122,9 @@ impl<'rb> RubyToJson<'rb> {
                         match preferred_class.funcall("new", (hash,)) {
                             Ok(res) => Ok(res),
                             Err(original_error) => {
-                                eprintln!("preferred_class {:?}, failed: {:?}. falling back to {:?}", preferred_class, original_error, backup_class);
                                 match backup_class.funcall("new", (hash,)) {
                                     Ok(res) => Ok(res),
                                     Err(e) => {
-                                        eprintln!("backup {:?} failed with {:?}", backup_class, e);
                                         Err(original_error)
                                     }
                             }
@@ -169,7 +160,6 @@ impl<'rb> RubyToJson<'rb> {
                     }
                     _ => serde_magnus::serialize(&from.0.value()),
                 };
-                dbg!(&res);
                 res
             }
         }

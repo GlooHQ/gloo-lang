@@ -681,7 +681,6 @@ impl Serialize for BamlValueWithMeta<Vec<ResponseCheck>> {
     where
         S: Serializer,
     {
-        eprintln!("ABOUT TO SERIALIZE");
         match self {
             BamlValueWithMeta::String(v, cr) => serialize_with_checks(v, cr, serializer),
             BamlValueWithMeta::Int(v, cr) => serialize_with_checks(v, cr, serializer),

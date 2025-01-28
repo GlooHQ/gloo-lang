@@ -38,9 +38,6 @@ impl FunctionResult {
         partial_types: RModule,
         allow_partials: bool,
     ) -> Result<Value> {
-        dbg!(&types);
-        dbg!(&partial_types);
-        dbg!(&allow_partials);
         let res = match rb_self.inner.result_with_constraints_content() {
             Ok(parsed) => {
                 ruby_to_json::RubyToJson::serialize_baml(ruby, types, partial_types, allow_partials, parsed.clone())
@@ -56,7 +53,6 @@ impl FunctionResult {
                 format!("Failed to parse LLM response: {}", rb_self.inner),
             )),
         };
-        dbg!(&res);
         res
     }
 

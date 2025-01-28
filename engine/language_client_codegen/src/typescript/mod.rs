@@ -478,6 +478,5 @@ function MkFoo() -> Foo {
         eprintln!("{}", partial_types);
         let async_client = res.get(&PathBuf::from("async_client.ts")).unwrap();
         eprintln!("{}", async_client);
-        assert!(false);
     }
 }

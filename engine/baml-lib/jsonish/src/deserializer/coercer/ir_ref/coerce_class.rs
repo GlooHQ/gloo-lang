@@ -82,7 +82,6 @@ impl TypeCoercer for Class {
             }
             Some(crate::jsonish::Value::Object(obj, completion)) => {
                 // match keys, if that fails, then do something fancy later.
-                // dbg!(&obj);
                 let mut extra_keys = vec![];
                 let mut found_keys = false;
                 obj.iter().for_each(|(key, v)| {
