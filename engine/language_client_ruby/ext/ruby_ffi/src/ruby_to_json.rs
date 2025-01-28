@@ -1,4 +1,4 @@
-use baml_types::{BamlMap, BamlValue, BamlValueWithMeta, CompletionState, ResponseCheck};
+use baml_types::{BamlMap, BamlValue, BamlValueWithMeta, ResponseCheck};
 use indexmap::IndexMap;
 use magnus::{
     prelude::*, typed_data::Obj, value::Value, Error, Float, Integer, IntoValue, RArray, RClass,
@@ -10,7 +10,7 @@ use crate::types::{
     self,
     media::{Audio, Image},
 };
-use jsonish::{deserializer::deserialize_flags::Flag, ResponseBamlValue};
+use jsonish::ResponseBamlValue;
 
 struct SerializationError {
     position: Vec<String>,
@@ -124,7 +124,7 @@ impl<'rb> RubyToJson<'rb> {
                             Err(original_error) => {
                                 match backup_class.funcall("new", (hash,)) {
                                     Ok(res) => Ok(res),
-                                    Err(e) => {
+                                    Err(_) => {
                                         Err(original_error)
                                     }
                             }

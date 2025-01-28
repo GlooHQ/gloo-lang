@@ -432,13 +432,6 @@ impl IRHelper for IntermediateRepr {
                     _ => Some(FieldType::Union(item_types)),
                 };
 
-                // let key_type = match self.distribute_metadata(&field_type) {
-                //     (FieldType::Map(annotation_key_type, _), _) => annotation_key_type.as_ref(),
-                //     // TODO: Make the following a baml compiler error, too.
-                //     (FieldType::RecursiveTypeAlias(_), _) => anyhow::bail!("Type aliases are not allowed as map keys."),
-                //     _ => anyhow::bail!("Value was not a map."),
-                // };
-
                 match maybe_item_type {
                     Some(item_type) => {
                         let map_type = FieldType::Map(
@@ -606,7 +599,6 @@ impl IRHelper for IntermediateRepr {
 
             BamlValueWithMeta::Null(meta) => Ok(BamlValueWithMeta::Null((meta, field_type))),
 
-            // TODO: Handle enums and literal keys.
             BamlValueWithMeta::Map(pairs, meta) => {
                 let (annotation_key_type, annotation_value_type) = map_types(self, &field_type)
                     .ok_or(anyhow::anyhow!("Could not unify map with {field_type:?}"))?;
@@ -632,9 +624,7 @@ impl IRHelper for IntermediateRepr {
                     .into_iter()
                     .map(|i| {
                         item_type(self, &field_type, &i)
-                            .ok_or({
-                                anyhow::anyhow!("Could not infer child type")
-                            })
+                            .ok_or({ anyhow::anyhow!("Could not infer child type") })
                             .and_then(|item_type| self.distribute_type_with_meta(i, item_type))
                     })
                     .collect::<Result<Vec<_>>>()?;
@@ -824,122 +814,22 @@ fn item_type<T: std::fmt::Debug>(
             .recursive_alias_definition(alias_name)
             .and_then(|resolved_type| item_type(ir, resolved_type, baml_child_values)),
         FieldType::Union(variants) => {
-            let variant_children = variants.iter().filter_map(|variant| item_type(ir, variant, baml_child_values)).collect::<Vec<_>>();
+            let variant_children = variants
+                .iter()
+                .filter_map(|variant| item_type(ir, variant, baml_child_values))
+                .collect::<Vec<_>>();
             match variant_children.len() {
                 0 => None,
                 1 => Some(variant_children[0].clone()),
                 _ => Some(FieldType::Union(variant_children)),
             }
-        },
+        }
         FieldType::Tuple(_) => None,
         FieldType::WithMetadata { base, .. } => item_type(ir, base, baml_child_values),
     };
     res
 }
 
-fn typecheck_value_with_meta<T: std::fmt::Debug>(
-    ir: &IntermediateRepr,
-    value: &BamlValueWithMeta<T>,
-    field_type: &FieldType,
-) -> bool {
-    let field_base_type = ir.distribute_metadata(&field_type).0;
-    match value {
-        BamlValueWithMeta::String(s, meta) => {
-            let literal_type = FieldType::Literal(LiteralValue::String(s.clone()));
-            let primitive_type = FieldType::Primitive(TypeValue::String);
-
-            ir.is_subtype(&literal_type, &field_base_type)
-                || ir.is_subtype(&primitive_type, &field_base_type)
-        }
-        BamlValueWithMeta::Int(i, meta) => {
-            ir.is_subtype(&FieldType::Literal(LiteralValue::Int(*i)), &field_base_type)
-        }
-        BamlValueWithMeta::Float(f, meta) => {
-            ir.is_subtype(&FieldType::Primitive(TypeValue::Float), &field_base_type)
-        }
-
-        BamlValueWithMeta::Bool(b, meta) => {
-            let literal_type = FieldType::Literal(LiteralValue::Bool(*b));
-            let primitive_type = FieldType::Primitive(TypeValue::Bool);
-
-            ir.is_subtype(&literal_type, &field_base_type)
-                || ir.is_subtype(&primitive_type, &field_base_type)
-        }
-
-        BamlValueWithMeta::Null(meta) => true,
-
-        // TODO: Handle enums and literal keys.
-        BamlValueWithMeta::Map(pairs, meta) => {
-            true
-            // TODO!
-        }
-
-        BamlValueWithMeta::List(items, meta) => {
-            let items_ok = items
-                .iter()
-                .map(|i| {
-                    item_type(ir, &field_type, i)
-                        .map_or(true, |item_ty| typecheck_value_with_meta(ir, i, &item_ty))
-                })
-                .all(|x| x);
-            items_ok
-        }
-
-        BamlValueWithMeta::Media(m, meta) => ir.is_subtype(
-            &FieldType::Primitive(TypeValue::Media(m.media_type)),
-            &field_base_type,
-        ),
-
-        BamlValueWithMeta::Enum(name, val, meta) => {
-            ir.is_subtype(&FieldType::Enum(name.clone()), &field_base_type)
-        }
-
-        BamlValueWithMeta::Class(name, fields, meta) => {
-            // // Classes not present in the IR may be dynamically generated.
-            // // In this case, all types will be inferred, rather than distributed
-            // // from the `field_type` parameter.
-
-            // TODO
-            true
-
-            // if ir.find_class(&name).is_err() {
-            //     return distribute_infer_class(self, &name, fields, meta);
-            // }
-            // if !self.is_subtype(&FieldType::Class(name.clone()), &field_base_type) {
-            //     anyhow::bail!("Could not unify Class {} with {:?}", name, field_base_type);
-            // } else {
-            //     let class_type = &self.find_class(&name)?.item.elem;
-            //     let class_fields: BamlMap<String, FieldType> = class_type
-            //         .static_fields
-            //         .iter()
-            //         .map(|field_node| {
-            //             (
-            //                 field_node.elem.name.clone(),
-            //                 field_node.elem.r#type.elem.clone(),
-            //             )
-            //         })
-            //         .collect();
-            //     let mapped_fields = fields
-            //         .into_iter()
-            //         .map(|(k, v)| {
-            //             let field_type = match class_fields.get(k.as_str()) {
-            //                 Some(ft) => ft.clone(),
-            //                 None => infer_type_with_meta(&v).unwrap_or(UNIT_TYPE),
-            //             };
-            //             let mapped_field = self.distribute_type_with_meta(v, field_type)?;
-            //             Ok((k, mapped_field))
-            //         })
-            //         .collect::<anyhow::Result<BamlMap<String, BamlValueWithMeta<(T, FieldType)>>>>(
-            //         )?;
-            //     Ok(BamlValueWithMeta::Class(
-            //         name,
-            //         mapped_fields,
-            //         (meta, field_type),
-            //     ))
-            // }
-        }
-    }
-}
 
 /// Like item_type, but specialized for maps.
 fn map_types<'ir, 'a>(
