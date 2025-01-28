@@ -9,6 +9,7 @@ pub use internal_baml_parser_database::{self};
 use internal_baml_schema_ast::ast::{Identifier, WithName};
 pub use internal_baml_schema_ast::{self, ast};
 
+use ir::repr::WithRepr;
 use rayon::prelude::*;
 use std::{
     path::{Path, PathBuf},
@@ -136,7 +137,21 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
 
                     match db.find_type_by_str(d.name()) {
                         Some(t) => match t {
-                            TypeWalker::Class(_) => ast::Top::Class(dyn_type),
+                            TypeWalker::Class(cls) => {
+                                if cls.get_default_attributes(ast::SubType::Class).is_none_or(|attrs| attrs.dynamic_type.unwrap_or(false)) {
+                                    diagnostics.push_error(DatamodelError::new_validation_error(
+                                        &format!("Type '{}' does not contain the `@@dynamic` attribute so it cannot be modified in a type builder block", cls.name()),
+                                        dyn_type.span.to_owned(),
+                                    ));
+                                    return ValidatedSchema {
+                                        db: scoped_db,
+                                        diagnostics,
+                                        configuration: Configuration::new(),
+                                    };
+                                }
+
+                                ast::Top::Class(dyn_type)
+                            },
                             TypeWalker::Enum(_) => ast::Top::Enum(dyn_type),
                             _ => todo!(),
                         },

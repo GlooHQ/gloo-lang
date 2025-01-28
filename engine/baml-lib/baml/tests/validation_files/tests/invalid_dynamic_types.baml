@@ -1,4 +1,4 @@
-function ExtractResume(from_text: string) -> Resume { 
+function TypeBuilderFn(from_text: string) -> Resume { 
   client "openai/gpt-4o-mini"
   prompt #"Hello"#
   type_builder {
@@ -12,8 +12,8 @@ function ExtractResume(from_text: string) -> Resume {
 }
 
 
-test ReturnDynamicClassTest {
-  functions [ExtractResume]
+test MultipleTypeBuilderBlocks {
+  functions [TypeBuilderFn]
   type_builder {
     class Foo {
       foo string
