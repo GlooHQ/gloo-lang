@@ -43,7 +43,7 @@ pub fn make_test_data1() {
 
             serde_json::to_value(&vec![
                 serde_json::to_value(partial_llm_data).unwrap(),
-                serde_json::to_value(&value).unwrap(),
+                serde_json::to_value(&value.serialize_partial()).unwrap(),
             ])
             .unwrap()
         })

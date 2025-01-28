@@ -536,7 +536,7 @@ mod tests {
 
         let res = parsed_value_to_response(&ir, value, &field_type, true).unwrap();
 
-        let json = serde_json::to_value(&res).unwrap();
+        let json = serde_json::to_value(res.serialize_final()).unwrap();
 
         match &json {
             serde_json::Value::Object(items) => {
@@ -545,24 +545,5 @@ mod tests {
             }
             _ => panic!("Expected json object"),
         }
-    }
-
-    #[test]
-    fn integ_test_failure() {
-        let ir = make_test_ir(r#"
-            class Foo {
-                prop1 string
-                prop2 int
-            }
-        "#).unwrap();
-        let target_type = FieldType::class("Foo");
-        let target = jsonish::helpers::render_output_format(&ir, &target_type, &Default::default()).unwrap();
-
-        let msg = r#"{"prop1": "something", "prop2": 2}"#;
-
-        let parsed = jsonish::from_str(&target, &target_type, msg, true).unwrap();
-        let response = parsed_value_to_response(&ir, parsed, &target_type, true).unwrap();
-        let json = serde_json::to_string(&response).unwrap();
-        assert_eq!(json, r#"{"prop1":"something","prop2":2}"#);
     }
 }

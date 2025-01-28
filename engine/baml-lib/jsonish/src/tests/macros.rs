@@ -142,7 +142,7 @@ macro_rules! test_partial_deserializer_streaming {
 
             let value = result;
             log::trace!("Score: {}", value.score());
-            let json_value = json!(value);
+            let json_value = json!(value.serialize_partial());
 
             let expected = serde_json::json!($($json)+);
 
