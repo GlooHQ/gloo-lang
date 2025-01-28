@@ -56,22 +56,57 @@ pub trait IRHelper {
         params: &BamlMap<String, BamlValue>,
         coerce_settings: ArgCoercer,
     ) -> Result<BamlValue>;
+
+    /// BAML does not support class-based subtyping. Nonetheless some builtin
+    /// BAML types are subtypes of others, and we need to be able to test this
+    /// when checking the types of values.
+    ///
+    /// For examples of pairs of types and their subtyping relationship, see
+    /// this module's test suite.
+    ///
+    /// Consider renaming this to `is_assignable`.
     fn is_subtype(&self, base: &FieldType, other: &FieldType) -> bool;
+
+    /// For some `BamlValue` with type `FieldType`, walk the structure of both the value
+    /// and the type simultaneously, associating each node in the `BamlValue` with its
+    /// `FieldType`.
     fn distribute_type(
         &self,
         value: BamlValue,
         field_type: FieldType,
     ) -> anyhow::Result<BamlValueWithMeta<FieldType>>;
+
+    /// For some `BamlValueWithMeta` with type `FieldType`, walk the structure of both the value
+    /// and the type simultaneously, associating each node in the `BamlValue` with its
+    /// `FieldType`.
+    /// TODO (Greg): Make this function DynamicTypes-aware. Right now it assigns default metadata
+    /// to unknown classes, which may have been created with TypeBuilder.
     fn distribute_type_with_meta<T: Clone + std::fmt::Debug>(
         &self,
         value: BamlValueWithMeta<T>,
         field_type: FieldType,
         // default_meta: Option<&T>,
     ) -> Result<BamlValueWithMeta<(T, FieldType)>>;
+
+    /// For any FieldType, check if the field type is FieldType::WithMetadata,
+    /// and if so, return the metadata alongside the base type.
+    /// All other field types will be returned as is, alongside default metadata.
     fn distribute_metadata<'a>(
         &'a self,
         field_type: &'a FieldType,
     ) -> (&'a FieldType, (Vec<Constraint>, StreamingBehavior));
+
+    /// Constraints may live in several places. A constrained base type stors its
+    /// constraints by wrapping itself in the `FieldType::WithMetadata` constructor.
+    /// Additionally, `FieldType::Class` may have constraints stored in its class node,
+    /// and `FieldType::Enum` can store constraints in its `Enum` node.
+    /// And the `FieldType::WithMetadata` constructor might wrap another
+    /// `FieldType::WithMetadata` constructor.
+    ///
+    /// This function collects constraints for a given type from all these
+    /// possible sources. Whenever querying a type for its constraints, you
+    /// should do so with this function, instead of searching manually for all
+    /// the places that Constraints can live.
     fn distribute_constraints<'a>(
         &'a self,
         field_type: &'a FieldType,
@@ -233,14 +268,6 @@ impl IRHelper for IntermediateRepr {
         }
     }
 
-    /// BAML does not support class-based subtyping. Nonetheless some builtin
-    /// BAML types are subtypes of others, and we need to be able to test this
-    /// when checking the types of values.
-    ///
-    /// For examples of pairs of types and their subtyping relationship, see
-    /// this module's test suite.
-    ///
-    /// Consider renaming this to `is_assignable`.
     fn is_subtype(&self, base: &FieldType, other: &FieldType) -> bool {
         if base == other {
             return true;
@@ -337,9 +364,6 @@ impl IRHelper for IntermediateRepr {
         }
     }
 
-    /// For some `BamlValue` with type `FieldType`, walk the structure of both the value
-    /// and the type simultaneously, associating each node in the `BamlValue` with its
-    /// `FieldType`.
     fn distribute_type(
         &self,
         value: BamlValue,
@@ -526,11 +550,6 @@ impl IRHelper for IntermediateRepr {
         }
     }
 
-    /// For some `BamlValueWithMeta` with type `FieldType`, walk the structure of both the value
-    /// and the type simultaneously, associating each node in the `BamlValue` with its
-    /// `FieldType`.
-    /// TODO (Greg): Make this function DynamicTypes-aware. Right now it assigns default metadata
-    /// to unknown classes, which may have been created with TypeBuilder.
     fn distribute_type_with_meta<T: Clone + std::fmt::Debug>(
         &self,
         value: BamlValueWithMeta<T>,
@@ -685,17 +704,6 @@ impl IRHelper for IntermediateRepr {
         }
     }
 
-    /// Constraints may live in several places. A constrained base type stors its
-    /// constraints by wrapping itself in the `FieldType::WithMetadata` constructor.
-    /// Additionally, `FieldType::Class` may have constraints stored in its class node,
-    /// and `FieldType::Enum` can store constraints in its `Enum` node.
-    /// And the `FieldType::WithMetadata` constructor might wrap another
-    /// `FieldType::WithMetadata` constructor.
-    ///
-    /// This function collects constraints for a given type from all these
-    /// possible sources. Whenever querying a type for its constraints, you
-    /// should do so with this function, instead of searching manually for all
-    /// the places that Constraints can live.
     fn distribute_constraints<'a>(
         &'a self,
         field_type: &'a FieldType,
@@ -704,9 +712,6 @@ impl IRHelper for IntermediateRepr {
         (field_type, metadata.0)
     }
 
-    /// For any FieldType, check if the field type is FieldType::WithMetadata,
-    /// and if so, return the metadata alongside the base type.
-    /// All other field types will be returned as is, alongside default metadata.
     fn distribute_metadata<'a>(
         &'a self,
         field_type: &'a FieldType,
