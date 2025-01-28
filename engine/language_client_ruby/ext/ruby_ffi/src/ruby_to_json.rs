@@ -124,8 +124,7 @@ impl<'rb> RubyToJson<'rb> {
                         };
                         let backup_class = match backup_module.const_get::<_, RClass>(class_name.as_str()) { 
                             Ok(class_type) => class_type,
-                            // Err(_) => ruby.eval::<RClass>("Baml::DynamicStruct")?,
-                            Err(_) => unreachable!("trying to avoid these"),
+                            Err(_) => ruby.eval::<RClass>("Baml::DynamicStruct")?,
                         };
                         match preferred_class.funcall("new", (hash,)) {
                             Ok(res) => Ok(res),
