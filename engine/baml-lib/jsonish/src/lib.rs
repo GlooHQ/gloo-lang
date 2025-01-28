@@ -244,20 +244,3 @@ impl WithScore for ResponseBamlValue {
         self.0.iter().map(|node| node.meta().0.score()).sum()
     }
 }
-
-// impl SerializeMetadata for ResponseBamlValue {
-//     fn metadata_fields(&self) -> Vec<(String, serde_json::Value)> {
-//         let mut fields = Vec::new();
-//         let checks: Vec<(&str, &ResponseCheck)> = self.0.meta().1.iter().map(|check| (check.name.as_str(), check)).collect();
-//         if !checks.is_empty() {
-//             let checks_json = serde_json::to_value(checks).expect("Serializing checks is safe.");
-//             fields.push(("checks".to_string(), checks_json));
-//         }
-//         let completion_state: Option<&CompletionState> = self.0.meta().2.as_ref();
-//         if let Some(state) = completion_state {
-//             let completion_state_json = serde_json::to_value(&state).expect("Serializing completion state is safe.");
-//             fields.push(("completion_state".to_string(), completion_state_json));
-//         }
-//         fields
-//     }
-// }
