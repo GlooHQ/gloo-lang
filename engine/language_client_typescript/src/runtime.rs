@@ -12,9 +12,9 @@ use baml_runtime::BamlRuntime as CoreRuntime;
 use baml_types::BamlValue;
 use napi::bindgen_prelude::ObjectFinalize;
 use napi::threadsafe_function::{ThreadSafeCallContext, ThreadsafeFunctionCallMode};
-use napi::JsFunction;
 use napi::JsObject;
 use napi::{Env, JsUndefined};
+use napi::{JsFunction, Ref};
 use napi_derive::napi;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -200,7 +200,7 @@ impl BamlRuntime {
             .map_err(from_anyhow_error)?;
 
         let cb = match cb {
-            Some(cb) => Some(env.create_reference(cb)?),
+            Some(cb) => Some(Ref::new(&env, &cb)?),
             None => None,
         };
 

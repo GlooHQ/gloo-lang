@@ -69,7 +69,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.7.3",
-    "@napi-rs/cli": "3.0.0-alpha.62",
+    "@napi-rs/cli": "3.0.0-alpha.67",
     "@types/node": "^20.12.11",
     "npm-run-all2": "^6.1.2",
     "ts-node": "^10.9.2",
