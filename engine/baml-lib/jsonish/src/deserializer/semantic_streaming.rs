@@ -49,23 +49,6 @@ pub fn validate_streaming_state(
     res
 }
 
-/// Like validate_state, but specialized to the metadata we happen to have already.
-/// (This is a performance hack to allow us to skip several map_meta, zip_meta
-/// steps).
-pub fn validate_streaming_state2(
-    ir: &IntermediateRepr,
-    baml_value: BamlValueWithMeta<(Vec<Flag>, Vec<ResponseCheck>)>,
-    field_type: &FieldType,
-    allow_partials: bool,
-) -> Result<
-    BamlValueWithMeta<(Vec<Flag>, Vec<ResponseCheck>, Completion)>,
-    StreamingError,
-> {
-    let typed_baml_value = ir.distribute_type_with_meta(baml_value, field_type.clone())?;
-    let res = process_node2(ir, typed_baml_value, allow_partials);
-    res
-}
-
 /// Consider a node's type, streaming state, and streaming behavior annotations. Return
 /// an error if streaming state doesn't meet the streaming requirements. Also attach
 /// the streaming state to the node as metadata, if this was requested by the user
@@ -93,11 +76,6 @@ fn process_node(
         display: streaming_behavior.state,
         required_done: must_be_done,
     };
-    // let new_meta = if streaming_behavior.state && allow_partials {
-    //     Some(completion_state.clone())
-    // } else {
-    //     None
-    // };
 
     if must_be_done && allow_partials && !(completion_state == CompletionState::Complete) {
         return Err(StreamingError::IncompleteDoneValue);
@@ -234,140 +212,6 @@ fn process_node(
     new_value
 }
 
-fn process_node2(
-    ir: &IntermediateRepr,
-    value: BamlValueWithMeta<((Vec<Flag>, Vec<ResponseCheck>), FieldType)>,
-    allow_partials: bool,
-) -> Result<
-    BamlValueWithMeta<(Vec<Flag>, Vec<ResponseCheck>, Completion)>,
-    StreamingError,
-> {
-    // let value_copy = value.clone();
-    let ((flags, checks), field_type) = value.meta().clone();
-    let complete = completion_state(&flags);
-    let (base_type, (_, streaming_behavior)) = ir.distribute_metadata(&field_type);
-
-    let must_be_done = required_done(ir, &field_type) && allow_partials;
-
-    let new_meta = (
-        flags,
-        checks,
-        Completion {
-            state: complete.clone(),
-            display: streaming_behavior.state,
-            required_done: must_be_done,
-        }
-    );
-
-    if must_be_done && !(complete == CompletionState::Complete) {
-        return Err(StreamingError::IncompleteDoneValue);
-        // return Ok(BamlValueWithMeta::Null(new_meta))
-    }
-
-    let new_value = match value {
-        BamlValueWithMeta::String(s, _) => Ok(BamlValueWithMeta::String(s, new_meta)),
-        BamlValueWithMeta::Media(m, _) => Ok(BamlValueWithMeta::Media(m, new_meta)),
-        BamlValueWithMeta::Null(_) => Ok(BamlValueWithMeta::Null(new_meta)),
-        BamlValueWithMeta::Int(i, _) => Ok(BamlValueWithMeta::Int(i, new_meta)),
-        BamlValueWithMeta::Float(f, _) => Ok(BamlValueWithMeta::Float(f, new_meta)),
-        BamlValueWithMeta::Bool(b, _) => Ok(BamlValueWithMeta::Bool(b, new_meta)),
-        BamlValueWithMeta::List(items, _) => Ok(BamlValueWithMeta::List(
-            items
-                .into_iter()
-                .filter_map(|item| process_node2(ir, item, allow_partials).ok())
-                .collect(),
-            new_meta,
-        )),
-        BamlValueWithMeta::Class(ref class_name, fields, _) => {
-            let field_names: HashSet<String> =
-                fields.keys().into_iter().map(|s| s.to_string()).collect();
-            let needed_fields: HashSet<String> = needed_fields(ir, &field_type, allow_partials)?;
-            // let missing_needed_fields = needed_fields.difference(&new_field_names);
-            let present_nonnull_fields: HashSet<String> = fields.iter().filter_map(|(field_name, field_value)| {
-                if matches!(field_value, BamlValueWithMeta::Null(_)) {
-                    None
-                } else {
-                    Some(field_name.to_string())
-                }
-            }).collect();
-
-            let missing_needed_fields: HashSet<&String> = needed_fields.difference(&present_nonnull_fields).into_iter().collect();
-            let unneeded_fields = field_names.difference(&needed_fields);
-
-            let fields_needing_null =
-                fields_needing_null_filler(ir, &field_type, field_names, allow_partials)?;
-
-            let mut deleted_fields: HashMap<
-                String,
-                BamlValueWithMeta<(Vec<Flag>, Vec<ResponseCheck>, Completion)>,
-            > = HashMap::new();
-
-            // let unneeded_fields = field_names.difference(&needed_fields);
-            let needed_nulls = fields_needing_null
-                .into_iter()
-                .filter_map(|ref null_field_name| {
-                    let field = fields
-                        .get(null_field_name)
-                        .expect("This field is guaranteed to be in the field set");
-                    let use_state = type_streaming_behavior(ir, &field.meta().1).state;
-                    let field_stream_state = Completion {
-                        state: CompletionState::Incomplete,
-                        display: use_state,
-                        required_done: false,
-                    };
-                    Some((
-                        null_field_name.to_string(),
-                        BamlValueWithMeta::Null((Vec::new(), Vec::new(), field_stream_state)),
-                    ))
-                })
-                .collect::<IndexMap<String, BamlValueWithMeta<_>>>();
-
-            let mut new_fields = fields
-                .into_iter()
-                .filter_map(|(field_name, field_value)| {
-                    let with_state = field_value
-                        .meta()
-                        .1
-                        .streaming_behavior()
-                        .as_ref()
-                        .map_or(false, |b| b.state);
-                    let complete: CompletionState = completion_state(&field_value.meta().0 .0);
-
-                    match process_node2(ir, field_value, allow_partials) {
-                        Ok(res) => Some((field_name, res)),
-                        _ => {
-                            let state = Completion { state: complete, display: with_state, required_done: false };
-                            let null = BamlValueWithMeta::Null((Vec::new(), Vec::new(), state));
-                            deleted_fields.insert(field_name, null);
-                            None
-                        }
-                    }
-                })
-                .collect::<IndexMap<String, BamlValueWithMeta<_>>>();
-
-            new_fields.extend(needed_nulls);
-            new_fields.extend(deleted_fields);
-            let res = BamlValueWithMeta::Class(class_name.clone(), new_fields, new_meta);
-            if missing_needed_fields.clone().len() == 0 {
-                Ok(res)
-            } else {
-                Err(StreamingError::MissingNeededFields)
-            }
-        }
-        BamlValueWithMeta::Enum(name, value, _) => {
-            Ok(BamlValueWithMeta::Enum(name, value, new_meta))
-        }
-        BamlValueWithMeta::Map(kvs, _) => {
-            let new_kvs = kvs
-                .into_iter()
-                .filter_map(|(k, v)| process_node2(ir, v, allow_partials).ok().map(|v| (k, v)))
-                .collect();
-            Ok(BamlValueWithMeta::Map(new_kvs, new_meta))
-        }
-    };
-
-    new_value
-}
 
 fn fields_needing_null_filler<'a>(
     ir: &'a IntermediateRepr,

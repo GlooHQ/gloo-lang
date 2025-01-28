@@ -15,7 +15,7 @@ use internal_baml_jinja::types::{Builder, Name, OutputFormatContent};
 use internal_baml_jinja::types::{Class, Enum};
 
 use crate::deserializer::deserialize_flags::{constraint_results, Flag};
-use crate::deserializer::semantic_streaming::validate_streaming_state2;
+use crate::deserializer::semantic_streaming::validate_streaming_state;
 use crate::{BamlValueWithFlags, ResponseBamlValue};
 
 pub fn load_test_ir(file_content: &str) -> IntermediateRepr {
@@ -256,34 +256,34 @@ fn relevant_data_models<'a>(
     ))
 }
 
-/// Validate a parsed value, checking asserts and checks.
-pub fn parsed_value_to_response(
-    ir: &IntermediateRepr,
-    baml_value: BamlValueWithFlags,
-    field_type: &FieldType,
-    allow_partials: bool,
-) -> Result<ResponseBamlValue> {
-    let meta_flags: BamlValueWithMeta<Vec<Flag>> = baml_value.into();
-
-    let baml_value_with_streaming2 = meta_flags.map_meta_owned(|flags| {
-        let constraint_results = constraint_results(&flags);
-        let response_checks: Vec<ResponseCheck> = constraint_results
-            .iter()
-            .map(|(label, expr, result)| {
-                let status = (if *result { "succeeded" } else { "failed" }).to_string();
-                ResponseCheck {
-                    name: label.clone(),
-                    expression: expr.0.clone(),
-                    status,
-                }
-            })
-            .collect();
-        (flags, response_checks)
-    });
-
-    let response_value2 =
-        validate_streaming_state2(ir, baml_value_with_streaming2, field_type, allow_partials)
-            .map_err(|s| anyhow::anyhow!("{s}"))?;
-
-    Ok(crate::ResponseBamlValue(response_value2))
-}
+// /// Validate a parsed value, checking asserts and checks.
+// pub fn parsed_value_to_response(
+//     ir: &IntermediateRepr,
+//     baml_value: BamlValueWithFlags,
+//     field_type: &FieldType,
+//     allow_partials: bool,
+// ) -> Result<ResponseBamlValue> {
+//     let meta_flags: BamlValueWithMeta<Vec<Flag>> = baml_value.into();
+// 
+//     let baml_value_with_streaming = meta_flags.map_meta_owned(|flags| {
+//         let constraint_results = constraint_results(&flags);
+//         let response_checks: Vec<ResponseCheck> = constraint_results
+//             .iter()
+//             .map(|(label, expr, result)| {
+//                 let status = (if *result { "succeeded" } else { "failed" }).to_string();
+//                 ResponseCheck {
+//                     name: label.clone(),
+//                     expression: expr.0.clone(),
+//                     status,
+//                 }
+//             })
+//             .collect();
+//         (flags, response_checks)
+//     });
+// 
+//     let response_value2 =
+//         validate_streaming_state(ir, baml_value_with_streaming, field_type, allow_partials)
+//             .map_err(|s| anyhow::anyhow!("{s}"))?;
+// 
+//     Ok(crate::ResponseBamlValue(response_value))
+// }
