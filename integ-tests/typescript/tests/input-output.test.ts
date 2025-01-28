@@ -104,7 +104,6 @@ describe('Semantic Streaming Tests', () => {
 
       // Test @stream.with_state.
       if (msg.class_needed.s_20_words.value && msg.class_needed.s_20_words.value.split(" ").length < 3 && msg.final_string == null) {
-        console.log(msg)
         expect(msg.class_needed.s_20_words.state).toEqual("Incomplete");
       }
       if (msg.final_string) {
@@ -118,6 +117,5 @@ describe('Semantic Streaming Tests', () => {
     }
 
     const final = await stream.getFinalResponse();
-    console.log(final);
   }, 20_000)
 })
