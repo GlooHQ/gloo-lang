@@ -354,7 +354,7 @@ impl ArgCoercer {
                     }
                 }
             }
-            (FieldType::Constrained { .. }, _) => {
+            (FieldType::WithMetadata { .. }, _) => {
                 unreachable!("The return value of distribute_constraints can never be FieldType::Constrainted");
             }
         }?;
@@ -417,7 +417,7 @@ fn first_failing_assert_nested<'a>(
 
 #[cfg(test)]
 mod tests {
-    use baml_types::JinjaExpression;
+    use baml_types::{JinjaExpression, StreamingBehavior};
 
     use crate::ir::repr::make_test_ir;
 
@@ -442,13 +442,14 @@ mod tests {
         )
         .unwrap();
         let value = BamlValue::Int(1);
-        let type_ = FieldType::Constrained {
+        let type_ = FieldType::WithMetadata {
             base: Box::new(FieldType::Primitive(TypeValue::Int)),
             constraints: vec![Constraint {
                 level: ConstraintLevel::Assert,
                 expression: JinjaExpression("this.length() > 0".to_string()),
                 label: Some("foo".to_string()),
             }],
+            streaming_behavior: StreamingBehavior::default(),
         };
         let arg_coercer = ArgCoercer {
             span_path: None,

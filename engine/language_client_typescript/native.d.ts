@@ -73,7 +73,7 @@ export declare class FieldType {
 
 export declare class FunctionResult {
   isOk(): boolean
-  parsed(): any
+  parsed(allowPartials: boolean): any
 }
 
 export declare class FunctionResultStream {

@@ -38,7 +38,6 @@ def all_succeeded(checks: Dict[CheckName, Check]) -> bool:
     return all(check.status == "succeeded" for check in get_checks(checks))
 
 
-
 class AliasedEnum(str, Enum):
     
     KEY_ONE = "KEY_ONE"
@@ -195,10 +194,18 @@ class ClassOptionalOutput2(BaseModel):
 class ClassToRecAlias(BaseModel):
     list: "LinkedListAliasNode"
 
+class ClassWithBlockDone(BaseModel):
+    i_16_digits: int
+    s_20_words: str
+
 class ClassWithImage(BaseModel):
     myImage: baml_py.Image
     param2: str
     fake_image: "FakeImage"
+
+class ClassWithoutDone(BaseModel):
+    i_16_digits: int
+    s_20_words: str
 
 class CompoundBigNumbers(BaseModel):
     big: "BigNumbers"
@@ -457,6 +464,20 @@ class SearchParams(BaseModel):
     company: Optional["WithReasoning"] = None
     description: List["WithReasoning"]
     tags: List[Union["Tag", str]]
+
+class SemanticContainer(BaseModel):
+    sixteen_digit_number: int
+    string_with_twenty_words: str
+    class_1: "ClassWithoutDone"
+    class_2: "ClassWithBlockDone"
+    class_done_needed: "ClassWithBlockDone"
+    class_needed: "ClassWithoutDone"
+    three_small_things: List["SmallThing"]
+    final_string: str
+
+class SmallThing(BaseModel):
+    i_16_digits: int
+    i_8_digits: int
 
 class SomeClassNestedDynamic(BaseModel):
     model_config = ConfigDict(extra='allow')

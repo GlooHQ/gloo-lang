@@ -155,7 +155,9 @@ module Baml
     class ClassOptionalOutput < T::Struct; end
     class ClassOptionalOutput2 < T::Struct; end
     class ClassToRecAlias < T::Struct; end
+    class ClassWithBlockDone < T::Struct; end
     class ClassWithImage < T::Struct; end
+    class ClassWithoutDone < T::Struct; end
     class CompoundBigNumbers < T::Struct; end
     class ContactInfo < T::Struct; end
     class CustomTaskResult < T::Struct; end
@@ -214,6 +216,8 @@ module Baml
     class Resume < T::Struct; end
     class Schema < T::Struct; end
     class SearchParams < T::Struct; end
+    class SemanticContainer < T::Struct; end
+    class SmallThing < T::Struct; end
     class SomeClassNestedDynamic < T::Struct; end
     class StringToClassEntry < T::Struct; end
     class TestClassAlias < T::Struct; end
@@ -366,6 +370,20 @@ module Baml
         @props = props
       end
     end
+    class ClassWithBlockDone < T::Struct
+      include Baml::Sorbet::Struct
+      const :i_16_digits, Integer
+      const :s_20_words, String
+
+      def initialize(props)
+        super(
+          i_16_digits: props[:i_16_digits],
+          s_20_words: props[:s_20_words],
+        )
+
+        @props = props
+      end
+    end
     class ClassWithImage < T::Struct
       include Baml::Sorbet::Struct
       const :myImage, Baml::Image
@@ -377,6 +395,20 @@ module Baml
           myImage: props[:myImage],
           param2: props[:param2],
           fake_image: props[:fake_image],
+        )
+
+        @props = props
+      end
+    end
+    class ClassWithoutDone < T::Struct
+      include Baml::Sorbet::Struct
+      const :i_16_digits, Integer
+      const :s_20_words, String
+
+      def initialize(props)
+        super(
+          i_16_digits: props[:i_16_digits],
+          s_20_words: props[:s_20_words],
         )
 
         @props = props
@@ -1223,6 +1255,46 @@ module Baml
           company: props[:company],
           description: props[:description],
           tags: props[:tags],
+        )
+
+        @props = props
+      end
+    end
+    class SemanticContainer < T::Struct
+      include Baml::Sorbet::Struct
+      const :sixteen_digit_number, Integer
+      const :string_with_twenty_words, String
+      const :class_1, Baml::Types::ClassWithoutDone
+      const :class_2, Baml::Types::ClassWithBlockDone
+      const :class_done_needed, Baml::Types::ClassWithBlockDone
+      const :class_needed, Baml::Types::ClassWithoutDone
+      const :three_small_things, T::Array[Baml::Types::SmallThing]
+      const :final_string, String
+
+      def initialize(props)
+        super(
+          sixteen_digit_number: props[:sixteen_digit_number],
+          string_with_twenty_words: props[:string_with_twenty_words],
+          class_1: props[:class_1],
+          class_2: props[:class_2],
+          class_done_needed: props[:class_done_needed],
+          class_needed: props[:class_needed],
+          three_small_things: props[:three_small_things],
+          final_string: props[:final_string],
+        )
+
+        @props = props
+      end
+    end
+    class SmallThing < T::Struct
+      include Baml::Sorbet::Struct
+      const :i_16_digits, Integer
+      const :i_8_digits, Integer
+
+      def initialize(props)
+        super(
+          i_16_digits: props[:i_16_digits],
+          i_8_digits: props[:i_8_digits],
         )
 
         @props = props
