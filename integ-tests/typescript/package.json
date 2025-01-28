@@ -23,16 +23,18 @@
     "dotenv-cli": "^7.4.2",
     "jest": "^29.7.0",
     "jest-html-reporter": "^3.10.2",
-    "jest-summary-reporter": "^0.0.2",
     "jest-junit": "^16.0.0",
+    "jest-summary-reporter": "^0.0.2",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.4.2"
   },
   "dependencies": {
+    "@aws-sdk/client-sts": "^3.721.0",
     "@boundaryml/baml": "link:../../engine/language_client_typescript",
-    "dotenv": "^16.4.5",
-    "@aws-sdk/client-sts": "^3.721.0"
+    "chart.js": "^4.4.7",
+    "chartjs-node-canvas": "^4.1.6",
+    "dotenv": "^16.4.5"
   }
 }

@@ -31,6 +31,7 @@ module Baml
     class ClassOptionalOutput2 < T::Struct; end
     class ClassToRecAlias < T::Struct; end
     class ClassWithImage < T::Struct; end
+    class ComplexMemoryObject < T::Struct; end
     class CompoundBigNumbers < T::Struct; end
     class ContactInfo < T::Struct; end
     class CustomTaskResult < T::Struct; end
@@ -65,6 +66,7 @@ module Baml
     class MalformedConstraints < T::Struct; end
     class MalformedConstraints2 < T::Struct; end
     class Martian < T::Struct; end
+    class MemoryObject < T::Struct; end
     class MergeAttrs < T::Struct; end
     class NamedArgsSingleClass < T::Struct; end
     class Nested < T::Struct; end
@@ -94,6 +96,7 @@ module Baml
     class TestClassAlias < T::Struct; end
     class TestClassNested < T::Struct; end
     class TestClassWithEnum < T::Struct; end
+    class TestMemoryOutput < T::Struct; end
     class TestOutputClass < T::Struct; end
     class Tree < T::Struct; end
     class TwoStoriesOneTitle < T::Struct; end
@@ -252,6 +255,24 @@ module Baml
           myImage: props[:myImage],
           param2: props[:param2],
           fake_image: props[:fake_image],
+        )
+
+        @props = props
+      end
+    end
+    class ComplexMemoryObject < T::Struct
+      include Baml::Sorbet::Struct
+      const :id, T.nilable(String)
+      const :name, T.nilable(String)
+      const :description, T.nilable(String)
+      const :metadata, T::Array[T.nilable(T.any(T.nilable(String), T.nilable(Integer), T.nilable(Float)))]
+
+      def initialize(props)
+        super(
+          id: props[:id],
+          name: props[:name],
+          description: props[:description],
+          metadata: props[:metadata],
         )
 
         @props = props
@@ -739,6 +760,22 @@ module Baml
         @props = props
       end
     end
+    class MemoryObject < T::Struct
+      include Baml::Sorbet::Struct
+      const :id, T.nilable(String)
+      const :name, T.nilable(String)
+      const :description, T.nilable(String)
+
+      def initialize(props)
+        super(
+          id: props[:id],
+          name: props[:name],
+          description: props[:description],
+        )
+
+        @props = props
+      end
+    end
     class MergeAttrs < T::Struct
       include Baml::Sorbet::Struct
       const :amount, Baml::Checked[T.nilable(Integer)]
@@ -1170,6 +1207,18 @@ module Baml
         super(
           prop1: props[:prop1],
           prop2: props[:prop2],
+        )
+
+        @props = props
+      end
+    end
+    class TestMemoryOutput < T::Struct
+      include Baml::Sorbet::Struct
+      const :items, T::Array[T.nilable(T.any(Baml::PartialTypes::MemoryObject, Baml::PartialTypes::ComplexMemoryObject))]
+
+      def initialize(props)
+        super(
+          items: props[:items],
         )
 
         @props = props

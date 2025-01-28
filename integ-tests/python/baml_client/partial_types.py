@@ -75,6 +75,12 @@ class ClassWithImage(BaseModel):
     param2: Optional[str] = None
     fake_image: Optional["FakeImage"] = None
 
+class ComplexMemoryObject(BaseModel):
+    id: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+    metadata: List[Optional[Union[Optional[str], Optional[int], Optional[float]]]]
+
 class CompoundBigNumbers(BaseModel):
     big: Optional["BigNumbers"] = None
     big_nums: List["BigNumbers"]
@@ -221,6 +227,11 @@ class Martian(BaseModel):
     """The age of the Martian in Mars years.
     So many Mars years."""
 
+class MemoryObject(BaseModel):
+    id: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+
 class MergeAttrs(BaseModel):
     amount: Checked[Optional[int],Literal["gt_ten"]]
 
@@ -354,6 +365,9 @@ class TestClassNested(BaseModel):
 class TestClassWithEnum(BaseModel):
     prop1: Optional[str] = None
     prop2: Optional[types.EnumInClass] = None
+
+class TestMemoryOutput(BaseModel):
+    items: List[Optional[Union["MemoryObject", "ComplexMemoryObject"]]]
 
 class TestOutputClass(BaseModel):
     prop1: Optional[str] = None

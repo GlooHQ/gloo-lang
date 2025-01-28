@@ -224,6 +224,14 @@ export interface ClassWithImage {
   
 }
 
+export interface ComplexMemoryObject {
+  id: string
+  name: string
+  description: string
+  metadata: (string | number | number)[]
+  
+}
+
 export interface CompoundBigNumbers {
   big: BigNumbers
   big_nums: BigNumbers[]
@@ -442,6 +450,13 @@ export interface Martian {
   
 }
 
+export interface MemoryObject {
+  id: string
+  name: string
+  description: string
+  
+}
+
 export interface MergeAttrs {
   amount: Checked<number,"gt_ten">
   
@@ -631,6 +646,11 @@ export interface TestClassNested {
 export interface TestClassWithEnum {
   prop1: string
   prop2: EnumInClass
+  
+}
+
+export interface TestMemoryOutput {
+  items: (MemoryObject | ComplexMemoryObject)[]
   
 }
 
