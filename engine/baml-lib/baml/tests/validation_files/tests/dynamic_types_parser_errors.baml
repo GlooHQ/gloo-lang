@@ -11,7 +11,6 @@ function TypeBuilderFn(from_text: string) -> Resume {
   }
 }
 
-
 test MultipleTypeBuilderBlocks {
   functions [TypeBuilderFn]
   type_builder {
@@ -36,7 +35,7 @@ test MultipleTypeBuilderBlocks {
 }
 
 // error: Error validating: Only tests may have a type_builder block.
-//   -->  tests/invalid_dynamic_types.baml:4
+//   -->  tests/dynamic_types_parser_errors.baml:4
 //    | 
 //  3 |   prompt #"Hello"#
 //  4 |   type_builder {
@@ -49,15 +48,15 @@ test MultipleTypeBuilderBlocks {
 // 11 |   }
 //    | 
 // error: Error validating: Definition of multiple `type_builder` blocks in the same parent block
-//   -->  tests/invalid_dynamic_types.baml:25
+//   -->  tests/dynamic_types_parser_errors.baml:24
 //    | 
-// 24 |   }
-// 25 |   type_builder {
-// 26 |     class A {
-// 27 |       a string
-// 28 |     }
-// 29 |     dynamic B {
-// 30 |       b int
-// 31 |     }
-// 32 |   }
+// 23 |   }
+// 24 |   type_builder {
+// 25 |     class A {
+// 26 |       a string
+// 27 |     }
+// 28 |     dynamic B {
+// 29 |       b int
+// 30 |     }
+// 31 |   }
 //    | 

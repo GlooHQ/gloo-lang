@@ -123,7 +123,7 @@ pub(crate) fn parse_type_expression_block(
             sub_type: sub_type
                 .clone()
                 .unwrap_or(SubType::Other("Subtype not found".to_string())),
-            is_dynamic: matches!(sub_type, Some(SubType::Dynamic)),
+            is_dynamic_type_def: matches!(sub_type, Some(SubType::Dynamic)),
         },
         _ => panic!("Encountered impossible type_expression declaration during parsing",),
     }

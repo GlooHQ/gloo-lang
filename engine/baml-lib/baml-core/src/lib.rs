@@ -133,27 +133,51 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
                         dyn_type.span.to_owned(),
                     );
 
-                    dyn_type.is_dynamic = true;
+                    dyn_type.is_dynamic_type_def = true;
 
+                    // Resolve dynamic definition. It either appends to a
+                    // @@dynamic class or enum.
                     match db.find_type_by_str(d.name()) {
                         Some(t) => match t {
                             TypeWalker::Class(cls) => {
-                                if cls.get_default_attributes(ast::SubType::Class).is_none_or(|attrs| attrs.dynamic_type.unwrap_or(false)) {
+                                if cls.get_default_attributes(ast::SubType::Class)
+                                    .is_none_or(|attrs| attrs.dynamic_type.unwrap_or(false))
+                                {
                                     diagnostics.push_error(DatamodelError::new_validation_error(
-                                        &format!("Type '{}' does not contain the `@@dynamic` attribute so it cannot be modified in a type builder block", cls.name()),
+                                        &format!(
+                                            "Type '{}' does not contain the `@@dynamic` attribute so it cannot be modified in a type builder block",
+                                             cls.name()
+                                        ),
                                         dyn_type.span.to_owned(),
                                     ));
-                                    return ValidatedSchema {
-                                        db: scoped_db,
-                                        diagnostics,
-                                        configuration: Configuration::new(),
-                                    };
+                                    continue;
                                 }
 
                                 ast::Top::Class(dyn_type)
                             },
-                            TypeWalker::Enum(_) => ast::Top::Enum(dyn_type),
-                            _ => todo!(),
+                            TypeWalker::Enum(enm) => {
+                                if enm.get_default_attributes(ast::SubType::Enum)
+                                    .is_none_or(|attrs| attrs.dynamic_type.unwrap_or(false))
+                                {
+                                    diagnostics.push_error(DatamodelError::new_validation_error(
+                                        &format!(
+                                            "Type '{}' does not contain the `@@dynamic` attribute so it cannot be modified in a type builder block",
+                                            enm.name()
+                                        ),
+                                        dyn_type.span.to_owned(),
+                                    ));
+                                    continue;
+                                }
+
+                                ast::Top::Enum(dyn_type)
+                            },
+                            TypeWalker::TypeAlias(_) => {
+                                diagnostics.push_error(DatamodelError::new_validation_error(
+                                    &format!("The `dynamic` keyword only works on classes and enums, but type '{}' is a type alias", d.name()),
+                                    d.span.to_owned(),
+                                ));
+                                continue;
+                            },
                         },
                         None => {
                             diagnostics.push_error(DatamodelError::new_validation_error(
@@ -172,11 +196,8 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
 
         if let Err(d) = scoped_db.validate(&mut diagnostics) {
             eprintln!("Error in scoped db: {:?}", d);
-            return ValidatedSchema {
-                db: scoped_db,
-                diagnostics,
-                configuration: Configuration::new(),
-            };
+            diagnostics.push(d);
+            continue;
         }
         validate::validate(
             &scoped_db,
@@ -184,11 +205,7 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
             &mut diagnostics,
         );
         if diagnostics.has_errors() {
-            return ValidatedSchema {
-                db: scoped_db,
-                diagnostics,
-                configuration,
-            };
+            continue;
         }
         scoped_db.finalize(&mut diagnostics);
 

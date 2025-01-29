@@ -614,7 +614,7 @@ impl WithRepr<Enum> for EnumWalker<'_> {
 
     fn repr(&self, db: &ParserDatabase) -> Result<Enum> {
         Ok(Enum {
-            name: if self.ast_type_block().is_dynamic {
+            name: if self.ast_type_block().is_dynamic_type_def {
                 self.name().strip_prefix("Dynamic").unwrap().to_string()
             } else {
                 self.name().to_string()
@@ -706,7 +706,7 @@ impl WithRepr<Class> for ClassWalker<'_> {
 
     fn repr(&self, db: &ParserDatabase) -> Result<Class> {
         Ok(Class {
-            name: if self.ast_type_block().is_dynamic {
+            name: if self.ast_type_block().is_dynamic_type_def {
                 self.name().strip_prefix("Dynamic").unwrap().to_string()
             } else {
                 self.name().to_string()
@@ -1102,7 +1102,7 @@ impl WithRepr<TestCase> for ConfigurationWalker<'_> {
             .type_builder_scoped_db
             .walk_enums()
             .filter(|e| {
-                self.test_case().type_builder_scoped_db.ast()[e.id].is_dynamic
+                self.test_case().type_builder_scoped_db.ast()[e.id].is_dynamic_type_def
                     || db.find_type_by_str(e.name()).is_none()
             })
             .map(|e| e.node(&self.test_case().type_builder_scoped_db))
@@ -1112,7 +1112,7 @@ impl WithRepr<TestCase> for ConfigurationWalker<'_> {
             .type_builder_scoped_db
             .walk_classes()
             .filter(|c| {
-                self.test_case().type_builder_scoped_db.ast()[c.id].is_dynamic
+                self.test_case().type_builder_scoped_db.ast()[c.id].is_dynamic_type_def
                     || db.find_type_by_str(c.name()).is_none()
             })
             .map(|c| c.node(&self.test_case().type_builder_scoped_db))
