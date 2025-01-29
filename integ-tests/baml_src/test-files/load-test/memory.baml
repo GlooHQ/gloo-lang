@@ -15,11 +15,17 @@ class ComplexMemoryObject {
   "#)
 }
 
+class AnotherObject {
+  id string
+  thingy2 string
+  thingy3 string
+}
+
 class TestMemoryOutput {
-  items (MemoryObject | ComplexMemoryObject)[] @description(#"
+  items (MemoryObject | ComplexMemoryObject | AnotherObject)[] @description(#"
     Add 10 items, which can be either simple MemoryObjects or more complex MemoryObjects with metadata.
   "#)
-  more_items (MemoryObject | ComplexMemoryObject)[] @description(#"
+  more_items (MemoryObject | ComplexMemoryObject | AnotherObject)[] @description(#"
     Add 3 more items, which can be either simple MemoryObjects or more complex MemoryObjects with metadata.
   "#)
 }

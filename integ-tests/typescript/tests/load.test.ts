@@ -32,50 +32,78 @@ async function measureMemoryUsage<T>(
   result: T;
   memoryUsage: {
     peak: { heapUsed: number; rss: number };
-    timeline: Array<{ timestamp: number; heapUsed: number; rss: number }>;
+    peakDiff: { heapUsed: number; rss: number };
+    baseline: { heapUsed: number; rss: number };
+    timeline: Array<{ timestamp: number; heapUsed: number; rss: number; heapUsedDiff: number; rssDiff: number }>;
     events: MemoryEvent[];
   };
 }> {
-  const memoryUsageLog: { timestamp: number; heapUsed: number; rss: number }[] = [];
+  const memoryUsageLog: { timestamp: number; heapUsed: number; rss: number; heapUsedDiff: number; rssDiff: number }[] = [];
   const events: MemoryEvent[] = [];
+  
+  // Get baseline memory usage
+  const baseline = process.memoryUsage();
   let maxHeapUsed = 0;
   let maxRss = 0;
+  let maxHeapUsedDiff = 0;
+  let maxRssDiff = 0;
 
   const logEvent = createEventLogger(events);
 
   const monitor = setInterval(() => {
     const mem = process.memoryUsage();
+    const heapUsedDiff = mem.heapUsed - baseline.heapUsed;
+    const rssDiff = mem.rss - baseline.rss;
+    
     maxHeapUsed = Math.max(maxHeapUsed, mem.heapUsed);
     maxRss = Math.max(maxRss, mem.rss);
+    maxHeapUsedDiff = Math.max(maxHeapUsedDiff, heapUsedDiff);
+    maxRssDiff = Math.max(maxRssDiff, rssDiff);
+    
     memoryUsageLog.push({
       timestamp: Date.now(),
       heapUsed: mem.heapUsed,
-      rss: mem.rss
+      rss: mem.rss,
+      heapUsedDiff,
+      rssDiff
     });
-    console.log('mem (MB)', (mem.rss / 1024 / 1024).toFixed(2), 'heapUsed (MB)', (mem.heapUsed / 1024 / 1024).toFixed(2), 'maxHeapUsed (MB)', (maxHeapUsed / 1024 / 1024).toFixed(2), 'maxRss (MB)', (maxRss / 1024 / 1024).toFixed(2));
+    console.log(
+      'rss (MB)', (mem.rss / 1024 / 1024).toFixed(2),
+      'rssDiff (MB)', (rssDiff / 1024 / 1024).toFixed(2),
+      'heapUsed (MB)', (mem.heapUsed / 1024 / 1024).toFixed(2),
+      'heapUsedDiff (MB)', (heapUsedDiff / 1024 / 1024).toFixed(2),
+      'maxHeapUsedDiff (MB)', (maxHeapUsedDiff / 1024 / 1024).toFixed(2)
+    );
   }, options.sampleInterval);
 
   try {
     console.log('starting operation');
     const result = await operation(logEvent);
-    const memoryUsage = {
+    return {
       result,
       memoryUsage: {
         peak: {
           heapUsed: maxHeapUsed,
           rss: maxRss
         },
+        peakDiff: {
+          heapUsed: maxHeapUsedDiff,
+          rss: maxRssDiff
+        },
+        baseline: {
+          heapUsed: baseline.heapUsed,
+          rss: baseline.rss
+        },
         timeline: memoryUsageLog,
         events
       }
     };
-    return memoryUsage;
   } finally {
     clearInterval(monitor);
   }
 }
 
-async function generateMemoryPlot(timeline: Array<{ timestamp: number; heapUsed: number; rss: number }>, events: MemoryEvent[]) {
+async function generateMemoryPlot(timeline: Array<{ timestamp: number; heapUsed: number; rss: number; heapUsedDiff: number; rssDiff: number }>, events: MemoryEvent[]) {
   const width = 800;
   const height = 600;
   const chartCallback = (ChartJS: any) => {
@@ -89,6 +117,7 @@ async function generateMemoryPlot(timeline: Array<{ timestamp: number; heapUsed:
   const timeData = timeline.map(t => (t.timestamp - startTime) / 1000); // Convert to seconds
   const heapData = timeline.map(t => t.heapUsed / 1024 / 1024); // Convert to MB
   const rssData = timeline.map(t => t.rss / 1024 / 1024); // Convert to MB
+  const heapDiffData = timeline.map(t => t.heapUsedDiff / 1024 / 1024); // Convert to MB
   
   const eventAnnotations = events.map(event => ({
     type: 'line' as const,
@@ -118,6 +147,12 @@ async function generateMemoryPlot(timeline: Array<{ timestamp: number; heapUsed:
           label: 'RSS (MB)',
           data: rssData,
           borderColor: 'rgb(255, 99, 132)',
+          tension: 0.1
+        },
+        {
+          label: 'Heap Used Diff (MB)',
+          data: heapDiffData,
+          borderColor: 'rgb(75, 192, 192)',
           tension: 0.1
         }
       ]
@@ -161,25 +196,11 @@ async function main() {
   console.log('Running memory usage test...');
   const { memoryUsage } = await measureMemoryUsage(
     async (logEvent) => {
-    //   for (let i = 0; i < 3; i++) {
-    //     logEvent(`Stream ${i + 1} started`);
-    //     const stream = b.stream.EditOneDataModel([message]);
-    //     for await (const chunk of stream) {
-    //       chunk;
-    //     }
-    //     logEvent(`Stream ${i + 1} chunks complete`);
-    //     await stream.getFinalResponse();
-    //     await new Promise(resolve => setTimeout(resolve, 1000));
-    // }
-
-    //   await new Promise(resolve => setTimeout(resolve, 1000));
       {
         logEvent(`Stream last started`);
         const stream = b.stream.TestMemory("poems");
         let chunkCount = 0;
         for await (const chunk of stream) {
-          // do nothing
-          // logEvent(`Chunk ${chunkCount}`);
           chunkCount++;
         }
         await stream.getFinalResponse();
@@ -192,22 +213,31 @@ async function main() {
     { sampleInterval: 1000 }
   );
 
-  await new Promise(resolve => setTimeout(resolve, 5000));
-
   console.log('Memory Usage Summary (MB):');
   console.table({
+    'Baseline Heap Used': Math.round(memoryUsage.baseline.heapUsed / 1024 / 1024 * 100) / 100,
+    'Baseline RSS': Math.round(memoryUsage.baseline.rss / 1024 / 1024 * 100) / 100,
     'Peak Heap Used': Math.round(memoryUsage.peak.heapUsed / 1024 / 1024 * 100) / 100,
     'Peak RSS': Math.round(memoryUsage.peak.rss / 1024 / 1024 * 100) / 100,
+    'Peak Heap Used Diff': Math.round(memoryUsage.peakDiff.heapUsed / 1024 / 1024 * 100) / 100,
+    'Peak RSS Diff': Math.round(memoryUsage.peakDiff.rss / 1024 / 1024 * 100) / 100,
   });
 
-  // dump the timeline to a file
   fs.writeFileSync('memory-usage-timeline.json', JSON.stringify(memoryUsage.timeline, null, 2));
   fs.writeFileSync('memory-usage-events.json', JSON.stringify(memoryUsage.events, null, 2));
 
-  // await generateMemoryPlot(memoryUsage.timeline, memoryUsage.events);
-  console.log('Memory usage plot has been saved to memory-usage-plot.png');
+  return memoryUsage;
 }
 
+describe('Memory usage tests', () => {
+  test('memory usage stays within limits', async () => {
+    const memoryUsage = await main();
+    const maxHeapUsedDiffMB = Math.round(memoryUsage.peakDiff.heapUsed / 1024 / 1024 * 100) / 100;
+    expect(maxHeapUsedDiffMB).toBeLessThan(50);
+  }, 90000);
+});
+
+// Modify the main execution block
 if (require.main === module) {
   main().catch(console.error);
 }
