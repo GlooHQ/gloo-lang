@@ -269,145 +269,78 @@ numbers like 1, 12, 129.9, etc.
 
 ## Semantic Streaming
 
-Sometimes you will want streaming to behave differently from the behavior
-described above for `Partial` types.
+BAML provides powerful attributes to control how your data streams, ensuring that partial values always maintain semantic validity. Here are the three key streaming attributes:
 
-BAML provides several attributes that can be attached to types
-to control streaming behavior, ensuring that the partial values streamed to you
-are always valid within your own semantics.
-
-  - `@stream.done`: Marks a type that should only be streamed when it is
-    done being read from the LLM response.
-  - `@stream.not_null`: Indicates that the class containing
-     that field should only be streamed if that field is present.
-  - `@stream.with_state`: Adds metadata to a type indicating whether is has
-    finished streaming or not.
-
-This table summarizes how the attributes impact types your will consume from
-streaming clients:
-
-| BAML type                         | Generated type             |
-| --------------------------------- | -------------------------- |
-| `T`                               | `Partial[T]?`              |
-| `T @stream.done`                  | `T?`                       |
-| `T @stream.not_null`              | `Partial[T]`               |
-| `T @stream.done @stream.not_null` | `T`                        |
-| `T @stream.with_state`            | `StreamState[Partial[T]?]` |
-
-    
 ### `@stream.done`
+This attribute ensures a type or field is only streamed when it's completely finished. It's useful when you need atomic, fully-formed values.
 
-To demonstrate the use of `@stream.done`, imagine that a `ReceiptItem`
-must only be considered valid and can only reach the client when its `name`,
-`description`, `quantity` and `price` fields are completely streamed in.
-To achieve this we can annotate the `ReceiptItem` class with the
-`@stream.done` attribute:
-
-```rust
+For example:
+```baml
 class ReceiptItem {
   name string
-  description string?
   quantity int
   price float
-  @@stream.done // <-- This annotation make ReceiptItem non-streaming.
+
+  // The entire ReceiptItem will only stream when complete
+  @@stream.done
 }
-```
 
-When generating the client code for `ReceiptType` none of the fields of
-`ReceiptItem` will be Optional or Partial. And when parsing an LLM response,
-no `ReceiptItem` will be streamed ot you until all of its fields are done being
-streamed in.
+// Receipts is a list of ReceiptItems,
+// each internal item will only stream when complete
+type Receipts = ReceiptItem[]
 
-```rust
 class Person {
-  name string @stream.done
-  phone_number string @stream.done
-  description string
+  // Name will only appear when fully complete,
+  // until then it will be null
+  name string @stream.done     
+  // Numbers (floats and ints) will only appear
+  // when fully complete by default
+  age int                     
+  // Bio will stream token by token
+  bio string                  
 }
 ```
-
-When using `@stream.done` on fields, the fields will never be partially filled,
-although they may be `null`. This `Person` will be streamed to your client one
-piece at a time, and the `description` will be streamed one token at a time.
-However, you will never see a partial `name` or a partial `phone_number` - these
-values will be delivered atomically.
 
 ### `@stream.not_null`
+This attribute ensures a containing object is only streamed when this field has a value. It's particularly useful for discriminator fields or required metadata.
 
-Sometimes the presence of a value is important to the correct interpretation
-of a containing value. This commonly occurs with tags used to determine which
-variant of a union is being used.
-
-For example, in this code, `@stream.not_null` on each of the
-`message_type` fields will ensure that an `Event` is never streamed until
-enough tokens have been received to know precisely what the message type is,
-allowing you to build UI appropriate to the message type before the other
-fields have been completed.
-
-```rust
+For example:
+```baml
 class Message {
-  message_type "greeting" | "within-convo" | "farewell" @stream.not_null
-  gesture ("gesticulate" | "wave" | "shake-hands" | "hug")
-  message string
+  // Message won't stream until type is known
+  type "error" | "success" | "info" @stream.not_null
+  // Timestamp will only appear when fully complete
+  // until then it will be null
+  timestamp string @stream.done                       
+  // Content can stream token by token
+  content string                                      
 }
-
-class Event {
-  speaker string @stream.done
-  event_message: Message
-}
-
-function Chat(history: Event[]) -> Event { ... }
 ```
-
-<Tip>
-You might wonder if it's sufficient to use `@stream.done` on the
-`message_type` field. `@stream.done` applies to types, preventing them
-from streaming out until they are completed. On the other hand,
-`@stream.not_null` applies to fields and prevents a containing object
-from streaming out until that field is present. `@stream.not_null` is more
-appropriate here so that your client will never see a `Message` until
-there is enough information (the `message_type` field) to begin to render
-it.
-
-A type with `@stream.done` will still be converted to a
-nullable field in the generated partial types, and would not
-produce the desired result of witholding a `Message` until its type is
-known. Messages would be streamed with `message_type: null`.
-
-This is a subtle distinction between `@stream.done` and
-`@stream.not_null`. As a rule of thumb, remember that `@stream.done`
-is about the type itself, and `@stream.not_null` is about the type's
-containing context.
-</Tip>
 
 ### `@stream.with_state`
+This attribute adds metadata to track if a field has finished streaming. It's perfect for showing loading states in UIs.
 
-It is often useful to know whether a value is finished, or
-could be updated in future messages. For example, in a frontend,
-you could use this information to render a spinner on data that are
-still streaming. The `@stream.with_state` attribute lets
-you attach metadata to types to indicate this state in client code.
-
-<Tabs>
-<Tab title="BAML">
-```rust
-class Message {
-  message_type "greeting" | "within-convo" | "farewell" @stream.not_null
-  gesture ("gesticulate" | "wave" | "shake-hands" | "hug")?
-  message string @stream.with_state
+For example:
+```baml
+class BlogPost {
+  // The blog post will only stream when title is known
+  title string @stream.done @stream.not_null
+  // The content will stream token by token, and include completion state
+  content string @stream.with_state 
 }
 ```
-</Tab>
+
+This will generate the following code in the `partial_types` module:
+<Tabs>
 <Tab title="Python">
 ```python
 class StreamState(BaseModel, Generic[T]):
   value: T,
   state: "incomplete" | "complete"
 
-class Message(BaseModel):
-  message_type: Union["greeting", "within-convo", "farewell"]
-  gesture: Option[Union["gesticulate", "wave", "shake-hands", "hug"]]
-  message: StreamState[String]
+class BlogPost(BaseModel):
+  title: str
+  content: StreamState[str | None]
 ```
 </Tab>
 
@@ -418,15 +351,29 @@ interface StreamState<T> {
   state: "incomplete" | "complete"
 }
 
-interface Message {
-  message_type: "greeting" | "within-convo" | "farewell",
-  gesture: ("gesticulate" | "wave" | "shake-hands" | "hug")?,
-  message: StreamState<string>,
+interface BlogPost {
+  title: StreamState<string>
+  content: StreamState<string>
 }
 ```
 </Tab>
-
 </Tabs>
+
+### Type Transformation Summary
+
+Here's how these attributes affect your types in generated code:
+
+| BAML Type                         | Generated Type (during streaming)              | Description                                    |
+|----------------------------------|----------------------------|------------------------------------------------|
+| `T`                               | `Partial[T]?`              | Default: Nullable and partial                   |
+| `T @stream.done`                  | `T?`                       | Nullable but always complete when present       |
+| `T @stream.not_null`              | `Partial[T]`               | Always present but may be partial              |
+| `T @stream.done @stream.not_null` | `T`                        | Always present and always complete             |
+| `T @stream.with_state`            | `StreamState[Partial[T]?]` | Includes streaming state metadata              |
+
+<Warning>
+The return type of a function is not affected by streaming attributes!
+</Warning>
 
 ## Putting it all together
 
@@ -434,12 +381,12 @@ Let's put all of these concepts together to design an application that
 streams a conversation containing stock recommendations, using semantic
 streaming to ensure that the streamed data obeys our domain's invariants.
 
-```rust
+```baml
 enum Stock {
-  APPL,
-  MSFT,
-  GOOG,
-  BAML,
+  APPL
+  MSFT
+  GOOG
+  BAML
 }
 
 // Make recommendations atomic - we do not want a recommendation to be
