@@ -217,10 +217,22 @@ export interface ClassToRecAlias {
   
 }
 
+export interface ClassWithBlockDone {
+  i_16_digits: number
+  s_20_words: string
+  
+}
+
 export interface ClassWithImage {
   myImage: Image
   param2: string
   fake_image: FakeImage
+  
+}
+
+export interface ClassWithoutDone {
+  i_16_digits: number
+  s_20_words: string
   
 }
 
@@ -599,6 +611,24 @@ export interface SearchParams {
   company?: WithReasoning | null
   description: WithReasoning[]
   tags: (Tag | string)[]
+  
+}
+
+export interface SemanticContainer {
+  sixteen_digit_number: number
+  string_with_twenty_words: string
+  class_1: ClassWithoutDone
+  class_2: ClassWithBlockDone
+  class_done_needed: ClassWithBlockDone
+  class_needed: ClassWithoutDone
+  three_small_things: SmallThing[]
+  final_string: string
+  
+}
+
+export interface SmallThing {
+  i_16_digits: number
+  i_8_digits: number
   
 }
 

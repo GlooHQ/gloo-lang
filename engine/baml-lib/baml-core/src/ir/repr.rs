@@ -2,8 +2,10 @@ use std::collections::HashSet;
 
 use anyhow::{anyhow, Result};
 use baml_types::{
-    Constraint, ConstraintLevel, FieldType, JinjaExpression, StringOr, UnresolvedValue,
+    Constraint, ConstraintLevel, FieldType, JinjaExpression, Resolvable, StreamingBehavior, StringOr,
+    UnresolvedValue,
 };
+use either::Either;
 use indexmap::{IndexMap, IndexSet};
 use internal_baml_parser_database::{
     walkers::{
@@ -13,7 +15,7 @@ use internal_baml_parser_database::{
     Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy, TypeWalker,
 };
 
-use internal_baml_schema_ast::ast::{self, FieldArity, SubType, ValExpId, WithName, WithSpan};
+use internal_baml_schema_ast::ast::{self, Attribute, FieldArity, SubType, ValExpId, WithName, WithSpan};
 use internal_llm_client::{ClientProvider, ClientSpec, UnresolvedClientProperty};
 use serde::Serialize;
 
@@ -279,6 +281,19 @@ impl NodeAttributes {
     pub fn get(&self, key: &str) -> Option<&UnresolvedValue<()>> {
         self.meta.get(key)
     }
+
+    pub fn streaming_behavior(&self) -> StreamingBehavior {
+        fn is_some_true(maybe_value: Option<&UnresolvedValue<()>>) -> bool {
+            match maybe_value {
+                Some(Resolvable::Bool(true, _)) => true,
+                _ => false,
+            }
+        }
+        StreamingBehavior {
+            done: is_some_true(self.get("stream.done")),
+            state: is_some_true(self.get("stream.with_state")),
+        }
+    }
 }
 
 impl Default for NodeAttributes {
@@ -303,6 +318,9 @@ fn to_ir_attributes(
             dynamic_type,
             skip,
             constraints,
+            streaming_done,
+            streaming_needed,
+            streaming_state,
         } = attributes;
 
         let description = description
@@ -327,11 +345,49 @@ fn to_ir_attributes(
                 None
             }
         });
+        let streaming_done = streaming_done.as_ref().and_then(|v| {
+            if *v {
+                Some((
+                    "stream.done".to_string(),
+                    UnresolvedValue::Bool(true, ()),
+                ))
+            } else {
+                None
+            }
+        });
+        let streaming_needed = streaming_needed.as_ref().and_then(|v| {
+            if *v {
+                Some((
+                    "stream.not_null".to_string(),
+                    UnresolvedValue::Bool(true, ()),
+                ))
+            } else {
+                None
+            }
+        });
+        let streaming_state = streaming_state.as_ref().and_then(|v| {
+            if *v {
+                Some((
+                    "stream.with_state".to_string(),
+                    UnresolvedValue::Bool(true, ()),
+                ))
+            } else {
+                None
+            }
+        });
 
-        let meta = vec![description, alias, dynamic_type, skip]
-            .into_iter()
-            .flatten()
-            .collect();
+        let meta = vec![
+            description,
+            alias,
+            dynamic_type,
+            skip,
+            streaming_done,
+            streaming_needed,
+            streaming_state,
+        ]
+        .into_iter()
+        .filter_map(|s| s)
+        .collect();
         (meta, constraints.clone())
     })
 }
@@ -407,8 +463,27 @@ impl WithRepr<FieldType> for ast::FieldType {
                 })
             })
             .collect::<Vec<Constraint>>();
+        let mut meta = IndexMap::new();
+        if self
+            .attributes()
+            .iter()
+            .find(|Attribute { name, .. }| name.name() == "stream.done")
+            .is_some()
+        {
+            let val: UnresolvedValue<()> = Resolvable::Bool(true, ());
+            meta.insert("stream.done".to_string(), val);
+        }
+        if self
+            .attributes()
+            .iter()
+            .find(|Attribute { name, .. }| name.name() == "stream.with_state")
+            .is_some()
+        {
+            let val: UnresolvedValue<()> = Resolvable::Bool(true, ());
+            meta.insert("stream.with_state".to_string(), val);
+        }
         let attributes = NodeAttributes {
-            meta: IndexMap::new(),
+            meta,
             constraints,
             span: Some(self.span().clone()),
         };
@@ -417,8 +492,10 @@ impl WithRepr<FieldType> for ast::FieldType {
     }
 
     fn repr(&self, db: &ParserDatabase) -> Result<FieldType> {
-        let constraints = WithRepr::attributes(self, db).constraints;
-        let has_constraints = !constraints.is_empty();
+        let attributes = WithRepr::attributes(self, db);
+        let has_constraints = !attributes.constraints.is_empty();
+        let streaming_behavior = attributes.streaming_behavior();
+        let has_special_streaming_behavior = streaming_behavior != StreamingBehavior::default();
         let base = match self {
             ast::FieldType::Primitive(arity, typeval, ..) => {
                 let repr = FieldType::Primitive(*typeval);
@@ -442,9 +519,10 @@ impl WithRepr<FieldType> for ast::FieldType {
                         let base_class = FieldType::Class(class_walker.name().to_string());
                         match class_walker.get_constraints(SubType::Class) {
                             Some(constraints) if !constraints.is_empty() => {
-                                FieldType::Constrained {
+                                FieldType::WithMetadata {
                                     base: Box::new(base_class),
                                     constraints,
+                                    streaming_behavior: streaming_behavior.clone(),
                                 }
                             }
                             _ => base_class,
@@ -454,9 +532,10 @@ impl WithRepr<FieldType> for ast::FieldType {
                         let base_type = FieldType::Enum(enum_walker.name().to_string());
                         match enum_walker.get_constraints(SubType::Enum) {
                             Some(constraints) if !constraints.is_empty() => {
-                                FieldType::Constrained {
+                                FieldType::WithMetadata {
                                     base: Box::new(base_type),
                                     constraints,
+                                    streaming_behavior: streaming_behavior.clone(),
                                 }
                             }
                             _ => base_type,
@@ -515,10 +594,13 @@ impl WithRepr<FieldType> for ast::FieldType {
             ),
         };
 
-        let with_constraints = if has_constraints {
-            FieldType::Constrained {
+
+        let use_metadata = has_constraints || has_special_streaming_behavior;
+        let with_constraints = if use_metadata {
+            FieldType::WithMetadata {
                 base: Box::new(base.clone()),
-                constraints,
+                constraints: attributes.constraints,
+                streaming_behavior,
             }
         } else {
             base
@@ -671,19 +753,17 @@ impl WithRepr<Field> for FieldWalker<'_> {
     }
 
     fn repr(&self, db: &ParserDatabase) -> Result<Field> {
+        let ast_field_type = self.ast_field().expr.as_ref().ok_or(anyhow!(
+            "Internal error occurred while resolving repr of field {:?}",
+            self.name(),
+        ))?;
+        let field_type_attributes = WithRepr::attributes(ast_field_type, db);
+        let field_type = ast_field_type.repr(db)?;
         Ok(Field {
             name: self.name().to_string(),
             r#type: Node {
-                elem: self
-                    .ast_field()
-                    .expr
-                    .clone()
-                    .ok_or(anyhow!(
-                        "Internal error occurred while resolving repr of field {:?}",
-                        self.name(),
-                    ))?
-                    .repr(db)?,
-                attributes: self.attributes(db),
+                elem: field_type,
+                attributes: field_type_attributes,
             },
             docstring: self.get_documentation().map(Docstring),
         })
@@ -1180,6 +1260,20 @@ pub fn make_test_ir(source_code: &str) -> anyhow::Result<IntermediateRepr> {
     Ok(ir)
 }
 
+/// Pull out `StreamingBehavior` from `NodeAttributes`.
+fn streaming_behavior_from_attributes(attributes: &NodeAttributes) -> StreamingBehavior {
+    fn is_some_true(maybe_value: Option<&UnresolvedValue<()>>) -> bool {
+        match maybe_value {
+            Some(Resolvable::Bool(true, _)) => true,
+            _ => false,
+        }
+    }
+    StreamingBehavior {
+        done: is_some_true(attributes.get("stream.done")),
+        state: is_some_true(attributes.get("stream.with_state")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1278,11 +1372,61 @@ mod tests {
     }
 
     #[test]
+    fn test_streaming_attributes() {
+        let ir = make_test_ir(
+            r##"
+            class Foo {
+              foo_int int @stream.not_null
+              foo_bool bool @stream.with_state
+              foo_list int[] @stream.done
+            }
+
+            class Bar {
+              name string @stream.done
+              message string
+              @@stream.done
+            }
+        "##,
+        )
+        .unwrap();
+        let foo = ir.find_class("Foo").unwrap();
+        assert!(!foo.streaming_done());
+        match foo.walk_fields().collect::<Vec<_>>().as_slice() {
+            [field1, field2, field3] => {
+                let type1 = &field1.item.elem.r#type;
+                assert!(field1.streaming_needed());
+                assert!(type1.attributes.get("stream.not_null").is_none());
+                let type2 = &field2.item.elem.r#type;
+                assert!(!field2.streaming_state());
+                assert!(type2.attributes.get("stream.with_state").is_some());
+                let type3 = &field3.item.elem.r#type;
+                assert!(!field3.streaming_done());
+                assert!(type3.attributes.get("stream.done").is_some());
+            }
+            _ => panic!("Expected exactly 3 fields"),
+        }
+        let bar = ir.find_class("Bar").unwrap();
+        assert!(bar.streaming_done());
+        match bar.walk_fields().collect::<Vec<_>>().as_slice() {
+            [field1, field2] => {
+                assert!(!field1.streaming_done());
+                assert!(field1
+                    .item
+                    .elem
+                    .r#type
+                    .attributes
+                    .get("stream.done")
+                    .is_some());
+            }
+            _ => panic!("Expected exactly 2 fields"),
+        }
+    }
+
     fn test_resolve_type_alias() {
         let ir = make_test_ir(
             r##"
-            type One = int 
-            type Two = One 
+            type One = int
+            type Two = One
             type Three = Two
 
             class Test {
@@ -1296,6 +1440,7 @@ mod tests {
         let alias = class.find_field("field").unwrap();
 
         assert_eq!(*alias.r#type(), FieldType::Primitive(TypeValue::Int));
+
     }
 
     #[test]
@@ -1316,7 +1461,7 @@ mod tests {
         let class = ir.find_class("Test").unwrap();
         let alias = class.find_field("field").unwrap();
 
-        let FieldType::Constrained { base, constraints } = alias.r#type() else {
+        let FieldType::WithMetadata { base, constraints, .. } = alias.r#type() else {
             panic!(
                 "expected resolved constrained type, found {:?}",
                 alias.r#type()
