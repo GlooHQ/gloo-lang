@@ -4,7 +4,6 @@ use std::{
 };
 
 use anyhow::{Context,Result};
-use std::collections::HashMap;
 use indexmap::IndexMap;
 use serde::{de::Visitor, ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
 
@@ -741,7 +740,7 @@ fn add_checks<'a, S: SerializeMap>(
 ) -> Result<(), S::Error>
 {
     if !checks.is_empty() {
-        let checks_map: HashMap<_,_> = checks.iter().map(|check| (check.name.clone(), check)).collect();
+        let checks_map: BamlMap<_,_> = checks.iter().map(|check| (check.name.clone(), check)).collect();
         map.serialize_entry("checks", &checks_map)?;
     }
     Ok(())
