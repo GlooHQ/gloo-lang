@@ -542,15 +542,24 @@ navbar-links:
     url: https://discord.gg/BTNBeXGuaS
 
 colors:
-  accentPrimary:
-    light: "#a78bfa"
-    dark: "#a78bfa"
+  accent-primary:
+    light: "#6025d1"
+    dark: "#b794ff"
   background:
     light: "#ffffff"
-    dark: "#1e293b"
+    dark: "#0b0d0e"
+  border:
+    light: "#e2e8f0cc"
+    dark: "#2e2e2ecc"
   sidebar-background:
-    light: "#fefefe"
-    dark: "#1e293b"
+    light: "#ffffff"
+    dark: "#0b0d0e"
+  header-background:
+    light: "#ffffffb3"
+    dark: "#0b0d0eb3"
+  card-background:
+    light: "#ffffff"
+    dark: "#0b0d0e"
 logo:
   light: assets/favicon.ico
   dark: assets/favicon.ico
