@@ -121,9 +121,37 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
         let mut ast = ast::SchemaAst::new();
         for type_def in &type_builder.entries {
             ast.tops.push(match type_def {
-                ast::TypeBuilderEntry::Class(c) => ast::Top::Class(c.to_owned()),
-                ast::TypeBuilderEntry::Enum(e) => ast::Top::Enum(e.to_owned()),
+                ast::TypeBuilderEntry::Class(c) => {
+                    if c.attributes.iter().any(|attr| attr.name.name() == "dynamic") {
+                        diagnostics.push_error(DatamodelError::new_validation_error(
+                            "The `@@dynamic` attribute is not allowed in type_builder blocks",
+                            c.span.to_owned(),
+                        ));
+                        continue;
+                    }
+
+                    ast::Top::Class(c.to_owned())
+                },
+                ast::TypeBuilderEntry::Enum(e) => {
+                    if e.attributes.iter().any(|attr| attr.name.name() == "dynamic") {
+                        diagnostics.push_error(DatamodelError::new_validation_error(
+                            "The `@@dynamic` attribute is not allowed in type_builder blocks",
+                            e.span.to_owned(),
+                        ));
+                        continue;
+                    }
+
+                    ast::Top::Enum(e.to_owned())
+                },
                 ast::TypeBuilderEntry::Dynamic(d) => {
+                    if d.attributes.iter().any(|attr| attr.name.name() == "dynamic") {
+                        diagnostics.push_error(DatamodelError::new_validation_error(
+                            "Dynamic type definitions cannot contain the `@@dynamic` attribute",
+                            d.span.to_owned(),
+                        ));
+                        continue;
+                    }
+
                     let mut dyn_type = d.to_owned();
 
                     // TODO: Extemely ugly hack to avoid collisions in the name
