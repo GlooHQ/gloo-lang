@@ -22,7 +22,7 @@
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/boundaryml/baml)](https://github.com/boundaryml/baml)
 [![License: Apache-2](https://img.shields.io/badge/License-Apache-green.svg)](https://opensource.org/licenses/Apache-2)
-[![BAML Version](https://img.shields.io/pypi/v/baml-py?color=006dad)](https://pypi.org/project/baml-py/)
+[![BAML Version](https://img.shields.io/pypi/v/baml-py?color=006dad&label=BAML%20Version)](https://pypi.org/project/baml-py/)
 
 
 **Try BAML**: [Prompt Fiddle](https://www.promptfiddle.com) • [Examples](https://baml-examples.vercel.app/) • [Example Source Code](https://github.com/BoundaryML/baml-examples)
