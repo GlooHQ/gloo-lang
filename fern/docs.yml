@@ -119,6 +119,7 @@ navigation:
             icon: fa-solid fa-terminal
             path: 01-guide/04-baml-basics/my-first-function.mdx
           - page: Switching LLMs
+            slug: switching-llms
             icon: fa-regular fa-random
             path: 01-guide/04-baml-basics/switching-llms.mdx
           - page: Testing functions
@@ -588,6 +589,8 @@ typography:
 
 # Legacy docs
 redirects:
+  - source: "/guide/baml-basics/switching-ll-ms"
+    destination: "/guide/baml-basics/switching-llms"
   - source: "/docs/get-started/what-is-baml"
     destination: "/guide/introduction/what-is-baml"
   - source: "/docs/get-started/interactive-demos"
