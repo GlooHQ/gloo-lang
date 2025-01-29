@@ -2989,7 +2989,7 @@ class BamlSyncClient:
         tb,
         __cr__,
       )
-      return cast(types.TestMemoryOutput, raw.cast_to(types, types))
+      return cast(types.TestMemoryOutput, raw.cast_to(types, types, partial_types, False))
     
     def TestMulticlassNamedArgs(
         self,
@@ -7211,8 +7211,8 @@ class BamlStreamClient:
 
       return baml_py.BamlSyncStream[partial_types.TestMemoryOutput, types.TestMemoryOutput](
         raw,
-        lambda x: cast(partial_types.TestMemoryOutput, x.cast_to(types, partial_types)),
-        lambda x: cast(types.TestMemoryOutput, x.cast_to(types, types)),
+        lambda x: cast(partial_types.TestMemoryOutput, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.TestMemoryOutput, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     

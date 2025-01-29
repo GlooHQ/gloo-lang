@@ -158,6 +158,7 @@ module Baml
     class ClassWithBlockDone < T::Struct; end
     class ClassWithImage < T::Struct; end
     class ClassWithoutDone < T::Struct; end
+    class ComplexMemoryObject < T::Struct; end
     class CompoundBigNumbers < T::Struct; end
     class ContactInfo < T::Struct; end
     class CustomTaskResult < T::Struct; end
@@ -411,6 +412,24 @@ module Baml
         super(
           i_16_digits: props[:i_16_digits],
           s_20_words: props[:s_20_words],
+        )
+
+        @props = props
+      end
+    end
+    class ComplexMemoryObject < T::Struct
+      include Baml::Sorbet::Struct
+      const :id, String
+      const :name, String
+      const :description, String
+      const :metadata, T::Array[T.any(String, Integer, Float)]
+
+      def initialize(props)
+        super(
+          id: props[:id],
+          name: props[:name],
+          description: props[:description],
+          metadata: props[:metadata],
         )
 
         @props = props
@@ -1393,10 +1412,12 @@ module Baml
     class TestMemoryOutput < T::Struct
       include Baml::Sorbet::Struct
       const :items, T::Array[T.any(Baml::Types::MemoryObject, Baml::Types::ComplexMemoryObject)]
+      const :more_items, T::Array[T.any(Baml::Types::MemoryObject, Baml::Types::ComplexMemoryObject)]
 
       def initialize(props)
         super(
           items: props[:items],
+          more_items: props[:more_items],
         )
 
         @props = props

@@ -1,67 +1,57 @@
 [
   {
-    "timestamp": 1738089827372,
-    "heapUsed": 15015520,
-    "rss": 147570688
+    "timestamp": 1738192962451,
+    "heapUsed": 10919744,
+    "rss": 122372096
   },
   {
-    "timestamp": 1738089828373,
-    "heapUsed": 15237768,
-    "rss": 164954112
+    "timestamp": 1738192963451,
+    "heapUsed": 11078824,
+    "rss": 123453440
   },
   {
-    "timestamp": 1738089829373,
-    "heapUsed": 15405240,
-    "rss": 185860096
+    "timestamp": 1738192964451,
+    "heapUsed": 11235928,
+    "rss": 124420096
   },
   {
-    "timestamp": 1738089830375,
-    "heapUsed": 15686336,
-    "rss": 247382016
+    "timestamp": 1738192965452,
+    "heapUsed": 11404016,
+    "rss": 126304256
   },
   {
-    "timestamp": 1738089831376,
-    "heapUsed": 15791184,
-    "rss": 258621440
+    "timestamp": 1738192966453,
+    "heapUsed": 11590576,
+    "rss": 127205376
   },
   {
-    "timestamp": 1738089832377,
-    "heapUsed": 15814440,
-    "rss": 259063808
+    "timestamp": 1738192967453,
+    "heapUsed": 11742352,
+    "rss": 128827392
   },
   {
-    "timestamp": 1738089833377,
-    "heapUsed": 15836360,
-    "rss": 259096576
+    "timestamp": 1738192968454,
+    "heapUsed": 11911472,
+    "rss": 130433024
   },
   {
-    "timestamp": 1738089834378,
-    "heapUsed": 15875392,
-    "rss": 258244608
+    "timestamp": 1738192969454,
+    "heapUsed": 12062152,
+    "rss": 127139840
   },
   {
-    "timestamp": 1738089835379,
-    "heapUsed": 11226776,
-    "rss": 200949760
+    "timestamp": 1738192970454,
+    "heapUsed": 10982248,
+    "rss": 117768192
   },
   {
-    "timestamp": 1738089836379,
-    "heapUsed": 11468824,
-    "rss": 237256704
+    "timestamp": 1738192971455,
+    "heapUsed": 11197720,
+    "rss": 119767040
   },
   {
-    "timestamp": 1738089837379,
-    "heapUsed": 11808064,
-    "rss": 342212608
-  },
-  {
-    "timestamp": 1738089838381,
-    "heapUsed": 12117176,
-    "rss": 450527232
-  },
-  {
-    "timestamp": 1738089839382,
-    "heapUsed": 11406696,
-    "rss": 345292800
+    "timestamp": 1738192972456,
+    "heapUsed": 11357960,
+    "rss": 121061376
   }
 ]

@@ -236,6 +236,14 @@ export interface ClassWithoutDone {
   
 }
 
+export interface ComplexMemoryObject {
+  id: string
+  name: string
+  description: string
+  metadata: (string | number | number)[]
+  
+}
+
 export interface CompoundBigNumbers {
   big: BigNumbers
   big_nums: BigNumbers[]
@@ -673,6 +681,7 @@ export interface TestClassWithEnum {
 
 export interface TestMemoryOutput {
   items: (MemoryObject | ComplexMemoryObject)[]
+  more_items: (MemoryObject | ComplexMemoryObject)[]
   
 }
 

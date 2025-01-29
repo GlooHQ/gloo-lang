@@ -1,6 +1,6 @@
 use anyhow::Result;
 use async_std::stream::StreamExt;
-use baml_types::BamlValue;
+use baml_types::{BamlValue, BamlValueWithMeta};
 use internal_baml_core::ir::repr::IntermediateRepr;
 use jsonish::BamlValueWithFlags;
 use web_time::Duration;
@@ -64,10 +64,20 @@ where
                     if let Some(on_event) = on_event.as_ref() {
                         if let LLMResponse::Success(s) = &stream_part {
                             let response_value = partial_parse_fn(&s.content);
+                            let response_value_without_flags = match response_value {
+                                Ok(baml_value) => {
+                                    let baml_value_without_flags: BamlValue =
+                                        baml_value.clone().into();
+                                    Ok(ResponseBamlValue(
+                                        baml_value.0.map_meta_owned(|m| (vec![], m.1, m.2)),
+                                    ))
+                                }
+                                Err(e) => Err(e),
+                            };
                             on_event(FunctionResult::new(
                                 node.scope.clone(),
                                 LLMResponse::Success(s.clone()),
-                                Some(response_value),
+                                Some(response_value_without_flags),
                             ));
                         }
                     }
@@ -96,16 +106,18 @@ where
                     .finish_reason_filter()
                     .is_allowed(s.metadata.finish_reason.as_ref())
                 {
-                    Some(Err(anyhow::anyhow!(crate::errors::ExposedError::FinishReasonError {
-                        prompt: s.prompt.to_string(),
-                        raw_output: s.content.clone(),
-                        message: "Finish reason not allowed".to_string(),
-                        finish_reason: s.metadata.finish_reason.clone(),
-                    })))
+                    Some(Err(anyhow::anyhow!(
+                        crate::errors::ExposedError::FinishReasonError {
+                            prompt: s.prompt.to_string(),
+                            raw_output: s.content.clone(),
+                            message: "Finish reason not allowed".to_string(),
+                            finish_reason: s.metadata.finish_reason.clone(),
+                        }
+                    )))
                 } else {
                     Some(parse_fn(&s.content))
                 }
-            },
+            }
             _ => None,
         };
         let sleep_duration = node.error_sleep_duration().cloned();

@@ -4143,7 +4143,7 @@ module Baml
         baml_options[:tb]&.instance_variable_get(:@registry),
         baml_options[:client_registry],
       )
-      (raw.parsed_using_types(Baml::Types))
+      (raw.parsed_using_types(Baml::Types, Baml::PartialTypes, false))
     end
 
     sig {
@@ -9145,7 +9145,7 @@ module Baml
         baml_options[:tb]&.instance_variable_get(:@registry),
         baml_options[:client_registry],
       )
-      Baml::BamlStream[Baml::PartialTypes::TestMemoryOutput, Baml::Types::TestMemoryOutput].new(
+      Baml::BamlStream[T.nilable(Baml::PartialTypes::TestMemoryOutput), Baml::Types::TestMemoryOutput].new(
         ffi_stream: raw,
         ctx_manager: @ctx_manager
       )

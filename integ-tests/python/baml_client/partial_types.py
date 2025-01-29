@@ -88,6 +88,12 @@ class ClassWithoutDone(BaseModel):
     i_16_digits: Optional[int] = None
     s_20_words: StreamState[Optional[str]]
 
+class ComplexMemoryObject(BaseModel):
+    id: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+    metadata: List[Optional[Union[Optional[str], Optional[int], Optional[float]]]]
+
 class CompoundBigNumbers(BaseModel):
     big: Optional["BigNumbers"] = None
     big_nums: List["BigNumbers"]
@@ -389,6 +395,7 @@ class TestClassWithEnum(BaseModel):
 
 class TestMemoryOutput(BaseModel):
     items: List[Optional[Union["MemoryObject", "ComplexMemoryObject"]]]
+    more_items: List[Optional[Union["MemoryObject", "ComplexMemoryObject"]]]
 
 class TestOutputClass(BaseModel):
     prop1: Optional[str] = None

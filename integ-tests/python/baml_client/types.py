@@ -208,6 +208,12 @@ class ClassWithoutDone(BaseModel):
     i_16_digits: int
     s_20_words: str
 
+class ComplexMemoryObject(BaseModel):
+    id: str
+    name: str
+    description: str
+    metadata: List[Union[str, int, float]]
+
 class CompoundBigNumbers(BaseModel):
     big: "BigNumbers"
     big_nums: List["BigNumbers"]
@@ -509,6 +515,7 @@ class TestClassWithEnum(BaseModel):
 
 class TestMemoryOutput(BaseModel):
     items: List[Union["MemoryObject", "ComplexMemoryObject"]]
+    more_items: List[Union["MemoryObject", "ComplexMemoryObject"]]
 
 class TestOutputClass(BaseModel):
     prop1: str

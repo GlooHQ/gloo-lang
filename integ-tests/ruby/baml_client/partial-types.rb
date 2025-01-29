@@ -33,6 +33,7 @@ module Baml
     class ClassWithBlockDone < T::Struct; end
     class ClassWithImage < T::Struct; end
     class ClassWithoutDone < T::Struct; end
+    class ComplexMemoryObject < T::Struct; end
     class CompoundBigNumbers < T::Struct; end
     class ContactInfo < T::Struct; end
     class CustomTaskResult < T::Struct; end
@@ -286,6 +287,24 @@ module Baml
         super(
           i_16_digits: props[:i_16_digits],
           s_20_words: props[:s_20_words],
+        )
+
+        @props = props
+      end
+    end
+    class ComplexMemoryObject < T::Struct
+      include Baml::Sorbet::Struct
+      const :id, T.nilable(String)
+      const :name, T.nilable(String)
+      const :description, T.nilable(String)
+      const :metadata, T::Array[T.nilable(T.any(T.nilable(String), T.nilable(Integer), T.nilable(Float)))]
+
+      def initialize(props)
+        super(
+          id: props[:id],
+          name: props[:name],
+          description: props[:description],
+          metadata: props[:metadata],
         )
 
         @props = props
@@ -1267,11 +1286,13 @@ module Baml
     end
     class TestMemoryOutput < T::Struct
       include Baml::Sorbet::Struct
-      const :items, T::Array[T.nilable(T.any(Baml::PartialTypes::MemoryObject, Baml::PartialTypes::ComplexMemoryObject))]
+      const :items, T::Array[T.nilable(T.any(T.nilable(Baml::PartialTypes::MemoryObject), T.nilable(Baml::PartialTypes::ComplexMemoryObject)))]
+      const :more_items, T::Array[T.nilable(T.any(T.nilable(Baml::PartialTypes::MemoryObject), T.nilable(Baml::PartialTypes::ComplexMemoryObject)))]
 
       def initialize(props)
         super(
           items: props[:items],
+          more_items: props[:more_items],
         )
 
         @props = props

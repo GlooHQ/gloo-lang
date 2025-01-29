@@ -99,6 +99,13 @@ export interface ClassWithoutDone {
     s_20_words?: StreamState<(string | null)>
 }
 
+export interface ComplexMemoryObject {
+    id?: (string | null)
+    name?: (string | null)
+    description?: (string | null)
+    metadata?: ((string | null) | (number | null) | (number | null) | null)[]
+}
+
 export interface CompoundBigNumbers {
     big?: partial_types.BigNumbers | null
     big_nums?: partial_types.BigNumbers | null[]
@@ -283,6 +290,12 @@ export interface Martian {
     age?: Checked<(number | null),"young_enough">
 }
 
+export interface MemoryObject {
+    id?: (string | null)
+    name?: (string | null)
+    description?: (string | null)
+}
+
 export interface MergeAttrs {
     amount?: Checked<(number | null),"gt_ten">
 }
@@ -460,6 +473,11 @@ export interface TestClassNested {
 export interface TestClassWithEnum {
     prop1?: (string | null)
     prop2?: (EnumInClass | null)
+}
+
+export interface TestMemoryOutput {
+    items?: (partial_types.MemoryObject | null | partial_types.ComplexMemoryObject | null | null)[]
+    more_items?: (partial_types.MemoryObject | null | partial_types.ComplexMemoryObject | null | null)[]
 }
 
 export interface TestOutputClass {

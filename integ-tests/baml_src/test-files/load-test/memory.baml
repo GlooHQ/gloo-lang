@@ -19,6 +19,9 @@ class TestMemoryOutput {
   items (MemoryObject | ComplexMemoryObject)[] @description(#"
     Add 10 items, which can be either simple MemoryObjects or more complex MemoryObjects with metadata.
   "#)
+  more_items (MemoryObject | ComplexMemoryObject)[] @description(#"
+    Add 3 more items, which can be either simple MemoryObjects or more complex MemoryObjects with metadata.
+  "#)
 }
 
 
