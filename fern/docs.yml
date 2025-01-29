@@ -544,12 +544,16 @@ navbar-links:
 colors:
   accentPrimary:
     light: "#a78bfa"
+    dark: "#a78bfa"
   background:
     light: "#ffffff"
+    dark: "#1e293b"
   sidebar-background:
     light: "#fefefe"
+    dark: "#1e293b"
 logo:
   light: assets/favicon.ico
+  dark: assets/favicon.ico
   height: 40
 favicon: assets/favicon.ico
 css: assets/styles.css
