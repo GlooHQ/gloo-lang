@@ -16,7 +16,7 @@
 import baml_py
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
-from typing import Dict, List, Optional, Union, Literal
+from typing import Dict, Generic, List, Optional, TypeVar, Union, Literal
 
 from . import types
 from .types import Checked, Check
@@ -27,6 +27,11 @@ from .types import Checked, Check
 #  is still being built up and any of its fields is not yet fully available.
 #
 ###############################################################################
+
+T = TypeVar('T')
+class StreamState(BaseModel, Generic[T]):
+    value: T
+    state: Literal["Pending", "Incomplete", "Complete"]
 
 
 class BigNumbers(BaseModel):
@@ -70,16 +75,18 @@ class ClassOptionalOutput2(BaseModel):
 class ClassToRecAlias(BaseModel):
     list: Optional["LinkedListAliasNode"] = None
 
+class ClassWithBlockDone(BaseModel):
+    i_16_digits: Optional[int] = None
+    s_20_words: Optional[str] = None
+
 class ClassWithImage(BaseModel):
     myImage: Optional[baml_py.Image] = None
     param2: Optional[str] = None
     fake_image: Optional["FakeImage"] = None
 
-class ComplexMemoryObject(BaseModel):
-    id: Optional[str] = None
-    name: Optional[str] = None
-    description: Optional[str] = None
-    metadata: List[Optional[Union[Optional[str], Optional[int], Optional[float]]]]
+class ClassWithoutDone(BaseModel):
+    i_16_digits: Optional[int] = None
+    s_20_words: StreamState[Optional[str]]
 
 class CompoundBigNumbers(BaseModel):
     big: Optional["BigNumbers"] = None
@@ -343,6 +350,20 @@ class SearchParams(BaseModel):
     company: Optional["WithReasoning"] = None
     description: List["WithReasoning"]
     tags: List[Optional[Union[Optional[types.Tag], Optional[str]]]]
+
+class SemanticContainer(BaseModel):
+    sixteen_digit_number: Optional[int] = None
+    string_with_twenty_words: Optional[str] = None
+    class_1: Optional["ClassWithoutDone"] = None
+    class_2: Optional["types.ClassWithBlockDone"] = None
+    class_done_needed: "types.ClassWithBlockDone"
+    class_needed: "ClassWithoutDone"
+    three_small_things: List["SmallThing"]
+    final_string: Optional[str] = None
+
+class SmallThing(BaseModel):
+    i_16_digits: int
+    i_8_digits: Optional[int] = None
 
 class SomeClassNestedDynamic(BaseModel):
     model_config = ConfigDict(extra='allow')
