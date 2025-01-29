@@ -95,7 +95,7 @@ impl ParserDatabase {
         }
     }
 
-    /// TODO: Temporary solution until we implement scoping in the AST.
+    /// TODO: #1343 Temporary solution until we implement scoping in the AST.
     pub fn add_test_case_db(&mut self, test_cases_id: ValExpId, scoped_db: Self) {
         self.types
             .test_cases

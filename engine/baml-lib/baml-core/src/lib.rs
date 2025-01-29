@@ -168,9 +168,7 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
                     match db.find_type_by_str(d.name()) {
                         Some(t) => match t {
                             TypeWalker::Class(cls) => {
-                                if cls.get_default_attributes(ast::SubType::Class)
-                                    .is_none_or(|attrs| attrs.dynamic_type.unwrap_or(false))
-                                {
+                                if !cls.ast_type_block().attributes.iter().any(|attr| attr.name.name() == "dynamic") {
                                     diagnostics.push_error(DatamodelError::new_validation_error(
                                         &format!(
                                             "Type '{}' does not contain the `@@dynamic` attribute so it cannot be modified in a type builder block",
@@ -184,8 +182,7 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
                                 ast::Top::Class(dyn_type)
                             },
                             TypeWalker::Enum(enm) => {
-                                if enm.get_default_attributes(ast::SubType::Enum)
-                                    .is_none_or(|attrs| attrs.dynamic_type.unwrap_or(false))
+                                if !enm.ast_type_block().attributes.iter().any(|attr| attr.name.name() == "dynamic")
                                 {
                                     diagnostics.push_error(DatamodelError::new_validation_error(
                                         &format!(

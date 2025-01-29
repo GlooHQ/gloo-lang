@@ -177,7 +177,7 @@ pub struct TestCase {
     pub args_field_span: Span,
     pub constraints: Vec<(Constraint, Span, Span)>,
     pub type_builder: Option<TypeBuilderBlock>,
-    // TODO: Temporary solution until we implement scoping in the AST.
+    // TODO: #1343 Temporary solution until we implement scoping in the AST.
     pub type_builder_scoped_db: ParserDatabase,
 }
 

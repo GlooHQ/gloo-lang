@@ -614,6 +614,7 @@ impl WithRepr<Enum> for EnumWalker<'_> {
 
     fn repr(&self, db: &ParserDatabase) -> Result<Enum> {
         Ok(Enum {
+            // TODO: #1343 Temporary solution until we implement scoping in the AST.
             name: if self.ast_type_block().is_dynamic_type_def {
                 self.name().strip_prefix("Dynamic").unwrap().to_string()
             } else {
@@ -706,6 +707,7 @@ impl WithRepr<Class> for ClassWalker<'_> {
 
     fn repr(&self, db: &ParserDatabase) -> Result<Class> {
         Ok(Class {
+            // TODO: #1343 Temporary solution until we implement scoping in the AST.
             name: if self.ast_type_block().is_dynamic_type_def {
                 self.name().strip_prefix("Dynamic").unwrap().to_string()
             } else {
@@ -1096,7 +1098,7 @@ impl WithRepr<TestCase> for ConfigurationWalker<'_> {
             .map(|i| (self, i).node(db))
             .collect::<Result<Vec<_>>>()?;
 
-        // TODO: Temporary solution until we implement scoping in the AST.
+        // TODO: #1343 Temporary solution until we implement scoping in the AST.
         let enums = self
             .test_case()
             .type_builder_scoped_db

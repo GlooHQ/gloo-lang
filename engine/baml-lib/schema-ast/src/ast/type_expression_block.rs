@@ -86,7 +86,7 @@ pub struct TypeExpressionBlock {
 
     /// This is used to distinguish between enums and classes.
     pub sub_type: SubType,
-    /// TODO: Temporary solution until we implement scoping in the AST.
+    /// TODO: #1343 Temporary solution until we implement scoping in the AST.
     pub is_dynamic_type_def: bool,
 }
 
