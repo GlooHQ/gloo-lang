@@ -307,7 +307,6 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
         for entry in test.type_builder_contents() {
             match entry {
                 TypeBuilderEntry::Class(cls) => {
-                    eprintln!("Class : {:#?}", cls.elem);
                     let mutex = type_builder.class(&cls.elem.name);
                     let class_builder = mutex.lock().unwrap();
                     for f in &cls.elem.static_fields {

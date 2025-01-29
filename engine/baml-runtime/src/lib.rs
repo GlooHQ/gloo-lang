@@ -228,8 +228,6 @@ impl BamlRuntime {
             .get_test_type_builder(function_name, test_name, ctx)
             .unwrap();
 
-        eprintln!("type_builder: {:#?}", type_builder);
-
         let run_to_response = || async {
             let rctx = ctx.create_ctx(type_builder.as_ref(), None)?;
             let (params, constraints) =

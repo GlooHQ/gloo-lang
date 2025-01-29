@@ -220,7 +220,6 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
         scoped_db.add_ast(ast);
 
         if let Err(d) = scoped_db.validate(&mut diagnostics) {
-            eprintln!("Error in scoped db: {:?}", d);
             diagnostics.push(d);
             continue;
         }
