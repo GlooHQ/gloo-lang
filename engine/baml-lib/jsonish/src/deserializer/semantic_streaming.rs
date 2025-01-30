@@ -3,16 +3,16 @@
 
 use crate::deserializer::coercer::ParsingError;
 use crate::{BamlValueWithFlags, Flag};
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use internal_baml_core::ir::repr::{IntermediateRepr, Walker};
 use internal_baml_core::ir::{Field, IRHelper};
 
 use baml_types::{
-    BamlValueWithMeta, Completion, CompletionState, FieldType, ResponseCheck, StreamingBehavior, TypeValue,
+    BamlMap, BamlValueWithMeta, Completion, CompletionState, FieldType, ResponseCheck, StreamingBehavior, TypeValue,
 };
 
 use anyhow::{Context, Error};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use thiserror;
 
 #[derive(Debug, thiserror::Error)]
@@ -97,7 +97,7 @@ fn process_node(
             new_meta,
         )),
         BamlValueWithMeta::Class(ref class_name, value_fields, _) => {
-            let value_field_names: HashSet<String> = value_fields
+            let value_field_names: IndexSet<String> = value_fields
                 .keys()
                 .into_iter()
                 .map(|s| s.to_string())
@@ -108,16 +108,16 @@ fn process_node(
             // fields in the Class type that are not present in the input
             // value.
             let fields_needing_null =
-                fields_needing_null_filler(ir, field_type, value_field_names, allow_partials)?;
+                fields_needing_null_filler(ir, field_type, value_field_names.iter().cloned().collect(), allow_partials)?;
 
             // We might later delete fields from 'value_fields`, (e.g. if they
             // were incomplete but required `done`). These deleted fields will
-            // need to be replaced with nulls. We initialize a hashmap to hold
+            // need to be replaced with nulls. We initialize a map to hold
             // these nulls here.
-            let mut deletion_nulls: HashMap<String, BamlValueWithMeta<Completion>> =
-                HashMap::new();
+            let mut deletion_nulls: BamlMap<String, BamlValueWithMeta<Completion>> =
+                BamlMap::new();
 
-            // Null values used to fill gaps in the input hashmap.
+            // Null values used to fill gaps in the input map.
             let filler_nulls = fields_needing_null
                 .into_iter()
                 .filter_map(|ref null_field_name| {
@@ -137,7 +137,7 @@ fn process_node(
                 })
                 .collect::<IndexMap<String, BamlValueWithMeta<Completion>>>();
 
-            // Fields of the input hashmap, transformed by running the
+            // Fields of the input map, transformed by running the
             // semantic-streaming algorithm, and deleted if appropriate.
             let mut new_fields = value_fields
                 .into_iter()
@@ -165,7 +165,7 @@ fn process_node(
                 })
                 .collect::<IndexMap<String, BamlValueWithMeta<_>>>();
 
-            // Names of fields from the input hashmap that survived semantic streaming.
+            // Names of fields from the input map that survived semantic streaming.
             let derived_present_nonnull_fields: HashSet<String> = new_fields.iter().filter_map(|(field_name, field_value)| {
                 if matches!(field_value, BamlValueWithMeta::Null(_)) {
                     None
@@ -177,6 +177,18 @@ fn process_node(
 
             new_fields.extend(filler_nulls);
             new_fields.extend(deletion_nulls);
+
+            let class_definition_fields = type_field_names(ir, field_type);
+            new_fields.sort_by(|k1, _v1, k2, _v2| {
+                let index1 = class_definition_fields.get_index_of(k1);
+                let index2 = class_definition_fields.get_index_of(k2);
+                match (index1, index2) {
+                    (Some(i1), Some(i2)) => i1.cmp(&i2),
+                    (Some(_), None) => std::cmp::Ordering::Less,
+                    (None, Some(_)) => std::cmp::Ordering::Greater,
+                    (None, None) => std::cmp::Ordering::Equal,
+                }
+            });
 
             let res = BamlValueWithMeta::Class(class_name.clone(), new_fields, new_meta);
             if missing_needed_fields.clone().len() == 0 {
@@ -200,10 +212,25 @@ fn process_node(
     new_value
 }
 
+/// Extract the field names from a field_type that is expected to be a `Class`.
+/// If it is not a known class, return no field names.
+fn type_field_names(
+    ir: &IntermediateRepr,
+    field_type: &FieldType,
+) -> IndexSet<String> {
+    match ir.distribute_metadata(field_type).0 {
+        FieldType::Class(class_name) => match ir.find_class(class_name) {
+            Err(_) => IndexSet::new(),
+            Ok(class) => { class.walk_fields().map(|field| field.name().to_string() ).collect() }
+        },
+        _ => IndexSet::new()
+    }
+}
 
-/// Given a type and an input hashmap, if that type is a class, determine what
+
+/// Given a type and an input map, if that type is a class, determine what
 /// fields in the class need to be filled in by a null. A field needs to be
-/// filled by a null if it is not present in the hashmap value.
+/// filled by a null if it is not present in the map value.
 fn fields_needing_null_filler<'a>(
     ir: &'a IntermediateRepr,
     field_type: &'a FieldType,
