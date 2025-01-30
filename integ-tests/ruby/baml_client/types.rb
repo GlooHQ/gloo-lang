@@ -216,6 +216,7 @@ module Baml
     class ReceiptInfo < T::Struct; end
     class ReceiptItem < T::Struct; end
     class Recipe < T::Struct; end
+    class RecursiveAliasDependency < T::Struct; end
     class Resume < T::Struct; end
     class Schema < T::Struct; end
     class SearchParams < T::Struct; end
@@ -1241,6 +1242,18 @@ module Baml
         super(
           ingredients: props[:ingredients],
           recipe_type: props[:recipe_type],
+        )
+
+        @props = props
+      end
+    end
+    class RecursiveAliasDependency < T::Struct
+      include Baml::Sorbet::Struct
+      const :value, T.anything
+
+      def initialize(props)
+        super(
+          value: props[:value],
         )
 
         @props = props

@@ -605,6 +605,11 @@ export interface Recipe {
   
 }
 
+export interface RecursiveAliasDependency {
+  value: JsonValue
+  
+}
+
 export interface Resume {
   name: string
   email: string
