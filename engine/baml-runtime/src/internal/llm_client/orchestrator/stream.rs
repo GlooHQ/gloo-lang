@@ -65,13 +65,9 @@ where
                         if let LLMResponse::Success(s) = &stream_part {
                             let response_value = partial_parse_fn(&s.content);
                             let response_value_without_flags = match response_value {
-                                Ok(baml_value) => {
-                                    let baml_value_without_flags: BamlValue =
-                                        baml_value.clone().into();
-                                    Ok(ResponseBamlValue(
-                                        baml_value.0.map_meta_owned(|m| (vec![], m.1, m.2)),
-                                    ))
-                                }
+                                Ok(baml_value) => Ok(ResponseBamlValue(
+                                    baml_value.0.map_meta_owned(|m| (vec![], m.1, m.2)),
+                                )),
                                 Err(e) => Err(e),
                             };
                             on_event(FunctionResult::new(
