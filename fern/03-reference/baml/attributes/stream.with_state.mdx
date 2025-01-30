@@ -1,0 +1,71 @@
+The `@stream.with_state` attribute adds metadata to track if a field has finished
+streaming. This is particularly useful for UI implementations where you need to
+show loading states or progress indicators while content is streaming.
+
+## Streaming Impact
+
+### Without `@stream.with_state`
+
+```baml BAML
+class BlogPost {
+  title string
+  content string
+}
+```
+
+During streaming, fields are simply nullable:
+```json
+{"title": "My Blog", "content": "This is the b"}
+{"title": "My Blog", "content": "This is the beginning"}
+```
+
+### With `@stream.with_state`
+
+```baml BAML
+class BlogPost {
+  title string
+  content string @stream.with_state
+}
+```
+
+The content field includes streaming state metadata:
+```json
+{"title": "My Blog", "content": {"value": "This is the b", "state": "Incomplete"}}
+{"title": "My Blog", "content": {"value": "This is the beginning", "state": "Complete"}}
+```
+
+## Generated Types
+
+A `StreamState` wrapper type is available in the `partial_types` module:
+
+```typescript
+interface StreamState<T> {
+  value: T,
+  state: "Incomplete" | "Complete"
+}
+```
+
+## Common Use Cases
+
+- Building responsive UIs with loading indicators.
+- Tracking completion status of streaming fields.
+- Managing UI state transitions during streaming.
+
+## Type Transformation
+
+When using `@stream.with_state`, the type transformation in generated code is:
+- Regular type `T` becomes `StreamState[Partial[T]?]` (includes streaming state metadata)
+- Can be combined with other streaming attributes for more specific behavior
+
+## Combining with Other Streaming Attributes
+
+`@stream.with_state` can be combined with other streaming attributes for precise control:
+
+```baml BAML
+class BlogPost {
+  // Title will be complete when present and include state information.
+  title string @stream.with_state @stream.done
+  // Content will stream token by token with state information
+  content string @stream.with_state
+}
+```

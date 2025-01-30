@@ -1,0 +1,63 @@
+The `@stream.not_null` attribute ensures a containing object is only streamed when
+the marked field has a value. This is particularly useful for discriminator fields
+or required metadata where the presence of certain fields is essential for the
+object to be meaningful.
+
+## Streaming Impact
+
+### Without `@stream.not_null`
+
+```baml BAML
+class Message {
+  type "error" | "success"
+  content string
+}
+```
+
+During streaming, the object will stream even when the type is unknown:
+```json
+{"type": null, "content": "An error occurred"}
+{"type": "error", "content": "An error occurred"}
+```
+
+### With `@stream.not_null`
+
+```baml BAML
+class Message {
+  type "error" | "success" @stream.not_null
+  content string
+}
+```
+
+The object will only stream once the type field has a value:
+```json
+{"type": "error", "content": "An"}
+{"type": "error", "content": "An error"}
+{"type": "error", "content": "An error occurred"}
+```
+
+## Common Use Cases
+
+- Ensuring discriminator fields are present before streaming.
+- Guaranteeing critical metadata is available.
+- Maintaining data validity in streaming responses.
+- Working with fields that are required for type identification.
+
+## Type Transformation
+
+When using `@stream.not_null`, the type transformation in generated code is:
+- Regular type `T` becomes `Partial[T]` (always present but may be partial).
+- When combined with `@stream.done`, type `T` becomes `T` (always present and complete).
+
+## Combining with Other Streaming Attributes
+
+`@stream.not_null` can be combined with other streaming attributes for fine-grained control:
+
+```baml BAML
+class BlogPost {
+  // The blog post will only stream when title is known and complete.
+  title string @stream.done @stream.not_null
+  // Content will stream token by token.
+  content string
+}
+```

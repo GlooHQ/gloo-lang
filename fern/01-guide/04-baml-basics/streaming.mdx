@@ -336,7 +336,7 @@ This will generate the following code in the `partial_types` module:
 ```python
 class StreamState(BaseModel, Generic[T]):
   value: T,
-  state: "incomplete" | "complete"
+  state: "Incomplete" | "Complete"
 
 class BlogPost(BaseModel):
   title: str
@@ -348,11 +348,11 @@ class BlogPost(BaseModel):
 ```typescript
 interface StreamState<T> {
   value: T,
-  state: "incomplete" | "complete"
+  state: "Incomplete" | "Complete"
 }
 
 interface BlogPost {
-  title: StreamState<string>
+  title: string
   content: StreamState<string>
 }
 ```
@@ -370,10 +370,6 @@ Here's how these attributes affect your types in generated code:
 | `T @stream.not_null`              | `Partial[T]`               | Always present but may be partial              |
 | `T @stream.done @stream.not_null` | `T`                        | Always present and always complete             |
 | `T @stream.with_state`            | `StreamState[Partial[T]?]` | Includes streaming state metadata              |
-
-<Warning>
-The return type of a function is not affected by streaming attributes!
-</Warning>
 
 ## Putting it all together
 

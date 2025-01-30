@@ -1,0 +1,60 @@
+The `@stream.done` attribute changes the streaming behavior of a type.
+
+## Streaming Impact
+
+### Without `@stream.done`
+
+```baml BAML
+class Person {
+  name string
+  age int
+}
+```
+
+During streaming, fields will be populated as they come in:
+```json
+{"name": "Jo"}
+{"name": "John", "age": null}
+{"name": "John Smith", "age": 30}
+```
+
+### With `@stream.done`
+
+```baml BAML
+class Person {
+  name string @stream.done
+  age int
+}
+```
+
+The name field will only appear when fully complete:
+```json
+{"name": null, "age": null}
+{"name": "John Smith", "age": null}
+{"name": "John Smith", "age": 30}
+```
+
+You can also apply it to an entire class:
+
+```baml BAML
+class Person {
+  name string
+  age int
+  @@stream.done
+}
+```
+
+In this case, the entire Person object will only stream when all fields are complete.
+
+## Common Use Cases
+
+- Ensuring atomic values for critical fields like IDs or status codes.
+- Preventing partial or incomplete data from being processed or rendered.
+- Maintaining data consistency in streaming responses.
+- Working with fields that only make sense when fully formed.
+
+## Type Transformation
+
+When using `@stream.done`, the type transformation in generated code is:
+- Regular type `T` becomes `T?` (nullable but always complete when present)
+- When combined with `@stream.not_null`, type `T` becomes `T` (always present and complete)

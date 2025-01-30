@@ -374,6 +374,12 @@ navigation:
             path: 03-reference/baml/attributes/check.mdx
           - page: "@@dynamic"
             path: 03-reference/baml/attributes/dynamic.mdx
+          - page: "@stream.done"
+            path: 03-reference/baml/attributes/stream.done.mdx
+          - page: "@stream.not_null"
+            path: 03-reference/baml/attributes/stream.not_null.mdx
+          - page: "@stream.with_state"
+            path: 03-reference/baml/attributes/stream.with_state.mdx
       - section: LLM Client Providers
         contents:
           - page: "AWS Bedrock"
