@@ -616,7 +616,10 @@ impl WithRepr<Enum> for EnumWalker<'_> {
         Ok(Enum {
             // TODO: #1343 Temporary solution until we implement scoping in the AST.
             name: if self.ast_type_block().is_dynamic_type_def {
-                self.name().strip_prefix("Dynamic").unwrap().to_string()
+                self.name()
+                    .strip_prefix(ast::DYNAMIC_TYPE_NAME_PREFIX)
+                    .unwrap()
+                    .to_string()
             } else {
                 self.name().to_string()
             },
@@ -709,7 +712,10 @@ impl WithRepr<Class> for ClassWalker<'_> {
         Ok(Class {
             // TODO: #1343 Temporary solution until we implement scoping in the AST.
             name: if self.ast_type_block().is_dynamic_type_def {
-                self.name().strip_prefix("Dynamic").unwrap().to_string()
+                self.name()
+                    .strip_prefix(ast::DYNAMIC_TYPE_NAME_PREFIX)
+                    .unwrap()
+                    .to_string()
             } else {
                 self.name().to_string()
             },

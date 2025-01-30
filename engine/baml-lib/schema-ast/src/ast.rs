@@ -33,7 +33,7 @@ pub use newline_type::NewlineType;
 pub use template_string::TemplateString;
 pub use top::Top;
 pub use traits::{WithAttributes, WithDocumentation, WithIdentifier, WithName, WithSpan};
-pub use type_builder_block::{TypeBuilderBlock, TypeBuilderEntry};
+pub use type_builder_block::{TypeBuilderBlock, TypeBuilderEntry, DYNAMIC_TYPE_NAME_PREFIX};
 pub use type_expression_block::{FieldId, SubType, TypeExpressionBlock};
 pub use value_expression_block::{BlockArg, BlockArgs, ValueExprBlock, ValueExprBlockType};
 

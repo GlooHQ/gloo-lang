@@ -321,7 +321,7 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
                     let mutex = type_builder.r#enum(&enm.elem.name);
                     let enum_builder = mutex.lock().unwrap();
                     for (variant, _) in &enm.elem.values {
-                        enum_builder.value(&variant.elem.0).lock().unwrap();
+                        let _ = enum_builder.value(&variant.elem.0).lock().unwrap();
                     }
                 }
 

@@ -822,4 +822,70 @@ test RecursiveAliasCycle {
           "##,
         })
     }
+
+    #[test]
+    fn test_type_builder_block_type_aliases() -> anyhow::Result<()> {
+        run_type_builder_block_test(TypeBuilderBlockTest {
+            function_name: "ExtractResume",
+            test_name: "ReturnDynamicClassTest",
+            baml: r##"
+                class Resume {
+                  name string
+                  education Education[]
+                  skills string[]
+                  @@dynamic
+                }
+
+                class Education {
+                  school string
+                  degree string
+                  year int
+                }
+
+                function ExtractResume(from_text: string) -> Resume {
+                  client "openai/gpt-4o"
+                  prompt #"
+                    Extract the resume information from the given text.
+
+                    {{ from_text }}
+
+                    {{ ctx.output_format }}
+                  "#
+                }
+
+                test ReturnDynamicClassTest {
+                  functions [ExtractResume]
+                  type_builder {
+                    class Experience {
+                      title string
+                      company string
+                      start_date string
+                      end_date string
+                    }
+
+                    type ExpAlias = Experience
+
+                    dynamic Resume {
+                      experience ExpAlias[]
+                    }
+                  }
+                  args {
+                    from_text #"
+                      John Doe
+
+                      Education
+                      - University of California, Berkeley, B.S. in Computer Science, 2020
+
+                      Experience
+                      - Software Engineer, Boundary, Sep 2022 - Sep 2023
+
+                      Skills
+                      - Python
+                      - Java
+                    "#
+                  }
+                }
+            "##,
+        })
+    }
 }

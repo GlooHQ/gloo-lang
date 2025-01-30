@@ -157,7 +157,7 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
                     // TODO: Extemely ugly hack to avoid collisions in the name
                     // interner.
                     dyn_type.name = Identifier::Local(
-                        format!("Dynamic{}", dyn_type.name()),
+                        format!("{}{}", ast::DYNAMIC_TYPE_NAME_PREFIX, dyn_type.name()),
                         dyn_type.span.to_owned(),
                     );
 
@@ -182,8 +182,7 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
                                 ast::Top::Class(dyn_type)
                             },
                             TypeWalker::Enum(enm) => {
-                                if !enm.ast_type_block().attributes.iter().any(|attr| attr.name.name() == "dynamic")
-                                {
+                                if !enm.ast_type_block().attributes.iter().any(|attr| attr.name.name() == "dynamic") {
                                     diagnostics.push_error(DatamodelError::new_validation_error(
                                         &format!(
                                             "Type '{}' does not contain the `@@dynamic` attribute so it cannot be modified in a type builder block",
@@ -213,7 +212,9 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
                         }
                     }
                 }
-                _ => todo!(),
+                ast::TypeBuilderEntry::TypeAlias(assignment) => {
+                    ast::Top::TypeAlias(assignment.to_owned())
+                },
             });
         }
 
