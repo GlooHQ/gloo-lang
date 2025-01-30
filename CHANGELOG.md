@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.74.0](https://github.com/boundaryml/baml/compare/0.73.5..0.74.0) - 2025-01-30
+
+### Features
+
+- Add dark mode to docs (#1382) - ([c684e2d](https://github.com/boundaryml/baml/commit/c684e2d2d35fd9d62e2aae01b4025e5302c3740b)) - Chris Watts
+- dedent strings parsed within triple quote blocks (#1395) - ([8ce04a9](https://github.com/boundaryml/baml/commit/8ce04a951ef9ac7dc2eab934c8163af2440b52bb)) - hellovai
+- Update README with better details (#1380) - ([02d1950](https://github.com/boundaryml/baml/commit/02d19503759986c0dba3b022afb03f45a52c31ad)) - hellovai
+- Semantic Streaming (#1293) - ([e30bdd5](https://github.com/boundaryml/baml/commit/e30bdd526910f11a6a9057cc4df90cf302939666)) - Greg Hale
+
+  
+### Bugfixes
+- Drop unnecessary jsonwebtoken dep in wasm build (#1381) - ([7b85c71](https://github.com/boundaryml/baml/commit/7b85c715e07be8f908ee114c50b85bd784cf567b)) - Greg Hale
+- Removing broken links (#1388) - ([e4b0b5b](https://github.com/boundaryml/baml/commit/e4b0b5ba390d3449247bfebb1f24013df69b6068)) - hellovai
+- Reduce JS client memory usage considerably during streaming (#1390) - ([3165e0f](https://github.com/boundaryml/baml/commit/3165e0f3126d94691bdd1e0a1411ee6de8ed0dea)) - aaronvg
+- Fix issue with semantic-streaming on unions of classes (#1393) - ([39b499d](https://github.com/boundaryml/baml/commit/39b499de396973bc1d1da991079a8d587cb29d75)) - Greg Hale
+- Fix issue where output panel pops open in cursor (#1394) - ([5fd5c46](https://github.com/boundaryml/baml/commit/5fd5c4672887050db533bda4c6f0f46b7ef18644)) - hellovai
+
+
 ## [0.73.5](https://github.com/boundaryml/baml/compare/0.73.4..0.73.5) - 2025-01-27
 
 
