@@ -145,6 +145,7 @@ module Baml
         G = new("G")
       end
     end
+    class AnotherObject < T::Struct; end
     class BigNumbers < T::Struct; end
     class BinaryNode < T::Struct; end
     class Blah < T::Struct; end
@@ -231,6 +232,22 @@ module Baml
     class TwoStoriesOneTitle < T::Struct; end
     class UnionTest_ReturnType < T::Struct; end
     class WithReasoning < T::Struct; end
+    class AnotherObject < T::Struct
+      include Baml::Sorbet::Struct
+      const :id, String
+      const :thingy2, String
+      const :thingy3, String
+
+      def initialize(props)
+        super(
+          id: props[:id],
+          thingy2: props[:thingy2],
+          thingy3: props[:thingy3],
+        )
+
+        @props = props
+      end
+    end
     class BigNumbers < T::Struct
       include Baml::Sorbet::Struct
       const :a, Integer
@@ -1411,8 +1428,8 @@ module Baml
     end
     class TestMemoryOutput < T::Struct
       include Baml::Sorbet::Struct
-      const :items, T::Array[T.any(Baml::Types::MemoryObject, Baml::Types::ComplexMemoryObject)]
-      const :more_items, T::Array[T.any(Baml::Types::MemoryObject, Baml::Types::ComplexMemoryObject)]
+      const :items, T::Array[T.any(Baml::Types::MemoryObject, Baml::Types::ComplexMemoryObject, Baml::Types::AnotherObject)]
+      const :more_items, T::Array[T.any(Baml::Types::MemoryObject, Baml::Types::ComplexMemoryObject, Baml::Types::AnotherObject)]
 
       def initialize(props)
         super(

@@ -34,6 +34,11 @@ class StreamState(BaseModel, Generic[T]):
     state: Literal["Pending", "Incomplete", "Complete"]
 
 
+class AnotherObject(BaseModel):
+    id: Optional[str] = None
+    thingy2: Optional[str] = None
+    thingy3: Optional[str] = None
+
 class BigNumbers(BaseModel):
     a: Optional[int] = None
     b: Optional[float] = None
@@ -394,8 +399,8 @@ class TestClassWithEnum(BaseModel):
     prop2: Optional[types.EnumInClass] = None
 
 class TestMemoryOutput(BaseModel):
-    items: List[Optional[Union["MemoryObject", "ComplexMemoryObject"]]]
-    more_items: List[Optional[Union["MemoryObject", "ComplexMemoryObject"]]]
+    items: List[Optional[Union["MemoryObject", "ComplexMemoryObject", "AnotherObject"]]]
+    more_items: List[Optional[Union["MemoryObject", "ComplexMemoryObject", "AnotherObject"]]]
 
 class TestOutputClass(BaseModel):
     prop1: Optional[str] = None

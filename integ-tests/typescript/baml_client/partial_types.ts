@@ -32,6 +32,12 @@ export interface StreamState<T> {
 }
 
 
+export interface AnotherObject {
+    id?: (string | null)
+    thingy2?: (string | null)
+    thingy3?: (string | null)
+}
+
 export interface BigNumbers {
     a?: (number | null)
     b?: (number | null)
@@ -476,8 +482,8 @@ export interface TestClassWithEnum {
 }
 
 export interface TestMemoryOutput {
-    items?: (partial_types.MemoryObject | null | partial_types.ComplexMemoryObject | null | null)[]
-    more_items?: (partial_types.MemoryObject | null | partial_types.ComplexMemoryObject | null | null)[]
+    items?: (partial_types.MemoryObject | null | partial_types.ComplexMemoryObject | null | partial_types.AnotherObject | null | null)[]
+    more_items?: (partial_types.MemoryObject | null | partial_types.ComplexMemoryObject | null | partial_types.AnotherObject | null | null)[]
 }
 
 export interface TestOutputClass {

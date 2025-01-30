@@ -156,6 +156,13 @@ export enum TestEnum {
   G = "G",
 }
 
+export interface AnotherObject {
+  id: string
+  thingy2: string
+  thingy3: string
+  
+}
+
 export interface BigNumbers {
   a: number
   b: number
@@ -680,8 +687,8 @@ export interface TestClassWithEnum {
 }
 
 export interface TestMemoryOutput {
-  items: (MemoryObject | ComplexMemoryObject)[]
-  more_items: (MemoryObject | ComplexMemoryObject)[]
+  items: (MemoryObject | ComplexMemoryObject | AnotherObject)[]
+  more_items: (MemoryObject | ComplexMemoryObject | AnotherObject)[]
   
 }
 

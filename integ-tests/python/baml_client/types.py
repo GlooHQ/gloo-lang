@@ -154,6 +154,11 @@ class TestEnum(str, Enum):
     F = "F"
     G = "G"
 
+class AnotherObject(BaseModel):
+    id: str
+    thingy2: str
+    thingy3: str
+
 class BigNumbers(BaseModel):
     a: int
     b: float
@@ -514,8 +519,8 @@ class TestClassWithEnum(BaseModel):
     prop2: "EnumInClass"
 
 class TestMemoryOutput(BaseModel):
-    items: List[Union["MemoryObject", "ComplexMemoryObject"]]
-    more_items: List[Union["MemoryObject", "ComplexMemoryObject"]]
+    items: List[Union["MemoryObject", "ComplexMemoryObject", "AnotherObject"]]
+    more_items: List[Union["MemoryObject", "ComplexMemoryObject", "AnotherObject"]]
 
 class TestOutputClass(BaseModel):
     prop1: str

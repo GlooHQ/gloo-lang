@@ -20,6 +20,7 @@ require_relative "types"
 module Baml
   
   module PartialTypes
+    class AnotherObject < T::Struct; end
     class BigNumbers < T::Struct; end
     class BinaryNode < T::Struct; end
     class Blah < T::Struct; end
@@ -106,6 +107,22 @@ module Baml
     class TwoStoriesOneTitle < T::Struct; end
     class UnionTest_ReturnType < T::Struct; end
     class WithReasoning < T::Struct; end
+    class AnotherObject < T::Struct
+      include Baml::Sorbet::Struct
+      const :id, T.nilable(String)
+      const :thingy2, T.nilable(String)
+      const :thingy3, T.nilable(String)
+
+      def initialize(props)
+        super(
+          id: props[:id],
+          thingy2: props[:thingy2],
+          thingy3: props[:thingy3],
+        )
+
+        @props = props
+      end
+    end
     class BigNumbers < T::Struct
       include Baml::Sorbet::Struct
       const :a, T.nilable(Integer)
@@ -1286,8 +1303,8 @@ module Baml
     end
     class TestMemoryOutput < T::Struct
       include Baml::Sorbet::Struct
-      const :items, T::Array[T.nilable(T.any(T.nilable(Baml::PartialTypes::MemoryObject), T.nilable(Baml::PartialTypes::ComplexMemoryObject)))]
-      const :more_items, T::Array[T.nilable(T.any(T.nilable(Baml::PartialTypes::MemoryObject), T.nilable(Baml::PartialTypes::ComplexMemoryObject)))]
+      const :items, T::Array[T.nilable(T.any(T.nilable(Baml::PartialTypes::MemoryObject), T.nilable(Baml::PartialTypes::ComplexMemoryObject), T.nilable(Baml::PartialTypes::AnotherObject)))]
+      const :more_items, T::Array[T.nilable(T.any(T.nilable(Baml::PartialTypes::MemoryObject), T.nilable(Baml::PartialTypes::ComplexMemoryObject), T.nilable(Baml::PartialTypes::AnotherObject)))]
 
       def initialize(props)
         super(
