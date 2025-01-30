@@ -154,6 +154,11 @@ class TestEnum(str, Enum):
     F = "F"
     G = "G"
 
+class AnotherObject(BaseModel):
+    id: str
+    thingy2: str
+    thingy3: str
+
 class BigNumbers(BaseModel):
     a: int
     b: float
@@ -207,6 +212,12 @@ class ClassWithImage(BaseModel):
 class ClassWithoutDone(BaseModel):
     i_16_digits: int
     s_20_words: str
+
+class ComplexMemoryObject(BaseModel):
+    id: str
+    name: str
+    description: str
+    metadata: List[Union[str, int, float]]
 
 class CompoundBigNumbers(BaseModel):
     big: "BigNumbers"
@@ -353,6 +364,11 @@ class Martian(BaseModel):
     age: Checked[int,Literal["young_enough"]]
     """The age of the Martian in Mars years.
     So many Mars years."""
+
+class MemoryObject(BaseModel):
+    id: str
+    name: str
+    description: str
 
 class MergeAttrs(BaseModel):
     amount: Checked[int,Literal["gt_ten"]]
@@ -501,6 +517,10 @@ class TestClassNested(BaseModel):
 class TestClassWithEnum(BaseModel):
     prop1: str
     prop2: "EnumInClass"
+
+class TestMemoryOutput(BaseModel):
+    items: List[Union["MemoryObject", "ComplexMemoryObject", "AnotherObject"]]
+    more_items: List[Union["MemoryObject", "ComplexMemoryObject", "AnotherObject"]]
 
 class TestOutputClass(BaseModel):
     prop1: str

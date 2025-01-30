@@ -156,6 +156,13 @@ export enum TestEnum {
   G = "G",
 }
 
+export interface AnotherObject {
+  id: string
+  thingy2: string
+  thingy3: string
+  
+}
+
 export interface BigNumbers {
   a: number
   b: number
@@ -233,6 +240,14 @@ export interface ClassWithImage {
 export interface ClassWithoutDone {
   i_16_digits: number
   s_20_words: string
+  
+}
+
+export interface ComplexMemoryObject {
+  id: string
+  name: string
+  description: string
+  metadata: (string | number | number)[]
   
 }
 
@@ -454,6 +469,13 @@ export interface Martian {
   
 }
 
+export interface MemoryObject {
+  id: string
+  name: string
+  description: string
+  
+}
+
 export interface MergeAttrs {
   amount: Checked<number,"gt_ten">
   
@@ -661,6 +683,12 @@ export interface TestClassNested {
 export interface TestClassWithEnum {
   prop1: string
   prop2: EnumInClass
+  
+}
+
+export interface TestMemoryOutput {
+  items: (MemoryObject | ComplexMemoryObject | AnotherObject)[]
+  more_items: (MemoryObject | ComplexMemoryObject | AnotherObject)[]
   
 }
 

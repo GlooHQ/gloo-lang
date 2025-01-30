@@ -32,6 +32,12 @@ export interface StreamState<T> {
 }
 
 
+export interface AnotherObject {
+    id?: (string | null)
+    thingy2?: (string | null)
+    thingy3?: (string | null)
+}
+
 export interface BigNumbers {
     a?: (number | null)
     b?: (number | null)
@@ -97,6 +103,13 @@ export interface ClassWithImage {
 export interface ClassWithoutDone {
     i_16_digits?: (number | null)
     s_20_words?: StreamState<(string | null)>
+}
+
+export interface ComplexMemoryObject {
+    id?: (string | null)
+    name?: (string | null)
+    description?: (string | null)
+    metadata?: ((string | null) | (number | null) | (number | null) | null)[]
 }
 
 export interface CompoundBigNumbers {
@@ -283,6 +296,12 @@ export interface Martian {
     age?: Checked<(number | null),"young_enough">
 }
 
+export interface MemoryObject {
+    id?: (string | null)
+    name?: (string | null)
+    description?: (string | null)
+}
+
 export interface MergeAttrs {
     amount?: Checked<(number | null),"gt_ten">
 }
@@ -460,6 +479,11 @@ export interface TestClassNested {
 export interface TestClassWithEnum {
     prop1?: (string | null)
     prop2?: (EnumInClass | null)
+}
+
+export interface TestMemoryOutput {
+    items?: (partial_types.MemoryObject | null | partial_types.ComplexMemoryObject | null | partial_types.AnotherObject | null | null)[]
+    more_items?: (partial_types.MemoryObject | null | partial_types.ComplexMemoryObject | null | partial_types.AnotherObject | null | null)[]
 }
 
 export interface TestOutputClass {
