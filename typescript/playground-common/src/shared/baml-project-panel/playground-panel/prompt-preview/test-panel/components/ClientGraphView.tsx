@@ -119,9 +119,9 @@ export const ClientGraphView: React.FC = () => {
   }
 
   return (
-    <div className='w-full h-full'>
+    <div className='flex flex-col w-full h-full'>
       <ClientHeader />
-      <div className='h-[400px] border-b-red-500 border-b-24 border'>
+      <div className='h-full'>
         <ReactFlow
           style={styles}
           nodes={flowNodes}

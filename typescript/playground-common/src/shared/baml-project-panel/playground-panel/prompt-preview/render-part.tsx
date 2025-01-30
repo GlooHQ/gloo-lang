@@ -1,6 +1,7 @@
 import type { WasmChatMessagePart, WasmParam, WasmTestCase } from '@gloo-ai/baml-schema-wasm-web'
-import { RenderText } from './render-text'
+import { RenderPromptPart } from './render-text'
 import { WebviewMedia } from './webview-media'
+import he from 'he'
 
 export const RenderPart: React.FC<{
   part: WasmChatMessagePart
@@ -17,11 +18,11 @@ export const RenderPart: React.FC<{
             if (typeof parsed === 'object') {
               return Object.values(parsed).filter((val): val is string => typeof val === 'string')
             } else {
-              return [parsed]
+              return [he.encode(parsed)]
             }
           } catch {
             // If parsing fails, treat it as a regular string
-            return [input.value]
+            return [he.encode(input.value)]
           }
         }
         if (typeof input.value === 'object') {
@@ -31,8 +32,14 @@ export const RenderPart: React.FC<{
       })
     }
 
-    const text = part.as_text()
-    const allChunks = extractStringValues(testCase?.inputs ?? [])
+    // this makes it so that we can escape html
+    const text = he.encode(part.as_text() ?? '')
+    // Skip processing if any input value is too large
+    const hasLargeInput = (testCase?.inputs ?? []).some(
+      (input) => typeof input.value === 'string' && input.value.length > 20000,
+    )
+
+    const allChunks = hasLargeInput ? [] : extractStringValues(testCase?.inputs ?? [])
     const highlightChunks = allChunks.filter((chunk) => {
       if (!chunk || !text) return false
       try {
@@ -44,11 +51,12 @@ export const RenderPart: React.FC<{
         // Only include chunks that appear at least once in the text
         return matches && matches.length === 1
       } catch (e) {
+        console.error('Error highlighting text part', e)
         return false
       }
     })
 
-    return text ? <RenderText text={text} highlightChunks={highlightChunks} /> : null
+    return text ? <RenderPromptPart text={text} highlightChunks={highlightChunks} /> : null
   }
 
   const media = part.as_media()

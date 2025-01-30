@@ -88,7 +88,7 @@ impl AwsClient {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: true,
+                max_one_system_prompt: true,
                 resolve_media_urls: ResolveMediaUrls::Always,
                 allowed_metadata: properties.allowed_role_metadata.clone(),
             },
@@ -111,7 +111,7 @@ impl AwsClient {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: true,
+                max_one_system_prompt: true,
                 resolve_media_urls: ResolveMediaUrls::Always,
                 allowed_metadata: properties.allowed_role_metadata.clone(),
             },

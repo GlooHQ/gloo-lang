@@ -2,7 +2,7 @@ import uuid
 import json
 import os
 import time
-from typing import List
+from typing import List, Optional
 import pytest
 from assertpy import assert_that
 from dotenv import load_dotenv
@@ -397,7 +397,7 @@ async def test_should_work_for_all_outputs():
     literal_string = await b.FnOutputLiteralString(a)
     assert literal_string == "example output"
 
-    list = await b.FnOutputClassList(a)
+    list = await b.FnOutputClassList(a) # Broken
     assert len(list) > 0
     assert len(list[0].prop1) > 0
 
@@ -445,6 +445,12 @@ async def test_should_work_with_image_list():
 async def test_should_work_with_vertex():
     res = await b.TestVertex("donkey kong")
     assert_that("donkey kong" in res.lower())
+
+
+@pytest.mark.asyncio
+async def test_should_work_with_vertex_adding_system_instructions():
+    res = await b.TestVertexWithSystemInstructions()
+    assert_that(len(res) > 0)
 
 
 @pytest.mark.asyncio
@@ -505,11 +511,29 @@ async def test_gemini():
 
 
 @pytest.mark.asyncio
+async def test_gemini_system_prompt():
+    geminiRes = await b.TestGeminiSystem(input="Dr. Pepper")
+    print(f"LLM output from Gemini: {geminiRes}")
+    assert len(geminiRes) > 0, "Expected non-empty result but got empty."
+
+@pytest.mark.asyncio
+async def test_gemini_system_prompt_as_chat():
+    geminiRes = await b.TestGeminiSystemAsChat(input="Dr. Pepper")
+    print(f"LLM output from Gemini: {geminiRes}")
+    assert len(geminiRes) > 0, "Expected non-empty result but got empty."
+
+@pytest.mark.asyncio
 async def test_gemini_streaming():
     geminiRes = await b.stream.TestGemini(input="Dr. Pepper").get_final_response()
     print(f"LLM output from Gemini: {geminiRes}")
 
     assert len(geminiRes) > 0, "Expected non-empty result but got empty."
+
+
+@pytest.mark.asyncio
+async def test_gemini_openai_generic_system_prompt():
+    res = await b.TestGeminiOpenAiGeneric()
+    assert len(res) > 0, "Expected non-empty result but got empty."
 
 
 @pytest.mark.asyncio
@@ -1457,7 +1481,11 @@ async def test_no_stream_big_integer():
     msgs: List[int | None] = []
     async for msg in stream:
         msgs.append(msg)
+    print("msgs:")
+    print(msgs)
     res = await stream.get_final_response()
+    print("res:")
+    print(res)
     for msg in msgs:
         assert True if msg is None else msg == res
 
@@ -1637,3 +1665,58 @@ async def test_block_constraint_arguments():
         nested_block_constraint = NestedBlockConstraintForParam(nbcfp=block_constraint)
         await b.UseNestedBlockConstraint(nested_block_constraint)
     assert "Failed assert: hi" in str(e)
+
+
+@pytest.mark.asyncio
+async def test_null_literal_class_hello():
+    stream = b.stream.NullLiteralClassHello(s="unused")
+    async for msg in stream:
+        msg.a is None
+
+
+@pytest.mark.asyncio
+async def test_semantic_streaming():
+    stream = b.stream.MakeSemanticContainer()
+
+    # We will use these to store streaming fields and check them
+    # for stability.
+    reference_string: Optional[str] = None
+    reference_int: Optional[int] = None
+
+    async for msg in stream:
+        assert "string_with_twenty_words" in dict(msg)
+        assert "sixteen_digit_number" in dict(msg)
+
+        # Checks for stability of numeric and @stream.done fields.
+        if msg.sixteen_digit_number is not None:
+            if reference_int is None:
+                # Set the reference if it hasn't been set yet.
+                reference_int = msg.sixteen_digit_number
+            else:
+                # If the reference has been set, check that the
+                # current value matches it.
+                assert reference_int == msg.sixteen_digit_number
+        if msg.string_with_twenty_words is not None:
+            if reference_string is None:
+                # Set the reference if it hasn't been set yet.
+                reference_string = msg.string_with_twenty_words
+            else:
+                # If the reference has been set, check that the
+                # current value matches it.
+                assert reference_string == msg.string_with_twenty_words
+
+        # Checks for @stream.with_state.
+        if msg.class_needed is not None:
+            if msg.class_needed.s_20_words.value is not None:
+                if len(msg.class_needed.s_20_words.value.split(" ")) < 3 and msg.final_string is None:
+                    print(msg)
+                    assert msg.class_needed.s_20_words.state == "Incomplete"
+        if msg.final_string is not None:
+            assert msg.class_needed.s_20_words.state == "Complete"
+        
+        # Checks for @stream.not_null.
+        for sub in msg.three_small_things:
+            assert sub.i_16_digits is not None
+    
+    final = await stream.get_final_response()
+    print(final)

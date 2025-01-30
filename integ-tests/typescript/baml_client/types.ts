@@ -156,6 +156,13 @@ export enum TestEnum {
   G = "G",
 }
 
+export interface AnotherObject {
+  id: string
+  thingy2: string
+  thingy3: string
+  
+}
+
 export interface BigNumbers {
   a: number
   b: number
@@ -194,6 +201,11 @@ export interface BookOrder {
   
 }
 
+export interface ClassForNullLiteral {
+  a: "hi"
+  
+}
+
 export interface ClassOptionalOutput {
   prop1: string
   prop2: string
@@ -212,10 +224,30 @@ export interface ClassToRecAlias {
   
 }
 
+export interface ClassWithBlockDone {
+  i_16_digits: number
+  s_20_words: string
+  
+}
+
 export interface ClassWithImage {
   myImage: Image
   param2: string
   fake_image: FakeImage
+  
+}
+
+export interface ClassWithoutDone {
+  i_16_digits: number
+  s_20_words: string
+  
+}
+
+export interface ComplexMemoryObject {
+  id: string
+  name: string
+  description: string
+  metadata: (string | number | number)[]
   
 }
 
@@ -437,6 +469,13 @@ export interface Martian {
   
 }
 
+export interface MemoryObject {
+  id: string
+  name: string
+  description: string
+  
+}
+
 export interface MergeAttrs {
   amount: Checked<number,"gt_ten">
   
@@ -597,6 +636,24 @@ export interface SearchParams {
   
 }
 
+export interface SemanticContainer {
+  sixteen_digit_number: number
+  string_with_twenty_words: string
+  class_1: ClassWithoutDone
+  class_2: ClassWithBlockDone
+  class_done_needed: ClassWithBlockDone
+  class_needed: ClassWithoutDone
+  three_small_things: SmallThing[]
+  final_string: string
+  
+}
+
+export interface SmallThing {
+  i_16_digits: number
+  i_8_digits: number
+  
+}
+
 export interface SomeClassNestedDynamic {
   hi: string
   
@@ -626,6 +683,12 @@ export interface TestClassNested {
 export interface TestClassWithEnum {
   prop1: string
   prop2: EnumInClass
+  
+}
+
+export interface TestMemoryOutput {
+  items: (MemoryObject | ComplexMemoryObject | AnotherObject)[]
+  more_items: (MemoryObject | ComplexMemoryObject | AnotherObject)[]
   
 }
 

@@ -27,9 +27,13 @@ client<llm> MyClient {
 }
 ```
 
-The options are passed through directly to the API, barring a few. Here's a shorthand of the options:
 
-## Non-forwarded options
+
+## BAML-specific request `options`
+These unique parameters (aka `options`) are modify the API request sent to the provider.
+
+You can use this to modify the `headers`, `base_url`, and `default_role` sent to the provider for example.
+
 
 <ParamField path="api_key" type="string" default="env.OPENAI_API_KEY">
   Will be used to build the `Authorization` header, like so: `Authorization: Bearer $api_key`
@@ -73,7 +77,10 @@ client<llm> MyClient {
 
 <Markdown src="../../../../snippets/allowed-role-metadata-basic.mdx" />
 
-## Forwarded options
+## Provider request parameters
+These are other parameters that are passed through to the provider, without modification by BAML. For example if the request has a `temperature` field, you can define it in the client here so every call has that set.
+
+Consult the specific provider's documentation for more information.
 
 <ParamField
    path="messages"

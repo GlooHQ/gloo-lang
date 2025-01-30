@@ -115,6 +115,7 @@ case "$_path" in
         --ext rs,toml \
         --watch "${_repo_root}/engine" \
         --ignore 'target' \
+        --ignore 'target-rust-analyzer' \
         --ignore 'tmp' \
         --exec "${command}"
     else
@@ -217,7 +218,8 @@ case "$_path" in
     command="${command} && pnpm baml-cli generate --from ${_repo_root}/integ-tests/baml_src"
     if [ "$_test_mode" -eq 1 ]; then
       #command="${command} && pnpm integ-tests"
-      command="${command} && BAML_LOG=${BAML_LOG}  infisical run -- pnpm test tests/integ-tests.test.ts"
+      # command="${command} && BAML_LOG=${BAML_LOG}  infisical run -- pnpm test tests/integ-tests.test.ts"
+      command="${command} && BAML_LOG=${BAML_LOG} pnpm test tests/providers/vertex.test.ts"
     fi
     if [ "$_watch_mode" -eq 1 ]; then
       npx nodemon \

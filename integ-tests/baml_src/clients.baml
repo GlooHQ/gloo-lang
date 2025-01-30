@@ -95,12 +95,21 @@ client<llm> Gemini {
   }
 }
 
+client<llm> GeminiOpenAiGeneric {
+  provider "openai-generic"
+  options {
+    base_url "https://generativelanguage.googleapis.com/v1beta/"
+    model "gemini-1.5-flash"
+    api_key env.GOOGLE_API_KEY
+  }
+}
+
 client<llm> Vertex {
   provider vertex-ai
   options {
     model gemini-1.5-pro
     location us-central1
-    credentials env.INTEG_TESTS_GOOGLE_APPLICATION_CREDENTIALS
+    credentials env.INTEG_TESTS_GOOGLE_APPLICATION_CREDENTIALS_CONTENT
   }
 }
 
@@ -250,4 +259,3 @@ client<llm> TogetherAi {
     model "meta-llama/Llama-3-70b-chat-hf"
   }
 }
-

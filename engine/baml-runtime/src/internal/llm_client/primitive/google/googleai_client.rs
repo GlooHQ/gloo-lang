@@ -169,6 +169,7 @@ impl SseResponseTrait for GoogleAIClient {
 
                         if let Some(choice) = event.candidates.get(0) {
                             let part_index = content_part(&model_id);
+<<<<<<< HEAD
                             if let Some(content) = choice.content.as_ref().and_then(|c| c.parts.get(part_index)) {
                                 btrace::log(
                                     btrace::Level::INFO,
@@ -178,6 +179,13 @@ impl SseResponseTrait for GoogleAIClient {
                                         "delta.content": content.text,
                                     }),
                                 );
+=======
+                            if let Some(content) = choice
+                                .content
+                                .as_ref()
+                                .and_then(|c| c.parts.get(part_index))
+                            {
+>>>>>>> canary
                                 inner.content += &content.text;
                             }
                             if let Some(FinishReason::Stop) = choice.finish_reason.as_ref() {
@@ -232,7 +240,7 @@ impl GoogleAIClient {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: false,
+                max_one_system_prompt: true,
                 resolve_media_urls: ResolveMediaUrls::Always,
                 allowed_metadata: properties.allowed_metadata.clone(),
             },
@@ -260,7 +268,7 @@ impl GoogleAIClient {
             features: ModelFeatures {
                 chat: true,
                 completion: false,
-                anthropic_system_constraints: false,
+                max_one_system_prompt: true,
                 resolve_media_urls: ResolveMediaUrls::Always,
                 allowed_metadata: properties.allowed_metadata.clone(),
             },
@@ -429,6 +437,26 @@ impl ToProviderMessageExt for GoogleAIClient {
         chat: &[RenderedChatMessage],
     ) -> Result<serde_json::Map<String, serde_json::Value>> {
         let mut res = serde_json::Map::new();
+        let (first, others) = chat.split_at(1);
+        if let Some(content) = first.first() {
+            if content.role == "system" {
+                res.insert(
+                    "system_instruction".into(),
+                    json!({
+                        "parts": self.parts_to_message(&content.parts)?
+                    }),
+                );
+                res.insert(
+                    "contents".into(),
+                    others
+                        .iter()
+                        .map(|c| self.role_to_message(c))
+                        .collect::<Result<Vec<_>>>()?
+                        .into(),
+                );
+                return Ok(res);
+            }
+        }
         res.insert(
             "contents".into(),
             chat.iter()
@@ -492,11 +520,11 @@ impl ToProviderMessage for GoogleAIClient {
 /// The Google Gemini 2 model has an experimental feature
 /// called Flash Thinking Mode, which is turned on in a particular
 /// named model: gemini-2.0-flash-thinking-exp-1219
-/// 
+///
 /// When run in this mode, Gemini returns `candidates` with 2 parts each.
 /// Part 0 is the chain of thought, part 1 is the actual output.
 /// Other Gemini models put the output data in part 0.
-/// 
+///
 /// TODO: Explicitly represent Flash Thinking Mode response and
 /// do more thorough checking for the content part.
 /// For examples of how to introspect the response more safely, see:

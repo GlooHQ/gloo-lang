@@ -4,10 +4,9 @@ import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { TokenEncoderCache } from './render-tokens'
-import { currentClientsAtom } from '../atoms-orch-graph'
 export const isDebugModeAtom = atom((get) => get(renderModeAtom) === 'tokens')
 
-export const RenderText: React.FC<{
+export const RenderPromptPart: React.FC<{
   text: string
   highlightChunks?: string[]
   model?: string
@@ -16,7 +15,8 @@ export const RenderText: React.FC<{
   const isDebugMode = useAtomValue(isDebugModeAtom)
   const isLongText = useMemo(() => text.split('\n').length > 18, [text])
   // const currentClient = useAtomValue(currentClientsAtom)
-  const [isFullTextVisible, setIsFullTextVisible] = useState(false)
+  // this causes weird scroll issues
+  const [isFullTextVisible, setIsFullTextVisible] = useState(true)
 
   const tokenizer = useMemo(() => {
     if (!isDebugMode) return undefined
@@ -47,16 +47,22 @@ export const RenderText: React.FC<{
     // Only do highlighting if we're not tokenizing
     if (!highlightChunks?.length) return text
 
-    let result = text
-    highlightChunks.forEach((chunk) => {
-      if (!chunk) return
-      const regex = new RegExp(`(${chunk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g')
-      result = result.replace(
-        regex,
-        '<mark class="bg-yellow-100/70 text-yellow-900 dark:bg-yellow-800/30 dark:text-yellow-100 rounded-sm px-0.5">$1</mark>',
-      )
-    })
-    return result
+    try {
+      let result = text
+      highlightChunks.forEach((chunk) => {
+        if (!chunk) return
+        if (chunk.length > 30000) return
+        const regex = new RegExp(`(${chunk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g')
+        result = result.replace(
+          regex,
+          '<mark class="bg-yellow-100/70 text-yellow-900 dark:bg-yellow-800/30 dark:text-yellow-100 rounded-sm px-0.5">$1</mark>',
+        )
+      })
+      return result
+    } catch (e) {
+      console.error('Error highlighting text', e)
+      return text
+    }
   }, [text, highlightChunks, tokenizer])
 
   return (
@@ -83,7 +89,7 @@ export const RenderText: React.FC<{
       )}
       <ScrollArea className='relative flex-1 p-2 pb-6 bg-muted/50 dark:bg-slate-900' type='always'>
         <pre
-          className={`whitespace-pre-wrap text-xs  ${isFullTextVisible ? 'max-h-96' : 'max-h-64'}`}
+          className={`whitespace-pre-wrap text-xs  ${isFullTextVisible ? 'max-h-fit' : 'max-h-64'}`}
           dangerouslySetInnerHTML={{ __html: renderContent }}
         />
 

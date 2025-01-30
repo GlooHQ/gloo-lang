@@ -23,10 +23,12 @@ client<llm> MyClient {
   }
 }
 ```
+## BAML-specific request `options`
+These unique parameters (aka `options`)  modify the API request sent to the provider.
 
-The options are passed through directly to the API, barring a few. Here's a shorthand of the options:
+You can use this to modify the `headers` and `base_url` for example.
 
-## Non-forwarded options
+
 <ParamField
   path="base_url"
   type="string"
@@ -58,7 +60,10 @@ client<llm> MyClient {
 
 <Markdown src="/snippets/supports-streaming.mdx" />
 
-## Forwarded options
+## Provider request parameters
+These are other parameters that are passed through to the provider, without modification by BAML. For example if the request has a `temperature` field, you can define it in the client here so every call has that set.
+
+Consult the specific provider's documentation for more information.
 <ParamField
    path="messages"
    type="DO NOT USE"

@@ -221,6 +221,7 @@ export class WebPanelView {
         if ('command' in message) {
           switch (message.command) {
             case 'add_project':
+              console.log('webview add_project')
               addProject()
 
               return

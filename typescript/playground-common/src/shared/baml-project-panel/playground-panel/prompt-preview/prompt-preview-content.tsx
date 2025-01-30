@@ -1,7 +1,7 @@
-import { useAtomValue } from 'jotai'
+import { atom, useAtomValue, useSetAtom } from 'jotai'
 import { ctxAtom, diagnosticsAtom, runtimeAtom } from '../../atoms'
 import { areTestsRunningAtom, functionTestSnippetAtom, selectionAtom } from '../atoms'
-import type { WasmPrompt } from '@gloo-ai/baml-schema-wasm-web'
+import type { WasmPrompt, WasmError } from '@gloo-ai/baml-schema-wasm-web'
 import { Loader } from './components'
 import { ErrorMessage } from './components'
 import { findMediaFile } from './media-utils'
@@ -10,18 +10,26 @@ import useSWR from 'swr'
 import { useState } from 'react'
 import { useCallback } from 'react'
 
+export const renderedPromptAtom = atom<WasmPrompt | undefined>(undefined)
+
 export const PromptPreviewContent = () => {
   const { rt } = useAtomValue(runtimeAtom)
   const ctx = useAtomValue(ctxAtom)
   const { selectedFn, selectedTc } = useAtomValue(selectionAtom)
   const diagnostics = useAtomValue(diagnosticsAtom)
+  const setPromptData = useSetAtom(renderedPromptAtom)
   const areTestsRunning = useAtomValue(areTestsRunningAtom)
   const generatePreview = async () => {
     if (rt === undefined || ctx === undefined || selectedFn === undefined || selectedTc === undefined) {
       return
     }
-    return selectedFn.render_prompt_for_test(rt, selectedTc.name, ctx, findMediaFile)
+    const newPreview = await selectedFn.render_prompt_for_test(rt, selectedTc.name, ctx, findMediaFile)
+    setLastKnownPreview(newPreview)
+    setPromptData(newPreview)
+    return newPreview
   }
+
+  const [lastKnownPreview, setLastKnownPreview] = useState<WasmPrompt | undefined>()
 
   const {
     data: preview,
@@ -33,8 +41,11 @@ export const PromptPreviewContent = () => {
     generatePreview,
   )
 
-  if (isLoading) {
-    return <Loader message='Refreshing...' />
+  if (isLoading && !preview) {
+    if (lastKnownPreview) {
+      return <RenderPrompt prompt={lastKnownPreview} testCase={selectedTc} />
+    }
+    return <Loader message='Loading...' />
   }
 
   if (error) {
@@ -43,18 +54,21 @@ export const PromptPreviewContent = () => {
 
   if (diagnostics.length > 0 && diagnostics.some((d) => d.type === 'error')) {
     return (
-      <div className='p-3'>
-        <div className='mb-2 text-sm font-medium text-red-500'>Syntax Error</div>
-        <pre className='px-2 py-1 font-mono text-sm text-red-500 whitespace-pre-wrap rounded-lg'>
-          <div className='space-y-2'>
-            <div>{diagnostics.filter((d) => d.type === 'error').length} error(s):</div>
-            {diagnostics
-              .filter((d) => d.type === 'error')
-              .map((d, i) => (
-                <div key={i}>- {d.message}</div>
-              ))}
-          </div>
-        </pre>
+      <div className='relative'>
+        {/* todo: maybe keep rendering the last known prompt? And make this a more condensed error banner in absolute position? */}
+        <div className='p-3'>
+          <div className='mb-2 text-sm font-medium text-red-500'>Syntax Error</div>
+          <pre className='px-2 py-1 font-mono text-sm text-red-500 whitespace-pre-wrap rounded-lg'>
+            <div className='space-y-2'>
+              <div>{diagnostics.filter((d: WasmError) => d.type === 'error').length} error(s):</div>
+              {diagnostics
+                .filter((d: WasmError) => d.type === 'error')
+                .map((d, i) => (
+                  <div key={i}>- {d.message}</div>
+                ))}
+            </div>
+          </pre>
+        </div>
       </div>
     )
   }

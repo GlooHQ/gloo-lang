@@ -32,7 +32,11 @@ limited to:
   - loading the specified `AWS_PROFILE` from `~/.aws/config`
   - built-in authn for services running in EC2, ECS, Lambda, etc.
 
-## Non-forwarded options
+
+## BAML-specific request `options`
+These unique parameters (aka `options`) are modify the API request sent to the provider.
+
+You can use this to modify the `headers`, `base_url`, and `default_role` sent to the provider for example.
 
 <ParamField
   path="default_role"
@@ -45,7 +49,10 @@ limited to:
 
 <Markdown src="../../../../snippets/allowed-role-metadata-basic.mdx" />
 
-## Forwarded options
+## Provider request parameters
+These are other parameters that are passed through to the provider, without modification by BAML. For example if the request has a `temperature` field, you can define it in the client here so every call has that set.
+
+Consult the specific provider's documentation for more information.
 
 <ParamField
    path="messages"

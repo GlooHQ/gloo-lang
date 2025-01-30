@@ -1,31 +1,25 @@
 'use client'
 import { BAML } from '@boundaryml/baml-lezer'
 import { linter } from '@codemirror/lint'
+import { tags as t } from '@lezer/highlight'
 import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode'
-import CodeMirror, {
-  Compartment,
-  EditorView,
-  StateEffect,
-  type Extension,
-  type ReactCodeMirrorRef,
-} from '@uiw/react-codemirror'
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import CodeMirror, { Compartment, EditorView, type Extension, type ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import { inlineCopilot } from 'codemirror-copilot'
-import { classHighlighter, styleTags, tags as t, tagHighlighter } from '@lezer/highlight'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { hyperLink } from '@uiw/codemirror-extensions-hyper-link'
 import { langs } from '@uiw/codemirror-extensions-langs'
+import { useSetAtom, useStore } from 'jotai'
 import { type ICodeBlock } from '../types'
 import { CodeMirrorDiagnosticsAtom } from './atoms'
-import { useSetAtom, useStore } from 'jotai'
 
-import { tsLinter, tsHover, tsAutocomplete, tsSync, tsFacet } from '@valtown/codemirror-ts'
-import { javascript } from '@codemirror/lang-javascript'
 import { autocompletion } from '@codemirror/autocomplete'
+import { javascript } from '@codemirror/lang-javascript'
+import { tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts'
 
 import { createDefaultMapFromCDN, createSystem, createVirtualTypeScriptEnvironment } from '@typescript/vfs'
-import ts from 'typescript'
 import { useTheme } from 'next-themes'
+import ts from 'typescript'
 import { updateCursorAtom } from '../playground-panel/atoms'
 
 const extensionMap = {
@@ -82,7 +76,7 @@ export const CodeMirrorViewer = ({
             return []
           }
         },
-        { delay: 200 },
+        { delay: 300 },
       )
     } else if (lang === 'python') {
       // use ruff wasm here
@@ -306,7 +300,7 @@ export const CodeMirrorViewer = ({
             onContentChange?.(value)
           }}
           readOnly={false}
-          extensions={[...extensions, ...inlineCopilotExtension]}
+          extensions={[...extensions]}
           theme={editorTheme}
           className='text-xs border-none'
           height='100%'

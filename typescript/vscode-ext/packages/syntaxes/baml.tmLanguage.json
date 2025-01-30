@@ -331,31 +331,33 @@
       ]
     },
     "block_attribute": {
-      "patterns": [
+       "patterns": [
         {
-          "begin": "(@{1,2}(?:check|assert))\\(([^,]+)?\\s*,\\s*()",
+          "begin": "(@{1,2}(?:check|assert))\\s*\\(\\s*(?=\\{\\{)",
           "beginCaptures": {
-            "1": { "name": "entity.name.function.attribute" },
-            "2": { "name": "variable.parameter.checkName" },
-            "3": { "name": "punctuation.definition.template-expression.begin" }
+            "1": { "name": "entity.name.function.attribute" }
           },
-          "end": "()\\)",
-          "endCaptures": {
-            "1": { "name": "punctuation.definition.template-expression.end" }
-          },
+          "end": "\\)\\s*",
           "contentName": "string.quoted.block.thing",
           "patterns": [{ "include": "source.baml-jinja" }]
         },
         {
-          "begin": "(@{1,2}assert)\\(",
+          "begin": "(@{1,2}(?:check|assert))\\s*\\(([^,]+)?\\s*,\\s*(?=\\{\\{)",
           "beginCaptures": {
-            "1": { "name": "entity.name.function.attribute.assert" },
-            "2": { "name": "punctuation.definition.template-expression.begin" }
+            "1": { "name": "entity.name.function.attribute" },
+            "2": { "name": "variable.parameter.checkName" }
           },
-          "end": "()\\)",
-          "endCaptures": {
-            "1": { "name": "punctuation.definition.template-expression.end" }
+          "end": "\\)\\s*",
+          "contentName": "string.quoted.block.thing",
+          "patterns": [{ "include": "source.baml-jinja" }]
+        },
+        {
+          "begin": "(@{1,2}(?:check|assert))\\(([^,]+)?\\s*,\\s*()",
+          "beginCaptures": {
+            "1": { "name": "entity.name.function.attribute" },
+            "2": { "name": "variable.parameter.checkName" }
           },
+          "end": "\\)",
           "contentName": "string.quoted.block.thing",
           "patterns": [{ "include": "source.baml-jinja" }]
         },

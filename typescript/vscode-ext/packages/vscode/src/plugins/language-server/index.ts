@@ -51,7 +51,11 @@ export const generateTestRequest = async (test_request: TestRequest): Promise<st
 export const requestDiagnostics = async () => {
   const currentFile = getCurrentOpenedFile()
   if (!currentFile) {
-    console.error('no current baml file')
+    console.warn('no current baml file')
+    return
+  }
+  // if not a baml file return
+  if (!currentFile.endsWith('.baml')) {
     return
   }
   await client?.sendRequest('requestDiagnostics', { projectId: currentFile })
@@ -251,6 +255,7 @@ const activateClient = (
         const currentFilePath = URI.parse(activeEditor.document.uri.toString()).fsPath
         const rootPathUri = URI.file(params.root_path).fsPath
         if (currentFilePath.startsWith(rootPathUri)) {
+          console.log('sending add_project message')
           WebPanelView.currentPanel?.postMessage('add_project', {
             ...params,
             root_path: URI.file(params.root_path).toString(),

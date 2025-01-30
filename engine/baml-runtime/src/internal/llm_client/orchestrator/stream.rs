@@ -1,7 +1,11 @@
 use anyhow::Result;
 use async_std::stream::StreamExt;
+<<<<<<< HEAD
 use baml_types::BamlValue;
 use btrace::WithTraceContext;
+=======
+use baml_types::{BamlValue, BamlValueWithMeta};
+>>>>>>> canary
 use internal_baml_core::ir::repr::IntermediateRepr;
 use jsonish::BamlValueWithFlags;
 use serde_json::json;
@@ -27,14 +31,13 @@ pub async fn orchestrate_stream<F>(
     ctx: &RuntimeContext,
     prompt: &PromptRenderer,
     params: &BamlValue,
-    partial_parse_fn: impl Fn(&str) -> Result<BamlValueWithFlags>,
-    parse_fn: impl Fn(&str) -> Result<BamlValueWithFlags>,
+    partial_parse_fn: impl Fn(&str) -> Result<ResponseBamlValue>,
+    parse_fn: impl Fn(&str) -> Result<ResponseBamlValue>,
     on_event: Option<F>,
 ) -> (
     Vec<(
         OrchestrationScope,
         LLMResponse,
-        Option<Result<BamlValueWithFlags>>,
         Option<Result<ResponseBamlValue>>,
     )>,
     Duration,
@@ -54,7 +57,6 @@ where
                     node.scope,
                     LLMResponse::InternalFailure(e.to_string()),
                     None,
-                    None,
                 ));
                 continue;
             }
@@ -67,18 +69,17 @@ where
                 .map(|stream_part| {
                     if let Some(on_event) = on_event.as_ref() {
                         if let LLMResponse::Success(s) = &stream_part {
-                            let parsed = partial_parse_fn(&s.content);
-                            let (parsed, response_value) = match parsed {
-                                Ok(v) => {
-                                    (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v))))
-                                }
-                                Err(e) => (None, Some(Err(e))),
+                            let response_value = partial_parse_fn(&s.content);
+                            let response_value_without_flags = match response_value {
+                                Ok(baml_value) => Ok(ResponseBamlValue(
+                                    baml_value.0.map_meta_owned(|m| (vec![], m.1, m.2)),
+                                )),
+                                Err(e) => Err(e),
                             };
                             on_event(FunctionResult::new(
                                 node.scope.clone(),
                                 LLMResponse::Success(s.clone()),
-                                parsed,
-                                response_value,
+                                Some(response_value_without_flags),
                             ));
                         }
                     }
@@ -111,7 +112,7 @@ where
             Err(response) => response,
         };
 
-        let parsed_response = match &final_response {
+        let response_value = match &final_response {
             LLMResponse::Success(s) => {
                 if !node
                     .finish_reason_filter()
@@ -131,6 +132,7 @@ where
             }
             _ => None,
         };
+<<<<<<< HEAD
         let (parsed_response, response_value) = match parsed_response {
             Some(Ok(v)) => (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v)))),
             Some(Err(e)) => (None, Some(Err(e))),
@@ -138,13 +140,15 @@ where
         };
         // parsed_response.map(|r| r.and_then(|v| parsed_value_to_response(v)));
         let node_name = node.scope.name();
+=======
+>>>>>>> canary
         let sleep_duration = node.error_sleep_duration().cloned();
-        results.push((node.scope, final_response, parsed_response, response_value));
+        results.push((node.scope, final_response, response_value));
 
         // Currently, we break out of the loop if an LLM responded, even if we couldn't parse the result.
         if results
             .last()
-            .map_or(false, |(_, r, _, _)| matches!(r, LLMResponse::Success(_)))
+            .map_or(false, |(_, r, _)| matches!(r, LLMResponse::Success(_)))
         {
             break;
         }

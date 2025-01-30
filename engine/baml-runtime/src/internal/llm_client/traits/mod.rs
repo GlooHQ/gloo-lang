@@ -151,8 +151,8 @@ where
 {
     #[allow(async_fn_in_trait)]
     async fn single_call(&self, ctx: &RuntimeContext, prompt: &RenderedPrompt) -> LLMResponse {
-        if let RenderedPrompt::Chat(chat) = &prompt {
-            match process_media_urls(
+        match prompt {
+            RenderedPrompt::Chat(chat) => match process_media_urls(
                 self.model_features().resolve_media_urls,
                 true,
                 None,
@@ -161,15 +161,10 @@ where
             )
             .await
             {
-                Ok(messages) => return self.chat(ctx, &messages).await,
-                Err(e) => {
-                    return LLMResponse::InternalFailure(format!("Error occurred:\n\n{:?}", e))
-                }
-            }
-        }
+                Ok(messages) => self.chat(ctx, &messages).await,
+                Err(e) => LLMResponse::InternalFailure(format!("Error occurred:\n\n{:?}", e)),
+            },
 
-        match prompt {
-            RenderedPrompt::Chat(p) => self.chat(ctx, p).await,
             RenderedPrompt::Completion(p) => self.completion(ctx, p).await,
         }
     }
@@ -243,17 +238,18 @@ where
             (false, false) => anyhow::bail!("No model type supported"),
         };
 
-        if features.anthropic_system_constraints {
+        if features.max_one_system_prompt {
             // Do some more fixes.
             if let RenderedPrompt::Chat(chat) = &mut prompt {
                 if chat.len() == 1 && chat[0].role == "system" {
-                    // If there is only one message and it is a system message, change it to a user message, because anthropic always requires a user message.
+                    // If there is only one message and it is a system message, change it to a user message,
+                    // because these models always requires a user message.
                     chat[0].role = "user".into();
                 } else {
                     // Otherwise, proceed with the existing logic for other messages.
                     chat.iter_mut().skip(1).for_each(|c| {
                         if c.role == "system" {
-                            c.role = "assistant".into();
+                            c.role = "user".into();
                         }
                     });
                 }

@@ -3,6 +3,7 @@ import { requiredEnvVarsAtom, envVarsAtom, runtimeAtom } from '../atoms'
 
 export const runtimeStateAtom = atom((get) => {
   const { rt } = get(runtimeAtom)
+  console.log('rt', rt)
   if (rt === undefined) {
     return { functions: [] }
   }
@@ -26,6 +27,32 @@ export const selectedItemAtom = atom(
     set(selectedFunctionAtom, functionName)
     set(selectedTestcaseAtom, testcaseName)
   },
+)
+
+export const functionObjectAtom = atomFamily((functionName: string) =>
+  atom((get) => {
+    const { functions } = get(runtimeStateAtom)
+    const fn = functions.find((f) => f.name === functionName)
+    if (!fn) {
+      return undefined
+    }
+    return fn
+  }),
+)
+
+export const testcaseObjectAtom = atomFamily((params: { functionName: string; testcaseName: string }) =>
+  atom((get) => {
+    const { functions } = get(runtimeStateAtom)
+    const fn = functions.find((f) => f.name === params.functionName)
+    if (!fn) {
+      return undefined
+    }
+    const tc = fn.test_cases.find((tc) => tc.name === params.testcaseName)
+    if (!tc) {
+      return undefined
+    }
+    return tc
+  }),
 )
 
 export const updateCursorAtom = atom(

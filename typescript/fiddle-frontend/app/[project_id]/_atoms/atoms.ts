@@ -3,7 +3,6 @@ import { filesAtom } from '@/shared/baml-project-panel/atoms'
 // import { ParserDBFunctionTestModel } from "@/lib/exampleProjects"
 import { TestState } from '@baml/common'
 // import { availableFunctionsAtom, selectedFunctionAtom } from '@baml/playground-common/baml_wasm_web/EventListener'
-import { sessionStore } from '@baml/playground-common/baml_wasm_web/JotaiProvider'
 // import { projectFilesAtom } from '@baml/playground-common/baml_wasm_web/baseAtoms'
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
@@ -25,7 +24,7 @@ export const currentEditorFilesAtom = atom<EditorFile[]>((get) => {
 //   sessionStore as any,
 // )
 export const unsavedChangesAtom = atom<boolean>(false)
-const activeFileNameAtomRaw = atomWithStorage<string | null>('active_file', null, sessionStore)
+const activeFileNameAtomRaw = atomWithStorage<string | null>('active_file', null)
 export const activeFileNameAtom = atom(
   (get) => {
     const files = get(currentEditorFilesAtom)

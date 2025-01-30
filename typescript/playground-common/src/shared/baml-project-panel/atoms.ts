@@ -5,7 +5,6 @@ import { unwrap } from 'jotai/utils'
 import { type ICodeBlock } from './types'
 import { vscodeLocalStorageStore } from './Jotai'
 import { orchIndexAtom } from './playground-panel/atoms-orch-graph'
-import { WasmCallContext } from '@gloo-ai/baml-schema-wasm-web/baml_schema_build'
 import { vscode } from './vscode'
 
 const wasmAtomAsync = atom(async () => {
@@ -78,24 +77,28 @@ export const ctxAtom = atom((get) => {
 })
 
 export const runtimeAtom = atom((get) => {
-  const wasm = get(wasmAtom)
-  const project = get(projectAtom)
-  const envVars = get(envVarsAtom)
-  if (wasm === undefined || project === undefined) {
-    return { rt: undefined, diags: undefined }
-  }
   try {
+    const wasm = get(wasmAtom)
+    const project = get(projectAtom)
+    const envVars = get(envVarsAtom)
+    if (wasm === undefined || project === undefined) {
+      return { rt: undefined, diags: undefined }
+    }
     const selectedEnvVars = Object.fromEntries(Object.entries(envVars).filter(([key, value]) => value !== undefined))
     const rt = project.runtime(selectedEnvVars)
     const diags = project.diagnostics(rt)
     return { rt, diags }
   } catch (e) {
     console.log('Error occurred while getting runtime', e)
-    const WasmDiagnosticError = wasm.WasmDiagnosticError
+    const wasm = get(wasmAtom)
+    if (wasm) {
+      const WasmDiagnosticError = wasm.WasmDiagnosticError
+      if (e instanceof WasmDiagnosticError) {
+        return { rt: undefined, diags: e }
+      }
+    }
     if (e instanceof Error) {
       console.error(e.message)
-    } else if (e instanceof WasmDiagnosticError) {
-      return { rt: undefined, diags: e }
     } else {
       console.error(e)
     }
@@ -223,6 +226,9 @@ export const envKeyValuesAtom = atom(
 )
 export const envVarsAtom = atom(
   (get) => {
+    if (typeof window === 'undefined') {
+      return {}
+    }
     if ((window as any).next?.version) {
       // NextJS environment doesnt have vscode settings, and proxy is always enabled
       return Object.fromEntries(defaultEnvKeyValues.map(([k, v]) => [k, v]))
@@ -270,6 +276,9 @@ export const requiredEnvVarsAtom = atom((get) => {
 })
 
 const defaultEnvKeyValues: [string, string][] = (() => {
+  if (typeof window === 'undefined') {
+    return []
+  }
   if ((window as any).next?.version) {
     console.log('Running in nextjs')
 
