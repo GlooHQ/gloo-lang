@@ -457,6 +457,9 @@ class Recipe(BaseModel):
     ingredients: Dict[str, "Quantity"]
     recipe_type: Union[Literal["breakfast"], Literal["dinner"]]
 
+class RecursiveAliasDependency(BaseModel):
+    value: "JsonValue"
+
 class Resume(BaseModel):
     name: str
     email: str

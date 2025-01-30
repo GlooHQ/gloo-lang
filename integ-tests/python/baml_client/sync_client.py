@@ -2278,6 +2278,29 @@ class BamlSyncClient:
       )
       return cast(types.CompoundBigNumbers, raw.cast_to(types, types, partial_types, False))
     
+    def TakeRecAliasDep(
+        self,
+        input: types.RecursiveAliasDependency,
+        baml_options: BamlCallOptions = {},
+    ) -> types.RecursiveAliasDependency:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "TakeRecAliasDep",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.RecursiveAliasDependency, raw.cast_to(types, types, partial_types, False))
+    
     def TestAnthropic(
         self,
         input: str,
@@ -6284,6 +6307,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(partial_types.CompoundBigNumbers, x.cast_to(types, types, partial_types, True)),
         lambda x: cast(types.CompoundBigNumbers, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TakeRecAliasDep(
+        self,
+        input: types.RecursiveAliasDependency,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.RecursiveAliasDependency, types.RecursiveAliasDependency]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "TakeRecAliasDep",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlSyncStream[partial_types.RecursiveAliasDependency, types.RecursiveAliasDependency](
+        raw,
+        lambda x: cast(partial_types.RecursiveAliasDependency, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.RecursiveAliasDependency, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     

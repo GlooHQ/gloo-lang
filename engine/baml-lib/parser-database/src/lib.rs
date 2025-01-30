@@ -168,18 +168,23 @@ impl ParserDatabase {
                     Some(TypeWalker::Enum(_)) => {}
                     // Gotta resolve type aliases.
                     Some(TypeWalker::TypeAlias(alias)) => {
-                        resolved_deps.extend(alias.resolved().flat_idns().iter().map(|ident| {
-                            match self.find_type_by_str(ident.name()) {
-                                Some(TypeWalker::Class(cls)) => cls.id,
-                                Some(TypeWalker::Enum(_)) => {
-                                    panic!("Enums are not allowed in type aliases")
+                        resolved_deps.extend(alias.resolved().flat_idns().iter().filter_map(
+                            |ident| {
+                                match self.find_type_by_str(ident.name()) {
+                                    Some(TypeWalker::Class(cls)) => Some(cls.id),
+                                    Some(TypeWalker::Enum(_)) => {
+                                        panic!("Enums are not allowed in type aliases")
+                                    }
+                                    Some(TypeWalker::TypeAlias(alias)) => {
+                                        // Skip this one, recursive type aliases
+                                        // are not part of the finite class cycle.
+                                        // They are handled separately.
+                                        None
+                                    }
+                                    None => panic!("Unknown class `{dep}`"),
                                 }
-                                Some(TypeWalker::TypeAlias(alias)) => {
-                                    panic!("Alias should be resolved at this point")
-                                }
-                                None => panic!("Unknown class `{dep}`"),
-                            }
-                        }))
+                            },
+                        ))
                     }
                     None => panic!("Unknown class `{dep}`"),
                 }
@@ -190,9 +195,6 @@ impl ParserDatabase {
 
         // Find the cycles and inject them into parser DB. This will then be
         // passed into the IR and then into the Jinja output format.
-        //
-        // TODO: Should we update `class_dependencies` to include resolved
-        // aliases or not?
         self.types.finite_recursive_cycles = Tarjan::components(&resolved_dependency_graph);
 
         // Fully resolve function dependencies.

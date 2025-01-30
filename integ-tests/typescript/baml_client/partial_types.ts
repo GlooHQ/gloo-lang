@@ -410,6 +410,10 @@ export interface Recipe {
     recipe_type?: ("breakfast" | "dinner" | null)
 }
 
+export interface RecursiveAliasDependency {
+    value?: JsonValue
+}
+
 export interface Resume {
     name?: (string | null)
     email?: (string | null)
