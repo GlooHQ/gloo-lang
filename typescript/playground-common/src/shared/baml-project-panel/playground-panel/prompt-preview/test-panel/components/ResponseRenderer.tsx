@@ -2,7 +2,17 @@
 import { WasmFunctionResponse, WasmTestResponse, WasmLLMFailure, WasmLLMResponse } from '@gloo-ai/baml-schema-wasm-web'
 import { DoneTestStatusType } from '../../../atoms'
 import { useState } from 'react'
-import { AlertCircle, Brain, Check, CheckCircle, ChevronDown, ChevronUp, Clock, Copy } from 'lucide-react'
+import {
+  AlertCircle,
+  Brain,
+  Check,
+  CheckCircle,
+  ChevronDown,
+  ChevronsLeftRight,
+  ChevronUp,
+  Clock,
+  Copy,
+} from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
@@ -48,9 +58,10 @@ export const ResponseRenderer: React.FC<ResponseRendererProps> = ({ response, st
 
   // Helper to determine if we should show parsed response separately
   const shouldShowParsedSeparately = () => {
-    if (!parsedResponse || !llmResponse) return false
-    const parsedValue = typeof parsedResponse === 'string' ? parsedResponse : parsedResponse.value
-    return parsedValue && JSON.stringify(JSON.parse(parsedValue)) !== JSON.stringify(llmResponse.content)
+    // if (!parsedResponse || !llmResponse) return false
+    // const parsedValue = typeof parsedResponse === 'string' ? parsedResponse : parsedResponse.value
+    // return parsedValue && JSON.stringify(JSON.parse(parsedValue)) !== JSON.stringify(llmResponse.content)
+    return true
   }
 
   return (
@@ -95,8 +106,7 @@ export const ResponseRenderer: React.FC<ResponseRendererProps> = ({ response, st
         )}
       </div>
 
-      {/* Error Messages */}
-      {failureMessage && <pre className='text-xs text-red-500 text-balance'>Error: {failureMessage}</pre>}
+      {/* Error Messages are rendered inside ParsedResponseRenderer*/}
     </div>
   )
 }
@@ -131,6 +141,18 @@ const MetadataBadges: React.FC<{ llmResponse: WasmLLMResponse }> = ({ llmRespons
         </Badge>
       </TooltipTrigger>
       <TooltipContent>Latency</TooltipContent>
+    </Tooltip>
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <Badge variant='outline' className='flex items-center space-x-1 font-light text-muted-foreground'>
+          <ChevronsLeftRight className='w-3 h-3' />
+          <span>
+            {llmResponse.input_tokens != null ? Number(llmResponse.input_tokens) : 'unknown'} in |{' '}
+            {llmResponse.output_tokens != null ? Number(llmResponse.output_tokens) : 'unknown'} out
+          </span>
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent>Tokens (in / out)</TooltipContent>
     </Tooltip>
   </TooltipProvider>
 )

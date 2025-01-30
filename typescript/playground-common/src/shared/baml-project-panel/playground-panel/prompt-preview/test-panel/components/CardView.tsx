@@ -34,13 +34,7 @@ interface TestId {
   testName: string
 }
 
-const TestResult = ({
-  testId,
-  historicalResponse,
-}: {
-  testId: TestId
-  historicalResponse?: TestState
-}) => {
+const TestResult = ({ testId, historicalResponse }: { testId: TestId; historicalResponse?: TestState }) => {
   const response = useAtomValue(testCaseResponseAtom(testId))
   const displayResponse = historicalResponse || response
   const { setRunningTests } = useRunTests()
@@ -73,20 +67,20 @@ const TestResult = ({
       )}
       onClick={() => setSelectedItem(testId.functionName, testId.testName)}
     >
-      <div className='flex items-center justify-between gap-2'>
-        <div className='flex items-center gap-2'>
+      <div className='flex gap-2 justify-between items-center'>
+        <div className='flex gap-2 items-center'>
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='h-6 w-6 shrink-0'
+                  className='w-6 h-6 shrink-0'
                   onClick={() => {
                     setRunningTests([testId])
                   }}
                 >
-                  <Play className='h-4 w-4' fill='#a855f7' stroke='#a855f7' />
+                  <Play className='w-4 h-4' fill='#a855f7' stroke='#a855f7' />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>

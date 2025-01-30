@@ -336,13 +336,17 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(diagnosticsCollection)
 
+  vscode.window.onDidChangeActiveTextEditor((event) => {
+    // makes it so we reload the project. Could probably be called reloadProjectFiles or something. This is because we may be clicking into a different file in a separate baml_src.
+    requestDiagnostics()
+  })
+
   // Add cursor movement listener
   vscode.window.onDidChangeTextEditorSelection((event) => {
     const position = event.selections[0].active
 
     const editor = vscode.window.activeTextEditor
-    // makes it so we reload the project. Could probably be called reloadProjectFiles or something. This is because we may be clicking into a different file in a separate baml_src.
-    requestDiagnostics()
+
     if (editor) {
       const name = editor.document.fileName
       const text = editor.document.getText()

@@ -8,7 +8,7 @@ pub(crate) mod internal;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod cli;
 pub mod client_registry;
-pub mod constraints;
+pub mod test_constraints;
 pub mod errors;
 pub mod request;
 mod runtime;
@@ -64,7 +64,7 @@ pub use internal_baml_core::internal_baml_diagnostics;
 pub use internal_baml_core::internal_baml_diagnostics::Diagnostics as DiagnosticsError;
 pub use internal_baml_core::ir::{scope_diagnostics, FieldType, IRHelper, TypeValue};
 
-use crate::constraints::{evaluate_test_constraints, TestConstraintsResult};
+use crate::test_constraints::{evaluate_test_constraints, TestConstraintsResult};
 use crate::internal::llm_client::LLMResponse;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -245,7 +245,7 @@ impl BamlRuntime {
             let (response_res, span_uuid) = stream.run(on_event, ctx, None, None).await;
             log::info!("response_res: {:#?}", response_res);
             let res = response_res?;
-            let (_, llm_resp, _, val) = res
+            let (_, llm_resp, val) = res
                 .event_chain()
                 .iter()
                 .last()
@@ -267,7 +267,8 @@ impl BamlRuntime {
             } else {
                 match val {
                     Some(Ok(value)) => {
-                        evaluate_test_constraints(&params, value, complete_resp, constraints)
+                        let value_with_constraints = value.0.map_meta(|(_,constraints,_)| constraints.clone());
+                        evaluate_test_constraints(&params, &value_with_constraints, complete_resp, constraints)
                     }
                     _ => TestConstraintsResult::empty(),
                 }

@@ -71,7 +71,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.Recipe, raw.cast_to(types, types))
+      return cast(types.Recipe, raw.cast_to(types, types, partial_types, False))
     
     async def AliasThatPointsToRecursiveType(
         self,
@@ -94,7 +94,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.LinkedListAliasNode, raw.cast_to(types, types))
+      return cast(types.LinkedListAliasNode, raw.cast_to(types, types, partial_types, False))
     
     async def AliasWithMultipleAttrs(
         self,
@@ -117,7 +117,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Checked[int,types.Literal["gt_ten"]], raw.cast_to(types, types))
+      return cast(Checked[int,types.Literal["gt_ten"]], raw.cast_to(types, types, partial_types, False))
     
     async def AliasedInputClass(
         self,
@@ -140,7 +140,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def AliasedInputClass2(
         self,
@@ -163,7 +163,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def AliasedInputClassNested(
         self,
@@ -186,7 +186,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def AliasedInputEnum(
         self,
@@ -209,7 +209,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def AliasedInputList(
         self,
@@ -232,7 +232,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def AllowedOptionals(
         self,
@@ -255,7 +255,30 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.OptionalListAndMap, raw.cast_to(types, types))
+      return cast(types.OptionalListAndMap, raw.cast_to(types, types, partial_types, False))
+    
+    async def AssertFn(
+        self,
+        a: int,
+        baml_options: BamlCallOptions = {},
+    ) -> int:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "AssertFn",
+        {
+          "a": a,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(int, raw.cast_to(types, types, partial_types, False))
     
     async def AudioInput(
         self,
@@ -278,7 +301,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def BuildLinkedList(
         self,
@@ -301,7 +324,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.LinkedList, raw.cast_to(types, types))
+      return cast(types.LinkedList, raw.cast_to(types, types, partial_types, False))
     
     async def BuildTree(
         self,
@@ -324,7 +347,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.Tree, raw.cast_to(types, types))
+      return cast(types.Tree, raw.cast_to(types, types, partial_types, False))
     
     async def ClassThatPointsToRecursiveClassThroughAlias(
         self,
@@ -347,7 +370,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.ClassToRecAlias, raw.cast_to(types, types))
+      return cast(types.ClassToRecAlias, raw.cast_to(types, types, partial_types, False))
     
     async def ClassifyDynEnumTwo(
         self,
@@ -370,7 +393,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Union[types.DynEnumTwo, str], raw.cast_to(types, types))
+      return cast(Union[types.DynEnumTwo, str], raw.cast_to(types, types, partial_types, False))
     
     async def ClassifyMessage(
         self,
@@ -393,7 +416,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.Category, raw.cast_to(types, types))
+      return cast(types.Category, raw.cast_to(types, types, partial_types, False))
     
     async def ClassifyMessage2(
         self,
@@ -416,7 +439,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.Category, raw.cast_to(types, types))
+      return cast(types.Category, raw.cast_to(types, types, partial_types, False))
     
     async def ClassifyMessage3(
         self,
@@ -439,7 +462,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.Category, raw.cast_to(types, types))
+      return cast(types.Category, raw.cast_to(types, types, partial_types, False))
     
     async def Completion(
         self,
@@ -462,7 +485,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def CustomTask(
         self,
@@ -485,7 +508,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Union[types.BookOrder, types.FlightConfirmation, types.GroceryReceipt], raw.cast_to(types, types))
+      return cast(Union[types.BookOrder, types.FlightConfirmation, types.GroceryReceipt], raw.cast_to(types, types, partial_types, False))
     
     async def DescribeImage(
         self,
@@ -508,7 +531,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def DescribeImage2(
         self,
@@ -531,7 +554,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def DescribeImage3(
         self,
@@ -554,7 +577,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def DescribeImage4(
         self,
@@ -577,7 +600,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def DifferentiateUnions(
         self,
@@ -600,7 +623,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Union[types.OriginalA, types.OriginalB], raw.cast_to(types, types))
+      return cast(Union[types.OriginalA, types.OriginalB], raw.cast_to(types, types, partial_types, False))
     
     async def DummyOutputFunction(
         self,
@@ -623,7 +646,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.DummyOutput, raw.cast_to(types, types))
+      return cast(types.DummyOutput, raw.cast_to(types, types, partial_types, False))
     
     async def DynamicFunc(
         self,
@@ -646,7 +669,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.DynamicClassTwo, raw.cast_to(types, types))
+      return cast(types.DynamicClassTwo, raw.cast_to(types, types, partial_types, False))
     
     async def DynamicInputOutput(
         self,
@@ -669,7 +692,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.DynInputOutput, raw.cast_to(types, types))
+      return cast(types.DynInputOutput, raw.cast_to(types, types, partial_types, False))
     
     async def DynamicListInputOutput(
         self,
@@ -692,7 +715,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(List[types.DynInputOutput], raw.cast_to(types, types))
+      return cast(List[types.DynInputOutput], raw.cast_to(types, types, partial_types, False))
     
     async def ExpectFailure(
         self,
@@ -715,7 +738,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def ExtractContactInfo(
         self,
@@ -738,7 +761,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.ContactInfo, raw.cast_to(types, types))
+      return cast(types.ContactInfo, raw.cast_to(types, types, partial_types, False))
     
     async def ExtractHobby(
         self,
@@ -761,7 +784,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(List[Union[types.Hobby, str]], raw.cast_to(types, types))
+      return cast(List[Union[types.Hobby, str]], raw.cast_to(types, types, partial_types, False))
     
     async def ExtractNames(
         self,
@@ -784,7 +807,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(List[str], raw.cast_to(types, types))
+      return cast(List[str], raw.cast_to(types, types, partial_types, False))
     
     async def ExtractPeople(
         self,
@@ -807,7 +830,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(List[types.Person], raw.cast_to(types, types))
+      return cast(List[types.Person], raw.cast_to(types, types, partial_types, False))
     
     async def ExtractReceiptInfo(
         self,
@@ -830,7 +853,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.ReceiptInfo, raw.cast_to(types, types))
+      return cast(types.ReceiptInfo, raw.cast_to(types, types, partial_types, False))
     
     async def ExtractResume(
         self,
@@ -853,7 +876,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.Resume, raw.cast_to(types, types))
+      return cast(types.Resume, raw.cast_to(types, types, partial_types, False))
     
     async def ExtractResume2(
         self,
@@ -876,7 +899,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.Resume, raw.cast_to(types, types))
+      return cast(types.Resume, raw.cast_to(types, types, partial_types, False))
     
     async def FnClassOptionalOutput(
         self,
@@ -899,7 +922,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Optional[types.ClassOptionalOutput], raw.cast_to(types, types))
+      return cast(Optional[types.ClassOptionalOutput], raw.cast_to(types, types, partial_types, False))
     
     async def FnClassOptionalOutput2(
         self,
@@ -922,7 +945,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Optional[types.ClassOptionalOutput2], raw.cast_to(types, types))
+      return cast(Optional[types.ClassOptionalOutput2], raw.cast_to(types, types, partial_types, False))
     
     async def FnEnumListOutput(
         self,
@@ -945,7 +968,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(List[types.EnumOutput], raw.cast_to(types, types))
+      return cast(List[types.EnumOutput], raw.cast_to(types, types, partial_types, False))
     
     async def FnEnumOutput(
         self,
@@ -968,7 +991,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.EnumOutput, raw.cast_to(types, types))
+      return cast(types.EnumOutput, raw.cast_to(types, types, partial_types, False))
     
     async def FnLiteralClassInputOutput(
         self,
@@ -991,7 +1014,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.LiteralClassHello, raw.cast_to(types, types))
+      return cast(types.LiteralClassHello, raw.cast_to(types, types, partial_types, False))
     
     async def FnLiteralUnionClassInputOutput(
         self,
@@ -1014,7 +1037,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Union[types.LiteralClassOne, types.LiteralClassTwo], raw.cast_to(types, types))
+      return cast(Union[types.LiteralClassOne, types.LiteralClassTwo], raw.cast_to(types, types, partial_types, False))
     
     async def FnNamedArgsSingleStringOptional(
         self,
@@ -1037,7 +1060,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def FnOutputBool(
         self,
@@ -1060,7 +1083,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(bool, raw.cast_to(types, types))
+      return cast(bool, raw.cast_to(types, types, partial_types, False))
     
     async def FnOutputClass(
         self,
@@ -1083,7 +1106,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.TestOutputClass, raw.cast_to(types, types))
+      return cast(types.TestOutputClass, raw.cast_to(types, types, partial_types, False))
     
     async def FnOutputClassList(
         self,
@@ -1106,7 +1129,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(List[types.TestOutputClass], raw.cast_to(types, types))
+      return cast(List[types.TestOutputClass], raw.cast_to(types, types, partial_types, False))
     
     async def FnOutputClassNested(
         self,
@@ -1129,7 +1152,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.TestClassNested, raw.cast_to(types, types))
+      return cast(types.TestClassNested, raw.cast_to(types, types, partial_types, False))
     
     async def FnOutputClassWithEnum(
         self,
@@ -1152,7 +1175,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.TestClassWithEnum, raw.cast_to(types, types))
+      return cast(types.TestClassWithEnum, raw.cast_to(types, types, partial_types, False))
     
     async def FnOutputInt(
         self,
@@ -1175,7 +1198,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(int, raw.cast_to(types, types))
+      return cast(int, raw.cast_to(types, types, partial_types, False))
     
     async def FnOutputLiteralBool(
         self,
@@ -1198,7 +1221,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Literal[False], raw.cast_to(types, types))
+      return cast(Literal[False], raw.cast_to(types, types, partial_types, False))
     
     async def FnOutputLiteralInt(
         self,
@@ -1221,7 +1244,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Literal[5], raw.cast_to(types, types))
+      return cast(Literal[5], raw.cast_to(types, types, partial_types, False))
     
     async def FnOutputLiteralString(
         self,
@@ -1244,7 +1267,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Literal["example output"], raw.cast_to(types, types))
+      return cast(Literal["example output"], raw.cast_to(types, types, partial_types, False))
     
     async def FnOutputStringList(
         self,
@@ -1267,7 +1290,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(List[str], raw.cast_to(types, types))
+      return cast(List[str], raw.cast_to(types, types, partial_types, False))
     
     async def FnTestAliasedEnumOutput(
         self,
@@ -1290,7 +1313,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.TestEnum, raw.cast_to(types, types))
+      return cast(types.TestEnum, raw.cast_to(types, types, partial_types, False))
     
     async def FnTestClassAlias(
         self,
@@ -1313,7 +1336,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.TestClassAlias, raw.cast_to(types, types))
+      return cast(types.TestClassAlias, raw.cast_to(types, types, partial_types, False))
     
     async def FnTestNamedArgsSingleEnum(
         self,
@@ -1336,7 +1359,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def GetDataType(
         self,
@@ -1359,7 +1382,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.RaysData, raw.cast_to(types, types))
+      return cast(types.RaysData, raw.cast_to(types, types, partial_types, False))
     
     async def GetOrderInfo(
         self,
@@ -1382,7 +1405,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.OrderInfo, raw.cast_to(types, types))
+      return cast(types.OrderInfo, raw.cast_to(types, types, partial_types, False))
     
     async def GetQuery(
         self,
@@ -1405,7 +1428,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.SearchParams, raw.cast_to(types, types))
+      return cast(types.SearchParams, raw.cast_to(types, types, partial_types, False))
     
     async def InOutEnumMapKey(
         self,
@@ -1428,7 +1451,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Dict[types.MapKey, str], raw.cast_to(types, types))
+      return cast(Dict[types.MapKey, str], raw.cast_to(types, types, partial_types, False))
     
     async def InOutLiteralStringUnionMapKey(
         self,
@@ -1451,7 +1474,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Dict[Union[Literal["one"], Literal["two"], Union[Literal["three"], Literal["four"]]], str], raw.cast_to(types, types))
+      return cast(Dict[Union[Literal["one"], Literal["two"], Union[Literal["three"], Literal["four"]]], str], raw.cast_to(types, types, partial_types, False))
     
     async def InOutSingleLiteralStringMapKey(
         self,
@@ -1474,7 +1497,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Dict[Literal["key"], str], raw.cast_to(types, types))
+      return cast(Dict[Literal["key"], str], raw.cast_to(types, types, partial_types, False))
     
     async def JsonTypeAliasCycle(
         self,
@@ -1497,7 +1520,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.JsonValue, raw.cast_to(types, types))
+      return cast(types.JsonValue, raw.cast_to(types, types, partial_types, False))
     
     async def LiteralUnionsTest(
         self,
@@ -1520,7 +1543,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Union[Literal[1], Literal[True], Literal["string output"]], raw.cast_to(types, types))
+      return cast(Union[Literal[1], Literal[True], Literal["string output"]], raw.cast_to(types, types, partial_types, False))
     
     async def MakeBlockConstraint(
         self,
@@ -1543,7 +1566,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Checked[types.BlockConstraint,types.Literal["cross_field"]], raw.cast_to(types, types))
+      return cast(Checked[types.BlockConstraint,types.Literal["cross_field"]], raw.cast_to(types, types, partial_types, False))
     
     async def MakeNestedBlockConstraint(
         self,
@@ -1566,7 +1589,30 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.NestedBlockConstraint, raw.cast_to(types, types))
+      return cast(types.NestedBlockConstraint, raw.cast_to(types, types, partial_types, False))
+    
+    async def MakeSemanticContainer(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> types.SemanticContainer:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "MakeSemanticContainer",
+        {
+          
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.SemanticContainer, raw.cast_to(types, types, partial_types, False))
     
     async def MapAlias(
         self,
@@ -1589,7 +1635,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Dict[str, List[str]], raw.cast_to(types, types))
+      return cast(Dict[str, List[str]], raw.cast_to(types, types, partial_types, False))
     
     async def MergeAliasAttributes(
         self,
@@ -1612,7 +1658,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.MergeAttrs, raw.cast_to(types, types))
+      return cast(types.MergeAttrs, raw.cast_to(types, types, partial_types, False))
     
     async def MyFunc(
         self,
@@ -1635,7 +1681,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.DynamicOutput, raw.cast_to(types, types))
+      return cast(types.DynamicOutput, raw.cast_to(types, types, partial_types, False))
     
     async def NestedAlias(
         self,
@@ -1658,7 +1704,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]], raw.cast_to(types, types))
+      return cast(Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]], raw.cast_to(types, types, partial_types, False))
     
     async def NullLiteralClassHello(
         self,
@@ -1681,7 +1727,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.ClassForNullLiteral, raw.cast_to(types, types))
+      return cast(types.ClassForNullLiteral, raw.cast_to(types, types, partial_types, False))
     
     async def OptionalTest_Function(
         self,
@@ -1704,7 +1750,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(List[Optional[types.OptionalTest_ReturnType]], raw.cast_to(types, types))
+      return cast(List[Optional[types.OptionalTest_ReturnType]], raw.cast_to(types, types, partial_types, False))
     
     async def PredictAge(
         self,
@@ -1727,7 +1773,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.FooAny, raw.cast_to(types, types))
+      return cast(types.FooAny, raw.cast_to(types, types, partial_types, False))
     
     async def PredictAgeBare(
         self,
@@ -1750,7 +1796,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Checked[int,types.Literal["too_big"]], raw.cast_to(types, types))
+      return cast(Checked[int,types.Literal["too_big"]], raw.cast_to(types, types, partial_types, False))
     
     async def PrimitiveAlias(
         self,
@@ -1773,7 +1819,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Union[int, str, bool, float], raw.cast_to(types, types))
+      return cast(Union[int, str, bool, float], raw.cast_to(types, types, partial_types, False))
     
     async def PromptTestClaude(
         self,
@@ -1796,7 +1842,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def PromptTestClaudeChat(
         self,
@@ -1819,7 +1865,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def PromptTestClaudeChatNoSystem(
         self,
@@ -1842,7 +1888,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def PromptTestOpenAI(
         self,
@@ -1865,7 +1911,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def PromptTestOpenAIChat(
         self,
@@ -1888,7 +1934,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def PromptTestOpenAIChatNoSystem(
         self,
@@ -1911,7 +1957,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def PromptTestStreaming(
         self,
@@ -1934,7 +1980,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def RecursiveAliasCycle(
         self,
@@ -1957,7 +2003,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.RecAliasOne, raw.cast_to(types, types))
+      return cast(types.RecAliasOne, raw.cast_to(types, types, partial_types, False))
     
     async def RecursiveClassWithAliasIndirection(
         self,
@@ -1980,7 +2026,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.NodeWithAliasIndirection, raw.cast_to(types, types))
+      return cast(types.NodeWithAliasIndirection, raw.cast_to(types, types, partial_types, False))
     
     async def ReturnAliasWithMergedAttributes(
         self,
@@ -2003,7 +2049,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Checked[int,types.Literal["gt_ten"]], raw.cast_to(types, types))
+      return cast(Checked[int,types.Literal["gt_ten"]], raw.cast_to(types, types, partial_types, False))
     
     async def ReturnFailingAssert(
         self,
@@ -2026,7 +2072,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(int, raw.cast_to(types, types))
+      return cast(int, raw.cast_to(types, types, partial_types, False))
     
     async def ReturnMalformedConstraints(
         self,
@@ -2049,7 +2095,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.MalformedConstraints, raw.cast_to(types, types))
+      return cast(types.MalformedConstraints, raw.cast_to(types, types, partial_types, False))
     
     async def SchemaDescriptions(
         self,
@@ -2072,7 +2118,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.Schema, raw.cast_to(types, types))
+      return cast(types.Schema, raw.cast_to(types, types, partial_types, False))
     
     async def SimpleRecursiveListAlias(
         self,
@@ -2095,7 +2141,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.RecursiveListAlias, raw.cast_to(types, types))
+      return cast(types.RecursiveListAlias, raw.cast_to(types, types, partial_types, False))
     
     async def SimpleRecursiveMapAlias(
         self,
@@ -2118,7 +2164,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.RecursiveMapAlias, raw.cast_to(types, types))
+      return cast(types.RecursiveMapAlias, raw.cast_to(types, types, partial_types, False))
     
     async def StreamBigNumbers(
         self,
@@ -2141,7 +2187,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.BigNumbers, raw.cast_to(types, types))
+      return cast(types.BigNumbers, raw.cast_to(types, types, partial_types, False))
     
     async def StreamFailingAssertion(
         self,
@@ -2164,7 +2210,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.TwoStoriesOneTitle, raw.cast_to(types, types))
+      return cast(types.TwoStoriesOneTitle, raw.cast_to(types, types, partial_types, False))
     
     async def StreamOneBigNumber(
         self,
@@ -2187,7 +2233,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(int, raw.cast_to(types, types))
+      return cast(int, raw.cast_to(types, types, partial_types, False))
     
     async def StreamUnionIntegers(
         self,
@@ -2210,7 +2256,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(List[Union[int, str]], raw.cast_to(types, types))
+      return cast(List[Union[int, str]], raw.cast_to(types, types, partial_types, False))
     
     async def StreamingCompoundNumbers(
         self,
@@ -2233,7 +2279,30 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.CompoundBigNumbers, raw.cast_to(types, types))
+      return cast(types.CompoundBigNumbers, raw.cast_to(types, types, partial_types, False))
+    
+    async def TakeRecAliasDep(
+        self,
+        input: types.RecursiveAliasDependency,
+        baml_options: BamlCallOptions = {},
+    ) -> types.RecursiveAliasDependency:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TakeRecAliasDep",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.RecursiveAliasDependency, raw.cast_to(types, types, partial_types, False))
     
     async def TestAnthropic(
         self,
@@ -2256,7 +2325,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestAnthropicShorthand(
         self,
@@ -2279,7 +2348,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestAws(
         self,
@@ -2302,7 +2371,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestAwsInvalidAccessKey(
         self,
@@ -2325,7 +2394,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestAwsInvalidProfile(
         self,
@@ -2348,7 +2417,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestAwsInvalidRegion(
         self,
@@ -2371,7 +2440,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestAwsInvalidSessionToken(
         self,
@@ -2394,7 +2463,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestAzure(
         self,
@@ -2417,7 +2486,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestAzureFailure(
         self,
@@ -2440,7 +2509,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestCaching(
         self,
@@ -2463,7 +2532,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestFallbackClient(
         self,
@@ -2486,7 +2555,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestFallbackToShorthand(
         self,
@@ -2509,7 +2578,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleBool(
         self,
@@ -2532,7 +2601,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleClass(
         self,
@@ -2555,7 +2624,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleEnumList(
         self,
@@ -2578,7 +2647,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleFloat(
         self,
@@ -2601,7 +2670,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleInt(
         self,
@@ -2624,7 +2693,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleMapStringToClass(
         self,
@@ -2647,7 +2716,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Dict[str, types.StringToClassEntry], raw.cast_to(types, types))
+      return cast(Dict[str, types.StringToClassEntry], raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleMapStringToMap(
         self,
@@ -2670,7 +2739,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Dict[str, Dict[str, str]], raw.cast_to(types, types))
+      return cast(Dict[str, Dict[str, str]], raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleMapStringToString(
         self,
@@ -2693,7 +2762,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(Dict[str, str], raw.cast_to(types, types))
+      return cast(Dict[str, str], raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleString(
         self,
@@ -2716,7 +2785,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleStringArray(
         self,
@@ -2739,7 +2808,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestFnNamedArgsSingleStringList(
         self,
@@ -2762,7 +2831,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestGemini(
         self,
@@ -2785,7 +2854,76 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestGeminiOpenAiGeneric(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestGeminiOpenAiGeneric",
+        {
+          
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestGeminiSystem(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestGeminiSystem",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestGeminiSystemAsChat(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestGeminiSystemAsChat",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestImageInput(
         self,
@@ -2808,7 +2946,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestImageInputAnthropic(
         self,
@@ -2831,7 +2969,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestImageListInput(
         self,
@@ -2854,7 +2992,30 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestMemory(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.TestMemoryOutput:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestMemory",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.TestMemoryOutput, raw.cast_to(types, types, partial_types, False))
     
     async def TestMulticlassNamedArgs(
         self,
@@ -2877,7 +3038,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestNamedArgsLiteralBool(
         self,
@@ -2900,7 +3061,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestNamedArgsLiteralInt(
         self,
@@ -2923,7 +3084,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestNamedArgsLiteralString(
         self,
@@ -2946,7 +3107,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestOllama(
         self,
@@ -2969,7 +3130,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestOpenAILegacyProvider(
         self,
@@ -2992,7 +3153,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestOpenAIShorthand(
         self,
@@ -3015,7 +3176,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestRetryConstant(
         self,
@@ -3038,7 +3199,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestRetryExponential(
         self,
@@ -3061,7 +3222,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestSingleFallbackClient(
         self,
@@ -3084,7 +3245,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestVertex(
         self,
@@ -3107,7 +3268,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def TestVertexWithSystemInstructions(
         self,
@@ -3130,7 +3291,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(str, raw.cast_to(types, types))
+      return cast(str, raw.cast_to(types, types, partial_types, False))
     
     async def UnionTest_Function(
         self,
@@ -3153,7 +3314,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(types.UnionTest_ReturnType, raw.cast_to(types, types))
+      return cast(types.UnionTest_ReturnType, raw.cast_to(types, types, partial_types, False))
     
     async def UseBlockConstraint(
         self,
@@ -3176,7 +3337,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(int, raw.cast_to(types, types))
+      return cast(int, raw.cast_to(types, types, partial_types, False))
     
     async def UseMalformedConstraints(
         self,
@@ -3199,7 +3360,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(int, raw.cast_to(types, types))
+      return cast(int, raw.cast_to(types, types, partial_types, False))
     
     async def UseNestedBlockConstraint(
         self,
@@ -3222,7 +3383,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      return cast(int, raw.cast_to(types, types))
+      return cast(int, raw.cast_to(types, types, partial_types, False))
     
 
 
@@ -3260,8 +3421,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.Recipe, types.Recipe](
         raw,
-        lambda x: cast(partial_types.Recipe, x.cast_to(types, partial_types)),
-        lambda x: cast(types.Recipe, x.cast_to(types, types)),
+        lambda x: cast(partial_types.Recipe, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.Recipe, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3290,8 +3451,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.LinkedListAliasNode, types.LinkedListAliasNode](
         raw,
-        lambda x: cast(partial_types.LinkedListAliasNode, x.cast_to(types, partial_types)),
-        lambda x: cast(types.LinkedListAliasNode, x.cast_to(types, types)),
+        lambda x: cast(partial_types.LinkedListAliasNode, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.LinkedListAliasNode, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3320,8 +3481,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Checked[Optional[int],types.Literal["gt_ten"]], Checked[int,types.Literal["gt_ten"]]](
         raw,
-        lambda x: cast(Checked[Optional[int],types.Literal["gt_ten"]], x.cast_to(types, partial_types)),
-        lambda x: cast(Checked[int,types.Literal["gt_ten"]], x.cast_to(types, types)),
+        lambda x: cast(Checked[Optional[int],types.Literal["gt_ten"]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Checked[int,types.Literal["gt_ten"]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3350,8 +3511,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3380,8 +3541,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3410,8 +3571,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3440,8 +3601,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3470,8 +3631,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3500,8 +3661,38 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.OptionalListAndMap, types.OptionalListAndMap](
         raw,
-        lambda x: cast(partial_types.OptionalListAndMap, x.cast_to(types, partial_types)),
-        lambda x: cast(types.OptionalListAndMap, x.cast_to(types, types)),
+        lambda x: cast(partial_types.OptionalListAndMap, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.OptionalListAndMap, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def AssertFn(
+        self,
+        a: int,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[int], int]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "AssertFn",
+        {
+          "a": a,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[int], int](
+        raw,
+        lambda x: cast(Optional[int], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(int, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3530,8 +3721,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3560,8 +3751,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.LinkedList, types.LinkedList](
         raw,
-        lambda x: cast(partial_types.LinkedList, x.cast_to(types, partial_types)),
-        lambda x: cast(types.LinkedList, x.cast_to(types, types)),
+        lambda x: cast(partial_types.LinkedList, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.LinkedList, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3590,8 +3781,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.Tree, types.Tree](
         raw,
-        lambda x: cast(partial_types.Tree, x.cast_to(types, partial_types)),
-        lambda x: cast(types.Tree, x.cast_to(types, types)),
+        lambda x: cast(partial_types.Tree, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.Tree, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3620,8 +3811,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.ClassToRecAlias, types.ClassToRecAlias](
         raw,
-        lambda x: cast(partial_types.ClassToRecAlias, x.cast_to(types, partial_types)),
-        lambda x: cast(types.ClassToRecAlias, x.cast_to(types, types)),
+        lambda x: cast(partial_types.ClassToRecAlias, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.ClassToRecAlias, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3650,8 +3841,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[Union[types.DynEnumTwo, str]], Union[types.DynEnumTwo, str]](
         raw,
-        lambda x: cast(Optional[Union[types.DynEnumTwo, str]], x.cast_to(types, partial_types)),
-        lambda x: cast(Union[types.DynEnumTwo, str], x.cast_to(types, types)),
+        lambda x: cast(Optional[Union[types.DynEnumTwo, str]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Union[types.DynEnumTwo, str], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3680,8 +3871,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[types.Category], types.Category](
         raw,
-        lambda x: cast(Optional[types.Category], x.cast_to(types, partial_types)),
-        lambda x: cast(types.Category, x.cast_to(types, types)),
+        lambda x: cast(Optional[types.Category], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.Category, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3710,8 +3901,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[types.Category], types.Category](
         raw,
-        lambda x: cast(Optional[types.Category], x.cast_to(types, partial_types)),
-        lambda x: cast(types.Category, x.cast_to(types, types)),
+        lambda x: cast(Optional[types.Category], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.Category, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3740,8 +3931,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[types.Category], types.Category](
         raw,
-        lambda x: cast(Optional[types.Category], x.cast_to(types, partial_types)),
-        lambda x: cast(types.Category, x.cast_to(types, types)),
+        lambda x: cast(Optional[types.Category], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.Category, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3772,8 +3963,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3802,8 +3993,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[Union[partial_types.BookOrder, partial_types.FlightConfirmation, partial_types.GroceryReceipt]], Union[types.BookOrder, types.FlightConfirmation, types.GroceryReceipt]](
         raw,
-        lambda x: cast(Optional[Union[partial_types.BookOrder, partial_types.FlightConfirmation, partial_types.GroceryReceipt]], x.cast_to(types, partial_types)),
-        lambda x: cast(Union[types.BookOrder, types.FlightConfirmation, types.GroceryReceipt], x.cast_to(types, types)),
+        lambda x: cast(Optional[Union[partial_types.BookOrder, partial_types.FlightConfirmation, partial_types.GroceryReceipt]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Union[types.BookOrder, types.FlightConfirmation, types.GroceryReceipt], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3832,8 +4023,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3863,8 +4054,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3894,8 +4085,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3925,8 +4116,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3954,8 +4145,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[Union[partial_types.OriginalA, partial_types.OriginalB]], Union[types.OriginalA, types.OriginalB]](
         raw,
-        lambda x: cast(Optional[Union[partial_types.OriginalA, partial_types.OriginalB]], x.cast_to(types, partial_types)),
-        lambda x: cast(Union[types.OriginalA, types.OriginalB], x.cast_to(types, types)),
+        lambda x: cast(Optional[Union[partial_types.OriginalA, partial_types.OriginalB]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Union[types.OriginalA, types.OriginalB], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -3984,8 +4175,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.DummyOutput, types.DummyOutput](
         raw,
-        lambda x: cast(partial_types.DummyOutput, x.cast_to(types, partial_types)),
-        lambda x: cast(types.DummyOutput, x.cast_to(types, types)),
+        lambda x: cast(partial_types.DummyOutput, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.DummyOutput, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4014,8 +4205,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.DynamicClassTwo, types.DynamicClassTwo](
         raw,
-        lambda x: cast(partial_types.DynamicClassTwo, x.cast_to(types, partial_types)),
-        lambda x: cast(types.DynamicClassTwo, x.cast_to(types, types)),
+        lambda x: cast(partial_types.DynamicClassTwo, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.DynamicClassTwo, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4044,8 +4235,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.DynInputOutput, types.DynInputOutput](
         raw,
-        lambda x: cast(partial_types.DynInputOutput, x.cast_to(types, partial_types)),
-        lambda x: cast(types.DynInputOutput, x.cast_to(types, types)),
+        lambda x: cast(partial_types.DynInputOutput, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.DynInputOutput, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4074,8 +4265,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[List[partial_types.DynInputOutput], List[types.DynInputOutput]](
         raw,
-        lambda x: cast(List[partial_types.DynInputOutput], x.cast_to(types, partial_types)),
-        lambda x: cast(List[types.DynInputOutput], x.cast_to(types, types)),
+        lambda x: cast(List[partial_types.DynInputOutput], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(List[types.DynInputOutput], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4103,8 +4294,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4133,8 +4324,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.ContactInfo, types.ContactInfo](
         raw,
-        lambda x: cast(partial_types.ContactInfo, x.cast_to(types, partial_types)),
-        lambda x: cast(types.ContactInfo, x.cast_to(types, types)),
+        lambda x: cast(partial_types.ContactInfo, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.ContactInfo, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4163,8 +4354,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[List[Optional[Union[types.Hobby, str]]], List[Union[types.Hobby, str]]](
         raw,
-        lambda x: cast(List[Optional[Union[types.Hobby, str]]], x.cast_to(types, partial_types)),
-        lambda x: cast(List[Union[types.Hobby, str]], x.cast_to(types, types)),
+        lambda x: cast(List[Optional[Union[types.Hobby, str]]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(List[Union[types.Hobby, str]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4193,8 +4384,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[List[Optional[str]], List[str]](
         raw,
-        lambda x: cast(List[Optional[str]], x.cast_to(types, partial_types)),
-        lambda x: cast(List[str], x.cast_to(types, types)),
+        lambda x: cast(List[Optional[str]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(List[str], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4223,8 +4414,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[List[partial_types.Person], List[types.Person]](
         raw,
-        lambda x: cast(List[partial_types.Person], x.cast_to(types, partial_types)),
-        lambda x: cast(List[types.Person], x.cast_to(types, types)),
+        lambda x: cast(List[partial_types.Person], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(List[types.Person], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4254,8 +4445,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.ReceiptInfo, types.ReceiptInfo](
         raw,
-        lambda x: cast(partial_types.ReceiptInfo, x.cast_to(types, partial_types)),
-        lambda x: cast(types.ReceiptInfo, x.cast_to(types, types)),
+        lambda x: cast(partial_types.ReceiptInfo, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.ReceiptInfo, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4285,8 +4476,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.Resume, types.Resume](
         raw,
-        lambda x: cast(partial_types.Resume, x.cast_to(types, partial_types)),
-        lambda x: cast(types.Resume, x.cast_to(types, types)),
+        lambda x: cast(partial_types.Resume, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.Resume, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4315,8 +4506,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.Resume, types.Resume](
         raw,
-        lambda x: cast(partial_types.Resume, x.cast_to(types, partial_types)),
-        lambda x: cast(types.Resume, x.cast_to(types, types)),
+        lambda x: cast(partial_types.Resume, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.Resume, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4345,8 +4536,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.ClassOptionalOutput, Optional[types.ClassOptionalOutput]](
         raw,
-        lambda x: cast(partial_types.ClassOptionalOutput, x.cast_to(types, partial_types)),
-        lambda x: cast(Optional[types.ClassOptionalOutput], x.cast_to(types, types)),
+        lambda x: cast(partial_types.ClassOptionalOutput, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Optional[types.ClassOptionalOutput], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4375,8 +4566,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.ClassOptionalOutput2, Optional[types.ClassOptionalOutput2]](
         raw,
-        lambda x: cast(partial_types.ClassOptionalOutput2, x.cast_to(types, partial_types)),
-        lambda x: cast(Optional[types.ClassOptionalOutput2], x.cast_to(types, types)),
+        lambda x: cast(partial_types.ClassOptionalOutput2, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Optional[types.ClassOptionalOutput2], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4405,8 +4596,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[List[Optional[types.EnumOutput]], List[types.EnumOutput]](
         raw,
-        lambda x: cast(List[Optional[types.EnumOutput]], x.cast_to(types, partial_types)),
-        lambda x: cast(List[types.EnumOutput], x.cast_to(types, types)),
+        lambda x: cast(List[Optional[types.EnumOutput]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(List[types.EnumOutput], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4435,8 +4626,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[types.EnumOutput], types.EnumOutput](
         raw,
-        lambda x: cast(Optional[types.EnumOutput], x.cast_to(types, partial_types)),
-        lambda x: cast(types.EnumOutput, x.cast_to(types, types)),
+        lambda x: cast(Optional[types.EnumOutput], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.EnumOutput, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4465,8 +4656,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.LiteralClassHello, types.LiteralClassHello](
         raw,
-        lambda x: cast(partial_types.LiteralClassHello, x.cast_to(types, partial_types)),
-        lambda x: cast(types.LiteralClassHello, x.cast_to(types, types)),
+        lambda x: cast(partial_types.LiteralClassHello, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.LiteralClassHello, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4495,8 +4686,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[Union[partial_types.LiteralClassOne, partial_types.LiteralClassTwo]], Union[types.LiteralClassOne, types.LiteralClassTwo]](
         raw,
-        lambda x: cast(Optional[Union[partial_types.LiteralClassOne, partial_types.LiteralClassTwo]], x.cast_to(types, partial_types)),
-        lambda x: cast(Union[types.LiteralClassOne, types.LiteralClassTwo], x.cast_to(types, types)),
+        lambda x: cast(Optional[Union[partial_types.LiteralClassOne, partial_types.LiteralClassTwo]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Union[types.LiteralClassOne, types.LiteralClassTwo], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4525,8 +4716,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4555,8 +4746,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[bool], bool](
         raw,
-        lambda x: cast(Optional[bool], x.cast_to(types, partial_types)),
-        lambda x: cast(bool, x.cast_to(types, types)),
+        lambda x: cast(Optional[bool], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(bool, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4585,8 +4776,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.TestOutputClass, types.TestOutputClass](
         raw,
-        lambda x: cast(partial_types.TestOutputClass, x.cast_to(types, partial_types)),
-        lambda x: cast(types.TestOutputClass, x.cast_to(types, types)),
+        lambda x: cast(partial_types.TestOutputClass, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.TestOutputClass, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4615,8 +4806,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[List[partial_types.TestOutputClass], List[types.TestOutputClass]](
         raw,
-        lambda x: cast(List[partial_types.TestOutputClass], x.cast_to(types, partial_types)),
-        lambda x: cast(List[types.TestOutputClass], x.cast_to(types, types)),
+        lambda x: cast(List[partial_types.TestOutputClass], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(List[types.TestOutputClass], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4645,8 +4836,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.TestClassNested, types.TestClassNested](
         raw,
-        lambda x: cast(partial_types.TestClassNested, x.cast_to(types, partial_types)),
-        lambda x: cast(types.TestClassNested, x.cast_to(types, types)),
+        lambda x: cast(partial_types.TestClassNested, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.TestClassNested, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4675,8 +4866,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.TestClassWithEnum, types.TestClassWithEnum](
         raw,
-        lambda x: cast(partial_types.TestClassWithEnum, x.cast_to(types, partial_types)),
-        lambda x: cast(types.TestClassWithEnum, x.cast_to(types, types)),
+        lambda x: cast(partial_types.TestClassWithEnum, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.TestClassWithEnum, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4705,8 +4896,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[int], int](
         raw,
-        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
-        lambda x: cast(int, x.cast_to(types, types)),
+        lambda x: cast(Optional[int], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(int, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4735,8 +4926,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[Literal[False]], Literal[False]](
         raw,
-        lambda x: cast(Optional[Literal[False]], x.cast_to(types, partial_types)),
-        lambda x: cast(Literal[False], x.cast_to(types, types)),
+        lambda x: cast(Optional[Literal[False]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Literal[False], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4765,8 +4956,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[Literal[5]], Literal[5]](
         raw,
-        lambda x: cast(Optional[Literal[5]], x.cast_to(types, partial_types)),
-        lambda x: cast(Literal[5], x.cast_to(types, types)),
+        lambda x: cast(Optional[Literal[5]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Literal[5], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4795,8 +4986,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[Literal["example output"]], Literal["example output"]](
         raw,
-        lambda x: cast(Optional[Literal["example output"]], x.cast_to(types, partial_types)),
-        lambda x: cast(Literal["example output"], x.cast_to(types, types)),
+        lambda x: cast(Optional[Literal["example output"]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Literal["example output"], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4825,8 +5016,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[List[Optional[str]], List[str]](
         raw,
-        lambda x: cast(List[Optional[str]], x.cast_to(types, partial_types)),
-        lambda x: cast(List[str], x.cast_to(types, types)),
+        lambda x: cast(List[Optional[str]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(List[str], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4855,8 +5046,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[types.TestEnum], types.TestEnum](
         raw,
-        lambda x: cast(Optional[types.TestEnum], x.cast_to(types, partial_types)),
-        lambda x: cast(types.TestEnum, x.cast_to(types, types)),
+        lambda x: cast(Optional[types.TestEnum], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.TestEnum, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4885,8 +5076,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.TestClassAlias, types.TestClassAlias](
         raw,
-        lambda x: cast(partial_types.TestClassAlias, x.cast_to(types, partial_types)),
-        lambda x: cast(types.TestClassAlias, x.cast_to(types, types)),
+        lambda x: cast(partial_types.TestClassAlias, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.TestClassAlias, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4915,8 +5106,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4945,8 +5136,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.RaysData, types.RaysData](
         raw,
-        lambda x: cast(partial_types.RaysData, x.cast_to(types, partial_types)),
-        lambda x: cast(types.RaysData, x.cast_to(types, types)),
+        lambda x: cast(partial_types.RaysData, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.RaysData, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -4975,8 +5166,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.OrderInfo, types.OrderInfo](
         raw,
-        lambda x: cast(partial_types.OrderInfo, x.cast_to(types, partial_types)),
-        lambda x: cast(types.OrderInfo, x.cast_to(types, types)),
+        lambda x: cast(partial_types.OrderInfo, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.OrderInfo, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5005,8 +5196,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.SearchParams, types.SearchParams](
         raw,
-        lambda x: cast(partial_types.SearchParams, x.cast_to(types, partial_types)),
-        lambda x: cast(types.SearchParams, x.cast_to(types, types)),
+        lambda x: cast(partial_types.SearchParams, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.SearchParams, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5036,8 +5227,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Dict[types.MapKey, Optional[str]], Dict[types.MapKey, str]](
         raw,
-        lambda x: cast(Dict[types.MapKey, Optional[str]], x.cast_to(types, partial_types)),
-        lambda x: cast(Dict[types.MapKey, str], x.cast_to(types, types)),
+        lambda x: cast(Dict[types.MapKey, Optional[str]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Dict[types.MapKey, str], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5067,8 +5258,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Dict[Union[Literal["one"], Literal["two"], Union[Literal["three"], Literal["four"]]], Optional[str]], Dict[Union[Literal["one"], Literal["two"], Union[Literal["three"], Literal["four"]]], str]](
         raw,
-        lambda x: cast(Dict[Union[Literal["one"], Literal["two"], Union[Literal["three"], Literal["four"]]], Optional[str]], x.cast_to(types, partial_types)),
-        lambda x: cast(Dict[Union[Literal["one"], Literal["two"], Union[Literal["three"], Literal["four"]]], str], x.cast_to(types, types)),
+        lambda x: cast(Dict[Union[Literal["one"], Literal["two"], Union[Literal["three"], Literal["four"]]], Optional[str]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Dict[Union[Literal["one"], Literal["two"], Union[Literal["three"], Literal["four"]]], str], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5097,8 +5288,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Dict[Literal["key"], Optional[str]], Dict[Literal["key"], str]](
         raw,
-        lambda x: cast(Dict[Literal["key"], Optional[str]], x.cast_to(types, partial_types)),
-        lambda x: cast(Dict[Literal["key"], str], x.cast_to(types, types)),
+        lambda x: cast(Dict[Literal["key"], Optional[str]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Dict[Literal["key"], str], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5127,8 +5318,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[types.JsonValue, types.JsonValue](
         raw,
-        lambda x: cast(types.JsonValue, x.cast_to(types, partial_types)),
-        lambda x: cast(types.JsonValue, x.cast_to(types, types)),
+        lambda x: cast(types.JsonValue, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.JsonValue, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5157,8 +5348,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[Union[Optional[Literal[1]], Optional[Literal[True]], Optional[Literal["string output"]]]], Union[Literal[1], Literal[True], Literal["string output"]]](
         raw,
-        lambda x: cast(Optional[Union[Optional[Literal[1]], Optional[Literal[True]], Optional[Literal["string output"]]]], x.cast_to(types, partial_types)),
-        lambda x: cast(Union[Literal[1], Literal[True], Literal["string output"]], x.cast_to(types, types)),
+        lambda x: cast(Optional[Union[Optional[Literal[1]], Optional[Literal[True]], Optional[Literal["string output"]]]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Union[Literal[1], Literal[True], Literal["string output"]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5186,8 +5377,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Checked[partial_types.BlockConstraint,types.Literal["cross_field"]], Checked[types.BlockConstraint,types.Literal["cross_field"]]](
         raw,
-        lambda x: cast(Checked[partial_types.BlockConstraint,types.Literal["cross_field"]], x.cast_to(types, partial_types)),
-        lambda x: cast(Checked[types.BlockConstraint,types.Literal["cross_field"]], x.cast_to(types, types)),
+        lambda x: cast(Checked[partial_types.BlockConstraint,types.Literal["cross_field"]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Checked[types.BlockConstraint,types.Literal["cross_field"]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5215,8 +5406,37 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.NestedBlockConstraint, types.NestedBlockConstraint](
         raw,
-        lambda x: cast(partial_types.NestedBlockConstraint, x.cast_to(types, partial_types)),
-        lambda x: cast(types.NestedBlockConstraint, x.cast_to(types, types)),
+        lambda x: cast(partial_types.NestedBlockConstraint, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.NestedBlockConstraint, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def MakeSemanticContainer(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.SemanticContainer, types.SemanticContainer]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "MakeSemanticContainer",
+        {
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.SemanticContainer, types.SemanticContainer](
+        raw,
+        lambda x: cast(partial_types.SemanticContainer, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.SemanticContainer, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5245,8 +5465,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Dict[str, List[Optional[str]]], Dict[str, List[str]]](
         raw,
-        lambda x: cast(Dict[str, List[Optional[str]]], x.cast_to(types, partial_types)),
-        lambda x: cast(Dict[str, List[str]], x.cast_to(types, types)),
+        lambda x: cast(Dict[str, List[Optional[str]]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Dict[str, List[str]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5275,8 +5495,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.MergeAttrs, types.MergeAttrs](
         raw,
-        lambda x: cast(partial_types.MergeAttrs, x.cast_to(types, partial_types)),
-        lambda x: cast(types.MergeAttrs, x.cast_to(types, types)),
+        lambda x: cast(partial_types.MergeAttrs, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.MergeAttrs, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5305,8 +5525,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.DynamicOutput, types.DynamicOutput](
         raw,
-        lambda x: cast(partial_types.DynamicOutput, x.cast_to(types, partial_types)),
-        lambda x: cast(types.DynamicOutput, x.cast_to(types, types)),
+        lambda x: cast(partial_types.DynamicOutput, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.DynamicOutput, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5335,8 +5555,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[Union[Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], List[Optional[str]], Dict[str, List[Optional[str]]]]], Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]]](
         raw,
-        lambda x: cast(Optional[Union[Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], List[Optional[str]], Dict[str, List[Optional[str]]]]], x.cast_to(types, partial_types)),
-        lambda x: cast(Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]], x.cast_to(types, types)),
+        lambda x: cast(Optional[Union[Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], List[Optional[str]], Dict[str, List[Optional[str]]]]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Union[Union[int, str, bool, float], List[str], Dict[str, List[str]]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5365,8 +5585,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.ClassForNullLiteral, types.ClassForNullLiteral](
         raw,
-        lambda x: cast(partial_types.ClassForNullLiteral, x.cast_to(types, partial_types)),
-        lambda x: cast(types.ClassForNullLiteral, x.cast_to(types, types)),
+        lambda x: cast(partial_types.ClassForNullLiteral, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.ClassForNullLiteral, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5395,8 +5615,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[List[partial_types.OptionalTest_ReturnType], List[Optional[types.OptionalTest_ReturnType]]](
         raw,
-        lambda x: cast(List[partial_types.OptionalTest_ReturnType], x.cast_to(types, partial_types)),
-        lambda x: cast(List[Optional[types.OptionalTest_ReturnType]], x.cast_to(types, types)),
+        lambda x: cast(List[partial_types.OptionalTest_ReturnType], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(List[Optional[types.OptionalTest_ReturnType]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5425,8 +5645,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.FooAny, types.FooAny](
         raw,
-        lambda x: cast(partial_types.FooAny, x.cast_to(types, partial_types)),
-        lambda x: cast(types.FooAny, x.cast_to(types, types)),
+        lambda x: cast(partial_types.FooAny, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.FooAny, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5455,8 +5675,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Checked[Optional[int],types.Literal["too_big"]], Checked[int,types.Literal["too_big"]]](
         raw,
-        lambda x: cast(Checked[Optional[int],types.Literal["too_big"]], x.cast_to(types, partial_types)),
-        lambda x: cast(Checked[int,types.Literal["too_big"]], x.cast_to(types, types)),
+        lambda x: cast(Checked[Optional[int],types.Literal["too_big"]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Checked[int,types.Literal["too_big"]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5485,8 +5705,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], Union[int, str, bool, float]](
         raw,
-        lambda x: cast(Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], x.cast_to(types, partial_types)),
-        lambda x: cast(Union[int, str, bool, float], x.cast_to(types, types)),
+        lambda x: cast(Optional[Union[Optional[int], Optional[str], Optional[bool], Optional[float]]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Union[int, str, bool, float], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5515,8 +5735,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5545,8 +5765,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5575,8 +5795,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5605,8 +5825,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5635,8 +5855,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5665,8 +5885,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5695,8 +5915,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5725,8 +5945,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[types.RecAliasOne, types.RecAliasOne](
         raw,
-        lambda x: cast(types.RecAliasOne, x.cast_to(types, partial_types)),
-        lambda x: cast(types.RecAliasOne, x.cast_to(types, types)),
+        lambda x: cast(types.RecAliasOne, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.RecAliasOne, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5755,8 +5975,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.NodeWithAliasIndirection, types.NodeWithAliasIndirection](
         raw,
-        lambda x: cast(partial_types.NodeWithAliasIndirection, x.cast_to(types, partial_types)),
-        lambda x: cast(types.NodeWithAliasIndirection, x.cast_to(types, types)),
+        lambda x: cast(partial_types.NodeWithAliasIndirection, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.NodeWithAliasIndirection, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5785,8 +6005,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Checked[Optional[int],types.Literal["gt_ten"]], Checked[int,types.Literal["gt_ten"]]](
         raw,
-        lambda x: cast(Checked[Optional[int],types.Literal["gt_ten"]], x.cast_to(types, partial_types)),
-        lambda x: cast(Checked[int,types.Literal["gt_ten"]], x.cast_to(types, types)),
+        lambda x: cast(Checked[Optional[int],types.Literal["gt_ten"]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Checked[int,types.Literal["gt_ten"]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5815,8 +6035,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[int], int](
         raw,
-        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
-        lambda x: cast(int, x.cast_to(types, types)),
+        lambda x: cast(Optional[int], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(int, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5845,8 +6065,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.MalformedConstraints, types.MalformedConstraints](
         raw,
-        lambda x: cast(partial_types.MalformedConstraints, x.cast_to(types, partial_types)),
-        lambda x: cast(types.MalformedConstraints, x.cast_to(types, types)),
+        lambda x: cast(partial_types.MalformedConstraints, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.MalformedConstraints, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5875,8 +6095,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.Schema, types.Schema](
         raw,
-        lambda x: cast(partial_types.Schema, x.cast_to(types, partial_types)),
-        lambda x: cast(types.Schema, x.cast_to(types, types)),
+        lambda x: cast(partial_types.Schema, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.Schema, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5905,8 +6125,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[types.RecursiveListAlias, types.RecursiveListAlias](
         raw,
-        lambda x: cast(types.RecursiveListAlias, x.cast_to(types, partial_types)),
-        lambda x: cast(types.RecursiveListAlias, x.cast_to(types, types)),
+        lambda x: cast(types.RecursiveListAlias, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.RecursiveListAlias, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5935,8 +6155,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[types.RecursiveMapAlias, types.RecursiveMapAlias](
         raw,
-        lambda x: cast(types.RecursiveMapAlias, x.cast_to(types, partial_types)),
-        lambda x: cast(types.RecursiveMapAlias, x.cast_to(types, types)),
+        lambda x: cast(types.RecursiveMapAlias, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.RecursiveMapAlias, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5965,8 +6185,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.BigNumbers, types.BigNumbers](
         raw,
-        lambda x: cast(partial_types.BigNumbers, x.cast_to(types, partial_types)),
-        lambda x: cast(types.BigNumbers, x.cast_to(types, types)),
+        lambda x: cast(partial_types.BigNumbers, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.BigNumbers, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -5996,8 +6216,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.TwoStoriesOneTitle, types.TwoStoriesOneTitle](
         raw,
-        lambda x: cast(partial_types.TwoStoriesOneTitle, x.cast_to(types, partial_types)),
-        lambda x: cast(types.TwoStoriesOneTitle, x.cast_to(types, types)),
+        lambda x: cast(partial_types.TwoStoriesOneTitle, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.TwoStoriesOneTitle, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6026,8 +6246,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[int], int](
         raw,
-        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
-        lambda x: cast(int, x.cast_to(types, types)),
+        lambda x: cast(Optional[int], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(int, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6056,8 +6276,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[List[Optional[Union[Optional[int], Optional[str]]]], List[Union[int, str]]](
         raw,
-        lambda x: cast(List[Optional[Union[Optional[int], Optional[str]]]], x.cast_to(types, partial_types)),
-        lambda x: cast(List[Union[int, str]], x.cast_to(types, types)),
+        lambda x: cast(List[Optional[Union[Optional[int], Optional[str]]]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(List[Union[int, str]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6087,8 +6307,38 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.CompoundBigNumbers, types.CompoundBigNumbers](
         raw,
-        lambda x: cast(partial_types.CompoundBigNumbers, x.cast_to(types, partial_types)),
-        lambda x: cast(types.CompoundBigNumbers, x.cast_to(types, types)),
+        lambda x: cast(partial_types.CompoundBigNumbers, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.CompoundBigNumbers, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TakeRecAliasDep(
+        self,
+        input: types.RecursiveAliasDependency,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.RecursiveAliasDependency, types.RecursiveAliasDependency]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TakeRecAliasDep",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.RecursiveAliasDependency, types.RecursiveAliasDependency](
+        raw,
+        lambda x: cast(partial_types.RecursiveAliasDependency, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.RecursiveAliasDependency, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6117,8 +6367,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6147,8 +6397,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6177,8 +6427,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6207,8 +6457,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6237,8 +6487,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6267,8 +6517,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6297,8 +6547,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6327,8 +6577,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6357,8 +6607,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6388,8 +6638,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6417,8 +6667,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6447,8 +6697,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6477,8 +6727,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6507,8 +6757,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6537,8 +6787,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6567,8 +6817,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6597,8 +6847,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6627,8 +6877,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Dict[str, partial_types.StringToClassEntry], Dict[str, types.StringToClassEntry]](
         raw,
-        lambda x: cast(Dict[str, partial_types.StringToClassEntry], x.cast_to(types, partial_types)),
-        lambda x: cast(Dict[str, types.StringToClassEntry], x.cast_to(types, types)),
+        lambda x: cast(Dict[str, partial_types.StringToClassEntry], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Dict[str, types.StringToClassEntry], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6657,8 +6907,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Dict[str, Dict[str, Optional[str]]], Dict[str, Dict[str, str]]](
         raw,
-        lambda x: cast(Dict[str, Dict[str, Optional[str]]], x.cast_to(types, partial_types)),
-        lambda x: cast(Dict[str, Dict[str, str]], x.cast_to(types, types)),
+        lambda x: cast(Dict[str, Dict[str, Optional[str]]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Dict[str, Dict[str, str]], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6687,8 +6937,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Dict[str, Optional[str]], Dict[str, str]](
         raw,
-        lambda x: cast(Dict[str, Optional[str]], x.cast_to(types, partial_types)),
-        lambda x: cast(Dict[str, str], x.cast_to(types, types)),
+        lambda x: cast(Dict[str, Optional[str]], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(Dict[str, str], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6717,8 +6967,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6747,8 +6997,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6777,8 +7027,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6807,8 +7057,97 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestGeminiOpenAiGeneric(
+        self,
+        
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestGeminiOpenAiGeneric",
+        {
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestGeminiSystem(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestGeminiSystem",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestGeminiSystemAsChat(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestGeminiSystemAsChat",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6837,8 +7176,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6867,8 +7206,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6897,8 +7236,38 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestMemory(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.TestMemoryOutput, types.TestMemoryOutput]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestMemory",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.TestMemoryOutput, types.TestMemoryOutput](
+        raw,
+        lambda x: cast(partial_types.TestMemoryOutput, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.TestMemoryOutput, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6928,8 +7297,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6958,8 +7327,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -6988,8 +7357,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7018,8 +7387,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7048,8 +7417,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7078,8 +7447,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7108,8 +7477,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7137,8 +7506,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7166,8 +7535,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7195,8 +7564,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7225,8 +7594,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7254,8 +7623,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[str], str](
         raw,
-        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
-        lambda x: cast(str, x.cast_to(types, types)),
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7284,8 +7653,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[partial_types.UnionTest_ReturnType, types.UnionTest_ReturnType](
         raw,
-        lambda x: cast(partial_types.UnionTest_ReturnType, x.cast_to(types, partial_types)),
-        lambda x: cast(types.UnionTest_ReturnType, x.cast_to(types, types)),
+        lambda x: cast(partial_types.UnionTest_ReturnType, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.UnionTest_ReturnType, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7314,8 +7683,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[int], int](
         raw,
-        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
-        lambda x: cast(int, x.cast_to(types, types)),
+        lambda x: cast(Optional[int], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(int, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7344,8 +7713,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[int], int](
         raw,
-        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
-        lambda x: cast(int, x.cast_to(types, types)),
+        lambda x: cast(Optional[int], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(int, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     
@@ -7374,8 +7743,8 @@ class BamlStreamClient:
 
       return baml_py.BamlStream[Optional[int], int](
         raw,
-        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
-        lambda x: cast(int, x.cast_to(types, types)),
+        lambda x: cast(Optional[int], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(int, x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     

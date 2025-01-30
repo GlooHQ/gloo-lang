@@ -249,6 +249,14 @@ impl<'a> Walker<'a, &'a Class> {
             .transpose()
     }
 
+    pub fn streaming_done(&self) -> bool {
+        self.item.attributes.get("stream.done").is_some()
+    }
+
+    pub fn streaming_state(&self) -> bool {
+        self.item.attributes.get("stream.with_state").is_some()
+    }
+
     pub fn walk_fields(&'a self) -> impl Iterator<Item = Walker<'a, &'a Field>> {
         self.item.elem.static_fields.iter().map(|f| Walker {
             db: self.db,
@@ -392,6 +400,18 @@ impl<'a> Walker<'a, &'a Field> {
             .get("description")
             .map(|v| v.resolve_string(ctx))
             .transpose()
+    }
+
+    pub fn streaming_done(&self) -> bool {
+        self.item.attributes.get("stream.done").is_some()
+    }
+
+    pub fn streaming_needed(&self) -> bool {
+        self.item.attributes.get("stream.not_null").is_some()
+    }
+
+    pub fn streaming_state(&self) -> bool {
+        self.item.attributes.get("stream.with_state").is_some()
     }
 
     pub fn span(&self) -> Option<&crate::Span> {

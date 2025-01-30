@@ -25,14 +25,16 @@ function App() {
       <DevTools />
       <Suspense fallback={<div>Loading...</div>}>
         <EventListener>
-          {/* <div>hi</div> */}
-          <div className='h-[100vh]'>
-            <ThemeProvider attribute='class' defaultTheme='dark' enableSystem={false} disableTransitionOnChange={true}>
-              <PromptPreview />
-            </ThemeProvider>
-          </div>
+          <div></div>
+        </EventListener>
+        {/* <div>hi</div> */}
+        <div className='h-[100vh]'>
+          <ThemeProvider attribute='class' defaultTheme='dark' enableSystem={false} disableTransitionOnChange={true}>
+            <PromptPreview />
+          </ThemeProvider>
+        </div>
 
-          {/* <AppStateProvider>
+        {/* <AppStateProvider>
             <div className='flex flex-col w-full gap-2 px-2 pb-1 h-[100vh] overflow-y-clip'>
               <div className='flex flex-row gap-1 justify-start items-center'>
                 <CustomErrorBoundary message='Error loading view selector'>
@@ -49,7 +51,6 @@ function App() {
               <IntroToChecksDialog />
             </CustomErrorBoundary>
           </AppStateProvider>{' '} */}
-        </EventListener>
       </Suspense>
     </CustomErrorBoundary>
   )

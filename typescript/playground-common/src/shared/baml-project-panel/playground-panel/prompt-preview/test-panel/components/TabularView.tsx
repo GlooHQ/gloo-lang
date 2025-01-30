@@ -1,7 +1,7 @@
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { useAtom } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { Check, Copy, Play } from 'lucide-react'
 import * as React from 'react'
 
@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { WasmFunctionResponse, WasmTestResponse } from '@gloo-ai/baml-schema-wasm-web'
 import { ErrorBoundary } from 'react-error-boundary'
 import { Button } from '~/components/ui/button'
-import { selectedItemAtom, TestState } from '../../../atoms'
+import { selectedItemAtom, testcaseObjectAtom, TestState } from '../../../atoms'
 import { type TestHistoryRun } from '../atoms'
 import { useRunTests } from '../test-runner'
 import { getExplanation, getStatus, getTestStateResponse } from '../testStateUtils'
@@ -18,6 +18,8 @@ import { MarkdownRenderer } from './MarkdownRenderer'
 import { ParsedResponseRenderer } from './ParsedResponseRender'
 import { TestStatus } from './TestStatus'
 import { ScrollArea } from '~/components/ui/scroll-area'
+import { vscode } from '@/shared/baml-project-panel/vscode'
+import { useMemo } from 'react'
 interface TabularViewProps {
   currentRun: TestHistoryRun
 }
@@ -81,13 +83,16 @@ const ResponseContent = ({
 
   return (
     <div className=''>
-      {failureMessage && <pre className='pb-2 text-xs text-red-500 text-balance'>Error: {failureMessage}</pre>}
+      {/* todo: render the failure if pretty or raw is selected. */}
       {responseViewType === 'parsed' && (
         <>
           <ParsedResponseRenderer response={getTestStateResponse(state)} />
 
           {getExplanation(state) && (
-            <div className='mt-2 text-xs text-muted-foreground/80'>{getExplanation(state)}</div>
+            <div className='flex flex-col gap-2 mt-2 text-xs text-muted-foreground/80'>
+              <div>BAML parser fixed the following issues:</div>
+              <pre>{getExplanation(state)}</pre>
+            </div>
           )}
         </>
       )}
@@ -121,6 +126,19 @@ export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
       responseViewType: value as ResponseViewType,
     }))
   }
+
+  const testAtom = useMemo(
+    () => testcaseObjectAtom({ functionName: selectedItem?.[0] ?? '', testcaseName: selectedItem?.[1] ?? '' }),
+    [selectedItem],
+  )
+  const tc = useAtomValue(testAtom)
+
+  const createSpan = (span: { start: number; end: number; file_path: string; start_line: number }) => ({
+    start: span.start,
+    end: span.end,
+    source_file: span.file_path,
+    value: `${span.file_path.split('/').pop() ?? '<file>.baml'}:${span.start_line + 1}`,
+  })
 
   const selectedRowRef = React.useRef<HTMLTableRowElement>(null)
 
@@ -215,7 +233,14 @@ export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
                     >
                       <Play className='w-4 h-4 text-purple-400' />
                     </Button>
-                    <span className='text-xs truncate whitespace-pre-wrap break-all text-muted-foreground'>
+                    <span
+                      className='text-xs truncate whitespace-pre-wrap break-all cursor-pointer text-muted-foreground hover:text-primary'
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (!tc?.span) return
+                        vscode.postMessage({ command: 'jumpToFile', span: createSpan(tc.span) })
+                      }}
+                    >
                       {test.testName}
                     </span>
                   </div>

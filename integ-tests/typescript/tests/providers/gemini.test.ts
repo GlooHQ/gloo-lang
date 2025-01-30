@@ -18,4 +18,10 @@ describe('Gemini Provider', () => {
       expect(msgs.at(-1)).toEqual(final)
     }, 20_000)
   })
+
+  describe('system message', () => {
+    it('should support system_instructions in Gemini', async () => {
+      const _ = await b.TestGeminiSystem("Dr. Pepper");
+    })
+  })
 })

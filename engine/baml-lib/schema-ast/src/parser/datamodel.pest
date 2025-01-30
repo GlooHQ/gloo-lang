@@ -81,8 +81,9 @@ non_union = { array_notation | map | identifier | group | tuple | literal_type }
 parenthesized_type = { openParan ~ field_type_with_attr ~ closeParan }
 
 path_identifier =  { single_word ~ ("." ~ single_word)+ }
-identifier      =  { path_identifier | single_word }
+identifier      = { path_identifier | namespaced_identifier | single_word }
 single_word     = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_" | "-")* }
+namespaced_identifier = { single_word ~ ("::" ~ single_word)+ }
 
 // ######################################
 // Type Alias

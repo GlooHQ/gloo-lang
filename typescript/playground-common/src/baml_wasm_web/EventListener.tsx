@@ -19,6 +19,7 @@ import { orchIndexAtom } from '@/shared/baml-project-panel/playground-panel/atom
 import { CodeMirrorDiagnosticsAtom } from '@/shared/baml-project-panel/codemirror-panel/atoms'
 import { AlertTriangle, XCircle } from 'lucide-react'
 import { CheckCircle } from 'lucide-react'
+import { useDebounce, useDebounceCallback } from '@react-hook/debounce'
 
 export const hasClosedEnvVarsDialogAtom = atomWithStorage<boolean>(
   'has-closed-env-vars-dialog',
@@ -79,6 +80,8 @@ const ErrorCount: React.FC = () => {
 export const EventListener: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const updateCursor = useSetAtom(updateCursorAtom)
   const setFiles = useSetAtom(filesAtom)
+  const debouncedSetFiles = useDebounceCallback(setFiles, 50, true)
+
   const [selectedFunc, setSelectedFunction] = useAtom(selectedFunctionAtom)
   const setSelectedTestcase = useSetAtom(selectedTestcaseAtom)
   const [bamlCliVersion, setBamlCliVersion] = useAtom(bamlCliVersionAtom)
@@ -103,8 +106,10 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
       setOrchestratorIndex(0)
     }
   }, [selectedFunc])
+  console.log('selectedFunc', selectedFunc)
 
   useEffect(() => {
+    console.log('adding event listener')
     const fn = (
       event: MessageEvent<
         | {
@@ -164,7 +169,9 @@ export const EventListener: React.FC<{ children: React.ReactNode }> = ({ childre
         case 'add_project':
           if (content && content.root_path) {
             console.log('add_project', content.root_path)
-            setFiles(Object.fromEntries(Object.entries(content.files).map(([name, content]) => [name, content])))
+            debouncedSetFiles(
+              Object.fromEntries(Object.entries(content.files).map(([name, content]) => [name, content])),
+            )
           }
           break
 
