@@ -80,7 +80,7 @@ impl From<JsonCollection> for Option<Value> {
             }
             JsonCollection::Array(values, completion_state) => Value::Array(values, completion_state),
             JsonCollection::QuotedString(s, completion_state) => Value::String(s, completion_state),
-            JsonCollection::TripleQuotedString(s, completion_state) => Value::String(s, completion_state),
+            JsonCollection::TripleQuotedString(s, completion_state) => Value::String(dedent(s.as_str()).content, completion_state),
             JsonCollection::SingleQuotedString(s, completion_state) => Value::String(s, completion_state),
             JsonCollection::TripleBacktickString { content, .. } => {
                 let Some((fenced_codeblock_info, codeblock_contents)) = content.0.split_once("\n")
