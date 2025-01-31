@@ -118,6 +118,22 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
 ///
 /// This codebase was not designed with scoping in mind, so there's no simple
 /// way of implementing scopes in the AST and IR.
+///
+/// # Hack Explanation
+///
+/// For every single type_builder block within a test we are creating a separate
+/// instance of [`internal_baml_parser_database::ParserDatabase`] that includes
+/// both the global type defs and the local type builder defs in the same AST.
+/// That way we can run all the validation logic that we normally execute for
+/// the global scope but including the local scope as well, and it doesn't
+/// become too complicated to figure out stuff like name resolution, alias
+/// resolution, dependencies, etc.
+///
+/// However, this increases memory usage significantly since we create a copy
+/// of the entire AST for every single type builder block. We implemented it
+/// this way because we wanted to ship the feature and delay AST refactoring,
+/// since it would take much longer to refactor the AST and include scoping than
+/// it would take to ship this hack.
 fn validate_type_builder_blocks(
     diagnostics: &mut Diagnostics,
     db: &mut internal_baml_parser_database::ParserDatabase,
@@ -132,9 +148,9 @@ fn validate_type_builder_blocks(
             continue;
         };
 
-        let mut ast = ast::SchemaAst::new();
+        let mut local_ast = ast::SchemaAst::new();
         for type_def in &type_builder.entries {
-            ast.tops.push(match type_def {
+            local_ast.tops.push(match type_def {
                 ast::TypeBuilderEntry::Class(c) => {
                     if c.attributes.iter().any(|attr| attr.name.name() == "dynamic") {
                         diagnostics.push_error(DatamodelError::new_validation_error(
@@ -169,7 +185,8 @@ fn validate_type_builder_blocks(
                     let mut dyn_type = d.to_owned();
 
                     // TODO: Extemely ugly hack to avoid collisions in the name
-                    // interner.
+                    // interner. We use syntax that is not normally allowed by
+                    // BAML for type names.
                     dyn_type.name = Identifier::Local(
                         format!("{}{}", ast::DYNAMIC_TYPE_NAME_PREFIX, dyn_type.name()),
                         dyn_type.span.to_owned(),
@@ -232,7 +249,7 @@ fn validate_type_builder_blocks(
             });
         }
 
-        scoped_db.add_ast(ast);
+        scoped_db.add_ast(local_ast);
 
         if let Err(d) = scoped_db.validate(diagnostics) {
             diagnostics.push(d);
