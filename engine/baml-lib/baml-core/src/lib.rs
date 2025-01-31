@@ -101,14 +101,28 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
     // Some last linker stuff can only happen post validation.
     db.finalize(&mut diagnostics);
 
-    // TODO: This is a very ugly hack to implement scoping for type builder
-    // blocks in test cases. Type builder blocks support all the type
-    // definitions (class, enum, type alias), and all these definitions have
-    // access to both the global and local scope but not the scope of other
-    // test cases.
-    //
-    // This codebase was not designed with scoping in mind, so there's no simple
-    // way of implementing scopes in the AST and IR.
+    // TODO: #1343 Temporary solution until we implement scoping in the AST.
+    validate_type_builder_blocks(&mut diagnostics, &mut db, &configuration);
+
+    ValidatedSchema {
+        db,
+        diagnostics,
+        configuration,
+    }
+}
+
+/// TODO: This is a very ugly hack to implement scoping for type builder blocks
+/// in test cases. Type builder blocks support all the type definitions (class,
+/// enum, type alias), and all these definitions have access to both the global
+/// and local scope but not the scope of other test cases.
+///
+/// This codebase was not designed with scoping in mind, so there's no simple
+/// way of implementing scopes in the AST and IR.
+fn validate_type_builder_blocks(
+    diagnostics: &mut Diagnostics,
+    db: &mut internal_baml_parser_database::ParserDatabase,
+    configuration: &Configuration,
+) {
     let mut test_case_scoped_dbs = Vec::new();
     for test in db.walk_test_cases() {
         let mut scoped_db = internal_baml_parser_database::ParserDatabase::new();
@@ -220,30 +234,20 @@ pub fn validate(root_path: &Path, files: Vec<SourceFile>) -> ValidatedSchema {
 
         scoped_db.add_ast(ast);
 
-        if let Err(d) = scoped_db.validate(&mut diagnostics) {
+        if let Err(d) = scoped_db.validate(diagnostics) {
             diagnostics.push(d);
             continue;
         }
-        validate::validate(
-            &scoped_db,
-            configuration.preview_features(),
-            &mut diagnostics,
-        );
+        validate::validate(&scoped_db, configuration.preview_features(), diagnostics);
         if diagnostics.has_errors() {
             continue;
         }
-        scoped_db.finalize(&mut diagnostics);
+        scoped_db.finalize(diagnostics);
 
         test_case_scoped_dbs.push((test.id.0, scoped_db));
     }
     for (test_id, scoped_db) in test_case_scoped_dbs.into_iter() {
         db.add_test_case_db(test_id, scoped_db);
-    }
-
-    ValidatedSchema {
-        db,
-        diagnostics,
-        configuration,
     }
 }
 

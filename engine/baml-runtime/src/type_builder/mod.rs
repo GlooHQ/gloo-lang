@@ -133,6 +133,26 @@ impl EnumBuilder {
     }
 }
 
+pub struct TypeAliasBuilder {
+    target: Arc<Mutex<Option<FieldType>>>,
+    meta: MetaData,
+}
+impl_meta!(TypeAliasBuilder);
+
+impl TypeAliasBuilder {
+    pub fn new() -> Self {
+        Self {
+            target: Default::default(),
+            meta: Arc::new(Mutex::new(Default::default())),
+        }
+    }
+
+    pub fn target(&self, target: FieldType) -> &Self {
+        *self.target.lock().unwrap() = Some(target);
+        self
+    }
+}
+
 impl std::fmt::Debug for TypeBuilder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // Start the debug printout with the struct name
@@ -170,6 +190,8 @@ impl std::fmt::Debug for TypeBuilder {
 pub struct TypeBuilder {
     classes: Arc<Mutex<IndexMap<String, Arc<Mutex<ClassBuilder>>>>>,
     enums: Arc<Mutex<IndexMap<String, Arc<Mutex<EnumBuilder>>>>>,
+    type_aliases: Arc<Mutex<IndexMap<String, Arc<Mutex<TypeAliasBuilder>>>>>,
+    recursive_type_aliases: Arc<Mutex<Vec<IndexMap<String, FieldType>>>>,
 }
 
 impl Default for TypeBuilder {
@@ -183,6 +205,8 @@ impl TypeBuilder {
         Self {
             classes: Default::default(),
             enums: Default::default(),
+            type_aliases: Default::default(),
+            recursive_type_aliases: Default::default(),
         }
     }
 
@@ -206,11 +230,27 @@ impl TypeBuilder {
         )
     }
 
+    pub fn type_alias(&self, name: &str) -> Arc<Mutex<TypeAliasBuilder>> {
+        Arc::clone(
+            self.type_aliases
+                .lock()
+                .unwrap()
+                .entry(name.to_string())
+                .or_insert_with(|| Arc::new(Mutex::new(TypeAliasBuilder::new()))),
+        )
+    }
+
+    pub fn recursive_type_aliases(&self) -> Arc<Mutex<Vec<IndexMap<String, FieldType>>>> {
+        Arc::clone(&self.recursive_type_aliases)
+    }
+
     pub fn to_overrides(
         &self,
     ) -> (
         IndexMap<String, RuntimeClassOverride>,
         IndexMap<String, RuntimeEnumOverride>,
+        IndexMap<String, FieldType>,
+        Vec<IndexMap<String, FieldType>>,
     ) {
         log::debug!("Converting types to overrides");
         let cls = self
@@ -283,12 +323,29 @@ impl TypeBuilder {
                 )
             })
             .collect();
+
+        let aliases = self
+            .type_aliases
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|(name, builder)| {
+                let mutex = builder.lock().unwrap();
+                let target = mutex.target.lock().unwrap();
+                // TODO: target.unwrap() might not be guaranteed here.
+                (name.clone(), target.to_owned().unwrap())
+            })
+            .collect();
+
         log::debug!(
             "Dynamic types: \n {:#?} \n Dynamic enums\n {:#?} enums",
             cls,
             enm
         );
-        (cls, enm)
+
+        let recursive_aliases = self.recursive_type_aliases.lock().unwrap().clone();
+
+        (cls, enm, aliases, recursive_aliases)
     }
 }
 

@@ -10,7 +10,7 @@ use std::collections::{HashMap, HashSet};
 
 use super::{
     repr::{self, FunctionConfig, TypeBuilderEntry, WithRepr},
-    Class, Client, Enum, EnumValue, Field, FunctionNode, IRHelper, Impl, RetryPolicy,
+    Class, Client, Enum, EnumValue, Field, FieldType, FunctionNode, IRHelper, Impl, RetryPolicy,
     TemplateString, TestCase, TypeAlias, Walker,
 };
 use crate::ir::jinja_helpers::render_expression;
@@ -224,8 +224,19 @@ impl<'a> Walker<'a, (&'a FunctionNode, &'a TestCase)> {
             .collect()
     }
 
+    // TODO: #1343 Temporary solution until we implement scoping in the AST.
     pub fn type_builder_contents(&self) -> &[TypeBuilderEntry] {
-        &self.item.1.elem.type_builder
+        &self.item.1.elem.type_builder.entries
+    }
+
+    // TODO: #1343 Temporary solution until we implement scoping in the AST.
+    pub fn type_builder_recursive_aliases(&self) -> &[IndexMap<String, FieldType>] {
+        &self
+            .item
+            .1
+            .elem
+            .type_builder
+            .structural_recursive_alias_cycles
     }
 
     pub fn function(&'a self) -> Walker<'a, &'a FunctionNode> {

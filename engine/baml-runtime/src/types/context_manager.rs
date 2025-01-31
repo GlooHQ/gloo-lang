@@ -125,7 +125,7 @@ impl RuntimeContextManager {
             ctx.map(|(.., tags)| tags).cloned().unwrap_or_default()
         };
 
-        let (cls, enm) = type_builder
+        let (cls, enm, als, rec_als) = type_builder
             .map(TypeBuilder::to_overrides)
             .unwrap_or_default();
 
@@ -136,6 +136,8 @@ impl RuntimeContextManager {
             Default::default(),
             cls,
             enm,
+            als,
+            rec_als,
         );
 
         ctx.client_overrides = match client_registry {
@@ -156,6 +158,8 @@ impl RuntimeContextManager {
             self.baml_src_reader.clone(),
             self.env_vars.clone(),
             ctx.last().map(|(.., x)| x).cloned().unwrap_or_default(),
+            Default::default(),
+            Default::default(),
             Default::default(),
             Default::default(),
             Default::default(),

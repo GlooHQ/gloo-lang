@@ -317,17 +317,28 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
                             .r#type(f.elem.r#type.elem.to_owned());
                     }
                 }
+
                 TypeBuilderEntry::Enum(enm) => {
                     let mutex = type_builder.r#enum(&enm.elem.name);
                     let enum_builder = mutex.lock().unwrap();
                     for (variant, _) in &enm.elem.values {
-                        let _ = enum_builder.value(&variant.elem.0).lock().unwrap();
+                        enum_builder.value(&variant.elem.0).lock().unwrap();
                     }
                 }
 
-                _ => todo!(),
+                TypeBuilderEntry::TypeAlias(alias) => {
+                    let mutex = type_builder.type_alias(&alias.elem.name);
+                    let alias_builder = mutex.lock().unwrap();
+                    alias_builder.target(alias.elem.r#type.elem.to_owned());
+                }
             }
         }
+
+        type_builder
+            .recursive_type_aliases()
+            .lock()
+            .unwrap()
+            .extend(test.type_builder_recursive_aliases().iter().cloned());
 
         Ok(Some(type_builder))
     }
