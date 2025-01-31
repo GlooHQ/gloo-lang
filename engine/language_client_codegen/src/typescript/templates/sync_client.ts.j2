@@ -1,6 +1,6 @@
 import { BamlRuntime, FunctionResult, BamlCtxManager, BamlSyncStream, Image, ClientRegistry, createBamlValidationError, BamlValidationError } from "@boundaryml/baml"
-import { Checked, Check, RecursivePartialNull } from "./types"
-import {
+import type { Checked, Check, RecursivePartialNull as MovedRecursivePartialNull } from "./types"
+import type {
   {%- for t in types %}{{ t }}{% if !loop.last %}, {% endif %}{% endfor -%}
 } from "./types"
 import TypeBuilder from "./type_builder"
@@ -8,12 +8,12 @@ import { DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX, DO_NOT_USE_DI
 
 /**
  * @deprecated Use RecursivePartialNull from 'baml_client/types' instead.
+ * Example:
+ * ```ts
+ * import { RecursivePartialNull } from './baml_client/types'
+ * ```
  */
-export type RecursivePartialNull<T> = T extends object
-  ? {
-      [P in keyof T]?: RecursivePartialNull<T[P]>;
-    }
-  : T | null;
+export type RecursivePartialNull<T> = MovedRecursivePartialNull<T>;
 
 export class BamlSyncClient {
   private runtime: BamlRuntime

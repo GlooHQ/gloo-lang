@@ -512,6 +512,9 @@ export interface UnionTest_ReturnType {
     prop3?: ((boolean | null)[] | (number | null)[] | null)
 }
 
+/**
+ * my docs
+ */
 export interface UniverseQuestion {
     question?: (string | null)
     answer?: (string | null)

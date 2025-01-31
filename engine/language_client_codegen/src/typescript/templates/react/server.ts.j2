@@ -16,7 +16,6 @@ import type {
  * {%- for (name, optional, type) in func.args %}
  * - {{ name }}{% if optional %} (optional){% endif %}: {{ type }}
  * {%- endfor %}
- *
  * Return Type:
  * - Non-streaming: {{ func.return_type }}
  * - Streaming: ReadableStream
@@ -33,6 +32,17 @@ export const {{ func.name }}Action = async (
   );
 };
 
+/**
+ * Server action for the {{ func.name }} BAML function.
+ *
+ * Input Types:
+ * {%- for (name, optional, type) in func.args %}
+ * - {{ name }}{% if optional %} (optional){% endif %}: {{ type }}
+ * {%- endfor %}
+ * Return Type:
+ * - Non-streaming: {{ func.return_type }}
+ * - Streaming: ReadableStream
+ */
 export const {{ func.name }}StreamingAction = async (
   {%- for (name, optional, type) in func.args %}
   {{ name }}{% if optional %}?{% endif %}: {{ type }},

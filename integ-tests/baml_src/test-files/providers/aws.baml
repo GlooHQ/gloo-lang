@@ -5,6 +5,7 @@ function TestAws(input: string) -> string {
   "#
 }
 
+/// my docs
 class UniverseQuestion {
   question string
   answer string

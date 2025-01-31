@@ -544,6 +544,7 @@ class UnionTest_ReturnType(BaseModel):
     prop3: Union[List[bool], List[int]]
 
 class UniverseQuestion(BaseModel):
+    """my docs"""
     question: str
     answer: str
 

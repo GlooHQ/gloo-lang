@@ -29,7 +29,6 @@ import type {AnotherObject, BigNumbers, BinaryNode, Blah, BlockConstraint, Block
  *
  * - recipe: string
  *
- *
  * Return Type:
  * - Non-streaming: Recipe
  * - Streaming: ReadableStream
@@ -42,6 +41,17 @@ export const AaaSamOutputFormatAction = async (
   );
 };
 
+/**
+ * Server action for the AaaSamOutputFormat BAML function.
+ *
+ * Input Types:
+ *
+ * - recipe: string
+ *
+ * Return Type:
+ * - Non-streaming: Recipe
+ * - Streaming: ReadableStream
+ */
 export const AaaSamOutputFormatStreamingAction = async (
   recipe: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -58,7 +68,6 @@ export const AaaSamOutputFormatStreamingAction = async (
  *
  * - list: LinkedListAliasNode
  *
- *
  * Return Type:
  * - Non-streaming: LinkedListAliasNode
  * - Streaming: ReadableStream
@@ -71,6 +80,17 @@ export const AliasThatPointsToRecursiveTypeAction = async (
   );
 };
 
+/**
+ * Server action for the AliasThatPointsToRecursiveType BAML function.
+ *
+ * Input Types:
+ *
+ * - list: LinkedListAliasNode
+ *
+ * Return Type:
+ * - Non-streaming: LinkedListAliasNode
+ * - Streaming: ReadableStream
+ */
 export const AliasThatPointsToRecursiveTypeStreamingAction = async (
   list: LinkedListAliasNode,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -87,7 +107,6 @@ export const AliasThatPointsToRecursiveTypeStreamingAction = async (
  *
  * - money: Checked<number,"gt_ten">
  *
- *
  * Return Type:
  * - Non-streaming: Checked<number,"gt_ten">
  * - Streaming: ReadableStream
@@ -100,6 +119,17 @@ export const AliasWithMultipleAttrsAction = async (
   );
 };
 
+/**
+ * Server action for the AliasWithMultipleAttrs BAML function.
+ *
+ * Input Types:
+ *
+ * - money: Checked<number,"gt_ten">
+ *
+ * Return Type:
+ * - Non-streaming: Checked<number,"gt_ten">
+ * - Streaming: ReadableStream
+ */
 export const AliasWithMultipleAttrsStreamingAction = async (
   money: Checked<number,"gt_ten">,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -116,7 +146,6 @@ export const AliasWithMultipleAttrsStreamingAction = async (
  *
  * - input: InputClass
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -129,6 +158,17 @@ export const AliasedInputClassAction = async (
   );
 };
 
+/**
+ * Server action for the AliasedInputClass BAML function.
+ *
+ * Input Types:
+ *
+ * - input: InputClass
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const AliasedInputClassStreamingAction = async (
   input: InputClass,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -145,7 +185,6 @@ export const AliasedInputClassStreamingAction = async (
  *
  * - input: InputClass
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -158,6 +197,17 @@ export const AliasedInputClass2Action = async (
   );
 };
 
+/**
+ * Server action for the AliasedInputClass2 BAML function.
+ *
+ * Input Types:
+ *
+ * - input: InputClass
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const AliasedInputClass2StreamingAction = async (
   input: InputClass,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -174,7 +224,6 @@ export const AliasedInputClass2StreamingAction = async (
  *
  * - input: InputClassNested
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -187,6 +236,17 @@ export const AliasedInputClassNestedAction = async (
   );
 };
 
+/**
+ * Server action for the AliasedInputClassNested BAML function.
+ *
+ * Input Types:
+ *
+ * - input: InputClassNested
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const AliasedInputClassNestedStreamingAction = async (
   input: InputClassNested,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -203,7 +263,6 @@ export const AliasedInputClassNestedStreamingAction = async (
  *
  * - input: AliasedEnum
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -216,6 +275,17 @@ export const AliasedInputEnumAction = async (
   );
 };
 
+/**
+ * Server action for the AliasedInputEnum BAML function.
+ *
+ * Input Types:
+ *
+ * - input: AliasedEnum
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const AliasedInputEnumStreamingAction = async (
   input: AliasedEnum,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -232,7 +302,6 @@ export const AliasedInputEnumStreamingAction = async (
  *
  * - input: AliasedEnum[]
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -245,6 +314,17 @@ export const AliasedInputListAction = async (
   );
 };
 
+/**
+ * Server action for the AliasedInputList BAML function.
+ *
+ * Input Types:
+ *
+ * - input: AliasedEnum[]
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const AliasedInputListStreamingAction = async (
   input: AliasedEnum[],
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -261,7 +341,6 @@ export const AliasedInputListStreamingAction = async (
  *
  * - optionals: OptionalListAndMap
  *
- *
  * Return Type:
  * - Non-streaming: OptionalListAndMap
  * - Streaming: ReadableStream
@@ -274,6 +353,17 @@ export const AllowedOptionalsAction = async (
   );
 };
 
+/**
+ * Server action for the AllowedOptionals BAML function.
+ *
+ * Input Types:
+ *
+ * - optionals: OptionalListAndMap
+ *
+ * Return Type:
+ * - Non-streaming: OptionalListAndMap
+ * - Streaming: ReadableStream
+ */
 export const AllowedOptionalsStreamingAction = async (
   optionals: OptionalListAndMap,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -290,7 +380,6 @@ export const AllowedOptionalsStreamingAction = async (
  *
  * - a: number
  *
- *
  * Return Type:
  * - Non-streaming: number
  * - Streaming: ReadableStream
@@ -303,6 +392,17 @@ export const AssertFnAction = async (
   );
 };
 
+/**
+ * Server action for the AssertFn BAML function.
+ *
+ * Input Types:
+ *
+ * - a: number
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
 export const AssertFnStreamingAction = async (
   a: number,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -319,7 +419,6 @@ export const AssertFnStreamingAction = async (
  *
  * - aud: Audio
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -332,6 +431,17 @@ export const AudioInputAction = async (
   );
 };
 
+/**
+ * Server action for the AudioInput BAML function.
+ *
+ * Input Types:
+ *
+ * - aud: Audio
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const AudioInputStreamingAction = async (
   aud: Audio,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -348,7 +458,6 @@ export const AudioInputStreamingAction = async (
  *
  * - input: number[]
  *
- *
  * Return Type:
  * - Non-streaming: LinkedList
  * - Streaming: ReadableStream
@@ -361,6 +470,17 @@ export const BuildLinkedListAction = async (
   );
 };
 
+/**
+ * Server action for the BuildLinkedList BAML function.
+ *
+ * Input Types:
+ *
+ * - input: number[]
+ *
+ * Return Type:
+ * - Non-streaming: LinkedList
+ * - Streaming: ReadableStream
+ */
 export const BuildLinkedListStreamingAction = async (
   input: number[],
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -377,7 +497,6 @@ export const BuildLinkedListStreamingAction = async (
  *
  * - input: BinaryNode
  *
- *
  * Return Type:
  * - Non-streaming: Tree
  * - Streaming: ReadableStream
@@ -390,6 +509,17 @@ export const BuildTreeAction = async (
   );
 };
 
+/**
+ * Server action for the BuildTree BAML function.
+ *
+ * Input Types:
+ *
+ * - input: BinaryNode
+ *
+ * Return Type:
+ * - Non-streaming: Tree
+ * - Streaming: ReadableStream
+ */
 export const BuildTreeStreamingAction = async (
   input: BinaryNode,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -406,7 +536,6 @@ export const BuildTreeStreamingAction = async (
  *
  * - cls: ClassToRecAlias
  *
- *
  * Return Type:
  * - Non-streaming: ClassToRecAlias
  * - Streaming: ReadableStream
@@ -419,6 +548,17 @@ export const ClassThatPointsToRecursiveClassThroughAliasAction = async (
   );
 };
 
+/**
+ * Server action for the ClassThatPointsToRecursiveClassThroughAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - cls: ClassToRecAlias
+ *
+ * Return Type:
+ * - Non-streaming: ClassToRecAlias
+ * - Streaming: ReadableStream
+ */
 export const ClassThatPointsToRecursiveClassThroughAliasStreamingAction = async (
   cls: ClassToRecAlias,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -435,7 +575,6 @@ export const ClassThatPointsToRecursiveClassThroughAliasStreamingAction = async 
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: (string | DynEnumTwo)
  * - Streaming: ReadableStream
@@ -448,6 +587,17 @@ export const ClassifyDynEnumTwoAction = async (
   );
 };
 
+/**
+ * Server action for the ClassifyDynEnumTwo BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: (string | DynEnumTwo)
+ * - Streaming: ReadableStream
+ */
 export const ClassifyDynEnumTwoStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -464,7 +614,6 @@ export const ClassifyDynEnumTwoStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: Category
  * - Streaming: ReadableStream
@@ -477,6 +626,17 @@ export const ClassifyMessageAction = async (
   );
 };
 
+/**
+ * Server action for the ClassifyMessage BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: Category
+ * - Streaming: ReadableStream
+ */
 export const ClassifyMessageStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -493,7 +653,6 @@ export const ClassifyMessageStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: Category
  * - Streaming: ReadableStream
@@ -506,6 +665,17 @@ export const ClassifyMessage2Action = async (
   );
 };
 
+/**
+ * Server action for the ClassifyMessage2 BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: Category
+ * - Streaming: ReadableStream
+ */
 export const ClassifyMessage2StreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -522,7 +692,6 @@ export const ClassifyMessage2StreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: Category
  * - Streaming: ReadableStream
@@ -535,6 +704,17 @@ export const ClassifyMessage3Action = async (
   );
 };
 
+/**
+ * Server action for the ClassifyMessage3 BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: Category
+ * - Streaming: ReadableStream
+ */
 export const ClassifyMessage3StreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -555,7 +735,6 @@ export const ClassifyMessage3StreamingAction = async (
  *
  * - language: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -572,6 +751,21 @@ export const CompletionAction = async (
   );
 };
 
+/**
+ * Server action for the Completion BAML function.
+ *
+ * Input Types:
+ *
+ * - prefix: string
+ *
+ * - suffix: string
+ *
+ * - language: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const CompletionStreamingAction = async (
   prefix: string,
   suffix: string,
@@ -592,7 +786,6 @@ export const CompletionStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: BookOrder | FlightConfirmation | GroceryReceipt
  * - Streaming: ReadableStream
@@ -605,6 +798,17 @@ export const CustomTaskAction = async (
   );
 };
 
+/**
+ * Server action for the CustomTask BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: BookOrder | FlightConfirmation | GroceryReceipt
+ * - Streaming: ReadableStream
+ */
 export const CustomTaskStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -621,7 +825,6 @@ export const CustomTaskStreamingAction = async (
  *
  * - img: Image
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -634,6 +837,17 @@ export const DescribeImageAction = async (
   );
 };
 
+/**
+ * Server action for the DescribeImage BAML function.
+ *
+ * Input Types:
+ *
+ * - img: Image
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const DescribeImageStreamingAction = async (
   img: Image,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -652,7 +866,6 @@ export const DescribeImageStreamingAction = async (
  *
  * - img2: Image
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -667,6 +880,19 @@ export const DescribeImage2Action = async (
   );
 };
 
+/**
+ * Server action for the DescribeImage2 BAML function.
+ *
+ * Input Types:
+ *
+ * - classWithImage: ClassWithImage
+ *
+ * - img2: Image
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const DescribeImage2StreamingAction = async (
   classWithImage: ClassWithImage,
   img2: Image,
@@ -687,7 +913,6 @@ export const DescribeImage2StreamingAction = async (
  *
  * - img2: Image
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -702,6 +927,19 @@ export const DescribeImage3Action = async (
   );
 };
 
+/**
+ * Server action for the DescribeImage3 BAML function.
+ *
+ * Input Types:
+ *
+ * - classWithImage: ClassWithImage
+ *
+ * - img2: Image
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const DescribeImage3StreamingAction = async (
   classWithImage: ClassWithImage,
   img2: Image,
@@ -722,7 +960,6 @@ export const DescribeImage3StreamingAction = async (
  *
  * - img2: Image
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -737,6 +974,19 @@ export const DescribeImage4Action = async (
   );
 };
 
+/**
+ * Server action for the DescribeImage4 BAML function.
+ *
+ * Input Types:
+ *
+ * - classWithImage: ClassWithImage
+ *
+ * - img2: Image
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const DescribeImage4StreamingAction = async (
   classWithImage: ClassWithImage,
   img2: Image,
@@ -753,7 +1003,6 @@ export const DescribeImage4StreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: OriginalA | OriginalB
  * - Streaming: ReadableStream
@@ -764,6 +1013,15 @@ export const DifferentiateUnionsAction = async (
   );
 };
 
+/**
+ * Server action for the DifferentiateUnions BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: OriginalA | OriginalB
+ * - Streaming: ReadableStream
+ */
 export const DifferentiateUnionsStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.DifferentiateUnions(
@@ -778,7 +1036,6 @@ export const DifferentiateUnionsStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: DummyOutput
  * - Streaming: ReadableStream
@@ -791,6 +1048,17 @@ export const DummyOutputFunctionAction = async (
   );
 };
 
+/**
+ * Server action for the DummyOutputFunction BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: DummyOutput
+ * - Streaming: ReadableStream
+ */
 export const DummyOutputFunctionStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -807,7 +1075,6 @@ export const DummyOutputFunctionStreamingAction = async (
  *
  * - input: DynamicClassOne
  *
- *
  * Return Type:
  * - Non-streaming: DynamicClassTwo
  * - Streaming: ReadableStream
@@ -820,6 +1087,17 @@ export const DynamicFuncAction = async (
   );
 };
 
+/**
+ * Server action for the DynamicFunc BAML function.
+ *
+ * Input Types:
+ *
+ * - input: DynamicClassOne
+ *
+ * Return Type:
+ * - Non-streaming: DynamicClassTwo
+ * - Streaming: ReadableStream
+ */
 export const DynamicFuncStreamingAction = async (
   input: DynamicClassOne,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -836,7 +1114,6 @@ export const DynamicFuncStreamingAction = async (
  *
  * - input: DynInputOutput
  *
- *
  * Return Type:
  * - Non-streaming: DynInputOutput
  * - Streaming: ReadableStream
@@ -849,6 +1126,17 @@ export const DynamicInputOutputAction = async (
   );
 };
 
+/**
+ * Server action for the DynamicInputOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: DynInputOutput
+ *
+ * Return Type:
+ * - Non-streaming: DynInputOutput
+ * - Streaming: ReadableStream
+ */
 export const DynamicInputOutputStreamingAction = async (
   input: DynInputOutput,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -865,7 +1153,6 @@ export const DynamicInputOutputStreamingAction = async (
  *
  * - input: DynInputOutput[]
  *
- *
  * Return Type:
  * - Non-streaming: DynInputOutput[]
  * - Streaming: ReadableStream
@@ -878,6 +1165,17 @@ export const DynamicListInputOutputAction = async (
   );
 };
 
+/**
+ * Server action for the DynamicListInputOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: DynInputOutput[]
+ *
+ * Return Type:
+ * - Non-streaming: DynInputOutput[]
+ * - Streaming: ReadableStream
+ */
 export const DynamicListInputOutputStreamingAction = async (
   input: DynInputOutput[],
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -892,7 +1190,6 @@ export const DynamicListInputOutputStreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -903,6 +1200,15 @@ export const ExpectFailureAction = async (
   );
 };
 
+/**
+ * Server action for the ExpectFailure BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const ExpectFailureStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.ExpectFailure(
@@ -917,7 +1223,6 @@ export const ExpectFailureStreamingAction = async (
  *
  * - document: string
  *
- *
  * Return Type:
  * - Non-streaming: ContactInfo
  * - Streaming: ReadableStream
@@ -930,6 +1235,17 @@ export const ExtractContactInfoAction = async (
   );
 };
 
+/**
+ * Server action for the ExtractContactInfo BAML function.
+ *
+ * Input Types:
+ *
+ * - document: string
+ *
+ * Return Type:
+ * - Non-streaming: ContactInfo
+ * - Streaming: ReadableStream
+ */
 export const ExtractContactInfoStreamingAction = async (
   document: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -946,7 +1262,6 @@ export const ExtractContactInfoStreamingAction = async (
  *
  * - text: string
  *
- *
  * Return Type:
  * - Non-streaming: (string | Hobby)[]
  * - Streaming: ReadableStream
@@ -959,6 +1274,17 @@ export const ExtractHobbyAction = async (
   );
 };
 
+/**
+ * Server action for the ExtractHobby BAML function.
+ *
+ * Input Types:
+ *
+ * - text: string
+ *
+ * Return Type:
+ * - Non-streaming: (string | Hobby)[]
+ * - Streaming: ReadableStream
+ */
 export const ExtractHobbyStreamingAction = async (
   text: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -975,7 +1301,6 @@ export const ExtractHobbyStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string[]
  * - Streaming: ReadableStream
@@ -988,6 +1313,17 @@ export const ExtractNamesAction = async (
   );
 };
 
+/**
+ * Server action for the ExtractNames BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string[]
+ * - Streaming: ReadableStream
+ */
 export const ExtractNamesStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1004,7 +1340,6 @@ export const ExtractNamesStreamingAction = async (
  *
  * - text: string
  *
- *
  * Return Type:
  * - Non-streaming: Person[]
  * - Streaming: ReadableStream
@@ -1017,6 +1352,17 @@ export const ExtractPeopleAction = async (
   );
 };
 
+/**
+ * Server action for the ExtractPeople BAML function.
+ *
+ * Input Types:
+ *
+ * - text: string
+ *
+ * Return Type:
+ * - Non-streaming: Person[]
+ * - Streaming: ReadableStream
+ */
 export const ExtractPeopleStreamingAction = async (
   text: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1035,7 +1381,6 @@ export const ExtractPeopleStreamingAction = async (
  *
  * - reason: "curiosity" | "personal_finance"
  *
- *
  * Return Type:
  * - Non-streaming: ReceiptInfo
  * - Streaming: ReadableStream
@@ -1050,6 +1395,19 @@ export const ExtractReceiptInfoAction = async (
   );
 };
 
+/**
+ * Server action for the ExtractReceiptInfo BAML function.
+ *
+ * Input Types:
+ *
+ * - email: string
+ *
+ * - reason: "curiosity" | "personal_finance"
+ *
+ * Return Type:
+ * - Non-streaming: ReceiptInfo
+ * - Streaming: ReadableStream
+ */
 export const ExtractReceiptInfoStreamingAction = async (
   email: string,
   reason: "curiosity" | "personal_finance",
@@ -1070,7 +1428,6 @@ export const ExtractReceiptInfoStreamingAction = async (
  *
  * - img (optional): Image | null
  *
- *
  * Return Type:
  * - Non-streaming: Resume
  * - Streaming: ReadableStream
@@ -1085,6 +1442,19 @@ export const ExtractResumeAction = async (
   );
 };
 
+/**
+ * Server action for the ExtractResume BAML function.
+ *
+ * Input Types:
+ *
+ * - resume: string
+ *
+ * - img (optional): Image | null
+ *
+ * Return Type:
+ * - Non-streaming: Resume
+ * - Streaming: ReadableStream
+ */
 export const ExtractResumeStreamingAction = async (
   resume: string,
   img?: Image | null,
@@ -1103,7 +1473,6 @@ export const ExtractResumeStreamingAction = async (
  *
  * - resume: string
  *
- *
  * Return Type:
  * - Non-streaming: Resume
  * - Streaming: ReadableStream
@@ -1116,6 +1485,17 @@ export const ExtractResume2Action = async (
   );
 };
 
+/**
+ * Server action for the ExtractResume2 BAML function.
+ *
+ * Input Types:
+ *
+ * - resume: string
+ *
+ * Return Type:
+ * - Non-streaming: Resume
+ * - Streaming: ReadableStream
+ */
 export const ExtractResume2StreamingAction = async (
   resume: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1132,7 +1512,6 @@ export const ExtractResume2StreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: ClassOptionalOutput | null
  * - Streaming: ReadableStream
@@ -1145,6 +1524,17 @@ export const FnClassOptionalOutputAction = async (
   );
 };
 
+/**
+ * Server action for the FnClassOptionalOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: ClassOptionalOutput | null
+ * - Streaming: ReadableStream
+ */
 export const FnClassOptionalOutputStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1161,7 +1551,6 @@ export const FnClassOptionalOutputStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: ClassOptionalOutput2 | null
  * - Streaming: ReadableStream
@@ -1174,6 +1563,17 @@ export const FnClassOptionalOutput2Action = async (
   );
 };
 
+/**
+ * Server action for the FnClassOptionalOutput2 BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: ClassOptionalOutput2 | null
+ * - Streaming: ReadableStream
+ */
 export const FnClassOptionalOutput2StreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1190,7 +1590,6 @@ export const FnClassOptionalOutput2StreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: EnumOutput[]
  * - Streaming: ReadableStream
@@ -1203,6 +1602,17 @@ export const FnEnumListOutputAction = async (
   );
 };
 
+/**
+ * Server action for the FnEnumListOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: EnumOutput[]
+ * - Streaming: ReadableStream
+ */
 export const FnEnumListOutputStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1219,7 +1629,6 @@ export const FnEnumListOutputStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: EnumOutput
  * - Streaming: ReadableStream
@@ -1232,6 +1641,17 @@ export const FnEnumOutputAction = async (
   );
 };
 
+/**
+ * Server action for the FnEnumOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: EnumOutput
+ * - Streaming: ReadableStream
+ */
 export const FnEnumOutputStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1248,7 +1668,6 @@ export const FnEnumOutputStreamingAction = async (
  *
  * - input: LiteralClassHello
  *
- *
  * Return Type:
  * - Non-streaming: LiteralClassHello
  * - Streaming: ReadableStream
@@ -1261,6 +1680,17 @@ export const FnLiteralClassInputOutputAction = async (
   );
 };
 
+/**
+ * Server action for the FnLiteralClassInputOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: LiteralClassHello
+ *
+ * Return Type:
+ * - Non-streaming: LiteralClassHello
+ * - Streaming: ReadableStream
+ */
 export const FnLiteralClassInputOutputStreamingAction = async (
   input: LiteralClassHello,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1277,7 +1707,6 @@ export const FnLiteralClassInputOutputStreamingAction = async (
  *
  * - input: LiteralClassOne | LiteralClassTwo
  *
- *
  * Return Type:
  * - Non-streaming: LiteralClassOne | LiteralClassTwo
  * - Streaming: ReadableStream
@@ -1290,6 +1719,17 @@ export const FnLiteralUnionClassInputOutputAction = async (
   );
 };
 
+/**
+ * Server action for the FnLiteralUnionClassInputOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: LiteralClassOne | LiteralClassTwo
+ *
+ * Return Type:
+ * - Non-streaming: LiteralClassOne | LiteralClassTwo
+ * - Streaming: ReadableStream
+ */
 export const FnLiteralUnionClassInputOutputStreamingAction = async (
   input: LiteralClassOne | LiteralClassTwo,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1306,7 +1746,6 @@ export const FnLiteralUnionClassInputOutputStreamingAction = async (
  *
  * - myString (optional): string | null
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -1319,6 +1758,17 @@ export const FnNamedArgsSingleStringOptionalAction = async (
   );
 };
 
+/**
+ * Server action for the FnNamedArgsSingleStringOptional BAML function.
+ *
+ * Input Types:
+ *
+ * - myString (optional): string | null
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const FnNamedArgsSingleStringOptionalStreamingAction = async (
   myString?: string | null,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1335,7 +1785,6 @@ export const FnNamedArgsSingleStringOptionalStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: boolean
  * - Streaming: ReadableStream
@@ -1348,6 +1797,17 @@ export const FnOutputBoolAction = async (
   );
 };
 
+/**
+ * Server action for the FnOutputBool BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: boolean
+ * - Streaming: ReadableStream
+ */
 export const FnOutputBoolStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1364,7 +1824,6 @@ export const FnOutputBoolStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: TestOutputClass
  * - Streaming: ReadableStream
@@ -1377,6 +1836,17 @@ export const FnOutputClassAction = async (
   );
 };
 
+/**
+ * Server action for the FnOutputClass BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: TestOutputClass
+ * - Streaming: ReadableStream
+ */
 export const FnOutputClassStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1393,7 +1863,6 @@ export const FnOutputClassStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: TestOutputClass[]
  * - Streaming: ReadableStream
@@ -1406,6 +1875,17 @@ export const FnOutputClassListAction = async (
   );
 };
 
+/**
+ * Server action for the FnOutputClassList BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: TestOutputClass[]
+ * - Streaming: ReadableStream
+ */
 export const FnOutputClassListStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1422,7 +1902,6 @@ export const FnOutputClassListStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: TestClassNested
  * - Streaming: ReadableStream
@@ -1435,6 +1914,17 @@ export const FnOutputClassNestedAction = async (
   );
 };
 
+/**
+ * Server action for the FnOutputClassNested BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: TestClassNested
+ * - Streaming: ReadableStream
+ */
 export const FnOutputClassNestedStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1451,7 +1941,6 @@ export const FnOutputClassNestedStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: TestClassWithEnum
  * - Streaming: ReadableStream
@@ -1464,6 +1953,17 @@ export const FnOutputClassWithEnumAction = async (
   );
 };
 
+/**
+ * Server action for the FnOutputClassWithEnum BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: TestClassWithEnum
+ * - Streaming: ReadableStream
+ */
 export const FnOutputClassWithEnumStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1480,7 +1980,6 @@ export const FnOutputClassWithEnumStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: number
  * - Streaming: ReadableStream
@@ -1493,6 +1992,17 @@ export const FnOutputIntAction = async (
   );
 };
 
+/**
+ * Server action for the FnOutputInt BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
 export const FnOutputIntStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1509,7 +2019,6 @@ export const FnOutputIntStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: false
  * - Streaming: ReadableStream
@@ -1522,6 +2031,17 @@ export const FnOutputLiteralBoolAction = async (
   );
 };
 
+/**
+ * Server action for the FnOutputLiteralBool BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: false
+ * - Streaming: ReadableStream
+ */
 export const FnOutputLiteralBoolStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1538,7 +2058,6 @@ export const FnOutputLiteralBoolStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: 5
  * - Streaming: ReadableStream
@@ -1551,6 +2070,17 @@ export const FnOutputLiteralIntAction = async (
   );
 };
 
+/**
+ * Server action for the FnOutputLiteralInt BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: 5
+ * - Streaming: ReadableStream
+ */
 export const FnOutputLiteralIntStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1567,7 +2097,6 @@ export const FnOutputLiteralIntStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: "example output"
  * - Streaming: ReadableStream
@@ -1580,6 +2109,17 @@ export const FnOutputLiteralStringAction = async (
   );
 };
 
+/**
+ * Server action for the FnOutputLiteralString BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: "example output"
+ * - Streaming: ReadableStream
+ */
 export const FnOutputLiteralStringStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1596,7 +2136,6 @@ export const FnOutputLiteralStringStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string[]
  * - Streaming: ReadableStream
@@ -1609,6 +2148,17 @@ export const FnOutputStringListAction = async (
   );
 };
 
+/**
+ * Server action for the FnOutputStringList BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string[]
+ * - Streaming: ReadableStream
+ */
 export const FnOutputStringListStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1625,7 +2175,6 @@ export const FnOutputStringListStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: TestEnum
  * - Streaming: ReadableStream
@@ -1638,6 +2187,17 @@ export const FnTestAliasedEnumOutputAction = async (
   );
 };
 
+/**
+ * Server action for the FnTestAliasedEnumOutput BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: TestEnum
+ * - Streaming: ReadableStream
+ */
 export const FnTestAliasedEnumOutputStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1654,7 +2214,6 @@ export const FnTestAliasedEnumOutputStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: TestClassAlias
  * - Streaming: ReadableStream
@@ -1667,6 +2226,17 @@ export const FnTestClassAliasAction = async (
   );
 };
 
+/**
+ * Server action for the FnTestClassAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: TestClassAlias
+ * - Streaming: ReadableStream
+ */
 export const FnTestClassAliasStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1683,7 +2253,6 @@ export const FnTestClassAliasStreamingAction = async (
  *
  * - myArg: NamedArgsSingleEnum
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -1696,6 +2265,17 @@ export const FnTestNamedArgsSingleEnumAction = async (
   );
 };
 
+/**
+ * Server action for the FnTestNamedArgsSingleEnum BAML function.
+ *
+ * Input Types:
+ *
+ * - myArg: NamedArgsSingleEnum
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const FnTestNamedArgsSingleEnumStreamingAction = async (
   myArg: NamedArgsSingleEnum,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1712,7 +2292,6 @@ export const FnTestNamedArgsSingleEnumStreamingAction = async (
  *
  * - text: string
  *
- *
  * Return Type:
  * - Non-streaming: RaysData
  * - Streaming: ReadableStream
@@ -1725,6 +2304,17 @@ export const GetDataTypeAction = async (
   );
 };
 
+/**
+ * Server action for the GetDataType BAML function.
+ *
+ * Input Types:
+ *
+ * - text: string
+ *
+ * Return Type:
+ * - Non-streaming: RaysData
+ * - Streaming: ReadableStream
+ */
 export const GetDataTypeStreamingAction = async (
   text: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1741,7 +2331,6 @@ export const GetDataTypeStreamingAction = async (
  *
  * - email: Email
  *
- *
  * Return Type:
  * - Non-streaming: OrderInfo
  * - Streaming: ReadableStream
@@ -1754,6 +2343,17 @@ export const GetOrderInfoAction = async (
   );
 };
 
+/**
+ * Server action for the GetOrderInfo BAML function.
+ *
+ * Input Types:
+ *
+ * - email: Email
+ *
+ * Return Type:
+ * - Non-streaming: OrderInfo
+ * - Streaming: ReadableStream
+ */
 export const GetOrderInfoStreamingAction = async (
   email: Email,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1770,7 +2370,6 @@ export const GetOrderInfoStreamingAction = async (
  *
  * - query: string
  *
- *
  * Return Type:
  * - Non-streaming: SearchParams
  * - Streaming: ReadableStream
@@ -1783,6 +2382,17 @@ export const GetQueryAction = async (
   );
 };
 
+/**
+ * Server action for the GetQuery BAML function.
+ *
+ * Input Types:
+ *
+ * - query: string
+ *
+ * Return Type:
+ * - Non-streaming: SearchParams
+ * - Streaming: ReadableStream
+ */
 export const GetQueryStreamingAction = async (
   query: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1801,7 +2411,6 @@ export const GetQueryStreamingAction = async (
  *
  * - i2: Partial<Record<types.MapKey, string>>
  *
- *
  * Return Type:
  * - Non-streaming: Partial<Record<types.MapKey, string>>
  * - Streaming: ReadableStream
@@ -1816,6 +2425,19 @@ export const InOutEnumMapKeyAction = async (
   );
 };
 
+/**
+ * Server action for the InOutEnumMapKey BAML function.
+ *
+ * Input Types:
+ *
+ * - i1: Partial<Record<types.MapKey, string>>
+ *
+ * - i2: Partial<Record<types.MapKey, string>>
+ *
+ * Return Type:
+ * - Non-streaming: Partial<Record<types.MapKey, string>>
+ * - Streaming: ReadableStream
+ */
 export const InOutEnumMapKeyStreamingAction = async (
   i1: Partial<Record<types.MapKey, string>>,
   i2: Partial<Record<types.MapKey, string>>,
@@ -1836,7 +2458,6 @@ export const InOutEnumMapKeyStreamingAction = async (
  *
  * - i2: Partial<Record<"one" | "two" | "three" | "four", string>>
  *
- *
  * Return Type:
  * - Non-streaming: Partial<Record<"one" | "two" | "three" | "four", string>>
  * - Streaming: ReadableStream
@@ -1851,6 +2472,19 @@ export const InOutLiteralStringUnionMapKeyAction = async (
   );
 };
 
+/**
+ * Server action for the InOutLiteralStringUnionMapKey BAML function.
+ *
+ * Input Types:
+ *
+ * - i1: Partial<Record<"one" | "two" | "three" | "four", string>>
+ *
+ * - i2: Partial<Record<"one" | "two" | "three" | "four", string>>
+ *
+ * Return Type:
+ * - Non-streaming: Partial<Record<"one" | "two" | "three" | "four", string>>
+ * - Streaming: ReadableStream
+ */
 export const InOutLiteralStringUnionMapKeyStreamingAction = async (
   i1: Partial<Record<"one" | "two" | "three" | "four", string>>,
   i2: Partial<Record<"one" | "two" | "three" | "four", string>>,
@@ -1869,7 +2503,6 @@ export const InOutLiteralStringUnionMapKeyStreamingAction = async (
  *
  * - m: Partial<Record<"key", string>>
  *
- *
  * Return Type:
  * - Non-streaming: Partial<Record<"key", string>>
  * - Streaming: ReadableStream
@@ -1882,6 +2515,17 @@ export const InOutSingleLiteralStringMapKeyAction = async (
   );
 };
 
+/**
+ * Server action for the InOutSingleLiteralStringMapKey BAML function.
+ *
+ * Input Types:
+ *
+ * - m: Partial<Record<"key", string>>
+ *
+ * Return Type:
+ * - Non-streaming: Partial<Record<"key", string>>
+ * - Streaming: ReadableStream
+ */
 export const InOutSingleLiteralStringMapKeyStreamingAction = async (
   m: Partial<Record<"key", string>>,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1898,7 +2542,6 @@ export const InOutSingleLiteralStringMapKeyStreamingAction = async (
  *
  * - input: JsonValue
  *
- *
  * Return Type:
  * - Non-streaming: JsonValue
  * - Streaming: ReadableStream
@@ -1911,6 +2554,17 @@ export const JsonTypeAliasCycleAction = async (
   );
 };
 
+/**
+ * Server action for the JsonTypeAliasCycle BAML function.
+ *
+ * Input Types:
+ *
+ * - input: JsonValue
+ *
+ * Return Type:
+ * - Non-streaming: JsonValue
+ * - Streaming: ReadableStream
+ */
 export const JsonTypeAliasCycleStreamingAction = async (
   input: JsonValue,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1927,7 +2581,6 @@ export const JsonTypeAliasCycleStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: 1 | true | "string output"
  * - Streaming: ReadableStream
@@ -1940,6 +2593,17 @@ export const LiteralUnionsTestAction = async (
   );
 };
 
+/**
+ * Server action for the LiteralUnionsTest BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: 1 | true | "string output"
+ * - Streaming: ReadableStream
+ */
 export const LiteralUnionsTestStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -1954,7 +2618,6 @@ export const LiteralUnionsTestStreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: Checked<BlockConstraint,"cross_field">
  * - Streaming: ReadableStream
@@ -1965,6 +2628,15 @@ export const MakeBlockConstraintAction = async (
   );
 };
 
+/**
+ * Server action for the MakeBlockConstraint BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: Checked<BlockConstraint,"cross_field">
+ * - Streaming: ReadableStream
+ */
 export const MakeBlockConstraintStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.MakeBlockConstraint(
@@ -1977,7 +2649,6 @@ export const MakeBlockConstraintStreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: NestedBlockConstraint
  * - Streaming: ReadableStream
@@ -1988,6 +2659,15 @@ export const MakeNestedBlockConstraintAction = async (
   );
 };
 
+/**
+ * Server action for the MakeNestedBlockConstraint BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: NestedBlockConstraint
+ * - Streaming: ReadableStream
+ */
 export const MakeNestedBlockConstraintStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.MakeNestedBlockConstraint(
@@ -2000,7 +2680,6 @@ export const MakeNestedBlockConstraintStreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: SemanticContainer
  * - Streaming: ReadableStream
@@ -2011,6 +2690,15 @@ export const MakeSemanticContainerAction = async (
   );
 };
 
+/**
+ * Server action for the MakeSemanticContainer BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: SemanticContainer
+ * - Streaming: ReadableStream
+ */
 export const MakeSemanticContainerStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.MakeSemanticContainer(
@@ -2025,7 +2713,6 @@ export const MakeSemanticContainerStreamingAction = async (
  *
  * - m: Record<string, string[]>
  *
- *
  * Return Type:
  * - Non-streaming: Record<string, string[]>
  * - Streaming: ReadableStream
@@ -2038,6 +2725,17 @@ export const MapAliasAction = async (
   );
 };
 
+/**
+ * Server action for the MapAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - m: Record<string, string[]>
+ *
+ * Return Type:
+ * - Non-streaming: Record<string, string[]>
+ * - Streaming: ReadableStream
+ */
 export const MapAliasStreamingAction = async (
   m: Record<string, string[]>,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2054,7 +2752,6 @@ export const MapAliasStreamingAction = async (
  *
  * - money: number
  *
- *
  * Return Type:
  * - Non-streaming: MergeAttrs
  * - Streaming: ReadableStream
@@ -2067,6 +2764,17 @@ export const MergeAliasAttributesAction = async (
   );
 };
 
+/**
+ * Server action for the MergeAliasAttributes BAML function.
+ *
+ * Input Types:
+ *
+ * - money: number
+ *
+ * Return Type:
+ * - Non-streaming: MergeAttrs
+ * - Streaming: ReadableStream
+ */
 export const MergeAliasAttributesStreamingAction = async (
   money: number,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2083,7 +2791,6 @@ export const MergeAliasAttributesStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: DynamicOutput
  * - Streaming: ReadableStream
@@ -2096,6 +2803,17 @@ export const MyFuncAction = async (
   );
 };
 
+/**
+ * Server action for the MyFunc BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: DynamicOutput
+ * - Streaming: ReadableStream
+ */
 export const MyFuncStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2112,7 +2830,6 @@ export const MyFuncStreamingAction = async (
  *
  * - c: number | string | boolean | number | string[] | Record<string, string[]>
  *
- *
  * Return Type:
  * - Non-streaming: number | string | boolean | number | string[] | Record<string, string[]>
  * - Streaming: ReadableStream
@@ -2125,6 +2842,17 @@ export const NestedAliasAction = async (
   );
 };
 
+/**
+ * Server action for the NestedAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - c: number | string | boolean | number | string[] | Record<string, string[]>
+ *
+ * Return Type:
+ * - Non-streaming: number | string | boolean | number | string[] | Record<string, string[]>
+ * - Streaming: ReadableStream
+ */
 export const NestedAliasStreamingAction = async (
   c: number | string | boolean | number | string[] | Record<string, string[]>,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2141,7 +2869,6 @@ export const NestedAliasStreamingAction = async (
  *
  * - s: string
  *
- *
  * Return Type:
  * - Non-streaming: ClassForNullLiteral
  * - Streaming: ReadableStream
@@ -2154,6 +2881,17 @@ export const NullLiteralClassHelloAction = async (
   );
 };
 
+/**
+ * Server action for the NullLiteralClassHello BAML function.
+ *
+ * Input Types:
+ *
+ * - s: string
+ *
+ * Return Type:
+ * - Non-streaming: ClassForNullLiteral
+ * - Streaming: ReadableStream
+ */
 export const NullLiteralClassHelloStreamingAction = async (
   s: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2170,7 +2908,6 @@ export const NullLiteralClassHelloStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: (OptionalTest_ReturnType | null)[]
  * - Streaming: ReadableStream
@@ -2183,6 +2920,17 @@ export const OptionalTest_FunctionAction = async (
   );
 };
 
+/**
+ * Server action for the OptionalTest_Function BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: (OptionalTest_ReturnType | null)[]
+ * - Streaming: ReadableStream
+ */
 export const OptionalTest_FunctionStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2199,7 +2947,6 @@ export const OptionalTest_FunctionStreamingAction = async (
  *
  * - name: string
  *
- *
  * Return Type:
  * - Non-streaming: FooAny
  * - Streaming: ReadableStream
@@ -2212,6 +2959,17 @@ export const PredictAgeAction = async (
   );
 };
 
+/**
+ * Server action for the PredictAge BAML function.
+ *
+ * Input Types:
+ *
+ * - name: string
+ *
+ * Return Type:
+ * - Non-streaming: FooAny
+ * - Streaming: ReadableStream
+ */
 export const PredictAgeStreamingAction = async (
   name: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2228,7 +2986,6 @@ export const PredictAgeStreamingAction = async (
  *
  * - inp: string
  *
- *
  * Return Type:
  * - Non-streaming: Checked<number,"too_big">
  * - Streaming: ReadableStream
@@ -2241,6 +2998,17 @@ export const PredictAgeBareAction = async (
   );
 };
 
+/**
+ * Server action for the PredictAgeBare BAML function.
+ *
+ * Input Types:
+ *
+ * - inp: string
+ *
+ * Return Type:
+ * - Non-streaming: Checked<number,"too_big">
+ * - Streaming: ReadableStream
+ */
 export const PredictAgeBareStreamingAction = async (
   inp: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2257,7 +3025,6 @@ export const PredictAgeBareStreamingAction = async (
  *
  * - p: number | string | boolean | number
  *
- *
  * Return Type:
  * - Non-streaming: number | string | boolean | number
  * - Streaming: ReadableStream
@@ -2270,6 +3037,17 @@ export const PrimitiveAliasAction = async (
   );
 };
 
+/**
+ * Server action for the PrimitiveAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - p: number | string | boolean | number
+ *
+ * Return Type:
+ * - Non-streaming: number | string | boolean | number
+ * - Streaming: ReadableStream
+ */
 export const PrimitiveAliasStreamingAction = async (
   p: number | string | boolean | number,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2286,7 +3064,6 @@ export const PrimitiveAliasStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -2299,6 +3076,17 @@ export const PromptTestClaudeAction = async (
   );
 };
 
+/**
+ * Server action for the PromptTestClaude BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const PromptTestClaudeStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2315,7 +3103,6 @@ export const PromptTestClaudeStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -2328,6 +3115,17 @@ export const PromptTestClaudeChatAction = async (
   );
 };
 
+/**
+ * Server action for the PromptTestClaudeChat BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const PromptTestClaudeChatStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2344,7 +3142,6 @@ export const PromptTestClaudeChatStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -2357,6 +3154,17 @@ export const PromptTestClaudeChatNoSystemAction = async (
   );
 };
 
+/**
+ * Server action for the PromptTestClaudeChatNoSystem BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const PromptTestClaudeChatNoSystemStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2373,7 +3181,6 @@ export const PromptTestClaudeChatNoSystemStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -2386,6 +3193,17 @@ export const PromptTestOpenAIAction = async (
   );
 };
 
+/**
+ * Server action for the PromptTestOpenAI BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const PromptTestOpenAIStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2402,7 +3220,6 @@ export const PromptTestOpenAIStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -2415,6 +3232,17 @@ export const PromptTestOpenAIChatAction = async (
   );
 };
 
+/**
+ * Server action for the PromptTestOpenAIChat BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const PromptTestOpenAIChatStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2431,7 +3259,6 @@ export const PromptTestOpenAIChatStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -2444,6 +3271,17 @@ export const PromptTestOpenAIChatNoSystemAction = async (
   );
 };
 
+/**
+ * Server action for the PromptTestOpenAIChatNoSystem BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const PromptTestOpenAIChatNoSystemStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2460,7 +3298,6 @@ export const PromptTestOpenAIChatNoSystemStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -2473,6 +3310,17 @@ export const PromptTestStreamingAction = async (
   );
 };
 
+/**
+ * Server action for the PromptTestStreaming BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const PromptTestStreamingStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2489,7 +3337,6 @@ export const PromptTestStreamingStreamingAction = async (
  *
  * - input: RecAliasOne
  *
- *
  * Return Type:
  * - Non-streaming: RecAliasOne
  * - Streaming: ReadableStream
@@ -2502,6 +3349,17 @@ export const RecursiveAliasCycleAction = async (
   );
 };
 
+/**
+ * Server action for the RecursiveAliasCycle BAML function.
+ *
+ * Input Types:
+ *
+ * - input: RecAliasOne
+ *
+ * Return Type:
+ * - Non-streaming: RecAliasOne
+ * - Streaming: ReadableStream
+ */
 export const RecursiveAliasCycleStreamingAction = async (
   input: RecAliasOne,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2518,7 +3376,6 @@ export const RecursiveAliasCycleStreamingAction = async (
  *
  * - cls: NodeWithAliasIndirection
  *
- *
  * Return Type:
  * - Non-streaming: NodeWithAliasIndirection
  * - Streaming: ReadableStream
@@ -2531,6 +3388,17 @@ export const RecursiveClassWithAliasIndirectionAction = async (
   );
 };
 
+/**
+ * Server action for the RecursiveClassWithAliasIndirection BAML function.
+ *
+ * Input Types:
+ *
+ * - cls: NodeWithAliasIndirection
+ *
+ * Return Type:
+ * - Non-streaming: NodeWithAliasIndirection
+ * - Streaming: ReadableStream
+ */
 export const RecursiveClassWithAliasIndirectionStreamingAction = async (
   cls: NodeWithAliasIndirection,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2547,7 +3415,6 @@ export const RecursiveClassWithAliasIndirectionStreamingAction = async (
  *
  * - money: Checked<number,"gt_ten">
  *
- *
  * Return Type:
  * - Non-streaming: Checked<number,"gt_ten">
  * - Streaming: ReadableStream
@@ -2560,6 +3427,17 @@ export const ReturnAliasWithMergedAttributesAction = async (
   );
 };
 
+/**
+ * Server action for the ReturnAliasWithMergedAttributes BAML function.
+ *
+ * Input Types:
+ *
+ * - money: Checked<number,"gt_ten">
+ *
+ * Return Type:
+ * - Non-streaming: Checked<number,"gt_ten">
+ * - Streaming: ReadableStream
+ */
 export const ReturnAliasWithMergedAttributesStreamingAction = async (
   money: Checked<number,"gt_ten">,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2576,7 +3454,6 @@ export const ReturnAliasWithMergedAttributesStreamingAction = async (
  *
  * - inp: number
  *
- *
  * Return Type:
  * - Non-streaming: number
  * - Streaming: ReadableStream
@@ -2589,6 +3466,17 @@ export const ReturnFailingAssertAction = async (
   );
 };
 
+/**
+ * Server action for the ReturnFailingAssert BAML function.
+ *
+ * Input Types:
+ *
+ * - inp: number
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
 export const ReturnFailingAssertStreamingAction = async (
   inp: number,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2605,7 +3493,6 @@ export const ReturnFailingAssertStreamingAction = async (
  *
  * - a: number
  *
- *
  * Return Type:
  * - Non-streaming: MalformedConstraints
  * - Streaming: ReadableStream
@@ -2618,6 +3505,17 @@ export const ReturnMalformedConstraintsAction = async (
   );
 };
 
+/**
+ * Server action for the ReturnMalformedConstraints BAML function.
+ *
+ * Input Types:
+ *
+ * - a: number
+ *
+ * Return Type:
+ * - Non-streaming: MalformedConstraints
+ * - Streaming: ReadableStream
+ */
 export const ReturnMalformedConstraintsStreamingAction = async (
   a: number,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2634,7 +3532,6 @@ export const ReturnMalformedConstraintsStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: Schema
  * - Streaming: ReadableStream
@@ -2647,6 +3544,17 @@ export const SchemaDescriptionsAction = async (
   );
 };
 
+/**
+ * Server action for the SchemaDescriptions BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: Schema
+ * - Streaming: ReadableStream
+ */
 export const SchemaDescriptionsStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2663,7 +3571,6 @@ export const SchemaDescriptionsStreamingAction = async (
  *
  * - input: RecursiveListAlias
  *
- *
  * Return Type:
  * - Non-streaming: RecursiveListAlias
  * - Streaming: ReadableStream
@@ -2676,6 +3583,17 @@ export const SimpleRecursiveListAliasAction = async (
   );
 };
 
+/**
+ * Server action for the SimpleRecursiveListAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - input: RecursiveListAlias
+ *
+ * Return Type:
+ * - Non-streaming: RecursiveListAlias
+ * - Streaming: ReadableStream
+ */
 export const SimpleRecursiveListAliasStreamingAction = async (
   input: RecursiveListAlias,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2692,7 +3610,6 @@ export const SimpleRecursiveListAliasStreamingAction = async (
  *
  * - input: RecursiveMapAlias
  *
- *
  * Return Type:
  * - Non-streaming: RecursiveMapAlias
  * - Streaming: ReadableStream
@@ -2705,6 +3622,17 @@ export const SimpleRecursiveMapAliasAction = async (
   );
 };
 
+/**
+ * Server action for the SimpleRecursiveMapAlias BAML function.
+ *
+ * Input Types:
+ *
+ * - input: RecursiveMapAlias
+ *
+ * Return Type:
+ * - Non-streaming: RecursiveMapAlias
+ * - Streaming: ReadableStream
+ */
 export const SimpleRecursiveMapAliasStreamingAction = async (
   input: RecursiveMapAlias,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2721,7 +3649,6 @@ export const SimpleRecursiveMapAliasStreamingAction = async (
  *
  * - digits: number
  *
- *
  * Return Type:
  * - Non-streaming: BigNumbers
  * - Streaming: ReadableStream
@@ -2734,6 +3661,17 @@ export const StreamBigNumbersAction = async (
   );
 };
 
+/**
+ * Server action for the StreamBigNumbers BAML function.
+ *
+ * Input Types:
+ *
+ * - digits: number
+ *
+ * Return Type:
+ * - Non-streaming: BigNumbers
+ * - Streaming: ReadableStream
+ */
 export const StreamBigNumbersStreamingAction = async (
   digits: number,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2752,7 +3690,6 @@ export const StreamBigNumbersStreamingAction = async (
  *
  * - length: number
  *
- *
  * Return Type:
  * - Non-streaming: TwoStoriesOneTitle
  * - Streaming: ReadableStream
@@ -2767,6 +3704,19 @@ export const StreamFailingAssertionAction = async (
   );
 };
 
+/**
+ * Server action for the StreamFailingAssertion BAML function.
+ *
+ * Input Types:
+ *
+ * - theme: string
+ *
+ * - length: number
+ *
+ * Return Type:
+ * - Non-streaming: TwoStoriesOneTitle
+ * - Streaming: ReadableStream
+ */
 export const StreamFailingAssertionStreamingAction = async (
   theme: string,
   length: number,
@@ -2785,7 +3735,6 @@ export const StreamFailingAssertionStreamingAction = async (
  *
  * - digits: number
  *
- *
  * Return Type:
  * - Non-streaming: number
  * - Streaming: ReadableStream
@@ -2798,6 +3747,17 @@ export const StreamOneBigNumberAction = async (
   );
 };
 
+/**
+ * Server action for the StreamOneBigNumber BAML function.
+ *
+ * Input Types:
+ *
+ * - digits: number
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
 export const StreamOneBigNumberStreamingAction = async (
   digits: number,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2814,7 +3774,6 @@ export const StreamOneBigNumberStreamingAction = async (
  *
  * - digits: number
  *
- *
  * Return Type:
  * - Non-streaming: (number | string)[]
  * - Streaming: ReadableStream
@@ -2827,6 +3786,17 @@ export const StreamUnionIntegersAction = async (
   );
 };
 
+/**
+ * Server action for the StreamUnionIntegers BAML function.
+ *
+ * Input Types:
+ *
+ * - digits: number
+ *
+ * Return Type:
+ * - Non-streaming: (number | string)[]
+ * - Streaming: ReadableStream
+ */
 export const StreamUnionIntegersStreamingAction = async (
   digits: number,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2845,7 +3815,6 @@ export const StreamUnionIntegersStreamingAction = async (
  *
  * - yapping: boolean
  *
- *
  * Return Type:
  * - Non-streaming: CompoundBigNumbers
  * - Streaming: ReadableStream
@@ -2860,6 +3829,19 @@ export const StreamingCompoundNumbersAction = async (
   );
 };
 
+/**
+ * Server action for the StreamingCompoundNumbers BAML function.
+ *
+ * Input Types:
+ *
+ * - digits: number
+ *
+ * - yapping: boolean
+ *
+ * Return Type:
+ * - Non-streaming: CompoundBigNumbers
+ * - Streaming: ReadableStream
+ */
 export const StreamingCompoundNumbersStreamingAction = async (
   digits: number,
   yapping: boolean,
@@ -2878,7 +3860,6 @@ export const StreamingCompoundNumbersStreamingAction = async (
  *
  * - input: RecursiveAliasDependency
  *
- *
  * Return Type:
  * - Non-streaming: RecursiveAliasDependency
  * - Streaming: ReadableStream
@@ -2891,6 +3872,17 @@ export const TakeRecAliasDepAction = async (
   );
 };
 
+/**
+ * Server action for the TakeRecAliasDep BAML function.
+ *
+ * Input Types:
+ *
+ * - input: RecursiveAliasDependency
+ *
+ * Return Type:
+ * - Non-streaming: RecursiveAliasDependency
+ * - Streaming: ReadableStream
+ */
 export const TakeRecAliasDepStreamingAction = async (
   input: RecursiveAliasDependency,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2907,7 +3899,6 @@ export const TakeRecAliasDepStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -2920,6 +3911,17 @@ export const TestAnthropicAction = async (
   );
 };
 
+/**
+ * Server action for the TestAnthropic BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestAnthropicStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2936,7 +3938,6 @@ export const TestAnthropicStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -2949,6 +3950,17 @@ export const TestAnthropicShorthandAction = async (
   );
 };
 
+/**
+ * Server action for the TestAnthropicShorthand BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestAnthropicShorthandStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2965,7 +3977,6 @@ export const TestAnthropicShorthandStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -2978,6 +3989,17 @@ export const TestAwsAction = async (
   );
 };
 
+/**
+ * Server action for the TestAws BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestAwsStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -2994,7 +4016,6 @@ export const TestAwsStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3007,6 +4028,17 @@ export const TestAwsInvalidAccessKeyAction = async (
   );
 };
 
+/**
+ * Server action for the TestAwsInvalidAccessKey BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestAwsInvalidAccessKeyStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3023,7 +4055,6 @@ export const TestAwsInvalidAccessKeyStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3036,6 +4067,17 @@ export const TestAwsInvalidProfileAction = async (
   );
 };
 
+/**
+ * Server action for the TestAwsInvalidProfile BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestAwsInvalidProfileStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3052,7 +4094,6 @@ export const TestAwsInvalidProfileStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3065,6 +4106,17 @@ export const TestAwsInvalidRegionAction = async (
   );
 };
 
+/**
+ * Server action for the TestAwsInvalidRegion BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestAwsInvalidRegionStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3081,7 +4133,6 @@ export const TestAwsInvalidRegionStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3094,6 +4145,17 @@ export const TestAwsInvalidSessionTokenAction = async (
   );
 };
 
+/**
+ * Server action for the TestAwsInvalidSessionToken BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestAwsInvalidSessionTokenStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3110,7 +4172,6 @@ export const TestAwsInvalidSessionTokenStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3123,6 +4184,17 @@ export const TestAzureAction = async (
   );
 };
 
+/**
+ * Server action for the TestAzure BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestAzureStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3139,7 +4211,6 @@ export const TestAzureStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3152,6 +4223,17 @@ export const TestAzureFailureAction = async (
   );
 };
 
+/**
+ * Server action for the TestAzureFailure BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestAzureFailureStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3170,7 +4252,6 @@ export const TestAzureFailureStreamingAction = async (
  *
  * - not_cached: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3185,6 +4266,19 @@ export const TestCachingAction = async (
   );
 };
 
+/**
+ * Server action for the TestCaching BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * - not_cached: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestCachingStreamingAction = async (
   input: string,
   not_cached: string,
@@ -3201,7 +4295,6 @@ export const TestCachingStreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3212,6 +4305,15 @@ export const TestFallbackClientAction = async (
   );
 };
 
+/**
+ * Server action for the TestFallbackClient BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestFallbackClientStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.TestFallbackClient(
@@ -3226,7 +4328,6 @@ export const TestFallbackClientStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3239,6 +4340,17 @@ export const TestFallbackToShorthandAction = async (
   );
 };
 
+/**
+ * Server action for the TestFallbackToShorthand BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestFallbackToShorthandStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3255,7 +4367,6 @@ export const TestFallbackToShorthandStreamingAction = async (
  *
  * - myBool: boolean
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3268,6 +4379,17 @@ export const TestFnNamedArgsSingleBoolAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleBool BAML function.
+ *
+ * Input Types:
+ *
+ * - myBool: boolean
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleBoolStreamingAction = async (
   myBool: boolean,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3284,7 +4406,6 @@ export const TestFnNamedArgsSingleBoolStreamingAction = async (
  *
  * - myArg: NamedArgsSingleClass
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3297,6 +4418,17 @@ export const TestFnNamedArgsSingleClassAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleClass BAML function.
+ *
+ * Input Types:
+ *
+ * - myArg: NamedArgsSingleClass
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleClassStreamingAction = async (
   myArg: NamedArgsSingleClass,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3313,7 +4445,6 @@ export const TestFnNamedArgsSingleClassStreamingAction = async (
  *
  * - myArg: NamedArgsSingleEnumList[]
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3326,6 +4457,17 @@ export const TestFnNamedArgsSingleEnumListAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleEnumList BAML function.
+ *
+ * Input Types:
+ *
+ * - myArg: NamedArgsSingleEnumList[]
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleEnumListStreamingAction = async (
   myArg: NamedArgsSingleEnumList[],
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3342,7 +4484,6 @@ export const TestFnNamedArgsSingleEnumListStreamingAction = async (
  *
  * - myFloat: number
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3355,6 +4496,17 @@ export const TestFnNamedArgsSingleFloatAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleFloat BAML function.
+ *
+ * Input Types:
+ *
+ * - myFloat: number
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleFloatStreamingAction = async (
   myFloat: number,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3371,7 +4523,6 @@ export const TestFnNamedArgsSingleFloatStreamingAction = async (
  *
  * - myInt: number
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3384,6 +4535,17 @@ export const TestFnNamedArgsSingleIntAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleInt BAML function.
+ *
+ * Input Types:
+ *
+ * - myInt: number
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleIntStreamingAction = async (
   myInt: number,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3400,7 +4562,6 @@ export const TestFnNamedArgsSingleIntStreamingAction = async (
  *
  * - myMap: Record<string, StringToClassEntry>
  *
- *
  * Return Type:
  * - Non-streaming: Record<string, StringToClassEntry>
  * - Streaming: ReadableStream
@@ -3413,6 +4574,17 @@ export const TestFnNamedArgsSingleMapStringToClassAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleMapStringToClass BAML function.
+ *
+ * Input Types:
+ *
+ * - myMap: Record<string, StringToClassEntry>
+ *
+ * Return Type:
+ * - Non-streaming: Record<string, StringToClassEntry>
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleMapStringToClassStreamingAction = async (
   myMap: Record<string, StringToClassEntry>,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3429,7 +4601,6 @@ export const TestFnNamedArgsSingleMapStringToClassStreamingAction = async (
  *
  * - myMap: Record<string, Record<string, string>>
  *
- *
  * Return Type:
  * - Non-streaming: Record<string, Record<string, string>>
  * - Streaming: ReadableStream
@@ -3442,6 +4613,17 @@ export const TestFnNamedArgsSingleMapStringToMapAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleMapStringToMap BAML function.
+ *
+ * Input Types:
+ *
+ * - myMap: Record<string, Record<string, string>>
+ *
+ * Return Type:
+ * - Non-streaming: Record<string, Record<string, string>>
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleMapStringToMapStreamingAction = async (
   myMap: Record<string, Record<string, string>>,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3458,7 +4640,6 @@ export const TestFnNamedArgsSingleMapStringToMapStreamingAction = async (
  *
  * - myMap: Record<string, string>
  *
- *
  * Return Type:
  * - Non-streaming: Record<string, string>
  * - Streaming: ReadableStream
@@ -3471,6 +4652,17 @@ export const TestFnNamedArgsSingleMapStringToStringAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleMapStringToString BAML function.
+ *
+ * Input Types:
+ *
+ * - myMap: Record<string, string>
+ *
+ * Return Type:
+ * - Non-streaming: Record<string, string>
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleMapStringToStringStreamingAction = async (
   myMap: Record<string, string>,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3487,7 +4679,6 @@ export const TestFnNamedArgsSingleMapStringToStringStreamingAction = async (
  *
  * - myString: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3500,6 +4691,17 @@ export const TestFnNamedArgsSingleStringAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleString BAML function.
+ *
+ * Input Types:
+ *
+ * - myString: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleStringStreamingAction = async (
   myString: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3516,7 +4718,6 @@ export const TestFnNamedArgsSingleStringStreamingAction = async (
  *
  * - myStringArray: string[]
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3529,6 +4730,17 @@ export const TestFnNamedArgsSingleStringArrayAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleStringArray BAML function.
+ *
+ * Input Types:
+ *
+ * - myStringArray: string[]
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleStringArrayStreamingAction = async (
   myStringArray: string[],
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3545,7 +4757,6 @@ export const TestFnNamedArgsSingleStringArrayStreamingAction = async (
  *
  * - myArg: string[]
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3558,6 +4769,17 @@ export const TestFnNamedArgsSingleStringListAction = async (
   );
 };
 
+/**
+ * Server action for the TestFnNamedArgsSingleStringList BAML function.
+ *
+ * Input Types:
+ *
+ * - myArg: string[]
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestFnNamedArgsSingleStringListStreamingAction = async (
   myArg: string[],
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3574,7 +4796,6 @@ export const TestFnNamedArgsSingleStringListStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3587,6 +4808,17 @@ export const TestGeminiAction = async (
   );
 };
 
+/**
+ * Server action for the TestGemini BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestGeminiStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3601,7 +4833,6 @@ export const TestGeminiStreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3612,6 +4843,15 @@ export const TestGeminiOpenAiGenericAction = async (
   );
 };
 
+/**
+ * Server action for the TestGeminiOpenAiGeneric BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestGeminiOpenAiGenericStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.TestGeminiOpenAiGeneric(
@@ -3626,7 +4866,6 @@ export const TestGeminiOpenAiGenericStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3639,6 +4878,17 @@ export const TestGeminiSystemAction = async (
   );
 };
 
+/**
+ * Server action for the TestGeminiSystem BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestGeminiSystemStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3655,7 +4905,6 @@ export const TestGeminiSystemStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3668,6 +4917,17 @@ export const TestGeminiSystemAsChatAction = async (
   );
 };
 
+/**
+ * Server action for the TestGeminiSystemAsChat BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestGeminiSystemAsChatStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3684,7 +4944,6 @@ export const TestGeminiSystemAsChatStreamingAction = async (
  *
  * - img: Image
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3697,6 +4956,17 @@ export const TestImageInputAction = async (
   );
 };
 
+/**
+ * Server action for the TestImageInput BAML function.
+ *
+ * Input Types:
+ *
+ * - img: Image
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestImageInputStreamingAction = async (
   img: Image,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3713,7 +4983,6 @@ export const TestImageInputStreamingAction = async (
  *
  * - img: Image
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3726,6 +4995,17 @@ export const TestImageInputAnthropicAction = async (
   );
 };
 
+/**
+ * Server action for the TestImageInputAnthropic BAML function.
+ *
+ * Input Types:
+ *
+ * - img: Image
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestImageInputAnthropicStreamingAction = async (
   img: Image,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3742,7 +5022,6 @@ export const TestImageInputAnthropicStreamingAction = async (
  *
  * - imgs: Image[]
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3755,6 +5034,17 @@ export const TestImageListInputAction = async (
   );
 };
 
+/**
+ * Server action for the TestImageListInput BAML function.
+ *
+ * Input Types:
+ *
+ * - imgs: Image[]
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestImageListInputStreamingAction = async (
   imgs: Image[],
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3771,7 +5061,6 @@ export const TestImageListInputStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: TestMemoryOutput
  * - Streaming: ReadableStream
@@ -3784,6 +5073,17 @@ export const TestMemoryAction = async (
   );
 };
 
+/**
+ * Server action for the TestMemory BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: TestMemoryOutput
+ * - Streaming: ReadableStream
+ */
 export const TestMemoryStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3802,7 +5102,6 @@ export const TestMemoryStreamingAction = async (
  *
  * - myArg2: NamedArgsSingleClass
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3817,6 +5116,19 @@ export const TestMulticlassNamedArgsAction = async (
   );
 };
 
+/**
+ * Server action for the TestMulticlassNamedArgs BAML function.
+ *
+ * Input Types:
+ *
+ * - myArg: NamedArgsSingleClass
+ *
+ * - myArg2: NamedArgsSingleClass
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestMulticlassNamedArgsStreamingAction = async (
   myArg: NamedArgsSingleClass,
   myArg2: NamedArgsSingleClass,
@@ -3835,7 +5147,6 @@ export const TestMulticlassNamedArgsStreamingAction = async (
  *
  * - myBool: true
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3848,6 +5159,17 @@ export const TestNamedArgsLiteralBoolAction = async (
   );
 };
 
+/**
+ * Server action for the TestNamedArgsLiteralBool BAML function.
+ *
+ * Input Types:
+ *
+ * - myBool: true
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestNamedArgsLiteralBoolStreamingAction = async (
   myBool: true,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3864,7 +5186,6 @@ export const TestNamedArgsLiteralBoolStreamingAction = async (
  *
  * - myInt: 1
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3877,6 +5198,17 @@ export const TestNamedArgsLiteralIntAction = async (
   );
 };
 
+/**
+ * Server action for the TestNamedArgsLiteralInt BAML function.
+ *
+ * Input Types:
+ *
+ * - myInt: 1
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestNamedArgsLiteralIntStreamingAction = async (
   myInt: 1,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3893,7 +5225,6 @@ export const TestNamedArgsLiteralIntStreamingAction = async (
  *
  * - myString: "My String"
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3906,6 +5237,17 @@ export const TestNamedArgsLiteralStringAction = async (
   );
 };
 
+/**
+ * Server action for the TestNamedArgsLiteralString BAML function.
+ *
+ * Input Types:
+ *
+ * - myString: "My String"
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestNamedArgsLiteralStringStreamingAction = async (
   myString: "My String",
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3922,7 +5264,6 @@ export const TestNamedArgsLiteralStringStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3935,6 +5276,17 @@ export const TestOllamaAction = async (
   );
 };
 
+/**
+ * Server action for the TestOllama BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestOllamaStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3951,7 +5303,6 @@ export const TestOllamaStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3964,6 +5315,17 @@ export const TestOpenAILegacyProviderAction = async (
   );
 };
 
+/**
+ * Server action for the TestOpenAILegacyProvider BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestOpenAILegacyProviderStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -3980,7 +5342,6 @@ export const TestOpenAILegacyProviderStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -3993,6 +5354,17 @@ export const TestOpenAIShorthandAction = async (
   );
 };
 
+/**
+ * Server action for the TestOpenAIShorthand BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestOpenAIShorthandStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -4007,7 +5379,6 @@ export const TestOpenAIShorthandStreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -4018,6 +5389,15 @@ export const TestRetryConstantAction = async (
   );
 };
 
+/**
+ * Server action for the TestRetryConstant BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestRetryConstantStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.TestRetryConstant(
@@ -4030,7 +5410,6 @@ export const TestRetryConstantStreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -4041,6 +5420,15 @@ export const TestRetryExponentialAction = async (
   );
 };
 
+/**
+ * Server action for the TestRetryExponential BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestRetryExponentialStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.TestRetryExponential(
@@ -4053,7 +5441,6 @@ export const TestRetryExponentialStreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -4064,6 +5451,15 @@ export const TestSingleFallbackClientAction = async (
   );
 };
 
+/**
+ * Server action for the TestSingleFallbackClient BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestSingleFallbackClientStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.TestSingleFallbackClient(
@@ -4078,7 +5474,6 @@ export const TestSingleFallbackClientStreamingAction = async (
  *
  * - question: UniverseQuestionInput
  *
- *
  * Return Type:
  * - Non-streaming: UniverseQuestion
  * - Streaming: ReadableStream
@@ -4091,6 +5486,17 @@ export const TestUniverseQuestionAction = async (
   );
 };
 
+/**
+ * Server action for the TestUniverseQuestion BAML function.
+ *
+ * Input Types:
+ *
+ * - question: UniverseQuestionInput
+ *
+ * Return Type:
+ * - Non-streaming: UniverseQuestion
+ * - Streaming: ReadableStream
+ */
 export const TestUniverseQuestionStreamingAction = async (
   question: UniverseQuestionInput,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -4107,7 +5513,6 @@ export const TestUniverseQuestionStreamingAction = async (
  *
  * - input: string
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -4120,6 +5525,17 @@ export const TestVertexAction = async (
   );
 };
 
+/**
+ * Server action for the TestVertex BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestVertexStreamingAction = async (
   input: string,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -4134,7 +5550,6 @@ export const TestVertexStreamingAction = async (
  *
  * Input Types:
  *
- *
  * Return Type:
  * - Non-streaming: string
  * - Streaming: ReadableStream
@@ -4145,6 +5560,15 @@ export const TestVertexWithSystemInstructionsAction = async (
   );
 };
 
+/**
+ * Server action for the TestVertexWithSystemInstructions BAML function.
+ *
+ * Input Types:
+ *
+ * Return Type:
+ * - Non-streaming: string
+ * - Streaming: ReadableStream
+ */
 export const TestVertexWithSystemInstructionsStreamingAction = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.TestVertexWithSystemInstructions(
@@ -4159,7 +5583,6 @@ export const TestVertexWithSystemInstructionsStreamingAction = async (
  *
  * - input: string | boolean
  *
- *
  * Return Type:
  * - Non-streaming: UnionTest_ReturnType
  * - Streaming: ReadableStream
@@ -4172,6 +5595,17 @@ export const UnionTest_FunctionAction = async (
   );
 };
 
+/**
+ * Server action for the UnionTest_Function BAML function.
+ *
+ * Input Types:
+ *
+ * - input: string | boolean
+ *
+ * Return Type:
+ * - Non-streaming: UnionTest_ReturnType
+ * - Streaming: ReadableStream
+ */
 export const UnionTest_FunctionStreamingAction = async (
   input: string | boolean,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -4188,7 +5622,6 @@ export const UnionTest_FunctionStreamingAction = async (
  *
  * - inp: BlockConstraintForParam
  *
- *
  * Return Type:
  * - Non-streaming: number
  * - Streaming: ReadableStream
@@ -4201,6 +5634,17 @@ export const UseBlockConstraintAction = async (
   );
 };
 
+/**
+ * Server action for the UseBlockConstraint BAML function.
+ *
+ * Input Types:
+ *
+ * - inp: BlockConstraintForParam
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
 export const UseBlockConstraintStreamingAction = async (
   inp: BlockConstraintForParam,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -4217,7 +5661,6 @@ export const UseBlockConstraintStreamingAction = async (
  *
  * - a: MalformedConstraints2
  *
- *
  * Return Type:
  * - Non-streaming: number
  * - Streaming: ReadableStream
@@ -4230,6 +5673,17 @@ export const UseMalformedConstraintsAction = async (
   );
 };
 
+/**
+ * Server action for the UseMalformedConstraints BAML function.
+ *
+ * Input Types:
+ *
+ * - a: MalformedConstraints2
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
 export const UseMalformedConstraintsStreamingAction = async (
   a: MalformedConstraints2,
 ): Promise<ReadableStream<Uint8Array>> => {
@@ -4246,7 +5700,6 @@ export const UseMalformedConstraintsStreamingAction = async (
  *
  * - inp: NestedBlockConstraintForParam
  *
- *
  * Return Type:
  * - Non-streaming: number
  * - Streaming: ReadableStream
@@ -4259,6 +5712,17 @@ export const UseNestedBlockConstraintAction = async (
   );
 };
 
+/**
+ * Server action for the UseNestedBlockConstraint BAML function.
+ *
+ * Input Types:
+ *
+ * - inp: NestedBlockConstraintForParam
+ *
+ * Return Type:
+ * - Non-streaming: number
+ * - Streaming: ReadableStream
+ */
 export const UseNestedBlockConstraintStreamingAction = async (
   inp: NestedBlockConstraintForParam,
 ): Promise<ReadableStream<Uint8Array>> => {

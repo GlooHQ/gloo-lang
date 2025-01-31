@@ -18,26 +18,8 @@ $ pnpm add @boundaryml/baml
 import type { BamlStream } from '@boundaryml/baml';
 import type { RecursivePartialNull } from '../types';
 import type { BamlValidationError, BamlClientFinishReasonError } from '@boundaryml/baml/errors';
-/**
- * Type for representing a partial response with type safety
- * @template Output The type of the partial response data
- */
-export type PartialResponse<Output> = {
-  partial?: RecursivePartialNull<Output> | null
-  final?: never
-}
-
-/**
- * Type for representing a final response with type safety
- * @template Output The type of the final response data
- */
-export type FinalResponse<Output> = {
-  partial?: never
-  final: Output
-}
 
 export type ServerAction<Input = any, Output = any> = (...args: Input extends any[] ? Input : [Input]) => Promise<ReadableStream<Uint8Array> | Output>;
-
 
 /**
  * Props for streaming mode, which provides incremental updates.

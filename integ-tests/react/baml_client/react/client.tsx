@@ -19,8 +19,6 @@ $ pnpm add @boundaryml/baml
 
 import { useCallback, useMemo, useReducer, useTransition } from 'react';
 import type {
-  PartialResponse,
-  FinalResponse,
   StreamingProps,
   NonStreamingProps,
   StreamingHookResult,
@@ -34,6 +32,7 @@ import { BamlValidationError, BamlClientFinishReasonError } from "@boundaryml/ba
 import * as ServerActions from './server';
 
 import type {AnotherObject, BigNumbers, BinaryNode, Blah, BlockConstraint, BlockConstraintForParam, BookOrder, ClassForNullLiteral, ClassOptionalOutput, ClassOptionalOutput2, ClassToRecAlias, ClassWithBlockDone, ClassWithImage, ClassWithoutDone, ComplexMemoryObject, CompoundBigNumbers, ContactInfo, CustomTaskResult, DummyOutput, DynInputOutput, DynamicClassOne, DynamicClassTwo, DynamicOutput, Earthling, Education, Email, EmailAddress, Event, FakeImage, FlightConfirmation, FooAny, Forest, FormatterTest0, FormatterTest1, FormatterTest2, FormatterTest3, GroceryReceipt, InnerClass, InnerClass2, InputClass, InputClassNested, LinkedList, LinkedListAliasNode, LiteralClassHello, LiteralClassOne, LiteralClassTwo, MalformedConstraints, MalformedConstraints2, Martian, MemoryObject, MergeAttrs, NamedArgsSingleClass, Nested, Nested2, NestedBlockConstraint, NestedBlockConstraintForParam, Node, NodeWithAliasIndirection, OptionalListAndMap, OptionalTest_Prop1, OptionalTest_ReturnType, OrderInfo, OriginalA, OriginalB, Person, PhoneNumber, Quantity, RaysData, ReceiptInfo, ReceiptItem, Recipe, RecursiveAliasDependency, Resume, Schema, SearchParams, SemanticContainer, SmallThing, SomeClassNestedDynamic, StringToClassEntry, TestClassAlias, TestClassNested, TestClassWithEnum, TestMemoryOutput, TestOutputClass, Tree, TwoStoriesOneTitle, UnionTest_ReturnType, UniverseQuestion, UniverseQuestionInput, WithReasoning, AliasedEnum, Category, Category2, Category3, Color, DataType, DynEnumOne, DynEnumTwo, EnumInClass, EnumOutput, Hobby, MapKey, NamedArgsSingleEnum, NamedArgsSingleEnumList, OptionalTest_CategoryType, OrderStatus, Tag, TestEnum} from "../types"
+import * as partial_types from "../types"
 
 /**
  * Type guard to check if props are for streaming mode
@@ -390,7 +389,7 @@ export function useBamlAction<Action>(
  *
  * Input Types:
  *
- * - recipe: string
+ * - recipe: types.string
  *
  *
  * Return Type:
@@ -522,7 +521,7 @@ export function useAaaSamOutputFormat<Action extends typeof ServerActions.AaaSam
  *
  * Input Types:
  *
- * - list: LinkedListAliasNode
+ * - list: types.LinkedListAliasNode
  *
  *
  * Return Type:
@@ -654,7 +653,7 @@ export function useAliasThatPointsToRecursiveType<Action extends typeof ServerAc
  *
  * Input Types:
  *
- * - money: Checked<number,"gt_ten">
+ * - money: types.Checked<number,"gt_ten">
  *
  *
  * Return Type:
@@ -786,7 +785,7 @@ export function useAliasWithMultipleAttrs<Action extends typeof ServerActions.Al
  *
  * Input Types:
  *
- * - input: InputClass
+ * - input: types.InputClass
  *
  *
  * Return Type:
@@ -918,7 +917,7 @@ export function useAliasedInputClass<Action extends typeof ServerActions.Aliased
  *
  * Input Types:
  *
- * - input: InputClass
+ * - input: types.InputClass
  *
  *
  * Return Type:
@@ -1050,7 +1049,7 @@ export function useAliasedInputClass2<Action extends typeof ServerActions.Aliase
  *
  * Input Types:
  *
- * - input: InputClassNested
+ * - input: types.InputClassNested
  *
  *
  * Return Type:
@@ -1182,7 +1181,7 @@ export function useAliasedInputClassNested<Action extends typeof ServerActions.A
  *
  * Input Types:
  *
- * - input: AliasedEnum
+ * - input: types.AliasedEnum
  *
  *
  * Return Type:
@@ -1314,7 +1313,7 @@ export function useAliasedInputEnum<Action extends typeof ServerActions.AliasedI
  *
  * Input Types:
  *
- * - input: AliasedEnum[]
+ * - input: types.AliasedEnum[]
  *
  *
  * Return Type:
@@ -1446,7 +1445,7 @@ export function useAliasedInputList<Action extends typeof ServerActions.AliasedI
  *
  * Input Types:
  *
- * - optionals: OptionalListAndMap
+ * - optionals: types.OptionalListAndMap
  *
  *
  * Return Type:
@@ -1578,7 +1577,7 @@ export function useAllowedOptionals<Action extends typeof ServerActions.AllowedO
  *
  * Input Types:
  *
- * - a: number
+ * - a: types.number
  *
  *
  * Return Type:
@@ -1710,7 +1709,7 @@ export function useAssertFn<Action extends typeof ServerActions.AssertFnAction>(
  *
  * Input Types:
  *
- * - aud: Audio
+ * - aud: types.Audio
  *
  *
  * Return Type:
@@ -1842,7 +1841,7 @@ export function useAudioInput<Action extends typeof ServerActions.AudioInputActi
  *
  * Input Types:
  *
- * - input: number[]
+ * - input: types.number[]
  *
  *
  * Return Type:
@@ -1974,7 +1973,7 @@ export function useBuildLinkedList<Action extends typeof ServerActions.BuildLink
  *
  * Input Types:
  *
- * - input: BinaryNode
+ * - input: types.BinaryNode
  *
  *
  * Return Type:
@@ -2106,7 +2105,7 @@ export function useBuildTree<Action extends typeof ServerActions.BuildTreeAction
  *
  * Input Types:
  *
- * - cls: ClassToRecAlias
+ * - cls: types.ClassToRecAlias
  *
  *
  * Return Type:
@@ -2238,7 +2237,7 @@ export function useClassThatPointsToRecursiveClassThroughAlias<Action extends ty
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -2370,7 +2369,7 @@ export function useClassifyDynEnumTwo<Action extends typeof ServerActions.Classi
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -2502,7 +2501,7 @@ export function useClassifyMessage<Action extends typeof ServerActions.ClassifyM
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -2634,7 +2633,7 @@ export function useClassifyMessage2<Action extends typeof ServerActions.Classify
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -2766,11 +2765,11 @@ export function useClassifyMessage3<Action extends typeof ServerActions.Classify
  *
  * Input Types:
  *
- * - prefix: string
+ * - prefix: types.string
  *
- * - suffix: string
+ * - suffix: types.string
  *
- * - language: string
+ * - language: types.string
  *
  *
  * Return Type:
@@ -2908,7 +2907,7 @@ export function useCompletion<Action extends typeof ServerActions.CompletionActi
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -3040,7 +3039,7 @@ export function useCustomTask<Action extends typeof ServerActions.CustomTaskActi
  *
  * Input Types:
  *
- * - img: Image
+ * - img: types.Image
  *
  *
  * Return Type:
@@ -3172,9 +3171,9 @@ export function useDescribeImage<Action extends typeof ServerActions.DescribeIma
  *
  * Input Types:
  *
- * - classWithImage: ClassWithImage
+ * - classWithImage: types.ClassWithImage
  *
- * - img2: Image
+ * - img2: types.Image
  *
  *
  * Return Type:
@@ -3309,9 +3308,9 @@ export function useDescribeImage2<Action extends typeof ServerActions.DescribeIm
  *
  * Input Types:
  *
- * - classWithImage: ClassWithImage
+ * - classWithImage: types.ClassWithImage
  *
- * - img2: Image
+ * - img2: types.Image
  *
  *
  * Return Type:
@@ -3446,9 +3445,9 @@ export function useDescribeImage3<Action extends typeof ServerActions.DescribeIm
  *
  * Input Types:
  *
- * - classWithImage: ClassWithImage
+ * - classWithImage: types.ClassWithImage
  *
- * - img2: Image
+ * - img2: types.Image
  *
  *
  * Return Type:
@@ -3710,7 +3709,7 @@ export function useDifferentiateUnions<Action extends typeof ServerActions.Diffe
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -3842,7 +3841,7 @@ export function useDummyOutputFunction<Action extends typeof ServerActions.Dummy
  *
  * Input Types:
  *
- * - input: DynamicClassOne
+ * - input: types.DynamicClassOne
  *
  *
  * Return Type:
@@ -3974,7 +3973,7 @@ export function useDynamicFunc<Action extends typeof ServerActions.DynamicFuncAc
  *
  * Input Types:
  *
- * - input: DynInputOutput
+ * - input: types.DynInputOutput
  *
  *
  * Return Type:
@@ -4106,7 +4105,7 @@ export function useDynamicInputOutput<Action extends typeof ServerActions.Dynami
  *
  * Input Types:
  *
- * - input: DynInputOutput[]
+ * - input: types.DynInputOutput[]
  *
  *
  * Return Type:
@@ -4365,7 +4364,7 @@ export function useExpectFailure<Action extends typeof ServerActions.ExpectFailu
  *
  * Input Types:
  *
- * - document: string
+ * - document: types.string
  *
  *
  * Return Type:
@@ -4497,7 +4496,7 @@ export function useExtractContactInfo<Action extends typeof ServerActions.Extrac
  *
  * Input Types:
  *
- * - text: string
+ * - text: types.string
  *
  *
  * Return Type:
@@ -4629,7 +4628,7 @@ export function useExtractHobby<Action extends typeof ServerActions.ExtractHobby
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -4761,7 +4760,7 @@ export function useExtractNames<Action extends typeof ServerActions.ExtractNames
  *
  * Input Types:
  *
- * - text: string
+ * - text: types.string
  *
  *
  * Return Type:
@@ -4893,9 +4892,9 @@ export function useExtractPeople<Action extends typeof ServerActions.ExtractPeop
  *
  * Input Types:
  *
- * - email: string
+ * - email: types.string
  *
- * - reason: "curiosity" | "personal_finance"
+ * - reason: types."curiosity" | "personal_finance"
  *
  *
  * Return Type:
@@ -5030,9 +5029,9 @@ export function useExtractReceiptInfo<Action extends typeof ServerActions.Extrac
  *
  * Input Types:
  *
- * - resume: string
+ * - resume: types.string
  *
- * - img (optional): Image | null
+ * - img (optional): types.Image | null
  *
  *
  * Return Type:
@@ -5167,7 +5166,7 @@ export function useExtractResume<Action extends typeof ServerActions.ExtractResu
  *
  * Input Types:
  *
- * - resume: string
+ * - resume: types.string
  *
  *
  * Return Type:
@@ -5299,7 +5298,7 @@ export function useExtractResume2<Action extends typeof ServerActions.ExtractRes
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -5431,7 +5430,7 @@ export function useFnClassOptionalOutput<Action extends typeof ServerActions.FnC
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -5563,7 +5562,7 @@ export function useFnClassOptionalOutput2<Action extends typeof ServerActions.Fn
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -5695,7 +5694,7 @@ export function useFnEnumListOutput<Action extends typeof ServerActions.FnEnumLi
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -5827,7 +5826,7 @@ export function useFnEnumOutput<Action extends typeof ServerActions.FnEnumOutput
  *
  * Input Types:
  *
- * - input: LiteralClassHello
+ * - input: types.LiteralClassHello
  *
  *
  * Return Type:
@@ -5959,7 +5958,7 @@ export function useFnLiteralClassInputOutput<Action extends typeof ServerActions
  *
  * Input Types:
  *
- * - input: LiteralClassOne | LiteralClassTwo
+ * - input: types.LiteralClassOne | LiteralClassTwo
  *
  *
  * Return Type:
@@ -6091,7 +6090,7 @@ export function useFnLiteralUnionClassInputOutput<Action extends typeof ServerAc
  *
  * Input Types:
  *
- * - myString (optional): string | null
+ * - myString (optional): types.string | null
  *
  *
  * Return Type:
@@ -6223,7 +6222,7 @@ export function useFnNamedArgsSingleStringOptional<Action extends typeof ServerA
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -6355,7 +6354,7 @@ export function useFnOutputBool<Action extends typeof ServerActions.FnOutputBool
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -6487,7 +6486,7 @@ export function useFnOutputClass<Action extends typeof ServerActions.FnOutputCla
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -6619,7 +6618,7 @@ export function useFnOutputClassList<Action extends typeof ServerActions.FnOutpu
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -6751,7 +6750,7 @@ export function useFnOutputClassNested<Action extends typeof ServerActions.FnOut
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -6883,7 +6882,7 @@ export function useFnOutputClassWithEnum<Action extends typeof ServerActions.FnO
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -7015,7 +7014,7 @@ export function useFnOutputInt<Action extends typeof ServerActions.FnOutputIntAc
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -7147,7 +7146,7 @@ export function useFnOutputLiteralBool<Action extends typeof ServerActions.FnOut
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -7279,7 +7278,7 @@ export function useFnOutputLiteralInt<Action extends typeof ServerActions.FnOutp
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -7411,7 +7410,7 @@ export function useFnOutputLiteralString<Action extends typeof ServerActions.FnO
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -7543,7 +7542,7 @@ export function useFnOutputStringList<Action extends typeof ServerActions.FnOutp
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -7675,7 +7674,7 @@ export function useFnTestAliasedEnumOutput<Action extends typeof ServerActions.F
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -7807,7 +7806,7 @@ export function useFnTestClassAlias<Action extends typeof ServerActions.FnTestCl
  *
  * Input Types:
  *
- * - myArg: NamedArgsSingleEnum
+ * - myArg: types.NamedArgsSingleEnum
  *
  *
  * Return Type:
@@ -7939,7 +7938,7 @@ export function useFnTestNamedArgsSingleEnum<Action extends typeof ServerActions
  *
  * Input Types:
  *
- * - text: string
+ * - text: types.string
  *
  *
  * Return Type:
@@ -8071,7 +8070,7 @@ export function useGetDataType<Action extends typeof ServerActions.GetDataTypeAc
  *
  * Input Types:
  *
- * - email: Email
+ * - email: types.Email
  *
  *
  * Return Type:
@@ -8203,7 +8202,7 @@ export function useGetOrderInfo<Action extends typeof ServerActions.GetOrderInfo
  *
  * Input Types:
  *
- * - query: string
+ * - query: types.string
  *
  *
  * Return Type:
@@ -8335,9 +8334,9 @@ export function useGetQuery<Action extends typeof ServerActions.GetQueryAction>(
  *
  * Input Types:
  *
- * - i1: Partial<Record<types.MapKey, string>>
+ * - i1: types.Partial<Record<types.MapKey, string>>
  *
- * - i2: Partial<Record<types.MapKey, string>>
+ * - i2: types.Partial<Record<types.MapKey, string>>
  *
  *
  * Return Type:
@@ -8472,9 +8471,9 @@ export function useInOutEnumMapKey<Action extends typeof ServerActions.InOutEnum
  *
  * Input Types:
  *
- * - i1: Partial<Record<"one" | "two" | "three" | "four", string>>
+ * - i1: types.Partial<Record<"one" | "two" | "three" | "four", string>>
  *
- * - i2: Partial<Record<"one" | "two" | "three" | "four", string>>
+ * - i2: types.Partial<Record<"one" | "two" | "three" | "four", string>>
  *
  *
  * Return Type:
@@ -8609,7 +8608,7 @@ export function useInOutLiteralStringUnionMapKey<Action extends typeof ServerAct
  *
  * Input Types:
  *
- * - m: Partial<Record<"key", string>>
+ * - m: types.Partial<Record<"key", string>>
  *
  *
  * Return Type:
@@ -8741,7 +8740,7 @@ export function useInOutSingleLiteralStringMapKey<Action extends typeof ServerAc
  *
  * Input Types:
  *
- * - input: JsonValue
+ * - input: types.JsonValue
  *
  *
  * Return Type:
@@ -8873,7 +8872,7 @@ export function useJsonTypeAliasCycle<Action extends typeof ServerActions.JsonTy
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -9386,7 +9385,7 @@ export function useMakeSemanticContainer<Action extends typeof ServerActions.Mak
  *
  * Input Types:
  *
- * - m: Record<string, string[]>
+ * - m: types.Record<string, string[]>
  *
  *
  * Return Type:
@@ -9518,7 +9517,7 @@ export function useMapAlias<Action extends typeof ServerActions.MapAliasAction>(
  *
  * Input Types:
  *
- * - money: number
+ * - money: types.number
  *
  *
  * Return Type:
@@ -9650,7 +9649,7 @@ export function useMergeAliasAttributes<Action extends typeof ServerActions.Merg
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -9782,7 +9781,7 @@ export function useMyFunc<Action extends typeof ServerActions.MyFuncAction>(
  *
  * Input Types:
  *
- * - c: number | string | boolean | number | string[] | Record<string, string[]>
+ * - c: types.number | string | boolean | number | string[] | Record<string, string[]>
  *
  *
  * Return Type:
@@ -9914,7 +9913,7 @@ export function useNestedAlias<Action extends typeof ServerActions.NestedAliasAc
  *
  * Input Types:
  *
- * - s: string
+ * - s: types.string
  *
  *
  * Return Type:
@@ -10046,7 +10045,7 @@ export function useNullLiteralClassHello<Action extends typeof ServerActions.Nul
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -10178,7 +10177,7 @@ export function useOptionalTest_Function<Action extends typeof ServerActions.Opt
  *
  * Input Types:
  *
- * - name: string
+ * - name: types.string
  *
  *
  * Return Type:
@@ -10310,7 +10309,7 @@ export function usePredictAge<Action extends typeof ServerActions.PredictAgeActi
  *
  * Input Types:
  *
- * - inp: string
+ * - inp: types.string
  *
  *
  * Return Type:
@@ -10442,7 +10441,7 @@ export function usePredictAgeBare<Action extends typeof ServerActions.PredictAge
  *
  * Input Types:
  *
- * - p: number | string | boolean | number
+ * - p: types.number | string | boolean | number
  *
  *
  * Return Type:
@@ -10574,7 +10573,7 @@ export function usePrimitiveAlias<Action extends typeof ServerActions.PrimitiveA
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -10706,7 +10705,7 @@ export function usePromptTestClaude<Action extends typeof ServerActions.PromptTe
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -10838,7 +10837,7 @@ export function usePromptTestClaudeChat<Action extends typeof ServerActions.Prom
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -10970,7 +10969,7 @@ export function usePromptTestClaudeChatNoSystem<Action extends typeof ServerActi
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -11102,7 +11101,7 @@ export function usePromptTestOpenAI<Action extends typeof ServerActions.PromptTe
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -11234,7 +11233,7 @@ export function usePromptTestOpenAIChat<Action extends typeof ServerActions.Prom
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -11366,7 +11365,7 @@ export function usePromptTestOpenAIChatNoSystem<Action extends typeof ServerActi
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -11498,7 +11497,7 @@ export function usePromptTestStreaming<Action extends typeof ServerActions.Promp
  *
  * Input Types:
  *
- * - input: RecAliasOne
+ * - input: types.RecAliasOne
  *
  *
  * Return Type:
@@ -11630,7 +11629,7 @@ export function useRecursiveAliasCycle<Action extends typeof ServerActions.Recur
  *
  * Input Types:
  *
- * - cls: NodeWithAliasIndirection
+ * - cls: types.NodeWithAliasIndirection
  *
  *
  * Return Type:
@@ -11762,7 +11761,7 @@ export function useRecursiveClassWithAliasIndirection<Action extends typeof Serv
  *
  * Input Types:
  *
- * - money: Checked<number,"gt_ten">
+ * - money: types.Checked<number,"gt_ten">
  *
  *
  * Return Type:
@@ -11894,7 +11893,7 @@ export function useReturnAliasWithMergedAttributes<Action extends typeof ServerA
  *
  * Input Types:
  *
- * - inp: number
+ * - inp: types.number
  *
  *
  * Return Type:
@@ -12026,7 +12025,7 @@ export function useReturnFailingAssert<Action extends typeof ServerActions.Retur
  *
  * Input Types:
  *
- * - a: number
+ * - a: types.number
  *
  *
  * Return Type:
@@ -12158,7 +12157,7 @@ export function useReturnMalformedConstraints<Action extends typeof ServerAction
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -12290,7 +12289,7 @@ export function useSchemaDescriptions<Action extends typeof ServerActions.Schema
  *
  * Input Types:
  *
- * - input: RecursiveListAlias
+ * - input: types.RecursiveListAlias
  *
  *
  * Return Type:
@@ -12422,7 +12421,7 @@ export function useSimpleRecursiveListAlias<Action extends typeof ServerActions.
  *
  * Input Types:
  *
- * - input: RecursiveMapAlias
+ * - input: types.RecursiveMapAlias
  *
  *
  * Return Type:
@@ -12554,7 +12553,7 @@ export function useSimpleRecursiveMapAlias<Action extends typeof ServerActions.S
  *
  * Input Types:
  *
- * - digits: number
+ * - digits: types.number
  *
  *
  * Return Type:
@@ -12686,9 +12685,9 @@ export function useStreamBigNumbers<Action extends typeof ServerActions.StreamBi
  *
  * Input Types:
  *
- * - theme: string
+ * - theme: types.string
  *
- * - length: number
+ * - length: types.number
  *
  *
  * Return Type:
@@ -12823,7 +12822,7 @@ export function useStreamFailingAssertion<Action extends typeof ServerActions.St
  *
  * Input Types:
  *
- * - digits: number
+ * - digits: types.number
  *
  *
  * Return Type:
@@ -12955,7 +12954,7 @@ export function useStreamOneBigNumber<Action extends typeof ServerActions.Stream
  *
  * Input Types:
  *
- * - digits: number
+ * - digits: types.number
  *
  *
  * Return Type:
@@ -13087,9 +13086,9 @@ export function useStreamUnionIntegers<Action extends typeof ServerActions.Strea
  *
  * Input Types:
  *
- * - digits: number
+ * - digits: types.number
  *
- * - yapping: boolean
+ * - yapping: types.boolean
  *
  *
  * Return Type:
@@ -13224,7 +13223,7 @@ export function useStreamingCompoundNumbers<Action extends typeof ServerActions.
  *
  * Input Types:
  *
- * - input: RecursiveAliasDependency
+ * - input: types.RecursiveAliasDependency
  *
  *
  * Return Type:
@@ -13356,7 +13355,7 @@ export function useTakeRecAliasDep<Action extends typeof ServerActions.TakeRecAl
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -13488,7 +13487,7 @@ export function useTestAnthropic<Action extends typeof ServerActions.TestAnthrop
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -13620,7 +13619,7 @@ export function useTestAnthropicShorthand<Action extends typeof ServerActions.Te
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -13752,7 +13751,7 @@ export function useTestAws<Action extends typeof ServerActions.TestAwsAction>(
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -13884,7 +13883,7 @@ export function useTestAwsInvalidAccessKey<Action extends typeof ServerActions.T
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -14016,7 +14015,7 @@ export function useTestAwsInvalidProfile<Action extends typeof ServerActions.Tes
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -14148,7 +14147,7 @@ export function useTestAwsInvalidRegion<Action extends typeof ServerActions.Test
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -14280,7 +14279,7 @@ export function useTestAwsInvalidSessionToken<Action extends typeof ServerAction
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -14412,7 +14411,7 @@ export function useTestAzure<Action extends typeof ServerActions.TestAzureAction
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -14544,9 +14543,9 @@ export function useTestAzureFailure<Action extends typeof ServerActions.TestAzur
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
- * - not_cached: string
+ * - not_cached: types.string
  *
  *
  * Return Type:
@@ -14808,7 +14807,7 @@ export function useTestFallbackClient<Action extends typeof ServerActions.TestFa
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -14940,7 +14939,7 @@ export function useTestFallbackToShorthand<Action extends typeof ServerActions.T
  *
  * Input Types:
  *
- * - myBool: boolean
+ * - myBool: types.boolean
  *
  *
  * Return Type:
@@ -15072,7 +15071,7 @@ export function useTestFnNamedArgsSingleBool<Action extends typeof ServerActions
  *
  * Input Types:
  *
- * - myArg: NamedArgsSingleClass
+ * - myArg: types.NamedArgsSingleClass
  *
  *
  * Return Type:
@@ -15204,7 +15203,7 @@ export function useTestFnNamedArgsSingleClass<Action extends typeof ServerAction
  *
  * Input Types:
  *
- * - myArg: NamedArgsSingleEnumList[]
+ * - myArg: types.NamedArgsSingleEnumList[]
  *
  *
  * Return Type:
@@ -15336,7 +15335,7 @@ export function useTestFnNamedArgsSingleEnumList<Action extends typeof ServerAct
  *
  * Input Types:
  *
- * - myFloat: number
+ * - myFloat: types.number
  *
  *
  * Return Type:
@@ -15468,7 +15467,7 @@ export function useTestFnNamedArgsSingleFloat<Action extends typeof ServerAction
  *
  * Input Types:
  *
- * - myInt: number
+ * - myInt: types.number
  *
  *
  * Return Type:
@@ -15600,7 +15599,7 @@ export function useTestFnNamedArgsSingleInt<Action extends typeof ServerActions.
  *
  * Input Types:
  *
- * - myMap: Record<string, StringToClassEntry>
+ * - myMap: types.Record<string, StringToClassEntry>
  *
  *
  * Return Type:
@@ -15732,7 +15731,7 @@ export function useTestFnNamedArgsSingleMapStringToClass<Action extends typeof S
  *
  * Input Types:
  *
- * - myMap: Record<string, Record<string, string>>
+ * - myMap: types.Record<string, Record<string, string>>
  *
  *
  * Return Type:
@@ -15864,7 +15863,7 @@ export function useTestFnNamedArgsSingleMapStringToMap<Action extends typeof Ser
  *
  * Input Types:
  *
- * - myMap: Record<string, string>
+ * - myMap: types.Record<string, string>
  *
  *
  * Return Type:
@@ -15996,7 +15995,7 @@ export function useTestFnNamedArgsSingleMapStringToString<Action extends typeof 
  *
  * Input Types:
  *
- * - myString: string
+ * - myString: types.string
  *
  *
  * Return Type:
@@ -16128,7 +16127,7 @@ export function useTestFnNamedArgsSingleString<Action extends typeof ServerActio
  *
  * Input Types:
  *
- * - myStringArray: string[]
+ * - myStringArray: types.string[]
  *
  *
  * Return Type:
@@ -16260,7 +16259,7 @@ export function useTestFnNamedArgsSingleStringArray<Action extends typeof Server
  *
  * Input Types:
  *
- * - myArg: string[]
+ * - myArg: types.string[]
  *
  *
  * Return Type:
@@ -16392,7 +16391,7 @@ export function useTestFnNamedArgsSingleStringList<Action extends typeof ServerA
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -16651,7 +16650,7 @@ export function useTestGeminiOpenAiGeneric<Action extends typeof ServerActions.T
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -16783,7 +16782,7 @@ export function useTestGeminiSystem<Action extends typeof ServerActions.TestGemi
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -16915,7 +16914,7 @@ export function useTestGeminiSystemAsChat<Action extends typeof ServerActions.Te
  *
  * Input Types:
  *
- * - img: Image
+ * - img: types.Image
  *
  *
  * Return Type:
@@ -17047,7 +17046,7 @@ export function useTestImageInput<Action extends typeof ServerActions.TestImageI
  *
  * Input Types:
  *
- * - img: Image
+ * - img: types.Image
  *
  *
  * Return Type:
@@ -17179,7 +17178,7 @@ export function useTestImageInputAnthropic<Action extends typeof ServerActions.T
  *
  * Input Types:
  *
- * - imgs: Image[]
+ * - imgs: types.Image[]
  *
  *
  * Return Type:
@@ -17311,7 +17310,7 @@ export function useTestImageListInput<Action extends typeof ServerActions.TestIm
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -17443,9 +17442,9 @@ export function useTestMemory<Action extends typeof ServerActions.TestMemoryActi
  *
  * Input Types:
  *
- * - myArg: NamedArgsSingleClass
+ * - myArg: types.NamedArgsSingleClass
  *
- * - myArg2: NamedArgsSingleClass
+ * - myArg2: types.NamedArgsSingleClass
  *
  *
  * Return Type:
@@ -17580,7 +17579,7 @@ export function useTestMulticlassNamedArgs<Action extends typeof ServerActions.T
  *
  * Input Types:
  *
- * - myBool: true
+ * - myBool: types.true
  *
  *
  * Return Type:
@@ -17712,7 +17711,7 @@ export function useTestNamedArgsLiteralBool<Action extends typeof ServerActions.
  *
  * Input Types:
  *
- * - myInt: 1
+ * - myInt: types.1
  *
  *
  * Return Type:
@@ -17844,7 +17843,7 @@ export function useTestNamedArgsLiteralInt<Action extends typeof ServerActions.T
  *
  * Input Types:
  *
- * - myString: "My String"
+ * - myString: types."My String"
  *
  *
  * Return Type:
@@ -17976,7 +17975,7 @@ export function useTestNamedArgsLiteralString<Action extends typeof ServerAction
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -18108,7 +18107,7 @@ export function useTestOllama<Action extends typeof ServerActions.TestOllamaActi
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -18240,7 +18239,7 @@ export function useTestOpenAILegacyProvider<Action extends typeof ServerActions.
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -18753,7 +18752,7 @@ export function useTestSingleFallbackClient<Action extends typeof ServerActions.
  *
  * Input Types:
  *
- * - question: UniverseQuestionInput
+ * - question: types.UniverseQuestionInput
  *
  *
  * Return Type:
@@ -18885,7 +18884,7 @@ export function useTestUniverseQuestion<Action extends typeof ServerActions.Test
  *
  * Input Types:
  *
- * - input: string
+ * - input: types.string
  *
  *
  * Return Type:
@@ -19144,7 +19143,7 @@ export function useTestVertexWithSystemInstructions<Action extends typeof Server
  *
  * Input Types:
  *
- * - input: string | boolean
+ * - input: types.string | boolean
  *
  *
  * Return Type:
@@ -19276,7 +19275,7 @@ export function useUnionTest_Function<Action extends typeof ServerActions.UnionT
  *
  * Input Types:
  *
- * - inp: BlockConstraintForParam
+ * - inp: types.BlockConstraintForParam
  *
  *
  * Return Type:
@@ -19408,7 +19407,7 @@ export function useUseBlockConstraint<Action extends typeof ServerActions.UseBlo
  *
  * Input Types:
  *
- * - a: MalformedConstraints2
+ * - a: types.MalformedConstraints2
  *
  *
  * Return Type:
@@ -19540,7 +19539,7 @@ export function useUseMalformedConstraints<Action extends typeof ServerActions.U
  *
  * Input Types:
  *
- * - inp: NestedBlockConstraintForParam
+ * - inp: types.NestedBlockConstraintForParam
  *
  *
  * Return Type:

@@ -1515,6 +1515,7 @@ module Baml
         @props = props
       end
     end
+    # my docs
     class UniverseQuestion < T::Struct
       include Baml::Sorbet::Struct
       const :question, String

@@ -5080,16 +5080,16 @@ components:
             checks:
               type: object
               properties:
-                regex_good:
+                trivial:
                   $ref: '#components/schemas/Check'
                 regex_bad:
                   $ref: '#components/schemas/Check'
-                trivial:
+                regex_good:
                   $ref: '#components/schemas/Check'
               required:
-              - regex_good
-              - regex_bad
               - trivial
+              - regex_bad
+              - regex_good
               additionalProperties: false
           required:
           - value

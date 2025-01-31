@@ -424,6 +424,7 @@ class UnionTest_ReturnType(BaseModel):
     prop3: Optional[Union[List[Optional[bool]], List[Optional[int]]]] = None
 
 class UniverseQuestion(BaseModel):
+    """my docs"""
     question: Optional[str] = None
     answer: Optional[str] = None
 

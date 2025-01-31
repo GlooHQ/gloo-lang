@@ -2,8 +2,6 @@
 
 import { useCallback, useMemo, useReducer, useTransition } from 'react';
 import type {
-  PartialResponse,
-  FinalResponse,
   StreamingProps,
   NonStreamingProps,
   StreamingHookResult,
@@ -19,6 +17,7 @@ import * as ServerActions from './server';
 import type {
   {%- for t in types %}{{ t }}{% if !loop.last %}, {% endif %}{% endfor -%}
 } from "../types"
+import * as partial_types from "../types"
 
 /**
  * Type guard to check if props are for streaming mode
@@ -377,7 +376,7 @@ export function useBamlAction<Action>(
  *
  * Input Types:
  * {%- for (name, optional, type) in func.args %}
- * - {{ name }}{% if optional %} (optional){% endif %}: {{ type }}
+ * - {{ name }}{% if optional %} (optional){% endif %}: types.{{ type }}
  * {%- endfor %}
  *
  * Return Type:
