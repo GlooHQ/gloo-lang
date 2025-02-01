@@ -83,6 +83,34 @@ pub(super) fn validate(ctx: &mut Context<'_>) {
         ctx,
         "These classes form a dependency cycle",
     );
+
+    let client_graph = HashMap::<_, _>::from_iter(ctx.db.walk_clients().map(|client| {
+        let mut dependencies = HashSet::new();
+
+        if let internal_llm_client::UnresolvedClientProperty::Fallback(options) =
+            &client.properties().options
+        {
+            use internal_llm_client::StrategyClientProperty;
+
+            let valid_clients = ctx.db.valid_client_names();
+
+            for (client, span) in options.strategy() {
+                if let either::Either::Right(internal_llm_client::ClientSpec::Named(s)) = client {
+                    if valid_clients.contains(s) {
+                        dependencies.insert(ctx.db.find_client(&s).unwrap().id);
+                    }
+                }
+            }
+        }
+
+        (client.id, dependencies)
+    }));
+
+    report_infinite_cycles(
+        &client_graph,
+        ctx,
+        "These fallback clients form a dependency cycle",
+    );
 }
 
 /// Finds and reports all the infinite cycles in the given graph.
