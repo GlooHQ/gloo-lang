@@ -1092,6 +1092,7 @@ dependencies = [
  "serde",
  "serde_json",
  "strum",
+ "tokio",
  "tracing-core",
  "web-time",
 ]
@@ -1262,7 +1263,7 @@ dependencies = [
 
 [[package]]
 name = "btrace"
-version = "0.72.0"
+version = "0.74.0"
 dependencies = [
  "anyhow",
  "baml-types",

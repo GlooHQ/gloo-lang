@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::{collections::HashMap, sync::Arc};
 
 use super::events::{FunctionId, LogEvent};
 
@@ -21,13 +21,14 @@ impl TraceStorage {
 
     pub fn put(&mut self, event: Arc<LogEvent>) {
         let span_id = event.span_id.clone();
-        self.span_map.entry(span_id).or_insert(Arc::new(Mutex::new(vec![])));
-        
-        match self.span_map.get_mut(&event.span_id).unwrap().lock() {
-            Ok(mut events) => events.push(event),
-            Err(e) => {
-                eprintln!("Failed to lock mutex: {}", e);
-            }
+        self.span_map
+            .entry(span_id)
+            .or_insert(Arc::new(Mutex::new(vec![])));
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        if let Some(mutex) = self.span_map.get_mut(&event.span_id) {
+            let mut events = rt.block_on(mutex.lock());
+            events.push(event);
         }
     }
 }
