@@ -1,0 +1,72 @@
+[package]
+edition = "2021"
+name = "language-server"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+license-file.workspace = true
+
+
+[dependencies]
+# ruff_diagnostics = { workspace = true }
+# ruff_formatter = { workspace = true }
+# ruff_linter = { workspace = true }
+# ruff_notebook = { workspace = true }
+# ruff_python_ast = { workspace = true }
+# ruff_python_codegen = { workspace = true }
+# ruff_python_formatter = { workspace = true }
+# ruff_python_index = { workspace = true }
+# ruff_python_parser = { workspace = true }
+# ruff_source_file = { workspace = true }
+# ruff_text_size = { workspace = true }
+# ruff_workspace = { workspace = true }
+
+anyhow = { workspace = true }
+crossbeam = { version = "0.8.4" }
+ignore = { version = "0.4.22" }
+jod-thread = { version = "0.1.2" }
+lsp-server = "0.7.6"
+lsp-types = "0.95.0"
+regex = { version = "1.10.2" }
+rustc-hash = { version = "2.0.0" }
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = { version = "1.0.113" }
+
+shellexpand = { version = "3.0.0" }
+
+thiserror = { version = "2.0.0" }
+
+tracing = { version = "0.1.40" }
+
+tracing-subscriber = { version = "0.3.18", default-features = false, features = [
+    "env-filter",
+    "fmt",
+] }
+
+## other package dependencies taht we can move out of this package (baml_*)
+
+
+schemars = { version = "0.8.16" }
+memchr = { version = "2.7.1" }
+
+# baml_diagnostics
+log = { workspace = true }
+is-macro = { version = "0.3.5" }
+
+# baml_linter
+similar = { version = "2.4.0", features = ["inline"] }
+colored = "3.0.0"
+path-absolutize = { version = "3.1.1", features = ["once_cell_cache", "use_unix_paths_on_wasm"] }
+pathdiff = { version = "0.2.1" }
+
+
+
+
+[dev-dependencies]
+insta = { version = "1.42.1" }
+
+[target.'cfg(target_vendor = "apple")'.dependencies]
+libc = { version = "0.2.169" }
+
+# [lints]
+# workspace = true

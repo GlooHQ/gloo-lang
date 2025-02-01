@@ -2,7 +2,6 @@ pub mod dev;
 pub mod generate;
 pub mod init;
 pub mod serve;
-
 use internal_baml_core::configuration::GeneratorOutputType;
 
 /// Default values for the CLI to use.

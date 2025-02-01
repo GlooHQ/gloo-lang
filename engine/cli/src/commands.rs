@@ -39,6 +39,9 @@ pub(crate) enum Commands {
 
     #[command(about = "Format BAML source files", name = "fmt", hide = true)]
     Format(crate::format::FormatArgs),
+
+    #[command(about = "Starts a language server", name = "lsp")]
+    LanguageServer(crate::lsp::LanguageServerArgs),
 }
 
 impl RuntimeCli {
@@ -74,6 +77,7 @@ impl RuntimeCli {
                 // args.from = BamlRuntime::parse_baml_src_path(&args.from)?;
                 args.run()
             }
+            Commands::LanguageServer(args) => args.run(),
         }
     }
 }
