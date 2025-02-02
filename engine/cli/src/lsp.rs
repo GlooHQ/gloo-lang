@@ -22,6 +22,6 @@ impl LanguageServerArgs {
 
 pub(crate) fn run_server(worker_threads: NonZeroUsize, preview: Option<bool>) -> Result<()> {
     let server = Server::new(worker_threads, preview)?;
-
-    server.run()
+    server.run()?;
+    Ok(())
 }

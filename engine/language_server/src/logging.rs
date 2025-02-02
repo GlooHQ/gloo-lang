@@ -56,7 +56,9 @@ pub(crate) fn init_logging(log_level: LogLevel, log_file: Option<&std::path::Pat
             .with_ansi(false)
             .with_writer(logger)
             .with_span_events(FmtSpan::ENTER)
-            .with_filter(LogLevelFilter { filter: log_level }),
+            .with_filter(LogLevelFilter {
+                filter: LogLevel::Debug,
+            }),
     );
 
     tracing::subscriber::set_global_default(subscriber)

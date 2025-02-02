@@ -9,6 +9,7 @@ use std::ops::Deref;
 // The new PanicInfoHook name requires MSRV >= 1.82
 #[allow(deprecated)]
 use std::panic::PanicInfo;
+use std::path::Path;
 use std::str::FromStr;
 use thiserror::Error;
 use types::ClientCapabilities;
@@ -59,13 +60,14 @@ pub struct Server {
 impl Server {
     pub fn new(worker_threads: NonZeroUsize, preview: Option<bool>) -> crate::Result<Self> {
         let connection = ConnectionInitializer::stdio();
-
+        log::info!("Language server connection initialized");
         let (id, init_params) = connection.initialize_start()?;
+        log::info!("Language server initialized");
 
         let client_capabilities = init_params.capabilities;
         let position_encoding = Self::find_best_position_encoding(&client_capabilities);
         let server_capabilities = Self::server_capabilities(position_encoding);
-
+        log::info!("Language server capabilities initialized");
         let connection = connection.initialize_finish(
             id,
             &server_capabilities,
@@ -95,7 +97,8 @@ impl Server {
 
         crate::logging::init_logging(
             global_settings.tracing.log_level.unwrap_or_default(),
-            global_settings.tracing.log_file.as_deref(),
+            Some(&Path::new("language_server.log")),
+            // global_settings.tracing.log_file.as_deref(),
         );
 
         let workspaces = Workspaces::from_workspace_folders(
