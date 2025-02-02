@@ -60,6 +60,13 @@ pub(crate) fn parse_type_builder_block(
                             entries.push(TypeBuilderEntry::TypeAlias(assignment));
                         }
 
+                        Rule::BLOCK_LEVEL_CATCH_ALL => {
+                            diagnostics.push_error(DatamodelError::new_validation_error(
+                                "Syntax error in type builder block",
+                                diagnostics.span(nested.as_span()),
+                            ))
+                        }
+
                         _ => parsing_catch_all(nested, "type_builder_contents"),
                     }
                 }

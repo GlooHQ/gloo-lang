@@ -34,6 +34,20 @@ test MultipleTypeBuilderBlocks {
   }
 }
 
+test IncompleteSyntax {
+  functions [TypeBuilderFn]
+  type_builder {
+    type
+
+    dynamic Bar {
+      bar int
+    }
+  }
+  args {
+    from_text "Test"
+  }
+}
+
 // error: Error validating: Only tests may have a type_builder block.
 //   -->  tests/dynamic_types_parser_errors.baml:4
 //    | 
@@ -59,4 +73,11 @@ test MultipleTypeBuilderBlocks {
 // 29 |       b int
 // 30 |     }
 // 31 |   }
+//    | 
+// error: Error validating: Syntax error in type builder block
+//   -->  tests/dynamic_types_parser_errors.baml:40
+//    | 
+// 39 |   type_builder {
+// 40 |     type
+// 41 | 
 //    | 
