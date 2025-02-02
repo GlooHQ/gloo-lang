@@ -76,6 +76,22 @@ test AttemptToModifySameDynamicMultipleTimes {
   }
 }
 
+test NameAlreadyExists {
+  functions [TypeBuilderFn]
+  type_builder {
+    class NonDynamic {
+      a string
+      b string
+    }
+    dynamic DynamicClass {
+      non_dynamic NonDynamic
+    }
+  }
+  args {
+    from_text "Test"
+  }
+}
+
 // error: Error validating: Type 'NonDynamic' does not contain the `@@dynamic` attribute so it cannot be modified in a type builder block
 //   -->  tests/dynamic_types_validation_errors.baml:14
 //    | 
@@ -126,4 +142,10 @@ test AttemptToModifySameDynamicMultipleTimes {
 // 70 |     dynamic DynamicClass {
 // 71 |       d string
 // 72 |     }
+//    | 
+// error: The class "NonDynamic" cannot be defined because a class with that name already exists.
+//   -->  tests/dynamic_types_validation_errors.baml:82
+//    | 
+// 81 |   type_builder {
+// 82 |     class NonDynamic {
 //    | 

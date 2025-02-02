@@ -7,7 +7,7 @@ use std::{
 use internal_baml_diagnostics::DatamodelError;
 use internal_baml_parser_database::{Tarjan, TypeWalker};
 use internal_baml_schema_ast::ast::{
-    FieldType, SchemaAst, TypeAliasId, TypeExpId, WithName, WithSpan,
+    self, FieldType, SchemaAst, TypeAliasId, TypeExpId, WithName, WithSpan,
 };
 
 use crate::validate::validation_pipeline::context::Context;
@@ -133,7 +133,17 @@ where
     for component in &components {
         let cycle = component
             .iter()
-            .map(|id| ctx.db.ast()[*id].name().to_string())
+            .map(|id| {
+                // TODO: #1343 Temporary solution until we implement scoping in the AST.
+                let name = ctx.db.ast()[*id].name().to_string();
+                if name.starts_with(ast::DYNAMIC_TYPE_NAME_PREFIX) {
+                    name.strip_prefix(ast::DYNAMIC_TYPE_NAME_PREFIX)
+                        .map(ToOwned::to_owned)
+                        .unwrap()
+                } else {
+                    name
+                }
+            })
             .collect::<Vec<_>>()
             .join(" -> ");
 
@@ -167,6 +177,17 @@ fn insert_required_class_deps(
             match ctx.db.find_type_by_str(ident.name()) {
                 Some(TypeWalker::Class(class)) => {
                     deps.insert(class.id);
+
+                    // TODO: #1343 Temporary solution until we implement scoping in the AST.
+                    if !class.name().starts_with(ast::DYNAMIC_TYPE_NAME_PREFIX) {
+                        let dyn_def_name =
+                            format!("{}{}", ast::DYNAMIC_TYPE_NAME_PREFIX, class.name());
+                        if let Some(TypeWalker::Class(dyn_def)) =
+                            ctx.db.find_type_by_str(&dyn_def_name)
+                        {
+                            deps.insert(dyn_def.id);
+                        }
+                    }
                 }
                 Some(TypeWalker::TypeAlias(alias)) => {
                     // This code runs after aliases are already resolved.
