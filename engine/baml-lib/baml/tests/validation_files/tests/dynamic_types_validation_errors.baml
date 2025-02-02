@@ -61,6 +61,21 @@ test AttemptToAddDynamicAttrInDyanmicDef {
   }
 }
 
+test AttemptToModifySameDynamicMultipleTimes {
+  functions [TypeBuilderFn]
+  type_builder {
+    dynamic DynamicClass {
+      c string
+    }
+    dynamic DynamicClass {
+      d string
+    }
+  }
+  args {
+    from_text "Test"
+  }
+}
+
 // error: Error validating: Type 'NonDynamic' does not contain the `@@dynamic` attribute so it cannot be modified in a type builder block
 //   -->  tests/dynamic_types_validation_errors.baml:14
 //    | 
@@ -103,4 +118,12 @@ test AttemptToAddDynamicAttrInDyanmicDef {
 // 55 |       c string
 // 56 |       @@dynamic
 // 57 |     }
+//    | 
+// error: Error validating: Multiple dynamic defintions for type `DynamicClass`
+//   -->  tests/dynamic_types_validation_errors.baml:70
+//    | 
+// 69 |     }
+// 70 |     dynamic DynamicClass {
+// 71 |       d string
+// 72 |     }
 //    | 
