@@ -1,38 +1,46 @@
-use crate::server::api::diagnostics::clear_diagnostics_for_document;
+use crate::baml_project::watch::ChangeEvent;
+use lsp_server::ErrorCode;
+use lsp_types::notification::DidCloseTextDocument;
+use lsp_types::DidCloseTextDocumentParams;
+
+use crate::server::api::diagnostics::clear_diagnostics;
+use crate::server::api::traits::{NotificationHandler, SyncNotificationHandler};
 use crate::server::api::LSPResult;
 use crate::server::client::{Notifier, Requester};
 use crate::server::Result;
 use crate::session::Session;
-use lsp_types as types;
-use lsp_types::notification as notif;
+// use crate::system::{url_to_any_system_path, AnySystemPath};
 
-pub(crate) struct DidClose;
+pub(crate) struct DidCloseTextDocumentHandler;
 
-impl super::NotificationHandler for DidClose {
-    type NotificationType = notif::DidCloseTextDocument;
+impl NotificationHandler for DidCloseTextDocumentHandler {
+    type NotificationType = DidCloseTextDocument;
 }
 
-impl super::SyncNotificationHandler for DidClose {
+impl SyncNotificationHandler for DidCloseTextDocumentHandler {
     fn run(
         session: &mut Session,
         notifier: Notifier,
         _requester: &mut Requester,
-        types::DidCloseTextDocumentParams {
-            text_document: types::TextDocumentIdentifier { uri },
-        }: types::DidCloseTextDocumentParams,
+        params: DidCloseTextDocumentParams,
     ) -> Result<()> {
-        let key = session.key_from_url(uri);
-        // Publish an empty diagnostic report for the document. This will de-register any existing diagnostics.
-        let Some(snapshot) = session.take_snapshot(key.clone().into_url()) else {
-            tracing::debug!(
-                "Unable to close document with key {key} - the snapshot was unavailable"
-            );
-            return Ok(());
-        };
-        clear_diagnostics_for_document(snapshot.query(), &notifier)?;
+        tracing::info!("DidCloseTextDocumentHandler");
+        // let Ok(path) = url_to_any_system_path(&params.text_document.uri) else {
+        //     return Ok(());
+        // };
 
+        let key = session.key_from_url(params.text_document.uri);
         session
             .close_document(&key)
-            .with_failure_code(lsp_server::ErrorCode::InternalError)
+            .with_failure_code(ErrorCode::InternalError)?;
+
+        // if let AnySystemPath::SystemVirtual(virtual_path) = path {
+        //     let db = session.default_project_db_mut();
+        //     db.apply_changes(vec![ChangeEvent::DeletedVirtual(virtual_path)], None);
+        // }
+
+        // clear_diagnostics(key.url(), &notifier)?;
+
+        Ok(())
     }
 }

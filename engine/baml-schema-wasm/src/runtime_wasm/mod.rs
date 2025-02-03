@@ -78,8 +78,7 @@ pub fn on_wasm_init() {
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Serialize, Deserialize)]
-
+#[derive(Serialize, Deserialize, Clone)]
 pub struct WasmProject {
     #[wasm_bindgen(readonly)]
     pub root_dir_name: String,
@@ -287,7 +286,19 @@ impl WasmProject {
     }
 }
 
+impl WasmProject {
+    pub fn run_generators_native(
+        &self,
+        no_version_check: Option<bool>,
+    ) -> Result<Vec<generator::WasmGeneratorOutput>, anyhow::Error> {
+        Err(anyhow::anyhow!(
+            "This function is not available in the wasm target."
+        ))
+    }
+}
+
 #[wasm_bindgen(inspectable, getter_with_clone)]
+#[derive(Clone)]
 pub struct WasmRuntime {
     runtime: BamlRuntime,
 }
@@ -522,8 +533,8 @@ fn serialize_value_counting_checks(value: &ResponseBamlValue) -> (serde_json::Va
         .collect::<IndexMap<String, String>>();
 
     let sub_check_count: usize = value.0.iter().map(|node| node.meta().1.len()).sum();
-    let json_value: serde_json::Value =
-        serde_json::to_value(value.serialize_final()).unwrap_or("Error converting value to JSON".into());
+    let json_value: serde_json::Value = serde_json::to_value(value.serialize_final())
+        .unwrap_or("Error converting value to JSON".into());
 
     let check_count = checks.len() + sub_check_count;
 
@@ -1444,6 +1455,7 @@ impl From<&OrchestratorNode> for SerializableOrchestratorNode {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 fn js_fn_to_baml_src_reader(get_baml_src_cb: js_sys::Function) -> BamlSrcReader {
     Some(Box::new(move |path| {
         Box::pin({
@@ -1475,6 +1487,11 @@ fn js_fn_to_baml_src_reader(get_baml_src_cb: js_sys::Function) -> BamlSrcReader 
             }
         })
     }))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn js_fn_to_baml_src_reader(get_baml_src_cb: js_sys::Function) -> BamlSrcReader {
+    None
 }
 
 #[wasm_bindgen]

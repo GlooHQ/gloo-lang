@@ -19,6 +19,14 @@ pub struct DiagnosticKind {
     pub suggestion: Option<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd)]
+pub enum Severity {
+    Info,
+    Warning,
+    Error,
+    Fatal,
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Diagnostic {
     pub kind: DiagnosticKind,

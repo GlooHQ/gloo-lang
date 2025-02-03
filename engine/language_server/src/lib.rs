@@ -1,42 +1,50 @@
-//! ## The Ruff Language Server
+#![allow(dead_code)]
 
+use anyhow::Context;
 pub use edit::{DocumentKey, PositionEncoding, TextDocument};
-use lsp_types::CodeActionKind;
-pub use server::{Server, Workspace, Workspaces};
 pub use session::{ClientSettings, DocumentQuery, DocumentSnapshot, Session};
+use std::num::NonZeroUsize;
+
+use crate::server::Server;
 
 #[macro_use]
 mod message;
 
-mod baml_diagnostics;
-mod baml_linter;
-mod baml_source_file;
-mod baml_text_size;
 mod edit;
-mod fix;
-mod format;
-mod lint;
 mod logging;
-mod resolve;
 mod server;
 mod session;
+mod system;
 
-pub(crate) const SERVER_NAME: &str = "baml";
-pub(crate) const DIAGNOSTIC_NAME: &str = "BAML";
+// additional baml modules
+mod baml_db;
+mod baml_diagnostics;
+mod baml_project;
+mod baml_source_file;
+mod baml_text_size;
 
-pub(crate) const SOURCE_FIX_ALL_BAML: CodeActionKind = CodeActionKind::new("source.fixAll.baml");
-pub(crate) const SOURCE_ORGANIZE_IMPORTS_BAML: CodeActionKind =
-    CodeActionKind::new("source.organizeImports.baml");
-pub(crate) const NOTEBOOK_SOURCE_FIX_ALL_BAML: CodeActionKind =
-    CodeActionKind::new("notebook.source.fixAll.baml");
-pub(crate) const NOTEBOOK_SOURCE_ORGANIZE_IMPORTS_BAML: CodeActionKind =
-    CodeActionKind::new("notebook.source.organizeImports.baml");
+pub(crate) const SERVER_NAME: &str = "red-knot";
+pub(crate) const DIAGNOSTIC_NAME: &str = "Red Knot";
 
 /// A common result type used in most cases where a
 /// result type is needed.
 pub(crate) type Result<T> = anyhow::Result<T>;
 
 pub(crate) fn version() -> &'static str {
-    // ruff_linter::VERSION
-    "0.0.1"
+    env!("CARGO_PKG_VERSION")
+}
+
+pub fn run_server() -> anyhow::Result<()> {
+    let four = NonZeroUsize::new(4).unwrap();
+
+    // by default, we set the number of worker threads to `num_cpus`, with a maximum of 4.
+    let worker_threads = std::thread::available_parallelism()
+        .unwrap_or(four)
+        .max(four);
+
+    Server::new(worker_threads)
+        .context("Failed to start server")?
+        .run()?;
+
+    Ok(())
 }

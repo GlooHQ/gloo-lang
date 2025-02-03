@@ -1,6 +1,8 @@
 use crate::{server::schedule::Task, session::Session};
 use lsp_server as server;
 
+// use crate::system::{url_to_any_system_path, AnySystemPath};
+
 mod diagnostics;
 mod notifications;
 mod requests;
@@ -13,18 +15,6 @@ use self::traits::{NotificationHandler, RequestHandler};
 
 use super::{client::Responder, schedule::BackgroundSchedule, Result};
 
-/// Defines the `document_url` method for implementers of [`traits::Notification`] and [`traits::Request`],
-/// given the parameter type used by the implementer.
-macro_rules! define_document_url {
-    ($params:ident: &$p:ty) => {
-        fn document_url($params: &$p) -> std::borrow::Cow<lsp_types::Url> {
-            std::borrow::Cow::Borrowed(&$params.text_document.uri)
-        }
-    };
-}
-
-use define_document_url;
-
 pub(super) fn request<'a>(req: server::Request) -> Task<'a> {
     let id = req.id.clone();
 
@@ -36,22 +26,23 @@ pub(super) fn request<'a>(req: server::Request) -> Task<'a> {
         // request::CodeActionResolve::METHOD => {
         //     background_request_task::<request::CodeActionResolve>(req, BackgroundSchedule::Worker)
         // }
-        request::DocumentDiagnostic::METHOD => {
-            background_request_task::<request::DocumentDiagnostic>(
+        request::DocumentDiagnosticRequestHandler::METHOD => {
+            background_request_task::<request::DocumentDiagnosticRequestHandler>(
                 req,
                 BackgroundSchedule::LatencySensitive,
             )
         }
-        request::ExecuteCommand::METHOD => local_request_task::<request::ExecuteCommand>(req),
+
+        // request::ExecuteCommand::METHOD => local_request_task::<request::ExecuteCommand>(req),
         // request::Format::METHOD => {
         //     background_request_task::<request::Format>(req, BackgroundSchedule::Fmt)
         // }
         // request::FormatRange::METHOD => {
         //     background_request_task::<request::FormatRange>(req, BackgroundSchedule::Fmt)
         // }
-        request::Hover::METHOD => {
-            background_request_task::<request::Hover>(req, BackgroundSchedule::Worker)
-        }
+        // request::Hover::METHOD => {
+        //     background_request_task::<request::Hover>(req, BackgroundSchedule::Worker)
+        // }
         method => {
             tracing::warn!("Received request {method} which does not have a handler");
             return Task::nothing();
@@ -69,9 +60,8 @@ pub(super) fn request<'a>(req: server::Request) -> Task<'a> {
 
 pub(super) fn notification<'a>(notif: server::Notification) -> Task<'a> {
     match notif.method.as_str() {
-        notification::Cancel::METHOD => local_notification_task::<notification::Cancel>(notif),
-        notification::DidChange::METHOD => {
-            local_notification_task::<notification::DidChange>(notif)
+        notification::DidChangeTextDocumentHandler::METHOD => {
+            local_notification_task::<notification::DidChangeTextDocumentHandler>(notif)
         }
         notification::DidChangeConfiguration::METHOD => {
             local_notification_task::<notification::DidChangeConfiguration>(notif)
@@ -79,11 +69,11 @@ pub(super) fn notification<'a>(notif: server::Notification) -> Task<'a> {
         notification::DidChangeWatchedFiles::METHOD => {
             local_notification_task::<notification::DidChangeWatchedFiles>(notif)
         }
-        notification::DidChangeWorkspace::METHOD => {
-            local_notification_task::<notification::DidChangeWorkspace>(notif)
-        }
-        notification::DidClose::METHOD => local_notification_task::<notification::DidClose>(notif),
-        notification::DidOpen::METHOD => local_notification_task::<notification::DidOpen>(notif),
+        // notification::DidChangeWorkspace::METHOD => {
+        //     local_notification_task::<notification::DidChangeWorkspace>(notif)
+        // }
+        notification::DidCloseTextDocumentHandler::METHOD => local_notification_task::<notification::DidCloseTextDocumentHandler>(notif),
+        notification::DidOpenTextDocumentHandler::METHOD => local_notification_task::<notification::DidOpenTextDocumentHandler>(notif),
         // notification::DidOpenNotebook::METHOD => {
         //     local_notification_task::<notification::DidOpenNotebook>(notif)
         // }
@@ -105,12 +95,11 @@ pub(super) fn notification<'a>(notif: server::Notification) -> Task<'a> {
     })
 }
 
-fn local_request_task<'a, R: traits::SyncRequestHandler>(
+fn _local_request_task<'a, R: traits::SyncRequestHandler>(
     req: server::Request,
 ) -> super::Result<Task<'a>> {
     let (id, params) = cast_request::<R>(req)?;
     Ok(Task::local(|session, notifier, requester, responder| {
-        let _span = tracing::trace_span!("request", %id, method = R::METHOD).entered();
         let result = R::run(session, notifier, requester, params);
         respond::<R>(id, result, &responder);
     }))
@@ -122,13 +111,27 @@ fn background_request_task<'a, R: traits::BackgroundDocumentRequestHandler>(
 ) -> super::Result<Task<'a>> {
     let (id, params) = cast_request::<R>(req)?;
     Ok(Task::background(schedule, move |session: &Session| {
-        // TODO(jane): we should log an error if we can't take a snapshot.
-        let Some(snapshot) = session.take_snapshot(R::document_url(&params).into_owned()) else {
+        let url = R::document_url(&params).into_owned();
+
+        // let Ok(path) = url_to_any_system_path(&url) else {
+        //     return Box::new(|_, _| {});
+        // };
+        // let db = match path {
+        //     AnySystemPath::System(path) => match session.project_db_for_path(path.as_std_path()) {
+        //         Some(db) => db.clone(),
+        //         None => session.default_project_db().clone(),
+        //     },
+        //     AnySystemPath::SystemVirtual(_) => session.default_project_db().clone(),
+        // };
+
+        let Some(snapshot) = session.take_snapshot(url) else {
             return Box::new(|_, _| {});
         };
+        // TODO get the relevant Project and pass it in.
+        let db = session.default_project_db().clone();
+
         Box::new(move |notifier, responder| {
-            let _span = tracing::trace_span!("request", %id, method = R::METHOD).entered();
-            let result = R::run_with_snapshot(snapshot, notifier, params);
+            let result = R::run_with_snapshot(snapshot, db, notifier, params);
             respond::<R>(id, result, &responder);
         })
     }))
@@ -139,7 +142,6 @@ fn local_notification_task<'a, N: traits::SyncNotificationHandler>(
 ) -> super::Result<Task<'a>> {
     let (id, params) = cast_notification::<N>(notif)?;
     Ok(Task::local(move |session, notifier, requester, _| {
-        let _span = tracing::trace_span!("notification", method = N::METHOD).entered();
         if let Err(err) = N::run(session, notifier, requester, params) {
             tracing::error!("An error occurred while running {id}: {err}");
             show_err_msg!("Ruff encountered a problem. Check the logs for more details.");
@@ -159,7 +161,6 @@ fn background_notification_thread<'a, N: traits::BackgroundDocumentNotificationH
             return Box::new(|_, _| {});
         };
         Box::new(move |notifier, _| {
-            let _span = tracing::trace_span!("notification", method = N::METHOD).entered();
             if let Err(err) = N::run_with_snapshot(snapshot, notifier, params) {
                 tracing::error!("An error occurred while running {id}: {err}");
                 show_err_msg!("Ruff encountered a problem. Check the logs for more details.");
@@ -206,7 +207,7 @@ fn respond<Req>(
     Req: traits::RequestHandler,
 {
     if let Err(err) = &result {
-        tracing::error!("An error occurred with request ID {id}: {err}");
+        tracing::error!("An error occurred with result ID {id}: {err}");
         show_err_msg!("Ruff encountered a problem. Check the logs for more details.");
     }
     if let Err(err) = responder.respond(id, result) {

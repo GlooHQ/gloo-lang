@@ -1,47 +1,50 @@
-use crate::server::api::diagnostics::publish_diagnostics_for_document;
-use crate::server::api::LSPResult;
+use lsp_types::notification::DidOpenTextDocument;
+use lsp_types::DidOpenTextDocumentParams;
+
+use crate::baml_project::watch::ChangeEvent;
+use crate::server::api::traits::{NotificationHandler, SyncNotificationHandler};
 use crate::server::client::{Notifier, Requester};
 use crate::server::Result;
 use crate::session::Session;
+// use crate::system::{url_to_any_system_path, AnySystemPath};
 use crate::TextDocument;
-use lsp_types as types;
-use lsp_types::notification as notif;
 
-pub(crate) struct DidOpen;
+pub(crate) struct DidOpenTextDocumentHandler;
 
-impl super::NotificationHandler for DidOpen {
-    type NotificationType = notif::DidOpenTextDocument;
+impl NotificationHandler for DidOpenTextDocumentHandler {
+    type NotificationType = DidOpenTextDocument;
 }
 
-impl super::SyncNotificationHandler for DidOpen {
+impl SyncNotificationHandler for DidOpenTextDocumentHandler {
     fn run(
         session: &mut Session,
-        notifier: Notifier,
+        _notifier: Notifier,
         _requester: &mut Requester,
-        types::DidOpenTextDocumentParams {
-            text_document:
-                types::TextDocumentItem {
-                    uri,
-                    text,
-                    version,
-                    language_id,
-                },
-        }: types::DidOpenTextDocumentParams,
+        params: DidOpenTextDocumentParams,
     ) -> Result<()> {
-        let document = TextDocument::new(text, version).with_language_id(&language_id);
+        tracing::info!("DidOpenTextDocumentHandler");
+        // let Ok(path) = url_to_any_system_path(&params.text_document.uri) else {
+        //     return Ok(());
+        // };
 
-        session.open_text_document(uri.clone(), document);
+        let document = TextDocument::new(params.text_document.text, params.text_document.version);
+        session.open_text_document(params.text_document.uri, document);
 
-        // Publish diagnostics if the client doesn't support pull diagnostics
-        if !session.resolved_client_capabilities().pull_diagnostics {
-            let snapshot = session
-                .take_snapshot(uri.clone())
-                .ok_or_else(|| {
-                    anyhow::anyhow!("Unable to take snapshot for document with URL {uri}")
-                })
-                .with_failure_code(lsp_server::ErrorCode::InternalError)?;
-            publish_diagnostics_for_document(&snapshot, &notifier)?;
-        }
+        // match path {
+        //     AnySystemPath::System(path) => {
+        //         let db = match session.project_db_for_path_mut(path.as_std_path()) {
+        //             Some(db) => db,
+        //             None => session.default_project_db_mut(),
+        //         };
+        //         db.apply_changes(vec![ChangeEvent::Opened(path)], None);
+        //     }
+        //     AnySystemPath::SystemVirtual(virtual_path) => {
+        //         let db = session.default_project_db_mut();
+        //         db.files().virtual_file(db, &virtual_path);
+        //     }
+        // }
+
+        // TODO(dhruvmanila): Publish diagnostics if the client doesn't support pull diagnostics
 
         Ok(())
     }

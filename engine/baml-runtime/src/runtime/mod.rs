@@ -24,6 +24,7 @@ use std::sync::Arc;
 
 use crate::internal::llm_client::{llm_provider::LLMProvider, retry_policy::CallablePolicy};
 
+#[derive(Clone)]
 pub struct InternalBamlRuntime {
     pub(crate) ir: Arc<IntermediateRepr>,
     diagnostics: Diagnostics,

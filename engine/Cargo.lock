@@ -3208,6 +3208,7 @@ name = "language-server"
 version = "0.74.0"
 dependencies = [
  "anyhow",
+ "baml-schema-build",
  "colored 3.0.0",
  "crossbeam",
  "ignore",
@@ -3225,6 +3226,7 @@ dependencies = [
  "rustc-hash 2.1.0",
  "schemars",
  "serde",
+ "serde-wasm-bindgen 0.4.5",
  "serde_json",
  "shellexpand",
  "similar",

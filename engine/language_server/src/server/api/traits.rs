@@ -1,8 +1,10 @@
 //! A stateful LSP implementation that calls into the Ruff API.
 
+use crate::baml_project::Project;
 use crate::server::client::{Notifier, Requester};
 use crate::session::{DocumentSnapshot, Session};
 
+// use crate::baml_project::ProjectDatabase;
 use lsp_types::notification::Notification as LSPNotification;
 use lsp_types::request::Request;
 
@@ -27,15 +29,13 @@ pub(super) trait SyncRequestHandler: RequestHandler {
 
 /// A request handler that can be run on a background thread.
 pub(super) trait BackgroundDocumentRequestHandler: RequestHandler {
-    /// `document_url` can be implemented automatically with
-    /// `define_document_url!(params: &<YourParameterType>)` in the trait
-    /// implementation.
     fn document_url(
         params: &<<Self as RequestHandler>::RequestType as Request>::Params,
     ) -> std::borrow::Cow<lsp_types::Url>;
 
     fn run_with_snapshot(
         snapshot: DocumentSnapshot,
+        db: Project,
         notifier: Notifier,
         params: <<Self as RequestHandler>::RequestType as Request>::Params,
     ) -> super::Result<<<Self as RequestHandler>::RequestType as Request>::Result>;

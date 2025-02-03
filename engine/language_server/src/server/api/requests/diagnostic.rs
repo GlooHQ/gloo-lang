@@ -1,40 +1,108 @@
-use crate::server::api::diagnostics::generate_diagnostics;
-use crate::server::{client::Notifier, Result};
-use crate::session::DocumentSnapshot;
-use lsp_types::{self as types, request as req};
-use types::{
-    DocumentDiagnosticReportResult, FullDocumentDiagnosticReport,
-    RelatedFullDocumentDiagnosticReport,
+use std::borrow::Cow;
+
+use lsp_types::request::DocumentDiagnosticRequest;
+use lsp_types::{
+    Diagnostic, DiagnosticSeverity, DocumentDiagnosticParams, DocumentDiagnosticReport,
+    DocumentDiagnosticReportResult, FullDocumentDiagnosticReport, NumberOrString, Range,
+    RelatedFullDocumentDiagnosticReport, Url,
 };
 
-pub(crate) struct DocumentDiagnostic;
+use crate::baml_diagnostics::diagnostic::Severity;
+use crate::baml_project::Project;
+use crate::edit::ToRangeExt;
+use crate::server::api::traits::{BackgroundDocumentRequestHandler, RequestHandler};
+use crate::server::{client::Notifier, Result};
+use crate::session::DocumentSnapshot;
+// use red_knot_project::{Db, ProjectDatabase};
+// use ruff_db::source::{line_index, source_text};
 
-impl super::RequestHandler for DocumentDiagnostic {
-    type RequestType = req::DocumentDiagnosticRequest;
+pub(crate) struct DocumentDiagnosticRequestHandler;
+
+impl RequestHandler for DocumentDiagnosticRequestHandler {
+    type RequestType = DocumentDiagnosticRequest;
 }
 
-impl super::BackgroundDocumentRequestHandler for DocumentDiagnostic {
-    super::define_document_url!(params: &types::DocumentDiagnosticParams);
+impl BackgroundDocumentRequestHandler for DocumentDiagnosticRequestHandler {
+    fn document_url(params: &DocumentDiagnosticParams) -> Cow<Url> {
+        Cow::Borrowed(&params.text_document.uri)
+    }
+
     fn run_with_snapshot(
         snapshot: DocumentSnapshot,
+        db: Project,
         _notifier: Notifier,
-        _params: types::DocumentDiagnosticParams,
+        _params: DocumentDiagnosticParams,
     ) -> Result<DocumentDiagnosticReportResult> {
+        tracing::info!("DocumentDiagnosticRequestHandler");
+        let diagnostics = compute_diagnostics(&snapshot, &db);
+
         Ok(DocumentDiagnosticReportResult::Report(
-            types::DocumentDiagnosticReport::Full(RelatedFullDocumentDiagnosticReport {
+            DocumentDiagnosticReport::Full(RelatedFullDocumentDiagnosticReport {
                 related_documents: None,
                 full_document_diagnostic_report: FullDocumentDiagnosticReport {
-                    // TODO(jane): eventually this will be important for caching diagnostic information.
                     result_id: None,
-                    // Pull diagnostic requests are only called for text documents.
-                    // Since diagnostic requests generate
-                    items: generate_diagnostics(&snapshot)
-                        .into_iter()
-                        .next()
-                        .map(|(_, diagnostics)| diagnostics)
-                        .unwrap_or_default(),
+                    items: diagnostics,
                 },
             }),
         ))
     }
 }
+
+fn compute_diagnostics(snapshot: &DocumentSnapshot, db: &Project) -> Vec<Diagnostic> {
+    // let Some(file) = snapshot.file(db) else {
+    //     tracing::info!(
+    //         "No file found for snapshot for `{}`",
+    //         snapshot.query().file_url()
+    //     );
+    //     return vec![];
+    // };
+
+    // let diagnostics = match db.check_file(file) {
+    //     Ok(diagnostics) => diagnostics,
+    //     Err(cancelled) => {
+    //         tracing::info!("Diagnostics computation {cancelled}");
+    //         return vec![];
+    //     }
+    // };
+
+    // diagnostics
+    //     .as_slice()
+    //     .iter()
+    //     .map(|message| to_lsp_diagnostic(db, message, snapshot.encoding()))
+    //     .collect()
+
+    todo!()
+}
+
+// fn to_lsp_diagnostic(
+//     db: &dyn Db,
+//     diagnostic: &dyn ruff_db::diagnostic::Diagnostic,
+//     encoding: crate::PositionEncoding,
+// ) -> Diagnostic {
+//     // let range = if let (Some(file), Some(range)) = (diagnostic.file(), diagnostic.range()) {
+//     //     let index = line_index(db.upcast(), file);
+//     //     let source = source_text(db.upcast(), file);
+
+//     //     range.to_range(&source, &index, encoding)
+//     // } else {
+//     //     Range::default()
+//     // };
+
+//     let severity = match diagnostic.severity() {
+//         Severity::Info => DiagnosticSeverity::INFORMATION,
+//         Severity::Warning => DiagnosticSeverity::WARNING,
+//         Severity::Error | Severity::Fatal => DiagnosticSeverity::ERROR,
+//     };
+
+//     Diagnostic {
+//         range: Range::default(),
+//         severity: Some(severity),
+//         tags: None,
+//         code: Some(NumberOrString::String(diagnostic.id().to_string())),
+//         code_description: None,
+//         source: Some("red-knot".into()),
+//         message: diagnostic.message().into_owned(),
+//         related_information: None,
+//         data: None,
+//     }
+// }

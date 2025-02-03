@@ -1,8 +1,6 @@
-use std::num::NonZeroUsize;
-
 use anyhow::Result;
 use clap::Args;
-use language_server::Server;
+use language_server::run_server;
 
 #[derive(Args, Debug)]
 pub struct LanguageServerArgs {
@@ -16,12 +14,7 @@ pub struct LanguageServerArgs {
 
 impl LanguageServerArgs {
     pub fn run(&self) -> Result<()> {
-        run_server(NonZeroUsize::new(4).unwrap(), None)
+        run_server()?;
+        Ok(())
     }
-}
-
-pub(crate) fn run_server(worker_threads: NonZeroUsize, preview: Option<bool>) -> Result<()> {
-    let server = Server::new(worker_threads, preview)?;
-    server.run()?;
-    Ok(())
 }
