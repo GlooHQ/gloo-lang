@@ -1,0 +1,58 @@
+'use server'
+
+import { b } from '../index';
+import type { Check, Checked } from "../types"
+import type { ServerAction } from "./types"
+import type { Image, Audio } from "@boundaryml/baml"
+import type {
+  {%- for t in types %}{{ t }}{% if !loop.last %}, {% endif %}{% endfor -%}
+} from "../types"
+
+{%- for func in funcs %}
+/**
+ * Server action for the {{ func.name }} BAML function.
+ *
+ * Input Types:
+ * {%- for (name, optional, type) in func.args %}
+ * - {{ name }}{% if optional %} (optional){% endif %}: {{ type }}
+ * {%- endfor %}
+ * Return Type:
+ * - Non-streaming: {{ func.return_type }}
+ * - Streaming: ReadableStream
+ */
+export const {{ func.name }}Action = async (
+  {%- for (name, optional, type) in func.args %}
+  {{ name }}{% if optional %}?{% endif %}: {{ type }},
+  {%- endfor %}
+): Promise<{{ func.return_type }}> => {
+  return b.{{ func.name }}(
+    {%- for (name, _, _) in func.args %}
+    {{ name }},
+    {%- endfor %}
+  );
+};
+
+/**
+ * Server action for the {{ func.name }} BAML function.
+ *
+ * Input Types:
+ * {%- for (name, optional, type) in func.args %}
+ * - {{ name }}{% if optional %} (optional){% endif %}: {{ type }}
+ * {%- endfor %}
+ * Return Type:
+ * - Non-streaming: {{ func.return_type }}
+ * - Streaming: ReadableStream
+ */
+export const {{ func.name }}StreamingAction = async (
+  {%- for (name, optional, type) in func.args %}
+  {{ name }}{% if optional %}?{% endif %}: {{ type }},
+  {%- endfor %}
+): Promise<ReadableStream<Uint8Array>> => {
+  const stream = b.stream.{{ func.name }}(
+    {%- for (name, _, _) in func.args %}
+    {{ name }},
+    {%- endfor %}
+  );
+  return stream.toStreamable();
+};
+{% endfor -%}
