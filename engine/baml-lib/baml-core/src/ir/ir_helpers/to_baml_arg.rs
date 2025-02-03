@@ -177,7 +177,9 @@ impl ArgCoercer {
             (FieldType::Enum(name), _) => match value {
                 BamlValue::String(s) => {
                     if let Ok(e) = ir.find_enum(name) {
-                        if e.walk_values().any(|v| v.item.elem.0 == *s) {
+                        if e.walk_values().any(|v| v.item.elem.0 == *s)
+                            || e.item.attributes.get("dynamic_type").is_some()
+                        {
                             Ok(BamlValue::Enum(name.to_string(), s.to_string()))
                         } else {
                             scope.push_error(format!(

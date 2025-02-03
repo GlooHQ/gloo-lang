@@ -207,9 +207,8 @@ impl BamlRuntime {
         ctx: &RuntimeContext,
         strict: bool,
     ) -> Result<BamlMap<String, BamlValue>> {
-        let (params, _) =
-            self.get_test_params_and_constraints(function_name, test_name, ctx, strict)?;
-        Ok(params)
+        self.inner
+            .get_test_params(function_name, test_name, ctx, strict)
     }
 
     pub async fn run_test<F>(
@@ -224,12 +223,17 @@ impl BamlRuntime {
     {
         let span = self.tracer.start_span(test_name, ctx, &Default::default());
 
+        let type_builder = self
+            .inner
+            .get_test_type_builder(function_name, test_name, ctx)
+            .unwrap();
+
         let run_to_response = || async {
-            let rctx = ctx.create_ctx(None, None)?;
+            let rctx = ctx.create_ctx(type_builder.as_ref(), None)?;
             let (params, constraints) =
                 self.get_test_params_and_constraints(function_name, test_name, &rctx, true)?;
             log::info!("params: {:#?}", params);
-            let rctx_stream = ctx.create_ctx(None, None)?;
+            let rctx_stream = ctx.create_ctx(type_builder.as_ref(), None)?;
             let mut stream = self.inner.stream_function_impl(
                 function_name.into(),
                 &params,

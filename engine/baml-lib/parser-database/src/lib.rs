@@ -40,7 +40,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 pub use coerce_expression::{coerce, coerce_array, coerce_opt};
 pub use internal_baml_schema_ast::ast;
-use internal_baml_schema_ast::ast::{FieldType, SchemaAst, WithName};
+use internal_baml_schema_ast::ast::{FieldType, SchemaAst, ValExpId, WithName};
 pub use tarjan::Tarjan;
 pub use types::{
     Attributes, ClientProperties, ContantDelayStrategy, ExponentialBackoffStrategy, PrinterType,
@@ -94,6 +94,15 @@ impl ParserDatabase {
             names: Default::default(),
             types: Default::default(),
         }
+    }
+
+    /// TODO: #1343 Temporary solution until we implement scoping in the AST.
+    pub fn add_test_case_db(&mut self, test_cases_id: ValExpId, scoped_db: Self) {
+        self.types
+            .test_cases
+            .get_mut(&test_cases_id)
+            .unwrap()
+            .type_builder_scoped_db = scoped_db;
     }
 
     /// See the docs on [ParserDatabase](/struct.ParserDatabase.html).

@@ -522,8 +522,8 @@ fn serialize_value_counting_checks(value: &ResponseBamlValue) -> (serde_json::Va
         .collect::<IndexMap<String, String>>();
 
     let sub_check_count: usize = value.0.iter().map(|node| node.meta().1.len()).sum();
-    let json_value: serde_json::Value =
-        serde_json::to_value(value.serialize_final()).unwrap_or("Error converting value to JSON".into());
+    let json_value: serde_json::Value = serde_json::to_value(value.serialize_final())
+        .unwrap_or("Error converting value to JSON".into());
 
     let check_count = checks.len() + sub_check_count;
 
@@ -1507,13 +1507,20 @@ impl WasmFunction {
         wasm_call_context: &WasmCallContext,
         get_baml_src_cb: js_sys::Function,
     ) -> JsResult<WasmPrompt> {
-        let ctx = rt
+        let context_manager = rt.runtime.create_ctx_manager(
+            BamlValue::String("wasm".to_string()),
+            js_fn_to_baml_src_reader(get_baml_src_cb),
+        );
+
+        let test_type_builder = rt
             .runtime
-            .create_ctx_manager(
-                BamlValue::String("wasm".to_string()),
-                js_fn_to_baml_src_reader(get_baml_src_cb),
-            )
-            .create_ctx_with_default();
+            .internal()
+            .get_test_type_builder(&self.name, &test_name, &context_manager)
+            .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
+
+        let ctx = context_manager
+            .create_ctx(test_type_builder.as_ref(), None)
+            .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
 
         let params = rt
             .runtime
@@ -1553,13 +1560,20 @@ impl WasmFunction {
         expand_images: bool,
         get_baml_src_cb: js_sys::Function,
     ) -> Result<String, wasm_bindgen::JsError> {
-        let ctx = rt
+        let context_manager = rt.runtime.create_ctx_manager(
+            BamlValue::String("wasm".to_string()),
+            js_fn_to_baml_src_reader(get_baml_src_cb),
+        );
+
+        let test_type_builder = rt
             .runtime
-            .create_ctx_manager(
-                BamlValue::String("wasm".to_string()),
-                js_fn_to_baml_src_reader(get_baml_src_cb),
-            )
-            .create_ctx_with_default();
+            .internal()
+            .get_test_type_builder(&self.name, &test_name, &context_manager)
+            .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
+
+        let ctx = context_manager
+            .create_ctx(test_type_builder.as_ref(), None)
+            .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
 
         let params = rt
             .runtime
