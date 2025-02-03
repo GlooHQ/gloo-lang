@@ -135,7 +135,7 @@ test NameAlreadyExists {
 // 56 |       @@dynamic
 // 57 |     }
 //    | 
-// error: Error validating: Multiple dynamic defintions for type `DynamicClass`
+// error: Error validating: Multiple dynamic definitions for type `DynamicClass`
 //   -->  tests/dynamic_types_validation_errors.baml:70
 //    | 
 // 69 |     }

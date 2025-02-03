@@ -224,7 +224,7 @@ fn insert_name(
         {
             return ctx.push_error(DatamodelError::new_validation_error(
                 &format!(
-                    "Multiple dynamic defintions for type `{}`",
+                    "Multiple dynamic definitions for type `{}`",
                     ctx.ast[existing]
                         .name()
                         .strip_prefix(ast::DYNAMIC_TYPE_NAME_PREFIX)
