@@ -78,8 +78,8 @@ These are other parameters that are passed through to the provider, without modi
   Example:
 
   ```baml BAML
-  client<llm> OpenAIo1{
-    provider openai
+  client<llm> OpenAIo1 {
+    provider "openai-generic"
     options {
       model "o1-mini"
       max_tokens null

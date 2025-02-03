@@ -113,10 +113,10 @@ Consult the specific provider's documentation for more information.
   Example:
 
   ```baml BAML
-  client<llm> OpenAIo1{
-    provider openai
+  client<llm> AzureO1 {
+    provider azure-openai
     options {
-      model "o1-mini"
+      deployment_id "o1-mini"
       max_tokens null
     }
   }
