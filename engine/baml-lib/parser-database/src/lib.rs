@@ -172,15 +172,14 @@ impl ParserDatabase {
                             |ident| {
                                 match self.find_type_by_str(ident.name()) {
                                     Some(TypeWalker::Class(cls)) => Some(cls.id),
-                                    Some(TypeWalker::Enum(_)) => {
-                                        panic!("Enums are not allowed in type aliases")
-                                    }
-                                    Some(TypeWalker::TypeAlias(alias)) => {
-                                        // Skip this one, recursive type aliases
-                                        // are not part of the finite class cycle.
-                                        // They are handled separately.
-                                        None
-                                    }
+                                    // Enums are not part of the dependency
+                                    // graph because they can't depend on other
+                                    // enums.
+                                    Some(TypeWalker::Enum(_)) => None,
+                                    // Skip this one, recursive type aliases are
+                                    // not part of the finite class cycle. They
+                                    // are handled separately.
+                                    Some(TypeWalker::TypeAlias(alias)) => None,
                                     None => panic!("Unknown class `{dep}`"),
                                 }
                             },
