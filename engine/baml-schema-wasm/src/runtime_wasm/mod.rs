@@ -1516,12 +1516,11 @@ impl WasmFunction {
             .runtime
             .internal()
             .get_test_type_builder(&self.name, &test_name, &context_manager)
-            .unwrap(); // TODO: handle error
+            .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
 
-        // TODO: handle error
         let ctx = context_manager
             .create_ctx(test_type_builder.as_ref(), None)
-            .unwrap();
+            .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
 
         let params = rt
             .runtime
@@ -1570,12 +1569,11 @@ impl WasmFunction {
             .runtime
             .internal()
             .get_test_type_builder(&self.name, &test_name, &context_manager)
-            .unwrap(); // TODO: handle error
+            .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
 
-        // TODO: handle error
         let ctx = context_manager
             .create_ctx(test_type_builder.as_ref(), None)
-            .unwrap();
+            .map_err(|e| JsError::new(format!("{e:?}").as_str()))?;
 
         let params = rt
             .runtime
