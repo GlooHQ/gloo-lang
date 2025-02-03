@@ -287,6 +287,14 @@ impl WasmProject {
 }
 
 impl WasmProject {
+    pub fn create(root_dir_name: String, files: HashMap<String, String>) -> Self {
+        WasmProject {
+            root_dir_name,
+            files,
+            unsaved_files: HashMap::new(),
+        }
+    }
+
     pub fn run_generators_native(
         &self,
         no_version_check: Option<bool>,

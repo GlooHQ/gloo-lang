@@ -17,7 +17,7 @@ use lsp_types::{TextDocumentItem, Url};
 ///
 /// * `Some(PathBuf)` if a directory with basename "baml_src" is found,
 ///   or `None` otherwise.
-pub fn find_top_level_parent(file_path: &Path) -> Option<PathBuf> {
+pub fn find_baml_src_root_path(file_path: &Path) -> Option<PathBuf> {
     let mut current = file_path;
     while let Some(parent) = current.parent() {
         if let Some(dir_name) = parent.file_name() {

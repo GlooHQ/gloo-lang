@@ -29,11 +29,14 @@ impl SyncNotificationHandler for DidChangeTextDocumentHandler {
         //     return Ok(());
         // };
 
-        // let key = session.key_from_url(params.text_document.uri);
+        let key = session.key_from_url(params.text_document.uri);
 
-        // session
-        //     .update_text_document(&key, params.content_changes, params.text_document.version)
-        //     .with_failure_code(ErrorCode::InternalError)?;
+        session
+            .update_text_document(&key, params.content_changes, params.text_document.version)
+            .with_failure_code(ErrorCode::InternalError)?;
+
+        let project = session.ensure_project_db_for_path_mut(key.url().path());
+        project.request_diagnostics();
 
         // match path {
         //     AnySystemPath::System(path) => {

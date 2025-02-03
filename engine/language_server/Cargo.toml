@@ -63,7 +63,12 @@ pathdiff = { version = "0.2.1" }
 baml-schema-build = { path ="../baml-schema-wasm" }
 
 # baml project dependency
-serde-wasm-bindgen = "0.4"
+# serde-wasm-bindgen = "0.4"
+baml-runtime = { path = "../baml-runtime", features= ["internal"], default-features = false }
+baml-types = { path = "../baml-lib/baml-types" }
+indexmap.workspace = true
+internal-baml-codegen.workspace = true
+internal-baml-core.workspace = true
 
 
 [dev-dependencies]

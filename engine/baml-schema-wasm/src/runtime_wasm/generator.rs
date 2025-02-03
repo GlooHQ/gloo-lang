@@ -1,13 +1,13 @@
 use internal_baml_codegen::GenerateOutput;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen(getter_with_clone, inspectable)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter_with_clone, inspectable))]
 pub struct WasmGeneratorOutput {
-    #[wasm_bindgen(readonly)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(readonly))]
     pub output_dir: String,
-    #[wasm_bindgen(readonly)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(readonly))]
     pub output_dir_relative_to_baml_src: String,
-    #[wasm_bindgen(readonly)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(readonly))]
     pub files: Vec<WasmGeneratedFile>,
 }
 

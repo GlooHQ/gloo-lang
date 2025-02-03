@@ -1,11 +1,12 @@
 //! Data model, state management, and configuration resolution.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::anyhow;
+use baml_schema_build::runtime_wasm::WasmProject;
 use lsp_types::{ClientCapabilities, TextDocumentContentChangeEvent, Url};
 
 // use red_knot_project::{ProjectDatabase, ProjectMetadata};
@@ -13,7 +14,7 @@ use lsp_types::{ClientCapabilities, TextDocumentContentChangeEvent, Url};
 // use ruff_db::system::SystemPath;
 // use ruff_db::Db;
 
-use crate::baml_project::Project;
+use crate::baml_project::{file_utils, Project};
 use crate::edit::{DocumentKey, DocumentVersion};
 // use crate::system::{url_to_any_system_path, AnySystemPath, LSPSystem};
 use crate::{PositionEncoding, TextDocument};
@@ -41,8 +42,8 @@ pub struct Session {
     /// [`index_mut`]: Session::index_mut
     index: Option<Arc<index::Index>>,
 
-    /// Maps workspace folders to their respective project databases.
-    projects_by_workspace_folder: BTreeMap<PathBuf, Project>,
+    /// A map of project roots (baml_src's) to their respective project databases.
+    projects: BTreeMap<PathBuf, Project>,
 
     /// The global position encoding, negotiated during LSP initialization.
     position_encoding: PositionEncoding,
@@ -76,7 +77,7 @@ impl Session {
 
         Ok(Self {
             position_encoding,
-            projects_by_workspace_folder: workspaces,
+            projects: workspaces,
             index: Some(index),
             resolved_client_capabilities: Arc::new(ResolvedClientCapabilities::new(
                 client_capabilities,
@@ -91,10 +92,33 @@ impl Session {
     /// Returns a reference to the project's [`ProjectDatabase`] corresponding to the given path, if
     /// any.
     pub(crate) fn project_db_for_path(&self, path: impl AsRef<Path>) -> Option<&Project> {
-        self.projects_by_workspace_folder
+        self.projects
             .range(..=path.as_ref().to_path_buf())
             .next_back()
             .map(|(_, db)| db)
+    }
+
+    pub(crate) fn ensure_project_db_for_path_mut(
+        &mut self,
+        path: impl AsRef<Path>,
+    ) -> &mut Project {
+        let path_buf = path.as_ref().to_path_buf();
+        self.projects.entry(path_buf.clone()).or_insert_with(|| {
+            if let Some(root_path) = file_utils::find_baml_src_root_path(&path_buf) {
+                if path_buf.extension().and_then(|s| s.to_str()) == Some("baml") {
+                    let mut project = Project::new(WasmProject::create(
+                        root_path.to_string_lossy().into(),
+                        HashMap::new(),
+                    ));
+                    project.reload_project_files(); // Call load_project_files on the new project
+                    return project;
+                }
+            }
+            Project::new(WasmProject::create(
+                path_buf.to_string_lossy().into(),
+                HashMap::new(),
+            ))
+        })
     }
 
     /// Returns a mutable reference to the project [`ProjectDatabase`] corresponding to the given
@@ -103,7 +127,7 @@ impl Session {
         &mut self,
         path: impl AsRef<Path>,
     ) -> Option<&mut Project> {
-        self.projects_by_workspace_folder
+        self.projects
             .range_mut(..=path.as_ref().to_path_buf())
             .next_back()
             .map(|(_, db)| db)
@@ -113,16 +137,13 @@ impl Session {
     /// minimum root path in the project map.
     pub(crate) fn default_project_db(&self) -> &Project {
         // SAFETY: Currently, red knot only support a single project.
-        self.projects_by_workspace_folder.values().next().unwrap()
+        self.projects.values().next().unwrap()
     }
 
     /// Returns a mutable reference to the default project [`ProjectDatabase`].
     pub(crate) fn default_project_db_mut(&mut self) -> &mut Project {
         // SAFETY: Currently, red knot only support a single project.
-        self.projects_by_workspace_folder
-            .values_mut()
-            .next()
-            .unwrap()
+        self.projects.values_mut().next().unwrap()
     }
 
     pub fn key_from_url(&self, url: Url) -> DocumentKey {
@@ -185,7 +206,7 @@ impl Session {
     fn index_mut(&mut self) -> MutIndexGuard {
         let index = self.index.take().unwrap();
 
-        for db in self.projects_by_workspace_folder.values_mut() {
+        for db in self.projects.values_mut() {
             // Remove the `index` from each database. This drops the count of `Arc<Index>` down to 1
             // db.system_mut()
             //     .as_any_mut()
@@ -230,7 +251,7 @@ impl Drop for MutIndexGuard<'_> {
     fn drop(&mut self) {
         if let Some(index) = self.index.take() {
             let index = Arc::new(index);
-            for db in self.session.projects_by_workspace_folder.values_mut() {
+            for db in self.session.projects.values_mut() {
                 // db.system_mut()
                 //     .as_any_mut()
                 //     .downcast_mut::<LSPSystem>()

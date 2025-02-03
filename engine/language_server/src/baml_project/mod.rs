@@ -1,78 +1,173 @@
+use baml_runtime::InternalRuntimeInterface;
+use baml_runtime::{
+    internal::llm_client::LLMResponse, BamlRuntime, DiagnosticsError, IRHelper, RenderedPrompt,
+};
 use baml_schema_build::runtime_wasm::{
     WasmDiagnosticError, WasmError, WasmFunction, WasmGeneratorConfig, WasmProject, WasmRuntime,
     WasmTestCase,
 };
+use baml_types::{BamlMediaType, BamlValue, GeneratorOutputType, TypeValue};
+use file_utils::gather_files;
+use indexmap::IndexMap;
+use internal_baml_codegen::version_check::GeneratorType;
+use internal_baml_codegen::version_check::{check_version, VersionCheckMode};
 use lsp_types::{GotoDefinitionParams, Url};
 use lsp_types::{
     Hover, HoverContents, HoverParams, LocationLink, Position, Range, TextDocumentItem,
 };
 use position_utils::get_word_at_position;
 use rustc_hash::FxHashSet;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Instant;
 
-mod file_utils;
+pub mod file_utils;
 pub mod metadata;
 mod position_utils;
 pub mod watch;
 
-// pub struct Project {
-//     /// The files that are open in the project.
-//     ///
-//     /// Setting the open files to a non-`None` value changes `check` to only check the
-//     /// open files rather than all files in the project.
-//     open_fileset: Option<Arc<FxHashSet<PathBuf>>>,
+/// Native version of the project. This is similar to the WasmProject,
+/// but uses native types instead of JS types.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ProjectFiles {
+    pub root_dir_name: String,
+    // This is the version of the file on disk.
+    files: HashMap<String, String>,
+    // This is the version of the file that is currently being edited (unsaved changes)
+    unsaved_files: HashMap<String, String>,
+}
 
-//     /// The first-party files of this project.
-//     file_set: Option<Arc<FxHashSet<PathBuf>>>,
-//     // The metadata describing the project, including the unresolved options.
-//     // pub metadata: ProjectMetadata,
+/// A diagnostic error structure to report errors along with a list of files.
+#[derive(Clone, Debug)]
+pub struct DiagnosticError {
+    pub errors: DiagnosticsError,
+    pub all_files: Vec<String>,
+}
+
+// impl Runtime {
+//     /// Run the generators/ codegen using the provided files.
+//     /// It converts the files (a HashMap of filename->contents) into the
+//     /// required format and then calls `run_codegen` on the internal runtime.
+//     pub fn run_generators(
+//         &self,
+//         input_files: &HashMap<String, String>,
+//         no_version_check: bool,
+//     ) -> Result<Vec<generator::GeneratorOutput>, Error> {
+//         // Convert input_files from HashMap<String, String> to HashMap<PathBuf, String>
+//         let files: HashMap<PathBuf, String> = input_files
+//             .iter()
+//             .map(|(k, v)| (PathBuf::from(k), v.clone()))
+//             .collect();
+
+//         // Call the codegen function on the BamlRuntime.
+//         self.runtime
+//             .run_codegen(&files, no_version_check)
+//             .map(|outputs| outputs.into_iter().map(|g| g.into()).collect())
+//     }
 // }
 
-// --- Supporting types for definition/hover handling ---
+impl ProjectFiles {
+    /// Construct a new project from a root directory name and a mapping of files.
+    pub fn new(root_dir_name: &str, files: HashMap<String, String>) -> Self {
+        Self {
+            root_dir_name: root_dir_name.to_string(),
+            files,
+            unsaved_files: HashMap::new(),
+        }
+    }
 
-// #[derive(Debug)]
-// pub struct Position {
-//     pub line: usize,
-//     pub character: usize,
-// }
+    /// Alternative constructor that takes owned parameters.
+    pub fn create(root_dir_name: String, files: HashMap<String, String>) -> Self {
+        Self {
+            root_dir_name,
+            files,
+            unsaved_files: HashMap::new(),
+        }
+    }
 
-// #[derive(Debug)]
-// pub struct Range {
-//     pub start: Position,
-//     pub end: Position,
-// }
+    /// Returns a Vec of formatted strings each representing a file and its content.
+    /// (Files are merged from saved and unsaved.)
+    pub fn files(&self) -> Vec<String> {
+        let mut merged_files = self.files.clone();
+        merged_files.extend(self.unsaved_files.clone());
+        merged_files
+            .iter()
+            .map(|(k, v)| format!("{}BAML_PATH_SPLTTER{}", k, v))
+            .collect()
+    }
 
-// #[derive(Debug)]
-// pub struct LocationLink {
-//     pub target_uri: String,
-//     pub target_range: Range,
-//     pub target_selection_range: Range,
-// }
+    /// Update the saved content of a file. If `content` is `None`, the file is removed.
+    pub fn update_file(&mut self, name: &str, content: Option<String>) {
+        if let Some(content) = content {
+            self.files.insert(name.to_string(), content);
+        } else {
+            self.files.remove(name);
+        }
+    }
 
-// #[derive(Debug)]
-// pub struct HoverContent {
-//     pub language: String,
-//     pub value: String,
-// }
+    /// Saves a file’s contents (updating the saved files and removing any unsaved changes).
+    pub fn save_file(&mut self, name: &str, content: &str) {
+        self.files.insert(name.to_string(), content.to_string());
+        self.unsaved_files.remove(name);
+    }
 
-// #[derive(Debug)]
-// pub struct Hover {
-//     pub contents: Vec<HoverContent>,
-// }
+    /// Sets the unsaved content for a file or removes it if `content` is `None`.
+    pub fn set_unsaved_file(&mut self, name: &str, content: Option<String>) {
+        if let Some(content) = content {
+            self.unsaved_files.insert(name.to_string(), content);
+        } else {
+            self.unsaved_files.remove(name);
+        }
+    }
 
-// A stub type for the symbol match that the runtime returns when looking up a symbol.
-// #[derive(Debug)]
-// pub struct SymbolMatch {
-//     pub uri: String,
-//     pub start_line: usize,
-//     pub start_character: usize,
-//     pub end_line: usize,
-//     pub end_character: usize,
-// }
+    /// Run the diagnostic process using the given runtime.
+    /// The function combines saved and unsaved files as part of the diagnostic context.
+    pub fn diagnostics(&self, rt: &BamlRuntime) -> DiagnosticError {
+        let mut merged_files: HashMap<_, _> = self.files.iter().collect();
+        merged_files.extend(self.unsaved_files.iter());
+
+        DiagnosticError {
+            errors: rt.internal().diagnostics().clone(),
+            all_files: merged_files.keys().map(|s| s.to_string()).collect(),
+        }
+    }
+
+    /// Create the runtime given a set of environment variables.
+    /// All files (saved and unsaved) are combined into one HashMap.
+    pub fn runtime(&self, env_vars: HashMap<String, String>) -> Result<BamlRuntime, anyhow::Error> {
+        let mut merged_files = self.files.clone();
+        merged_files.extend(self.unsaved_files.clone());
+
+        BamlRuntime::from_file_content(&self.root_dir_name, &merged_files, env_vars)
+    }
+
+    /// Run the code generators using the files in the project.
+    /// This function logs the files, creates a runtime with the provided
+    /// environment variables, and then uses the runtime to run the generators.
+    pub fn run_generators(
+        &self,
+        no_version_check: Option<bool>,
+        env_vars: HashMap<String, String>,
+    ) -> Result<Vec<generator::GeneratorOutput>, Error> {
+        let no_version_check = no_version_check.unwrap_or(false);
+        info!("Files are: {:#?}", self.files);
+        let rt = self.runtime(env_vars)?;
+        rt.run_generators(&self.files, no_version_check)
+    }
+
+    /// A native version to run generators.
+    /// (In the wasm target this function was not available.)
+    pub fn run_generators_native(
+        &self,
+        no_version_check: Option<bool>,
+        env_vars: HashMap<String, String>,
+    ) -> Result<Vec<generator::GeneratorOutput>, Error> {
+        self.run_generators(no_version_check, env_vars)
+    }
+}
 
 // --- Helper functions for working with text documents ---
 
@@ -95,16 +190,43 @@ pub struct Project {
 
 impl Project {
     /// Creates a new `Project` instance.
-    pub fn new<F>(wasm_project: WasmProject, on_success: F) -> Self
-    where
-        F: Fn(WasmDiagnosticError, HashMap<String, String>) + 'static,
-    {
+    pub fn new(wasm_project: WasmProject) -> Self {
         Self {
             wasm_project,
-            // on_success: Box::new(on_success),
             current_runtime: None,
             last_successful_runtime: None,
         }
+    }
+
+    pub fn reload_project_files(&mut self) {
+        let root_dir = self.wasm_project.root_dir_name.clone();
+        let root_path = std::path::Path::new(&root_dir);
+        let files = match gather_files(root_path, false) {
+            Ok(files) => files,
+            Err(e) => {
+                self.replace_all_files(WasmProject::create(root_dir.into(), HashMap::new()));
+                tracing::error!("Error gathering files: {}", e);
+                return;
+            }
+        };
+
+        if files.is_empty() {
+            self.replace_all_files(WasmProject::create(root_dir.clone().into(), HashMap::new()));
+            tracing::warn!("Empty baml_src directory found: {}. See Output panel -> BAML Language Server for more details.", root_path.display());
+        }
+
+        let mut files_map = HashMap::new();
+        for file in files {
+            let file_path = file.display().to_string();
+            if let Ok(text_document) = file_utils::convert_to_text_document(&file) {
+                files_map.insert(file_path.clone(), text_document.text.clone());
+            } else {
+                tracing::error!("Failed to convert file {} to text document.", file_path);
+            }
+        }
+
+        self.replace_all_files(WasmProject::create(root_dir.into(), files_map));
+        self.update_runtime();
     }
 
     /// Checks the version of a given generator.
@@ -127,7 +249,7 @@ impl Project {
                     if first_error_message.is_none() {
                         first_error_message = Some(message.clone());
                     }
-                    eprintln!("{}", message);
+                    tracing::error!("{}", message);
                 }
             }
         }
@@ -467,7 +589,7 @@ impl Project {
                 }
             }
             Err(e) => {
-                eprintln!("Failed to generate BAML client: {:?}", e);
+                tracing::error!("Failed to generate BAML client: {:?}", e);
                 on_error(format!("Failed to generate BAML client: {:?}", e));
             }
         }
