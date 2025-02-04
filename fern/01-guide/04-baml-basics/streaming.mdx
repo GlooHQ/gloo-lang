@@ -435,7 +435,7 @@ the generated code:
 ```python
 class StreamState(BaseModel, Generic[T]):
   value: T,
-  state: Literal["Incomplete", "Complete"]
+  state: Literal["Pending", "Incomplete", "Complete"]
 
 class Stock(str, Enum):
     APPL = "APPL"
@@ -470,7 +470,7 @@ the generated code:
 ```typescript
 export interface StreamState<T> {
   value: T,
-  state: "Incomplete" | "Complete"
+  state: "Pending" | "Incomplete" | "Complete"
 }
 
 export enum Category {
