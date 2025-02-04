@@ -151,6 +151,24 @@ Argument: Argument<Span> = {
   <name: Identifier> ":" <r#type: Type> => { return Argument { name, r#type } }
 }
 
-RawString: Expression<Span> = {
-  "#\"\"" <contents:r##"#"(?!#").*"#"#=> { return Expression::RawString { inner: contents } }
+pub Expression: Expression<T> = {
+    RawString => Expression::RawString { inner: <> }
 }
+
+RawString: String = {
+    // Single hash case
+    "#\"" <content:r#"\"\#[^\"]*\#\""#> "\"#" => String::from(&content[1..(content.len()-1)]),
+    
+    // // Double hash case
+    // "##\"" <content:r".*"> "\"##" => String::from(content),
+    
+    // // Triple hash case
+    // "###\"" <content:r".*"> "\"###" => String::from(content),
+    
+    // // Four hash case
+    // "####\"" <content:r".*"> "\"####" => String::from(content),
+    
+    // // Five hash case
+    // "#####\"" <content:r".*"> "\"#####" => String::from(content),
+};
+
