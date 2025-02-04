@@ -134,7 +134,7 @@ fn process_node(
                         .expect("This field is guaranteed to be in the field set");
                     let use_state = type_streaming_behavior(ir, field.meta().1).state;
                     let field_stream_state = Completion {
-                        state: CompletionState::Incomplete,
+                        state: CompletionState::Pending,
                         display: use_state,
                         required_done: false,
                     };
@@ -340,13 +340,17 @@ fn required_done(ir: &IntermediateRepr, field_type: &FieldType) -> bool {
 }
 
 fn completion_state(flags: &Vec<Flag>) -> CompletionState {
-    if flags
-        .iter()
-        .any(|f| matches!(f, Flag::Incomplete) || matches!(f, Flag::Pending))
-    {
-        CompletionState::Incomplete
+    if flags.iter().any(|f| matches!(f, Flag::Pending)) {
+        CompletionState::Pending
     } else {
-        CompletionState::Complete
+        if flags
+            .iter()
+            .any(|f| matches!(f, Flag::Incomplete))
+        {
+            CompletionState::Incomplete
+        } else {
+            CompletionState::Complete
+        }
     }
 }
 
