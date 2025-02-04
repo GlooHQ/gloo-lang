@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use anyhow::{anyhow, Result};
 use baml_types::{
-    Constraint, ConstraintLevel, FieldType, JinjaExpression, Resolvable, StreamingBehavior, StringOr,
-    UnresolvedValue,
+    Constraint, ConstraintLevel, FieldType, JinjaExpression, Resolvable, StreamingBehavior,
+    StringOr, UnresolvedValue,
 };
 use either::Either;
 use indexmap::{IndexMap, IndexSet};
@@ -15,7 +15,9 @@ use internal_baml_parser_database::{
     Attributes, ParserDatabase, PromptAst, RetryPolicyStrategy, TypeWalker,
 };
 
-use internal_baml_schema_ast::ast::{self, Attribute, FieldArity, SubType, ValExpId, WithName, WithSpan};
+use internal_baml_schema_ast::ast::{
+    self, Attribute, FieldArity, SubType, ValExpId, WithName, WithSpan,
+};
 use internal_llm_client::{ClientProvider, ClientSpec, UnresolvedClientProperty};
 use serde::Serialize;
 
@@ -179,6 +181,9 @@ impl IntermediateRepr {
         db: &ParserDatabase,
         configuration: Configuration,
     ) -> Result<IntermediateRepr> {
+        // TODO: We're iterating over the AST tops once for every property in
+        // the IR. Easy performance optimization here by iterating only one time
+        // and distributing the tops to the appropriate IR properties.
         let mut repr = IntermediateRepr {
             enums: db
                 .walk_enums()
@@ -347,10 +352,7 @@ fn to_ir_attributes(
         });
         let streaming_done = streaming_done.as_ref().and_then(|v| {
             if *v {
-                Some((
-                    "stream.done".to_string(),
-                    UnresolvedValue::Bool(true, ()),
-                ))
+                Some(("stream.done".to_string(), UnresolvedValue::Bool(true, ())))
             } else {
                 None
             }
@@ -594,7 +596,6 @@ impl WithRepr<FieldType> for ast::FieldType {
             ),
         };
 
-
         let use_metadata = has_constraints || has_special_streaming_behavior;
         let with_constraints = if use_metadata {
             FieldType::WithMetadata {
@@ -608,30 +609,6 @@ impl WithRepr<FieldType> for ast::FieldType {
         Ok(with_constraints)
     }
 }
-
-// #[derive(serde::Serialize, Debug)]
-// pub enum Identifier {
-//     /// Starts with env.*
-//     ENV(String),
-//     /// The path to a Local Identifer + the local identifer. Separated by '.'
-//     #[allow(dead_code)]
-//     Ref(Vec<String>),
-//     /// A string without spaces or '.' Always starts with a letter. May contain numbers
-//     Local(String),
-//     /// Special types (always lowercase).
-//     Primitive(baml_types::TypeValue),
-// }
-
-// impl Identifier {
-//     pub fn name(&self) -> String {
-//         match self {
-//             Identifier::ENV(k) => k.clone(),
-//             Identifier::Ref(r) => r.join("."),
-//             Identifier::Local(l) => l.clone(),
-//             Identifier::Primitive(p) => p.to_string(),
-//         }
-//     }
-// }
 
 type TemplateStringId = String;
 
@@ -717,7 +694,15 @@ impl WithRepr<Enum> for EnumWalker<'_> {
 
     fn repr(&self, db: &ParserDatabase) -> Result<Enum> {
         Ok(Enum {
-            name: self.name().to_string(),
+            // TODO: #1343 Temporary solution until we implement scoping in the AST.
+            name: if self.ast_type_block().is_dynamic_type_def {
+                self.name()
+                    .strip_prefix(ast::DYNAMIC_TYPE_NAME_PREFIX)
+                    .unwrap()
+                    .to_string()
+            } else {
+                self.name().to_string()
+            },
             values: self
                 .values()
                 .map(|w| {
@@ -803,7 +788,15 @@ impl WithRepr<Class> for ClassWalker<'_> {
 
     fn repr(&self, db: &ParserDatabase) -> Result<Class> {
         Ok(Class {
-            name: self.name().to_string(),
+            // TODO: #1343 Temporary solution until we implement scoping in the AST.
+            name: if self.ast_type_block().is_dynamic_type_def {
+                self.name()
+                    .strip_prefix(ast::DYNAMIC_TYPE_NAME_PREFIX)
+                    .unwrap()
+                    .to_string()
+            } else {
+                self.name().to_string()
+            },
             static_fields: self
                 .static_fields()
                 .map(|e| e.node(db))
@@ -1118,6 +1111,21 @@ impl WithRepr<RetryPolicy> for ConfigurationWalker<'_> {
     }
 }
 
+// TODO: #1343 Temporary solution until we implement scoping in the AST.
+#[derive(Debug)]
+pub enum TypeBuilderEntry {
+    Enum(Node<Enum>),
+    Class(Node<Class>),
+    TypeAlias(Node<TypeAlias>),
+}
+
+// TODO: #1343 Temporary solution until we implement scoping in the AST.
+#[derive(Debug)]
+pub struct TestTypeBuilder {
+    pub entries: Vec<TypeBuilderEntry>,
+    pub structural_recursive_alias_cycles: Vec<IndexMap<String, FieldType>>,
+}
+
 #[derive(serde::Serialize, Debug)]
 pub struct TestCaseFunction(String);
 
@@ -1133,6 +1141,7 @@ pub struct TestCase {
     pub functions: Vec<Node<TestCaseFunction>>,
     pub args: IndexMap<String, UnresolvedValue<()>>,
     pub constraints: Vec<Constraint>,
+    pub type_builder: TestTypeBuilder,
 }
 
 impl WithRepr<TestCaseFunction> for (&ConfigurationWalker<'_>, usize) {
@@ -1180,6 +1189,69 @@ impl WithRepr<TestCase> for ConfigurationWalker<'_> {
         let functions = (0..self.test_case().functions.len())
             .map(|i| (self, i).node(db))
             .collect::<Result<Vec<_>>>()?;
+
+        // TODO: #1343 Temporary solution until we implement scoping in the AST.
+        let enums = self
+            .test_case()
+            .type_builder_scoped_db
+            .walk_enums()
+            .filter(|e| {
+                self.test_case().type_builder_scoped_db.ast()[e.id].is_dynamic_type_def
+                    || db.find_type_by_str(e.name()).is_none()
+            })
+            .map(|e| e.node(&self.test_case().type_builder_scoped_db))
+            .collect::<Result<Vec<Node<Enum>>>>()?;
+        let classes = self
+            .test_case()
+            .type_builder_scoped_db
+            .walk_classes()
+            .filter(|c| {
+                self.test_case().type_builder_scoped_db.ast()[c.id].is_dynamic_type_def
+                    || db.find_type_by_str(c.name()).is_none()
+            })
+            .map(|c| c.node(&self.test_case().type_builder_scoped_db))
+            .collect::<Result<Vec<Node<Class>>>>()?;
+        let type_aliases = self
+            .test_case()
+            .type_builder_scoped_db
+            .walk_type_aliases()
+            .filter(|a| db.find_type_by_str(a.name()).is_none())
+            .map(|a| a.node(&self.test_case().type_builder_scoped_db))
+            .collect::<Result<Vec<Node<TypeAlias>>>>()?;
+        let mut type_builder_entries = Vec::new();
+
+        for e in enums {
+            type_builder_entries.push(TypeBuilderEntry::Enum(e));
+        }
+        for c in classes {
+            type_builder_entries.push(TypeBuilderEntry::Class(c));
+        }
+        for a in type_aliases {
+            type_builder_entries.push(TypeBuilderEntry::TypeAlias(a));
+        }
+
+        let mut recursive_aliases = vec![];
+        for cycle in self
+            .test_case()
+            .type_builder_scoped_db
+            .recursive_alias_cycles()
+        {
+            let mut component = IndexMap::new();
+            for id in cycle {
+                let alias = &self.test_case().type_builder_scoped_db.ast()[*id];
+                // Those are global cycles, skip.
+                if db.find_type_by_str(alias.name()).is_some() {
+                    continue;
+                }
+                // Cycles defined in the scoped test type builder block.
+                component.insert(
+                    alias.name().to_string(),
+                    alias.value.repr(&self.test_case().type_builder_scoped_db)?,
+                );
+            }
+            recursive_aliases.push(component);
+        }
+
         Ok(TestCase {
             name: self.name().to_string(),
             args: self
@@ -1195,9 +1267,14 @@ impl WithRepr<TestCase> for ConfigurationWalker<'_> {
             .constraints
             .into_iter()
             .collect::<Vec<_>>(),
+            type_builder: TestTypeBuilder {
+                entries: type_builder_entries,
+                structural_recursive_alias_cycles: recursive_aliases,
+            },
         })
     }
 }
+
 #[derive(Debug, Clone, Serialize)]
 pub enum Prompt {
     // The prompt stirng, and a list of input replacer keys (raw key w/ magic string, and key to replace with)
@@ -1440,7 +1517,6 @@ mod tests {
         let alias = class.find_field("field").unwrap();
 
         assert_eq!(*alias.r#type(), FieldType::Primitive(TypeValue::Int));
-
     }
 
     #[test]
@@ -1461,7 +1537,10 @@ mod tests {
         let class = ir.find_class("Test").unwrap();
         let alias = class.find_field("field").unwrap();
 
-        let FieldType::WithMetadata { base, constraints, .. } = alias.r#type() else {
+        let FieldType::WithMetadata {
+            base, constraints, ..
+        } = alias.r#type()
+        else {
             panic!(
                 "expected resolved constrained type, found {:?}",
                 alias.r#type()

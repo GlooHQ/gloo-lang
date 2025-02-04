@@ -140,7 +140,6 @@ fn find_existing_class_field(
         }
     }
 
-
     let name = Name::new_with_alias(field_name.to_string(), alias.value());
     let desc = desc.value();
     let r#type = field_walker.r#type();
@@ -228,6 +227,8 @@ fn relevant_data_models<'a>(
     let mut recursive_classes = IndexSet::new();
     let mut structural_recursive_aliases = IndexMap::new();
     let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
+
+    // start.extend(ctx.type_alias_overrides.values().cloned());
 
     let eval_ctx = ctx.eval_ctx(false);
 
@@ -392,6 +393,15 @@ fn relevant_data_models<'a>(
             (FieldType::RecursiveTypeAlias(name), _) => {
                 // TODO: Same O(n) problem as above.
                 for cycle in ir.structural_recursive_alias_cycles() {
+                    if cycle.contains_key(name) {
+                        for (alias, target) in cycle.iter() {
+                            structural_recursive_aliases.insert(alias.to_owned(), target.clone());
+                        }
+                    }
+                }
+
+                // Overrides.
+                for cycle in &ctx.recursive_type_alias_overrides {
                     if cycle.contains_key(name) {
                         for (alias, target) in cycle.iter() {
                             structural_recursive_aliases.insert(alias.to_owned(), target.clone());
