@@ -5322,13 +5322,13 @@ components:
             checks:
               type: object
               properties:
-                earth_aged:
-                  $ref: '#components/schemas/Check'
                 no_infants:
                   $ref: '#components/schemas/Check'
+                earth_aged:
+                  $ref: '#components/schemas/Check'
               required:
-              - earth_aged
               - no_infants
+              - earth_aged
               additionalProperties: false
           required:
           - value
@@ -5457,16 +5457,16 @@ components:
             checks:
               type: object
               properties:
-                regex_good:
+                regex_bad:
                   $ref: '#components/schemas/Check'
                 trivial:
                   $ref: '#components/schemas/Check'
-                regex_bad:
+                regex_good:
                   $ref: '#components/schemas/Check'
               required:
-              - regex_good
-              - trivial
               - regex_bad
+              - trivial
+              - regex_good
               additionalProperties: false
           required:
           - value
