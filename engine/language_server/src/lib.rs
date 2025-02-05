@@ -15,6 +15,7 @@ mod logging;
 mod server;
 mod session;
 mod system;
+mod tests;
 
 // additional baml modules
 mod baml_db;

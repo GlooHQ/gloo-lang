@@ -5,6 +5,11 @@ This is a mostly free-form guide with resources to help you get started with con
 
 ### Project Architecture
 
+`language_server` contains 
+ - A Rust library for managing a `Session` and running the abstract functionality of an LSP server.
+ - A concrete LSP server that uses the above library runs as a native executable.
+ - A WASM module that wraps the above library with WASM shims for use by the web panel.
+
 `ruff_server` uses a [lock-free data model](https://github.com/astral-sh/ruff/blob/a28776e3aa76c18dcc1f1ad36a48aa189040860d/crates/ruff_server/src/session.rs#L17-L26) to represent its state. The server runs in a [continuous event loop](https://github.com/astral-sh/ruff/blob/a28776e3aa76c18dcc1f1ad36a48aa189040860d/crates/ruff_server/src/server.rs#L146-L173) by listening to incoming messages
 over `stdin` and dispatches [tasks](https://github.com/astral-sh/ruff/blob/a28776e3aa76c18dcc1f1ad36a48aa189040860d/crates/ruff_server/src/server/schedule/task.rs#L29-L40) based on the type of message. A 'task' can either be 'local' or 'background' - the former kind has
 exclusive mutable access to the state and execute immediately, blocking the event loop until their completion. The latter kind, background

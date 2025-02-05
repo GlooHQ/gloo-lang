@@ -22,6 +22,8 @@ license-file.workspace = true
 # ruff_workspace = { workspace = true }
 
 anyhow = { workspace = true }
+baml-types = { path = "../baml-lib/baml-types" }
+baml-runtime = { path = "../baml-runtime", features=["internal"], default-features=false }
 crossbeam = { version = "0.8.4" }
 ignore = { version = "0.4.22" }
 jod-thread = { version = "0.1.2" }
@@ -43,8 +45,7 @@ tracing-subscriber = { version = "0.3.18", default-features = false, features = 
     "fmt",
 ] }
 
-## other package dependencies taht we can move out of this package (baml_*)
-
+## other package dependencies that we can move out of this package (baml_*)
 
 schemars = { version = "0.8.16" }
 memchr = { version = "2.7.1" }
@@ -74,3 +75,10 @@ libc = { version = "0.2.169" }
 
 # [lints]
 # workspace = true
+
+[[bin]]
+name = "baml-language-server"
+path = "bin/language_server.rs"
+required-features = []
+test = false
+bench = false

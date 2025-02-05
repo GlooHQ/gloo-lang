@@ -3208,7 +3208,9 @@ name = "language-server"
 version = "0.74.0"
 dependencies = [
  "anyhow",
+ "baml-runtime",
  "baml-schema-build",
+ "baml-types",
  "colored 3.0.0",
  "crossbeam",
  "ignore",
