@@ -747,18 +747,18 @@ export interface WithReasoning {
   
 }
 
-export type RecursiveMapAlias = Record<string, RecursiveMapAlias>
-
-export type RecursiveListAlias = RecursiveListAlias[]
-
-export type RecAliasOne = RecAliasTwo
-
-export type RecAliasTwo = RecAliasThree
-
-export type RecAliasThree = RecAliasOne[]
-
-export type JsonValue = number | string | boolean | number | JsonObject | JsonArray
+export type JsonArray = JsonValue[]
 
 export type JsonObject = Record<string, JsonValue>
 
-export type JsonArray = JsonValue[]
+export type JsonValue = number | string | boolean | number | JsonObject | JsonArray
+
+export type RecAliasOne = RecAliasTwo
+
+export type RecAliasThree = RecAliasOne[]
+
+export type RecAliasTwo = RecAliasThree
+
+export type RecursiveListAlias = RecursiveListAlias[]
+
+export type RecursiveMapAlias = Record<string, RecursiveMapAlias>
