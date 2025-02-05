@@ -657,6 +657,11 @@ export interface SemanticContainer {
   
 }
 
+export interface SimpleTag {
+  field: string
+  
+}
+
 export interface SmallThing {
   i_16_digits: number
   i_8_digits: number
@@ -749,7 +754,11 @@ export interface WithReasoning {
 
 export type JsonArray = JsonValue[]
 
+export type JsonEntry = SimpleTag | JsonTemplate
+
 export type JsonObject = Record<string, JsonValue>
+
+export type JsonTemplate = Record<string, JsonEntry>
 
 export type JsonValue = number | string | boolean | number | JsonObject | JsonArray
 

@@ -18,7 +18,7 @@ $ pnpm add @boundaryml/baml
 import { type BamlCtxManager, type BamlRuntime, BamlStream, BamlValidationError, type ClientRegistry, FunctionResult, type Image, createBamlValidationError } from "@boundaryml/baml"
 import type { Checked, Check, RecursivePartialNull as MovedRecursivePartialNull } from "./types"
 import type { partial_types } from "./partial_types";
-import type {AliasedEnum, AnotherObject, BigNumbers, BinaryNode, Blah, BlockConstraint, BlockConstraintForParam, BookOrder, Category, Category2, Category3, ClassForNullLiteral, ClassOptionalOutput, ClassOptionalOutput2, ClassToRecAlias, ClassWithBlockDone, ClassWithImage, ClassWithoutDone, Color, ComplexMemoryObject, CompoundBigNumbers, ContactInfo, CustomTaskResult, DataType, DummyOutput, DynEnumOne, DynEnumTwo, DynInputOutput, DynamicClassOne, DynamicClassTwo, DynamicOutput, Earthling, Education, Email, EmailAddress, EnumInClass, EnumOutput, Event, FakeImage, FlightConfirmation, FooAny, Forest, FormatterTest0, FormatterTest1, FormatterTest2, FormatterTest3, GroceryReceipt, Hobby, InnerClass, InnerClass2, InputClass, InputClassNested, JsonArray, JsonObject, JsonValue, LinkedList, LinkedListAliasNode, LiteralClassHello, LiteralClassOne, LiteralClassTwo, MalformedConstraints, MalformedConstraints2, MapKey, Martian, MemoryObject, MergeAttrs, NamedArgsSingleClass, NamedArgsSingleEnum, NamedArgsSingleEnumList, Nested, Nested2, NestedBlockConstraint, NestedBlockConstraintForParam, Node, NodeWithAliasIndirection, OptionalListAndMap, OptionalTest_CategoryType, OptionalTest_Prop1, OptionalTest_ReturnType, OrderInfo, OrderStatus, OriginalA, OriginalB, Person, PhoneNumber, Quantity, RaysData, RecAliasOne, RecAliasThree, RecAliasTwo, ReceiptInfo, ReceiptItem, Recipe, RecursiveAliasDependency, RecursiveListAlias, RecursiveMapAlias, Resume, Schema, SearchParams, SemanticContainer, SmallThing, SomeClassNestedDynamic, StringToClassEntry, Tag, TestClassAlias, TestClassNested, TestClassWithEnum, TestEnum, TestMemoryOutput, TestOutputClass, Tree, TwoStoriesOneTitle, UnionTest_ReturnType, UniverseQuestion, UniverseQuestionInput, WithReasoning} from "./types"
+import type {AliasedEnum, AnotherObject, BigNumbers, BinaryNode, Blah, BlockConstraint, BlockConstraintForParam, BookOrder, Category, Category2, Category3, ClassForNullLiteral, ClassOptionalOutput, ClassOptionalOutput2, ClassToRecAlias, ClassWithBlockDone, ClassWithImage, ClassWithoutDone, Color, ComplexMemoryObject, CompoundBigNumbers, ContactInfo, CustomTaskResult, DataType, DummyOutput, DynEnumOne, DynEnumTwo, DynInputOutput, DynamicClassOne, DynamicClassTwo, DynamicOutput, Earthling, Education, Email, EmailAddress, EnumInClass, EnumOutput, Event, FakeImage, FlightConfirmation, FooAny, Forest, FormatterTest0, FormatterTest1, FormatterTest2, FormatterTest3, GroceryReceipt, Hobby, InnerClass, InnerClass2, InputClass, InputClassNested, JsonArray, JsonEntry, JsonObject, JsonTemplate, JsonValue, LinkedList, LinkedListAliasNode, LiteralClassHello, LiteralClassOne, LiteralClassTwo, MalformedConstraints, MalformedConstraints2, MapKey, Martian, MemoryObject, MergeAttrs, NamedArgsSingleClass, NamedArgsSingleEnum, NamedArgsSingleEnumList, Nested, Nested2, NestedBlockConstraint, NestedBlockConstraintForParam, Node, NodeWithAliasIndirection, OptionalListAndMap, OptionalTest_CategoryType, OptionalTest_Prop1, OptionalTest_ReturnType, OrderInfo, OrderStatus, OriginalA, OriginalB, Person, PhoneNumber, Quantity, RaysData, RecAliasOne, RecAliasThree, RecAliasTwo, ReceiptInfo, ReceiptItem, Recipe, RecursiveAliasDependency, RecursiveListAlias, RecursiveMapAlias, Resume, Schema, SearchParams, SemanticContainer, SimpleTag, SmallThing, SomeClassNestedDynamic, StringToClassEntry, Tag, TestClassAlias, TestClassNested, TestClassWithEnum, TestEnum, TestMemoryOutput, TestOutputClass, Tree, TwoStoriesOneTitle, UnionTest_ReturnType, UniverseQuestion, UniverseQuestionInput, WithReasoning} from "./types"
 import type TypeBuilder from "./type_builder"
 import { DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX, DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME } from "./globals"
 
@@ -2233,6 +2233,31 @@ export class BamlAsyncClient {
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as number
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      }
+
+      throw error;
+    }
+  }
+  
+  async ReturnJsonEntry(
+      s: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<JsonTemplate> {
+    try {
+      const raw = await this.runtime.callFunction(
+        "ReturnJsonEntry",
+        {
+          "s": s
+        },
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return raw.parsed(false) as JsonTemplate
     } catch (error: any) {
       const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
@@ -6839,6 +6864,39 @@ class BamlStreamClient {
         raw,
         (a): a is number => a,
         (a): a is number => a,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        const bamlError = createBamlValidationError(error);
+        if (bamlError instanceof BamlValidationError) {
+          throw bamlError;
+        }
+      }
+      throw error;
+    }
+  }
+  
+  ReturnJsonEntry(
+      s: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<JsonTemplate, JsonTemplate> {
+    try {
+      const raw = this.runtime.streamFunction(
+        "ReturnJsonEntry",
+        {
+          "s": s
+        },
+        undefined,
+        this.ctx_manager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      )
+      return new BamlStream<JsonTemplate, JsonTemplate>(
+        raw,
+        (a): a is JsonTemplate => a,
+        (a): a is JsonTemplate => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )

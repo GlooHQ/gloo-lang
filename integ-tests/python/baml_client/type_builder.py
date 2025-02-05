@@ -20,55 +20,55 @@ from baml_py.type_builder import TypeBuilder as _TypeBuilder, ClassPropertyBuild
 class TypeBuilder(_TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["AnotherObject","BigNumbers","BinaryNode","Blah","BlockConstraint","BlockConstraintForParam","BookOrder","ClassForNullLiteral","ClassOptionalOutput","ClassOptionalOutput2","ClassToRecAlias","ClassWithBlockDone","ClassWithImage","ClassWithoutDone","ComplexMemoryObject","CompoundBigNumbers","ContactInfo","CustomTaskResult","DummyOutput","DynInputOutput","DynamicClassOne","DynamicClassTwo","DynamicOutput","Earthling","Education","Email","EmailAddress","Event","FakeImage","FlightConfirmation","FooAny","Forest","FormatterTest0","FormatterTest1","FormatterTest2","FormatterTest3","GroceryReceipt","InnerClass","InnerClass2","InputClass","InputClassNested","LinkedList","LinkedListAliasNode","LiteralClassHello","LiteralClassOne","LiteralClassTwo","MalformedConstraints","MalformedConstraints2","Martian","MemoryObject","MergeAttrs","NamedArgsSingleClass","Nested","Nested2","NestedBlockConstraint","NestedBlockConstraintForParam","Node","NodeWithAliasIndirection","OptionalListAndMap","OptionalTest_Prop1","OptionalTest_ReturnType","OrderInfo","OriginalA","OriginalB","Person","PhoneNumber","Quantity","RaysData","ReceiptInfo","ReceiptItem","Recipe","RecursiveAliasDependency","Resume","Schema","SearchParams","SemanticContainer","SmallThing","SomeClassNestedDynamic","StringToClassEntry","TestClassAlias","TestClassNested","TestClassWithEnum","TestMemoryOutput","TestOutputClass","Tree","TwoStoriesOneTitle","UnionTest_ReturnType","UniverseQuestion","UniverseQuestionInput","WithReasoning",]
+          ["AnotherObject","BigNumbers","BinaryNode","Blah","BlockConstraint","BlockConstraintForParam","BookOrder","ClassForNullLiteral","ClassOptionalOutput","ClassOptionalOutput2","ClassToRecAlias","ClassWithBlockDone","ClassWithImage","ClassWithoutDone","ComplexMemoryObject","CompoundBigNumbers","ContactInfo","CustomTaskResult","DummyOutput","DynInputOutput","DynamicClassOne","DynamicClassTwo","DynamicOutput","Earthling","Education","Email","EmailAddress","Event","FakeImage","FlightConfirmation","FooAny","Forest","FormatterTest0","FormatterTest1","FormatterTest2","FormatterTest3","GroceryReceipt","InnerClass","InnerClass2","InputClass","InputClassNested","LinkedList","LinkedListAliasNode","LiteralClassHello","LiteralClassOne","LiteralClassTwo","MalformedConstraints","MalformedConstraints2","Martian","MemoryObject","MergeAttrs","NamedArgsSingleClass","Nested","Nested2","NestedBlockConstraint","NestedBlockConstraintForParam","Node","NodeWithAliasIndirection","OptionalListAndMap","OptionalTest_Prop1","OptionalTest_ReturnType","OrderInfo","OriginalA","OriginalB","Person","PhoneNumber","Quantity","RaysData","ReceiptInfo","ReceiptItem","Recipe","RecursiveAliasDependency","Resume","Schema","SearchParams","SemanticContainer","SimpleTag","SmallThing","SomeClassNestedDynamic","StringToClassEntry","TestClassAlias","TestClassNested","TestClassWithEnum","TestMemoryOutput","TestOutputClass","Tree","TwoStoriesOneTitle","UnionTest_ReturnType","UniverseQuestion","UniverseQuestionInput","WithReasoning",]
         ), enums=set(
           ["AliasedEnum","Category","Category2","Category3","Color","DataType","DynEnumOne","DynEnumTwo","EnumInClass","EnumOutput","Hobby","MapKey","NamedArgsSingleEnum","NamedArgsSingleEnumList","OptionalTest_CategoryType","OrderStatus","Tag","TestEnum",]
         ))
 
 
-
+    
     @property
     def DummyOutput(self) -> "DummyOutputBuilder":
         return DummyOutputBuilder(self)
 
 
-
+    
     @property
     def DynInputOutput(self) -> "DynInputOutputBuilder":
         return DynInputOutputBuilder(self)
 
 
-
+    
     @property
     def DynamicClassOne(self) -> "DynamicClassOneBuilder":
         return DynamicClassOneBuilder(self)
 
 
-
+    
     @property
     def DynamicClassTwo(self) -> "DynamicClassTwoBuilder":
         return DynamicClassTwoBuilder(self)
 
 
-
+    
     @property
     def DynamicOutput(self) -> "DynamicOutputBuilder":
         return DynamicOutputBuilder(self)
 
 
-
+    
     @property
     def OriginalB(self) -> "OriginalBBuilder":
         return OriginalBBuilder(self)
 
 
-
+    
     @property
     def Person(self) -> "PersonBuilder":
         return PersonBuilder(self)
 
 
-
+    
     @property
     def SomeClassNestedDynamic(self) -> "SomeClassNestedDynamicBuilder":
         return SomeClassNestedDynamicBuilder(self)
@@ -110,7 +110,7 @@ class DummyOutputBuilder:
     @property
     def props(self) -> "DummyOutputProperties":
         return self.__props
-
+    
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
         return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
@@ -124,7 +124,7 @@ class DummyOutputProperties:
         self.__bldr = cls_bldr
         self.__properties = properties
 
-
+    
 
     @property
     def nonce(self) -> ClassPropertyBuilder:
@@ -152,7 +152,7 @@ class DynInputOutputBuilder:
     @property
     def props(self) -> "DynInputOutputProperties":
         return self.__props
-
+    
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
         return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
@@ -166,7 +166,7 @@ class DynInputOutputProperties:
         self.__bldr = cls_bldr
         self.__properties = properties
 
-
+    
 
     @property
     def testKey(self) -> ClassPropertyBuilder:
@@ -190,7 +190,7 @@ class DynamicClassOneBuilder:
     @property
     def props(self) -> "DynamicClassOneProperties":
         return self.__props
-
+    
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
         return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
@@ -204,7 +204,7 @@ class DynamicClassOneProperties:
         self.__bldr = cls_bldr
         self.__properties = properties
 
-
+    
 
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
@@ -224,7 +224,7 @@ class DynamicClassTwoBuilder:
     @property
     def props(self) -> "DynamicClassTwoProperties":
         return self.__props
-
+    
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
         return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
@@ -238,7 +238,7 @@ class DynamicClassTwoProperties:
         self.__bldr = cls_bldr
         self.__properties = properties
 
-
+    
 
     @property
     def hi(self) -> ClassPropertyBuilder:
@@ -270,7 +270,7 @@ class DynamicOutputBuilder:
     @property
     def props(self) -> "DynamicOutputProperties":
         return self.__props
-
+    
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
         return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
@@ -284,7 +284,7 @@ class DynamicOutputProperties:
         self.__bldr = cls_bldr
         self.__properties = properties
 
-
+    
 
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
@@ -304,7 +304,7 @@ class OriginalBBuilder:
     @property
     def props(self) -> "OriginalBProperties":
         return self.__props
-
+    
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
         return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
@@ -318,7 +318,7 @@ class OriginalBProperties:
         self.__bldr = cls_bldr
         self.__properties = properties
 
-
+    
 
     @property
     def value(self) -> ClassPropertyBuilder:
@@ -342,7 +342,7 @@ class PersonBuilder:
     @property
     def props(self) -> "PersonProperties":
         return self.__props
-
+    
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
         return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
@@ -356,7 +356,7 @@ class PersonProperties:
         self.__bldr = cls_bldr
         self.__properties = properties
 
-
+    
 
     @property
     def name(self) -> ClassPropertyBuilder:
@@ -384,7 +384,7 @@ class SomeClassNestedDynamicBuilder:
     @property
     def props(self) -> "SomeClassNestedDynamicProperties":
         return self.__props
-
+    
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
         return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
@@ -398,7 +398,7 @@ class SomeClassNestedDynamicProperties:
         self.__bldr = cls_bldr
         self.__properties = properties
 
-
+    
 
     @property
     def hi(self) -> ClassPropertyBuilder:
@@ -440,37 +440,37 @@ class ColorValues:
         self.__bldr = enum_bldr
         self.__values = values
 
-
+    
 
     @property
     def RED(self) -> EnumValueBuilder:
         return self.__bldr.value("RED")
-
+    
 
     @property
     def BLUE(self) -> EnumValueBuilder:
         return self.__bldr.value("BLUE")
-
+    
 
     @property
     def GREEN(self) -> EnumValueBuilder:
         return self.__bldr.value("GREEN")
-
+    
 
     @property
     def YELLOW(self) -> EnumValueBuilder:
         return self.__bldr.value("YELLOW")
-
+    
 
     @property
     def BLACK(self) -> EnumValueBuilder:
         return self.__bldr.value("BLACK")
-
+    
 
     @property
     def WHITE(self) -> EnumValueBuilder:
         return self.__bldr.value("WHITE")
-
+    
 
     def __getattr__(self, name: str) -> EnumValueBuilder:
         if name not in self.__values:
@@ -505,7 +505,7 @@ class DynEnumOneValues:
         self.__bldr = enum_bldr
         self.__values = values
 
-
+    
 
     def __getattr__(self, name: str) -> EnumValueBuilder:
         if name not in self.__values:
@@ -540,7 +540,7 @@ class DynEnumTwoValues:
         self.__bldr = enum_bldr
         self.__values = values
 
-
+    
 
     def __getattr__(self, name: str) -> EnumValueBuilder:
         if name not in self.__values:
@@ -575,22 +575,22 @@ class HobbyValues:
         self.__bldr = enum_bldr
         self.__values = values
 
-
+    
 
     @property
     def SPORTS(self) -> EnumValueBuilder:
         return self.__bldr.value("SPORTS")
-
+    
 
     @property
     def MUSIC(self) -> EnumValueBuilder:
         return self.__bldr.value("MUSIC")
-
+    
 
     @property
     def READING(self) -> EnumValueBuilder:
         return self.__bldr.value("READING")
-
+    
 
     def __getattr__(self, name: str) -> EnumValueBuilder:
         if name not in self.__values:

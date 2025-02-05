@@ -1276,6 +1276,19 @@ paths:
                 title: ReturnFailingAssertResponse
                 type: integer
       operationId: ReturnFailingAssert
+  /call/ReturnJsonEntry:
+    post:
+      requestBody:
+        $ref: '#/components/requestBodies/ReturnJsonEntry'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                title: ReturnJsonEntryResponse
+                anyOf: []
+      operationId: ReturnJsonEntry
   /call/ReturnMalformedConstraints:
     post:
       requestBody:
@@ -3663,6 +3676,22 @@ components:
             required:
             - inp
             additionalProperties: false
+    ReturnJsonEntry:
+      required: true
+      content:
+        application/json:
+          schema:
+            title: ReturnJsonEntryRequest
+            type: object
+            properties:
+              s:
+                type: string
+              __baml_options__:
+                nullable: true
+                $ref: '#/components/schemas/BamlOptions'
+            required:
+            - s
+            additionalProperties: false
     ReturnMalformedConstraints:
       required: true
       content:
@@ -6016,6 +6045,14 @@ components:
       - sixteen_digit_number
       - string_with_twenty_words
       - three_small_things
+      additionalProperties: false
+    SimpleTag:
+      type: object
+      properties:
+        field:
+          type: string
+      required:
+      - field
       additionalProperties: false
     SmallThing:
       type: object

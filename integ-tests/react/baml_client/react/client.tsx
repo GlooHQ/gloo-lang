@@ -5026,6 +5026,60 @@ export function useReturnFailingAssert(
   return useBamlAction(Actions.ReturnFailingAssert, props);
 }
 /**
+ * A specialized hook for the ReturnJsonEntry BAML function that supports both streaming and non‑streaming responses.
+ *
+ * **Input Types:**
+ *
+ * - s: string
+ *
+ *
+ * **Return Type:**
+ * - **Non‑streaming:** JsonTemplate
+ * - **Streaming Partial:** JsonTemplate
+ * - **Streaming Final:** JsonTemplate
+ *
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
+ *
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
+ *
+ * @example
+ * ```tsx
+ * // Basic non‑streaming usage:
+ * const { data, error, isPending, mutate } = useReturnJsonEntry();
+ *
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useReturnJsonEntry({
+ *   stream: true,
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
+ * });
+ * ```
+ */
+export function useReturnJsonEntry(
+  props: StreamingProps<'ReturnJsonEntry'>
+): StreamingHookResult<'ReturnJsonEntry'>;
+
+export function useReturnJsonEntry(
+  props?: NonStreamingProps<'ReturnJsonEntry'>
+): NonStreamingHookResult<'ReturnJsonEntry'>;
+
+export function useReturnJsonEntry(
+  props: HookProps<'ReturnJsonEntry'> = {}
+): StreamingHookResult<'ReturnJsonEntry'> | NonStreamingHookResult<'ReturnJsonEntry'> {
+  if (props.stream) {
+    return useBamlAction(StreamingActions.ReturnJsonEntry, props);
+  }
+
+  return useBamlAction(Actions.ReturnJsonEntry, props);
+}
+/**
  * A specialized hook for the ReturnMalformedConstraints BAML function that supports both streaming and non‑streaming responses.
  *
  * **Input Types:**

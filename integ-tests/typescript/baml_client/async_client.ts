@@ -18,7 +18,7 @@ $ pnpm add @boundaryml/baml
 import { type BamlCtxManager, type BamlRuntime, BamlStream, BamlValidationError, type ClientRegistry, FunctionResult, type Image, createBamlValidationError } from "@boundaryml/baml"
 import type { Checked, Check, RecursivePartialNull as MovedRecursivePartialNull } from "./types"
 import type { partial_types } from "./partial_types";
-import type {AliasedEnum, AnotherObject, BigNumbers, BinaryNode, Blah, BlockConstraint, BlockConstraintForParam, BookOrder, Category, Category2, Category3, ClassForNullLiteral, ClassOptionalOutput, ClassOptionalOutput2, ClassToRecAlias, ClassWithBlockDone, ClassWithImage, ClassWithoutDone, Color, ComplexMemoryObject, CompoundBigNumbers, ContactInfo, CustomTaskResult, DataType, DummyOutput, DynEnumOne, DynEnumTwo, DynInputOutput, DynamicClassOne, DynamicClassTwo, DynamicOutput, Earthling, Education, Email, EmailAddress, EnumInClass, EnumOutput, Event, FakeImage, FlightConfirmation, FooAny, Forest, FormatterTest0, FormatterTest1, FormatterTest2, FormatterTest3, GroceryReceipt, Hobby, InnerClass, InnerClass2, InputClass, InputClassNested, JsonArray, JsonObject, JsonValue, LinkedList, LinkedListAliasNode, LiteralClassHello, LiteralClassOne, LiteralClassTwo, MalformedConstraints, MalformedConstraints2, MapKey, Martian, MemoryObject, MergeAttrs, NamedArgsSingleClass, NamedArgsSingleEnum, NamedArgsSingleEnumList, Nested, Nested2, NestedBlockConstraint, NestedBlockConstraintForParam, Node, NodeWithAliasIndirection, OptionalListAndMap, OptionalTest_CategoryType, OptionalTest_Prop1, OptionalTest_ReturnType, OrderInfo, OrderStatus, OriginalA, OriginalB, Person, PhoneNumber, Quantity, RaysData, RecAliasOne, RecAliasThree, RecAliasTwo, ReceiptInfo, ReceiptItem, Recipe, RecursiveAliasDependency, RecursiveListAlias, RecursiveMapAlias, Resume, Schema, SearchParams, SemanticContainer, SmallThing, SomeClassNestedDynamic, StringToClassEntry, Tag, TestClassAlias, TestClassNested, TestClassWithEnum, TestEnum, TestMemoryOutput, TestOutputClass, Tree, TwoStoriesOneTitle, UnionTest_ReturnType, UniverseQuestion, UniverseQuestionInput, WithReasoning} from "./types"
+import type {AliasedEnum, AnotherObject, BigNumbers, BinaryNode, Blah, BlockConstraint, BlockConstraintForParam, BookOrder, Category, Category2, Category3, ClassForNullLiteral, ClassOptionalOutput, ClassOptionalOutput2, ClassToRecAlias, ClassWithBlockDone, ClassWithImage, ClassWithoutDone, Color, ComplexMemoryObject, CompoundBigNumbers, ContactInfo, CustomTaskResult, DataType, DummyOutput, DynEnumOne, DynEnumTwo, DynInputOutput, DynamicClassOne, DynamicClassTwo, DynamicOutput, Earthling, Education, Email, EmailAddress, EnumInClass, EnumOutput, Event, FakeImage, FlightConfirmation, FooAny, Forest, FormatterTest0, FormatterTest1, FormatterTest2, FormatterTest3, GroceryReceipt, Hobby, InnerClass, InnerClass2, InputClass, InputClassNested, JsonArray, JsonEntry, JsonObject, JsonTemplate, JsonValue, LinkedList, LinkedListAliasNode, LiteralClassHello, LiteralClassOne, LiteralClassTwo, MalformedConstraints, MalformedConstraints2, MapKey, Martian, MemoryObject, MergeAttrs, NamedArgsSingleClass, NamedArgsSingleEnum, NamedArgsSingleEnumList, Nested, Nested2, NestedBlockConstraint, NestedBlockConstraintForParam, Node, NodeWithAliasIndirection, OptionalListAndMap, OptionalTest_CategoryType, OptionalTest_Prop1, OptionalTest_ReturnType, OrderInfo, OrderStatus, OriginalA, OriginalB, Person, PhoneNumber, Quantity, RaysData, RecAliasOne, RecAliasThree, RecAliasTwo, ReceiptInfo, ReceiptItem, Recipe, RecursiveAliasDependency, RecursiveListAlias, RecursiveMapAlias, Resume, Schema, SearchParams, SemanticContainer, SimpleTag, SmallThing, SomeClassNestedDynamic, StringToClassEntry, Tag, TestClassAlias, TestClassNested, TestClassWithEnum, TestEnum, TestMemoryOutput, TestOutputClass, Tree, TwoStoriesOneTitle, UnionTest_ReturnType, UniverseQuestion, UniverseQuestionInput, WithReasoning} from "./types"
 import type TypeBuilder from "./type_builder"
 import { DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX, DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME } from "./globals"
 
@@ -42,15 +42,16 @@ export class BamlAsyncClient {
     return this.stream_client
   }
 
+  
   async AaaSamOutputFormat(
-    recipe: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      recipe: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Recipe> {
     try {
       const raw = await this.runtime.callFunction(
-        'AaaSamOutputFormat',
+        "AaaSamOutputFormat",
         {
-          recipe: recipe,
+          "recipe": recipe
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -58,24 +59,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Recipe
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async AliasThatPointsToRecursiveType(
-    list: LinkedListAliasNode,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      list: LinkedListAliasNode,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<LinkedListAliasNode> {
     try {
       const raw = await this.runtime.callFunction(
-        'AliasThatPointsToRecursiveType',
+        "AliasThatPointsToRecursiveType",
         {
-          list: list,
+          "list": list
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -83,49 +84,49 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as LinkedListAliasNode
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async AliasWithMultipleAttrs(
-    money: Checked<number, 'gt_ten'>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): Promise<Checked<number, 'gt_ten'>> {
+      money: Checked<number,"gt_ten">,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<Checked<number,"gt_ten">> {
     try {
       const raw = await this.runtime.callFunction(
-        'AliasWithMultipleAttrs',
+        "AliasWithMultipleAttrs",
         {
-          money: money,
+          "money": money
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return raw.parsed(false) as Checked<number, 'gt_ten'>
+      return raw.parsed(false) as Checked<number,"gt_ten">
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async AliasedInputClass(
-    input: InputClass,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: InputClass,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'AliasedInputClass',
+        "AliasedInputClass",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -133,24 +134,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async AliasedInputClass2(
-    input: InputClass,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: InputClass,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'AliasedInputClass2',
+        "AliasedInputClass2",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -158,24 +159,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async AliasedInputClassNested(
-    input: InputClassNested,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: InputClassNested,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'AliasedInputClassNested',
+        "AliasedInputClassNested",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -183,24 +184,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async AliasedInputEnum(
-    input: AliasedEnum,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: AliasedEnum,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'AliasedInputEnum',
+        "AliasedInputEnum",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -208,24 +209,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async AliasedInputList(
-    input: AliasedEnum[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: AliasedEnum[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'AliasedInputList',
+        "AliasedInputList",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -233,24 +234,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async AllowedOptionals(
-    optionals: OptionalListAndMap,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      optionals: OptionalListAndMap,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<OptionalListAndMap> {
     try {
       const raw = await this.runtime.callFunction(
-        'AllowedOptionals',
+        "AllowedOptionals",
         {
-          optionals: optionals,
+          "optionals": optionals
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -258,21 +259,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as OptionalListAndMap
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async AssertFn(a: number, __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): Promise<number> {
+  
+  async AssertFn(
+      a: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<number> {
     try {
       const raw = await this.runtime.callFunction(
-        'AssertFn',
+        "AssertFn",
         {
-          a: a,
+          "a": a
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -280,24 +284,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as number
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async AudioInput(
-    aud: Audio,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      aud: Audio,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'AudioInput',
+        "AudioInput",
         {
-          aud: aud,
+          "aud": aud
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -305,24 +309,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async BuildLinkedList(
-    input: number[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: number[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<LinkedList> {
     try {
       const raw = await this.runtime.callFunction(
-        'BuildLinkedList',
+        "BuildLinkedList",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -330,24 +334,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as LinkedList
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async BuildTree(
-    input: BinaryNode,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: BinaryNode,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Tree> {
     try {
       const raw = await this.runtime.callFunction(
-        'BuildTree',
+        "BuildTree",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -355,24 +359,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Tree
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ClassThatPointsToRecursiveClassThroughAlias(
-    cls: ClassToRecAlias,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      cls: ClassToRecAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<ClassToRecAlias> {
     try {
       const raw = await this.runtime.callFunction(
-        'ClassThatPointsToRecursiveClassThroughAlias',
+        "ClassThatPointsToRecursiveClassThroughAlias",
         {
-          cls: cls,
+          "cls": cls
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -380,49 +384,49 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as ClassToRecAlias
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ClassifyDynEnumTwo(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): Promise<string | DynEnumTwo> {
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<(string | DynEnumTwo)> {
     try {
       const raw = await this.runtime.callFunction(
-        'ClassifyDynEnumTwo',
+        "ClassifyDynEnumTwo",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return raw.parsed(false) as string | DynEnumTwo
+      return raw.parsed(false) as (string | DynEnumTwo)
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ClassifyMessage(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Category> {
     try {
       const raw = await this.runtime.callFunction(
-        'ClassifyMessage',
+        "ClassifyMessage",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -430,24 +434,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Category
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ClassifyMessage2(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Category> {
     try {
       const raw = await this.runtime.callFunction(
-        'ClassifyMessage2',
+        "ClassifyMessage2",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -455,24 +459,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Category
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ClassifyMessage3(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Category> {
     try {
       const raw = await this.runtime.callFunction(
-        'ClassifyMessage3',
+        "ClassifyMessage3",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -480,28 +484,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Category
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async Completion(
-    prefix: string,
-    suffix: string,
-    language: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      prefix: string,suffix: string,language: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'Completion',
+        "Completion",
         {
-          prefix: prefix,
-          suffix: suffix,
-          language: language,
+          "prefix": prefix,"suffix": suffix,"language": language
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -509,24 +509,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async CustomTask(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<BookOrder | FlightConfirmation | GroceryReceipt> {
     try {
       const raw = await this.runtime.callFunction(
-        'CustomTask',
+        "CustomTask",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -534,24 +534,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as BookOrder | FlightConfirmation | GroceryReceipt
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async DescribeImage(
-    img: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      img: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'DescribeImage',
+        "DescribeImage",
         {
-          img: img,
+          "img": img
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -559,26 +559,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async DescribeImage2(
-    classWithImage: ClassWithImage,
-    img2: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      classWithImage: ClassWithImage,img2: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'DescribeImage2',
+        "DescribeImage2",
         {
-          classWithImage: classWithImage,
-          img2: img2,
+          "classWithImage": classWithImage,"img2": img2
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -586,26 +584,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async DescribeImage3(
-    classWithImage: ClassWithImage,
-    img2: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      classWithImage: ClassWithImage,img2: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'DescribeImage3',
+        "DescribeImage3",
         {
-          classWithImage: classWithImage,
-          img2: img2,
+          "classWithImage": classWithImage,"img2": img2
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -613,26 +609,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async DescribeImage4(
-    classWithImage: ClassWithImage,
-    img2: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      classWithImage: ClassWithImage,img2: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'DescribeImage4',
+        "DescribeImage4",
         {
-          classWithImage: classWithImage,
-          img2: img2,
+          "classWithImage": classWithImage,"img2": img2
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -640,46 +634,49 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async DifferentiateUnions(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): Promise<
-    OriginalA | OriginalB
-  > {
+  
+  async DifferentiateUnions(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<OriginalA | OriginalB> {
     try {
       const raw = await this.runtime.callFunction(
-        'DifferentiateUnions',
-        {},
+        "DifferentiateUnions",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as OriginalA | OriginalB
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async DummyOutputFunction(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<DummyOutput> {
     try {
       const raw = await this.runtime.callFunction(
-        'DummyOutputFunction',
+        "DummyOutputFunction",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -687,24 +684,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as DummyOutput
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async DynamicFunc(
-    input: DynamicClassOne,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: DynamicClassOne,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<DynamicClassTwo> {
     try {
       const raw = await this.runtime.callFunction(
-        'DynamicFunc',
+        "DynamicFunc",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -712,24 +709,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as DynamicClassTwo
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async DynamicInputOutput(
-    input: DynInputOutput,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: DynInputOutput,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<DynInputOutput> {
     try {
       const raw = await this.runtime.callFunction(
-        'DynamicInputOutput',
+        "DynamicInputOutput",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -737,24 +734,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as DynInputOutput
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async DynamicListInputOutput(
-    input: DynInputOutput[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: DynInputOutput[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<DynInputOutput[]> {
     try {
       const raw = await this.runtime.callFunction(
-        'DynamicListInputOutput',
+        "DynamicListInputOutput",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -762,44 +759,49 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as DynInputOutput[]
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async ExpectFailure(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): Promise<string> {
+  
+  async ExpectFailure(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'ExpectFailure',
-        {},
+        "ExpectFailure",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ExtractContactInfo(
-    document: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      document: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<ContactInfo> {
     try {
       const raw = await this.runtime.callFunction(
-        'ExtractContactInfo',
+        "ExtractContactInfo",
         {
-          document: document,
+          "document": document
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -807,24 +809,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as ContactInfo
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ExtractHobby(
-    text: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      text: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<(string | Hobby)[]> {
     try {
       const raw = await this.runtime.callFunction(
-        'ExtractHobby',
+        "ExtractHobby",
         {
-          text: text,
+          "text": text
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -832,24 +834,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as (string | Hobby)[]
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ExtractNames(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string[]> {
     try {
       const raw = await this.runtime.callFunction(
-        'ExtractNames',
+        "ExtractNames",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -857,24 +859,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string[]
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ExtractPeople(
-    text: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      text: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Person[]> {
     try {
       const raw = await this.runtime.callFunction(
-        'ExtractPeople',
+        "ExtractPeople",
         {
-          text: text,
+          "text": text
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -882,26 +884,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Person[]
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ExtractReceiptInfo(
-    email: string,
-    reason: 'curiosity' | 'personal_finance',
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      email: string,reason: "curiosity" | "personal_finance",
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<ReceiptInfo> {
     try {
       const raw = await this.runtime.callFunction(
-        'ExtractReceiptInfo',
+        "ExtractReceiptInfo",
         {
-          email: email,
-          reason: reason,
+          "email": email,"reason": reason
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -909,26 +909,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as ReceiptInfo
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ExtractResume(
-    resume: string,
-    img?: Image | null,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      resume: string,img?: Image | null,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Resume> {
     try {
       const raw = await this.runtime.callFunction(
-        'ExtractResume',
+        "ExtractResume",
         {
-          resume: resume,
-          img: img ?? null,
+          "resume": resume,"img": img?? null
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -936,24 +934,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Resume
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ExtractResume2(
-    resume: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      resume: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Resume> {
     try {
       const raw = await this.runtime.callFunction(
-        'ExtractResume2',
+        "ExtractResume2",
         {
-          resume: resume,
+          "resume": resume
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -961,24 +959,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Resume
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnClassOptionalOutput(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<ClassOptionalOutput | null> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnClassOptionalOutput',
+        "FnClassOptionalOutput",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -986,24 +984,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as ClassOptionalOutput | null
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnClassOptionalOutput2(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<ClassOptionalOutput2 | null> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnClassOptionalOutput2',
+        "FnClassOptionalOutput2",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1011,24 +1009,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as ClassOptionalOutput2 | null
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnEnumListOutput(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<EnumOutput[]> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnEnumListOutput',
+        "FnEnumListOutput",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1036,24 +1034,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as EnumOutput[]
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnEnumOutput(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<EnumOutput> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnEnumOutput',
+        "FnEnumOutput",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1061,24 +1059,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as EnumOutput
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnLiteralClassInputOutput(
-    input: LiteralClassHello,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: LiteralClassHello,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<LiteralClassHello> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnLiteralClassInputOutput',
+        "FnLiteralClassInputOutput",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1086,24 +1084,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as LiteralClassHello
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnLiteralUnionClassInputOutput(
-    input: LiteralClassOne | LiteralClassTwo,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: LiteralClassOne | LiteralClassTwo,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<LiteralClassOne | LiteralClassTwo> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnLiteralUnionClassInputOutput',
+        "FnLiteralUnionClassInputOutput",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1111,24 +1109,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as LiteralClassOne | LiteralClassTwo
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnNamedArgsSingleStringOptional(
-    myString?: string | null,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myString?: string | null,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnNamedArgsSingleStringOptional',
+        "FnNamedArgsSingleStringOptional",
         {
-          myString: myString ?? null,
+          "myString": myString?? null
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1136,24 +1134,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnOutputBool(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<boolean> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnOutputBool',
+        "FnOutputBool",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1161,24 +1159,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as boolean
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnOutputClass(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<TestOutputClass> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnOutputClass',
+        "FnOutputClass",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1186,24 +1184,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as TestOutputClass
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnOutputClassList(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<TestOutputClass[]> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnOutputClassList',
+        "FnOutputClassList",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1211,24 +1209,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as TestOutputClass[]
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnOutputClassNested(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<TestClassNested> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnOutputClassNested',
+        "FnOutputClassNested",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1236,24 +1234,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as TestClassNested
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnOutputClassWithEnum(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<TestClassWithEnum> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnOutputClassWithEnum',
+        "FnOutputClassWithEnum",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1261,24 +1259,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as TestClassWithEnum
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnOutputInt(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<number> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnOutputInt',
+        "FnOutputInt",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1286,24 +1284,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as number
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnOutputLiteralBool(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<false> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnOutputLiteralBool',
+        "FnOutputLiteralBool",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1311,24 +1309,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as false
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnOutputLiteralInt(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<5> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnOutputLiteralInt',
+        "FnOutputLiteralInt",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1336,49 +1334,49 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as 5
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnOutputLiteralString(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): Promise<'example output'> {
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<"example output"> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnOutputLiteralString',
+        "FnOutputLiteralString",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return raw.parsed(false) as 'example output'
+      return raw.parsed(false) as "example output"
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnOutputStringList(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string[]> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnOutputStringList',
+        "FnOutputStringList",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1386,24 +1384,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string[]
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnTestAliasedEnumOutput(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<TestEnum> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnTestAliasedEnumOutput',
+        "FnTestAliasedEnumOutput",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1411,24 +1409,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as TestEnum
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnTestClassAlias(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<TestClassAlias> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnTestClassAlias',
+        "FnTestClassAlias",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1436,24 +1434,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as TestClassAlias
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async FnTestNamedArgsSingleEnum(
-    myArg: NamedArgsSingleEnum,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myArg: NamedArgsSingleEnum,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'FnTestNamedArgsSingleEnum',
+        "FnTestNamedArgsSingleEnum",
         {
-          myArg: myArg,
+          "myArg": myArg
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1461,24 +1459,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async GetDataType(
-    text: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      text: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<RaysData> {
     try {
       const raw = await this.runtime.callFunction(
-        'GetDataType',
+        "GetDataType",
         {
-          text: text,
+          "text": text
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1486,24 +1484,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as RaysData
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async GetOrderInfo(
-    email: Email,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      email: Email,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<OrderInfo> {
     try {
       const raw = await this.runtime.callFunction(
-        'GetOrderInfo',
+        "GetOrderInfo",
         {
-          email: email,
+          "email": email
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1511,24 +1509,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as OrderInfo
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async GetQuery(
-    query: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      query: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<SearchParams> {
     try {
       const raw = await this.runtime.callFunction(
-        'GetQuery',
+        "GetQuery",
         {
-          query: query,
+          "query": query
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1536,26 +1534,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as SearchParams
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async InOutEnumMapKey(
-    i1: Partial<Record<types.MapKey, string>>,
-    i2: Partial<Record<types.MapKey, string>>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      i1: Partial<Record<types.MapKey, string>>,i2: Partial<Record<types.MapKey, string>>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Partial<Record<types.MapKey, string>>> {
     try {
       const raw = await this.runtime.callFunction(
-        'InOutEnumMapKey',
+        "InOutEnumMapKey",
         {
-          i1: i1,
-          i2: i2,
+          "i1": i1,"i2": i2
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1563,76 +1559,74 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Partial<Record<types.MapKey, string>>
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async InOutLiteralStringUnionMapKey(
-    i1: Partial<Record<'one' | 'two' | 'three' | 'four', string>>,
-    i2: Partial<Record<'one' | 'two' | 'three' | 'four', string>>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): Promise<Partial<Record<'one' | 'two' | 'three' | 'four', string>>> {
+      i1: Partial<Record<"one" | "two" | "three" | "four", string>>,i2: Partial<Record<"one" | "two" | "three" | "four", string>>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<Partial<Record<"one" | "two" | "three" | "four", string>>> {
     try {
       const raw = await this.runtime.callFunction(
-        'InOutLiteralStringUnionMapKey',
+        "InOutLiteralStringUnionMapKey",
         {
-          i1: i1,
-          i2: i2,
+          "i1": i1,"i2": i2
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return raw.parsed(false) as Partial<Record<'one' | 'two' | 'three' | 'four', string>>
+      return raw.parsed(false) as Partial<Record<"one" | "two" | "three" | "four", string>>
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async InOutSingleLiteralStringMapKey(
-    m: Partial<Record<'key', string>>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): Promise<Partial<Record<'key', string>>> {
+      m: Partial<Record<"key", string>>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<Partial<Record<"key", string>>> {
     try {
       const raw = await this.runtime.callFunction(
-        'InOutSingleLiteralStringMapKey',
+        "InOutSingleLiteralStringMapKey",
         {
-          m: m,
+          "m": m
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return raw.parsed(false) as Partial<Record<'key', string>>
+      return raw.parsed(false) as Partial<Record<"key", string>>
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async JsonTypeAliasCycle(
-    input: JsonValue,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: JsonValue,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<JsonValue> {
     try {
       const raw = await this.runtime.callFunction(
-        'JsonTypeAliasCycle',
+        "JsonTypeAliasCycle",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1640,117 +1634,124 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as JsonValue
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async LiteralUnionsTest(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): Promise<1 | true | 'string output'> {
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<1 | true | "string output"> {
     try {
       const raw = await this.runtime.callFunction(
-        'LiteralUnionsTest',
+        "LiteralUnionsTest",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return raw.parsed(false) as 1 | true | 'string output'
+      return raw.parsed(false) as 1 | true | "string output"
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async MakeBlockConstraint(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): Promise<
-    Checked<BlockConstraint, 'cross_field'>
-  > {
+  
+  async MakeBlockConstraint(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<Checked<BlockConstraint,"cross_field">> {
     try {
       const raw = await this.runtime.callFunction(
-        'MakeBlockConstraint',
-        {},
+        "MakeBlockConstraint",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return raw.parsed(false) as Checked<BlockConstraint, 'cross_field'>
+      return raw.parsed(false) as Checked<BlockConstraint,"cross_field">
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async MakeNestedBlockConstraint(__baml_options__?: {
-    tb?: TypeBuilder
-    clientRegistry?: ClientRegistry
-  }): Promise<NestedBlockConstraint> {
+  
+  async MakeNestedBlockConstraint(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<NestedBlockConstraint> {
     try {
       const raw = await this.runtime.callFunction(
-        'MakeNestedBlockConstraint',
-        {},
+        "MakeNestedBlockConstraint",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as NestedBlockConstraint
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async MakeSemanticContainer(__baml_options__?: {
-    tb?: TypeBuilder
-    clientRegistry?: ClientRegistry
-  }): Promise<SemanticContainer> {
+  
+  async MakeSemanticContainer(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<SemanticContainer> {
     try {
       const raw = await this.runtime.callFunction(
-        'MakeSemanticContainer',
-        {},
+        "MakeSemanticContainer",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as SemanticContainer
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async MapAlias(
-    m: Record<string, string[]>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      m: Record<string, string[]>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Record<string, string[]>> {
     try {
       const raw = await this.runtime.callFunction(
-        'MapAlias',
+        "MapAlias",
         {
-          m: m,
+          "m": m
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1758,24 +1759,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Record<string, string[]>
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async MergeAliasAttributes(
-    money: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      money: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<MergeAttrs> {
     try {
       const raw = await this.runtime.callFunction(
-        'MergeAliasAttributes',
+        "MergeAliasAttributes",
         {
-          money: money,
+          "money": money
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1783,24 +1784,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as MergeAttrs
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async MyFunc(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<DynamicOutput> {
     try {
       const raw = await this.runtime.callFunction(
-        'MyFunc',
+        "MyFunc",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1808,24 +1809,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as DynamicOutput
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async NestedAlias(
-    c: number | string | boolean | number | string[] | Record<string, string[]>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      c: number | string | boolean | number | string[] | Record<string, string[]>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<number | string | boolean | number | string[] | Record<string, string[]>> {
     try {
       const raw = await this.runtime.callFunction(
-        'NestedAlias',
+        "NestedAlias",
         {
-          c: c,
+          "c": c
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1833,24 +1834,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as number | string | boolean | number | string[] | Record<string, string[]>
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async NullLiteralClassHello(
-    s: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      s: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<ClassForNullLiteral> {
     try {
       const raw = await this.runtime.callFunction(
-        'NullLiteralClassHello',
+        "NullLiteralClassHello",
         {
-          s: s,
+          "s": s
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1858,24 +1859,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as ClassForNullLiteral
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async OptionalTest_Function(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<(OptionalTest_ReturnType | null)[]> {
     try {
       const raw = await this.runtime.callFunction(
-        'OptionalTest_Function',
+        "OptionalTest_Function",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1883,24 +1884,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as (OptionalTest_ReturnType | null)[]
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async PredictAge(
-    name: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      name: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<FooAny> {
     try {
       const raw = await this.runtime.callFunction(
-        'PredictAge',
+        "PredictAge",
         {
-          name: name,
+          "name": name
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1908,49 +1909,49 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as FooAny
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async PredictAgeBare(
-    inp: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): Promise<Checked<number, 'too_big'>> {
+      inp: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<Checked<number,"too_big">> {
     try {
       const raw = await this.runtime.callFunction(
-        'PredictAgeBare',
+        "PredictAgeBare",
         {
-          inp: inp,
+          "inp": inp
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return raw.parsed(false) as Checked<number, 'too_big'>
+      return raw.parsed(false) as Checked<number,"too_big">
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async PrimitiveAlias(
-    p: number | string | boolean | number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      p: number | string | boolean | number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<number | string | boolean | number> {
     try {
       const raw = await this.runtime.callFunction(
-        'PrimitiveAlias',
+        "PrimitiveAlias",
         {
-          p: p,
+          "p": p
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1958,24 +1959,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as number | string | boolean | number
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async PromptTestClaude(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'PromptTestClaude',
+        "PromptTestClaude",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -1983,24 +1984,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async PromptTestClaudeChat(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'PromptTestClaudeChat',
+        "PromptTestClaudeChat",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2008,24 +2009,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async PromptTestClaudeChatNoSystem(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'PromptTestClaudeChatNoSystem',
+        "PromptTestClaudeChatNoSystem",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2033,24 +2034,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async PromptTestOpenAI(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'PromptTestOpenAI',
+        "PromptTestOpenAI",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2058,24 +2059,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async PromptTestOpenAIChat(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'PromptTestOpenAIChat',
+        "PromptTestOpenAIChat",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2083,24 +2084,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async PromptTestOpenAIChatNoSystem(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'PromptTestOpenAIChatNoSystem',
+        "PromptTestOpenAIChatNoSystem",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2108,24 +2109,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async PromptTestStreaming(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'PromptTestStreaming',
+        "PromptTestStreaming",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2133,24 +2134,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async RecursiveAliasCycle(
-    input: RecAliasOne,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: RecAliasOne,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<RecAliasOne> {
     try {
       const raw = await this.runtime.callFunction(
-        'RecursiveAliasCycle',
+        "RecursiveAliasCycle",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2158,24 +2159,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as RecAliasOne
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async RecursiveClassWithAliasIndirection(
-    cls: NodeWithAliasIndirection,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      cls: NodeWithAliasIndirection,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<NodeWithAliasIndirection> {
     try {
       const raw = await this.runtime.callFunction(
-        'RecursiveClassWithAliasIndirection',
+        "RecursiveClassWithAliasIndirection",
         {
-          cls: cls,
+          "cls": cls
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2183,49 +2184,49 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as NodeWithAliasIndirection
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ReturnAliasWithMergedAttributes(
-    money: Checked<number, 'gt_ten'>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): Promise<Checked<number, 'gt_ten'>> {
+      money: Checked<number,"gt_ten">,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<Checked<number,"gt_ten">> {
     try {
       const raw = await this.runtime.callFunction(
-        'ReturnAliasWithMergedAttributes',
+        "ReturnAliasWithMergedAttributes",
         {
-          money: money,
+          "money": money
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return raw.parsed(false) as Checked<number, 'gt_ten'>
+      return raw.parsed(false) as Checked<number,"gt_ten">
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ReturnFailingAssert(
-    inp: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      inp: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<number> {
     try {
       const raw = await this.runtime.callFunction(
-        'ReturnFailingAssert',
+        "ReturnFailingAssert",
         {
-          inp: inp,
+          "inp": inp
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2233,24 +2234,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as number
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ReturnJsonEntry(
-    s: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      s: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<JsonTemplate> {
     try {
       const raw = await this.runtime.callFunction(
-        'ReturnJsonEntry',
+        "ReturnJsonEntry",
         {
-          s: s,
+          "s": s
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2258,24 +2259,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as JsonTemplate
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async ReturnMalformedConstraints(
-    a: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      a: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<MalformedConstraints> {
     try {
       const raw = await this.runtime.callFunction(
-        'ReturnMalformedConstraints',
+        "ReturnMalformedConstraints",
         {
-          a: a,
+          "a": a
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2283,24 +2284,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as MalformedConstraints
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async SchemaDescriptions(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Schema> {
     try {
       const raw = await this.runtime.callFunction(
-        'SchemaDescriptions',
+        "SchemaDescriptions",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2308,24 +2309,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Schema
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async SimpleRecursiveListAlias(
-    input: RecursiveListAlias,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: RecursiveListAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<RecursiveListAlias> {
     try {
       const raw = await this.runtime.callFunction(
-        'SimpleRecursiveListAlias',
+        "SimpleRecursiveListAlias",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2333,24 +2334,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as RecursiveListAlias
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async SimpleRecursiveMapAlias(
-    input: RecursiveMapAlias,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: RecursiveMapAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<RecursiveMapAlias> {
     try {
       const raw = await this.runtime.callFunction(
-        'SimpleRecursiveMapAlias',
+        "SimpleRecursiveMapAlias",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2358,24 +2359,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as RecursiveMapAlias
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async StreamBigNumbers(
-    digits: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      digits: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<BigNumbers> {
     try {
       const raw = await this.runtime.callFunction(
-        'StreamBigNumbers',
+        "StreamBigNumbers",
         {
-          digits: digits,
+          "digits": digits
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2383,26 +2384,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as BigNumbers
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async StreamFailingAssertion(
-    theme: string,
-    length: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      theme: string,length: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<TwoStoriesOneTitle> {
     try {
       const raw = await this.runtime.callFunction(
-        'StreamFailingAssertion',
+        "StreamFailingAssertion",
         {
-          theme: theme,
-          length: length,
+          "theme": theme,"length": length
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2410,24 +2409,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as TwoStoriesOneTitle
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async StreamOneBigNumber(
-    digits: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      digits: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<number> {
     try {
       const raw = await this.runtime.callFunction(
-        'StreamOneBigNumber',
+        "StreamOneBigNumber",
         {
-          digits: digits,
+          "digits": digits
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2435,24 +2434,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as number
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async StreamUnionIntegers(
-    digits: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      digits: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<(number | string)[]> {
     try {
       const raw = await this.runtime.callFunction(
-        'StreamUnionIntegers',
+        "StreamUnionIntegers",
         {
-          digits: digits,
+          "digits": digits
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2460,26 +2459,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as (number | string)[]
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async StreamingCompoundNumbers(
-    digits: number,
-    yapping: boolean,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      digits: number,yapping: boolean,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<CompoundBigNumbers> {
     try {
       const raw = await this.runtime.callFunction(
-        'StreamingCompoundNumbers',
+        "StreamingCompoundNumbers",
         {
-          digits: digits,
-          yapping: yapping,
+          "digits": digits,"yapping": yapping
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2487,24 +2484,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as CompoundBigNumbers
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TakeRecAliasDep(
-    input: RecursiveAliasDependency,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: RecursiveAliasDependency,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<RecursiveAliasDependency> {
     try {
       const raw = await this.runtime.callFunction(
-        'TakeRecAliasDep',
+        "TakeRecAliasDep",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2512,24 +2509,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as RecursiveAliasDependency
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAnthropic(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAnthropic',
+        "TestAnthropic",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2537,24 +2534,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAnthropicShorthand(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAnthropicShorthand',
+        "TestAnthropicShorthand",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2562,24 +2559,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAws(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAws',
+        "TestAws",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2587,24 +2584,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAwsInvalidAccessKey(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAwsInvalidAccessKey',
+        "TestAwsInvalidAccessKey",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2612,24 +2609,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAwsInvalidProfile(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAwsInvalidProfile',
+        "TestAwsInvalidProfile",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2637,24 +2634,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAwsInvalidRegion(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAwsInvalidRegion',
+        "TestAwsInvalidRegion",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2662,24 +2659,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAwsInvalidSessionToken(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAwsInvalidSessionToken',
+        "TestAwsInvalidSessionToken",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2687,24 +2684,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAzure(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAzure',
+        "TestAzure",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2712,24 +2709,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAzureFailure(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAzureFailure',
+        "TestAzureFailure",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2737,24 +2734,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAzureO1NoMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAzureO1NoMaxTokens',
+        "TestAzureO1NoMaxTokens",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2762,24 +2759,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAzureO1WithMaxCompletionTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAzureO1WithMaxCompletionTokens',
+        "TestAzureO1WithMaxCompletionTokens",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2787,24 +2784,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAzureO1WithMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAzureO1WithMaxTokens',
+        "TestAzureO1WithMaxTokens",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2812,24 +2809,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestAzureWithMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestAzureWithMaxTokens',
+        "TestAzureWithMaxTokens",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2837,26 +2834,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestCaching(
-    input: string,
-    not_cached: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,not_cached: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestCaching',
+        "TestCaching",
         {
-          input: input,
-          not_cached: not_cached,
+          "input": input,"not_cached": not_cached
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2864,44 +2859,49 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async TestFallbackClient(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): Promise<string> {
+  
+  async TestFallbackClient(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFallbackClient',
-        {},
+        "TestFallbackClient",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFallbackToShorthand(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFallbackToShorthand',
+        "TestFallbackToShorthand",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2909,24 +2909,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleBool(
-    myBool: boolean,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myBool: boolean,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleBool',
+        "TestFnNamedArgsSingleBool",
         {
-          myBool: myBool,
+          "myBool": myBool
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2934,24 +2934,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleClass(
-    myArg: NamedArgsSingleClass,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myArg: NamedArgsSingleClass,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleClass',
+        "TestFnNamedArgsSingleClass",
         {
-          myArg: myArg,
+          "myArg": myArg
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2959,24 +2959,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleEnumList(
-    myArg: NamedArgsSingleEnumList[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myArg: NamedArgsSingleEnumList[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleEnumList',
+        "TestFnNamedArgsSingleEnumList",
         {
-          myArg: myArg,
+          "myArg": myArg
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -2984,24 +2984,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleFloat(
-    myFloat: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myFloat: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleFloat',
+        "TestFnNamedArgsSingleFloat",
         {
-          myFloat: myFloat,
+          "myFloat": myFloat
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3009,24 +3009,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleInt(
-    myInt: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myInt: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleInt',
+        "TestFnNamedArgsSingleInt",
         {
-          myInt: myInt,
+          "myInt": myInt
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3034,24 +3034,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleMapStringToClass(
-    myMap: Record<string, StringToClassEntry>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myMap: Record<string, StringToClassEntry>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Record<string, StringToClassEntry>> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleMapStringToClass',
+        "TestFnNamedArgsSingleMapStringToClass",
         {
-          myMap: myMap,
+          "myMap": myMap
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3059,24 +3059,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Record<string, StringToClassEntry>
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleMapStringToMap(
-    myMap: Record<string, Record<string, string>>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myMap: Record<string, Record<string, string>>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Record<string, Record<string, string>>> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleMapStringToMap',
+        "TestFnNamedArgsSingleMapStringToMap",
         {
-          myMap: myMap,
+          "myMap": myMap
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3084,24 +3084,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Record<string, Record<string, string>>
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleMapStringToString(
-    myMap: Record<string, string>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myMap: Record<string, string>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<Record<string, string>> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleMapStringToString',
+        "TestFnNamedArgsSingleMapStringToString",
         {
-          myMap: myMap,
+          "myMap": myMap
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3109,24 +3109,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as Record<string, string>
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleString(
-    myString: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myString: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleString',
+        "TestFnNamedArgsSingleString",
         {
-          myString: myString,
+          "myString": myString
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3134,24 +3134,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleStringArray(
-    myStringArray: string[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myStringArray: string[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleStringArray',
+        "TestFnNamedArgsSingleStringArray",
         {
-          myStringArray: myStringArray,
+          "myStringArray": myStringArray
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3159,24 +3159,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestFnNamedArgsSingleStringList(
-    myArg: string[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myArg: string[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestFnNamedArgsSingleStringList',
+        "TestFnNamedArgsSingleStringList",
         {
-          myArg: myArg,
+          "myArg": myArg
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3184,24 +3184,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestGemini(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestGemini',
+        "TestGemini",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3209,47 +3209,49 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async TestGeminiOpenAiGeneric(__baml_options__?: {
-    tb?: TypeBuilder
-    clientRegistry?: ClientRegistry
-  }): Promise<string> {
+  
+  async TestGeminiOpenAiGeneric(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestGeminiOpenAiGeneric',
-        {},
+        "TestGeminiOpenAiGeneric",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestGeminiSystem(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestGeminiSystem',
+        "TestGeminiSystem",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3257,24 +3259,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestGeminiSystemAsChat(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestGeminiSystemAsChat',
+        "TestGeminiSystemAsChat",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3282,24 +3284,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestImageInput(
-    img: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      img: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestImageInput',
+        "TestImageInput",
         {
-          img: img,
+          "img": img
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3307,24 +3309,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestImageInputAnthropic(
-    img: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      img: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestImageInputAnthropic',
+        "TestImageInputAnthropic",
         {
-          img: img,
+          "img": img
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3332,24 +3334,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestImageListInput(
-    imgs: Image[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      imgs: Image[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestImageListInput',
+        "TestImageListInput",
         {
-          imgs: imgs,
+          "imgs": imgs
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3357,24 +3359,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestMemory(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<TestMemoryOutput> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestMemory',
+        "TestMemory",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3382,26 +3384,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as TestMemoryOutput
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestMulticlassNamedArgs(
-    myArg: NamedArgsSingleClass,
-    myArg2: NamedArgsSingleClass,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myArg: NamedArgsSingleClass,myArg2: NamedArgsSingleClass,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestMulticlassNamedArgs',
+        "TestMulticlassNamedArgs",
         {
-          myArg: myArg,
-          myArg2: myArg2,
+          "myArg": myArg,"myArg2": myArg2
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3409,24 +3409,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestNamedArgsLiteralBool(
-    myBool: true,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myBool: true,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestNamedArgsLiteralBool',
+        "TestNamedArgsLiteralBool",
         {
-          myBool: myBool,
+          "myBool": myBool
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3434,24 +3434,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestNamedArgsLiteralInt(
-    myInt: 1,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myInt: 1,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestNamedArgsLiteralInt',
+        "TestNamedArgsLiteralInt",
         {
-          myInt: myInt,
+          "myInt": myInt
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3459,24 +3459,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestNamedArgsLiteralString(
-    myString: 'My String',
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myString: "My String",
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestNamedArgsLiteralString',
+        "TestNamedArgsLiteralString",
         {
-          myString: myString,
+          "myString": myString
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3484,24 +3484,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestOllama(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestOllama',
+        "TestOllama",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3509,24 +3509,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestOpenAI(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestOpenAI',
+        "TestOpenAI",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3534,24 +3534,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestOpenAILegacyProvider(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestOpenAILegacyProvider',
+        "TestOpenAILegacyProvider",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3559,24 +3559,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestOpenAIO1NoMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestOpenAIO1NoMaxTokens',
+        "TestOpenAIO1NoMaxTokens",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3584,24 +3584,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestOpenAIO1WithMaxCompletionTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestOpenAIO1WithMaxCompletionTokens',
+        "TestOpenAIO1WithMaxCompletionTokens",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3609,24 +3609,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestOpenAIO1WithMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestOpenAIO1WithMaxTokens',
+        "TestOpenAIO1WithMaxTokens",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3634,24 +3634,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestOpenAIShorthand(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestOpenAIShorthand',
+        "TestOpenAIShorthand",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3659,24 +3659,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestOpenAIWithMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestOpenAIWithMaxTokens',
+        "TestOpenAIWithMaxTokens",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3684,24 +3684,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestOpenAIWithNullMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestOpenAIWithNullMaxTokens',
+        "TestOpenAIWithNullMaxTokens",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3709,90 +3709,99 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async TestRetryConstant(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): Promise<string> {
+  
+  async TestRetryConstant(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestRetryConstant',
-        {},
+        "TestRetryConstant",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async TestRetryExponential(__baml_options__?: {
-    tb?: TypeBuilder
-    clientRegistry?: ClientRegistry
-  }): Promise<string> {
+  
+  async TestRetryExponential(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestRetryExponential',
-        {},
+        "TestRetryExponential",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async TestSingleFallbackClient(__baml_options__?: {
-    tb?: TypeBuilder
-    clientRegistry?: ClientRegistry
-  }): Promise<string> {
+  
+  async TestSingleFallbackClient(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestSingleFallbackClient',
-        {},
+        "TestSingleFallbackClient",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestUniverseQuestion(
-    question: UniverseQuestionInput,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      question: UniverseQuestionInput,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<UniverseQuestion> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestUniverseQuestion',
+        "TestUniverseQuestion",
         {
-          question: question,
+          "question": question
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3800,24 +3809,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as UniverseQuestion
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async TestVertex(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestVertex',
+        "TestVertex",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3825,47 +3834,49 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
-  async TestVertexWithSystemInstructions(__baml_options__?: {
-    tb?: TypeBuilder
-    clientRegistry?: ClientRegistry
-  }): Promise<string> {
+  
+  async TestVertexWithSystemInstructions(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): Promise<string> {
     try {
       const raw = await this.runtime.callFunction(
-        'TestVertexWithSystemInstructions',
-        {},
+        "TestVertexWithSystemInstructions",
+        {
+          
+        },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
       return raw.parsed(false) as string
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async UnionTest_Function(
-    input: string | boolean,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string | boolean,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<UnionTest_ReturnType> {
     try {
       const raw = await this.runtime.callFunction(
-        'UnionTest_Function',
+        "UnionTest_Function",
         {
-          input: input,
+          "input": input
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3873,24 +3884,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as UnionTest_ReturnType
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async UseBlockConstraint(
-    inp: BlockConstraintForParam,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      inp: BlockConstraintForParam,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<number> {
     try {
       const raw = await this.runtime.callFunction(
-        'UseBlockConstraint',
+        "UseBlockConstraint",
         {
-          inp: inp,
+          "inp": inp
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3898,24 +3909,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as number
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async UseMalformedConstraints(
-    a: MalformedConstraints2,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      a: MalformedConstraints2,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<number> {
     try {
       const raw = await this.runtime.callFunction(
-        'UseMalformedConstraints',
+        "UseMalformedConstraints",
         {
-          a: a,
+          "a": a
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3923,24 +3934,24 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as number
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
-
+  
   async UseNestedBlockConstraint(
-    inp: NestedBlockConstraintForParam,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      inp: NestedBlockConstraintForParam,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Promise<number> {
     try {
       const raw = await this.runtime.callFunction(
-        'UseNestedBlockConstraint',
+        "UseNestedBlockConstraint",
         {
-          inp: inp,
+          "inp": inp
         },
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -3948,31 +3959,30 @@ export class BamlAsyncClient {
       )
       return raw.parsed(false) as number
     } catch (error: any) {
-      const bamlError = createBamlValidationError(error)
+      const bamlError = createBamlValidationError(error);
       if (bamlError instanceof BamlValidationError) {
-        throw bamlError
+        throw bamlError;
       }
 
-      throw error
+      throw error;
     }
   }
+  
 }
 
 class BamlStreamClient {
-  constructor(
-    private runtime: BamlRuntime,
-    private ctx_manager: BamlCtxManager,
-  ) {}
+  constructor(private runtime: BamlRuntime, private ctx_manager: BamlCtxManager) {}
 
+  
   AaaSamOutputFormat(
-    recipe: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      recipe: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.Recipe, Recipe> {
     try {
       const raw = this.runtime.streamFunction(
-        'AaaSamOutputFormat',
+        "AaaSamOutputFormat",
         {
-          recipe: recipe,
+          "recipe": recipe
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -3988,24 +3998,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   AliasThatPointsToRecursiveType(
-    list: LinkedListAliasNode,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      list: LinkedListAliasNode,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.LinkedListAliasNode, LinkedListAliasNode> {
     try {
       const raw = this.runtime.streamFunction(
-        'AliasThatPointsToRecursiveType',
+        "AliasThatPointsToRecursiveType",
         {
-          list: list,
+          "list": list
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4021,57 +4031,57 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   AliasWithMultipleAttrs(
-    money: Checked<number, 'gt_ten'>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<Checked<number, 'gt_ten'>, Checked<number, 'gt_ten'>> {
+      money: Checked<number,"gt_ten">,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<Checked<number,"gt_ten">, Checked<number,"gt_ten">> {
     try {
       const raw = this.runtime.streamFunction(
-        'AliasWithMultipleAttrs',
+        "AliasWithMultipleAttrs",
         {
-          money: money,
+          "money": money
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<Checked<number, 'gt_ten'>, Checked<number, 'gt_ten'>>(
+      return new BamlStream<Checked<number,"gt_ten">, Checked<number,"gt_ten">>(
         raw,
-        (a): a is Checked<number, 'gt_ten'> => a,
-        (a): a is Checked<number, 'gt_ten'> => a,
+        (a): a is Checked<number,"gt_ten"> => a,
+        (a): a is Checked<number,"gt_ten"> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   AliasedInputClass(
-    input: InputClass,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: InputClass,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'AliasedInputClass',
+        "AliasedInputClass",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4087,24 +4097,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   AliasedInputClass2(
-    input: InputClass,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: InputClass,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'AliasedInputClass2',
+        "AliasedInputClass2",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4120,24 +4130,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   AliasedInputClassNested(
-    input: InputClassNested,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: InputClassNested,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'AliasedInputClassNested',
+        "AliasedInputClassNested",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4153,24 +4163,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   AliasedInputEnum(
-    input: AliasedEnum,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: AliasedEnum,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'AliasedInputEnum',
+        "AliasedInputEnum",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4186,24 +4196,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   AliasedInputList(
-    input: AliasedEnum[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: AliasedEnum[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'AliasedInputList',
+        "AliasedInputList",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4219,24 +4229,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   AllowedOptionals(
-    optionals: OptionalListAndMap,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      optionals: OptionalListAndMap,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.OptionalListAndMap, OptionalListAndMap> {
     try {
       const raw = this.runtime.streamFunction(
-        'AllowedOptionals',
+        "AllowedOptionals",
         {
-          optionals: optionals,
+          "optionals": optionals
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4252,24 +4262,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   AssertFn(
-    a: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      a: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<number, number> {
     try {
       const raw = this.runtime.streamFunction(
-        'AssertFn',
+        "AssertFn",
         {
-          a: a,
+          "a": a
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4285,24 +4295,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   AudioInput(
-    aud: Audio,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      aud: Audio,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'AudioInput',
+        "AudioInput",
         {
-          aud: aud,
+          "aud": aud
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4318,24 +4328,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   BuildLinkedList(
-    input: number[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: number[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.LinkedList, LinkedList> {
     try {
       const raw = this.runtime.streamFunction(
-        'BuildLinkedList',
+        "BuildLinkedList",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4351,24 +4361,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   BuildTree(
-    input: BinaryNode,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: BinaryNode,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.Tree, Tree> {
     try {
       const raw = this.runtime.streamFunction(
-        'BuildTree',
+        "BuildTree",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4384,24 +4394,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ClassThatPointsToRecursiveClassThroughAlias(
-    cls: ClassToRecAlias,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      cls: ClassToRecAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.ClassToRecAlias, ClassToRecAlias> {
     try {
       const raw = this.runtime.streamFunction(
-        'ClassThatPointsToRecursiveClassThroughAlias',
+        "ClassThatPointsToRecursiveClassThroughAlias",
         {
-          cls: cls,
+          "cls": cls
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4417,57 +4427,57 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ClassifyDynEnumTwo(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<string | DynEnumTwo, string | DynEnumTwo> {
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<(string | DynEnumTwo), (string | DynEnumTwo)> {
     try {
       const raw = this.runtime.streamFunction(
-        'ClassifyDynEnumTwo',
+        "ClassifyDynEnumTwo",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<string | DynEnumTwo, string | DynEnumTwo>(
+      return new BamlStream<(string | DynEnumTwo), (string | DynEnumTwo)>(
         raw,
-        (a): a is string | DynEnumTwo => a,
-        (a): a is string | DynEnumTwo => a,
+        (a): a is (string | DynEnumTwo) => a,
+        (a): a is (string | DynEnumTwo) => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ClassifyMessage(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<types.Category, Category> {
     try {
       const raw = this.runtime.streamFunction(
-        'ClassifyMessage',
+        "ClassifyMessage",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4483,24 +4493,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ClassifyMessage2(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<types.Category, Category> {
     try {
       const raw = this.runtime.streamFunction(
-        'ClassifyMessage2',
+        "ClassifyMessage2",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4516,24 +4526,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ClassifyMessage3(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<types.Category, Category> {
     try {
       const raw = this.runtime.streamFunction(
-        'ClassifyMessage3',
+        "ClassifyMessage3",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4549,28 +4559,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   Completion(
-    prefix: string,
-    suffix: string,
-    language: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      prefix: string,suffix: string,language: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'Completion',
+        "Completion",
         {
-          prefix: prefix,
-          suffix: suffix,
-          language: language,
+          "prefix": prefix,"suffix": suffix,"language": language
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4586,72 +4592,57 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   CustomTask(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<
-    | (partial_types.BookOrder | null)
-    | (partial_types.FlightConfirmation | null)
-    | (partial_types.GroceryReceipt | null),
-    BookOrder | FlightConfirmation | GroceryReceipt
-  > {
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<((partial_types.BookOrder | null) | (partial_types.FlightConfirmation | null) | (partial_types.GroceryReceipt | null)), BookOrder | FlightConfirmation | GroceryReceipt> {
     try {
       const raw = this.runtime.streamFunction(
-        'CustomTask',
+        "CustomTask",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<
-        | (partial_types.BookOrder | null)
-        | (partial_types.FlightConfirmation | null)
-        | (partial_types.GroceryReceipt | null),
-        BookOrder | FlightConfirmation | GroceryReceipt
-      >(
+      return new BamlStream<((partial_types.BookOrder | null) | (partial_types.FlightConfirmation | null) | (partial_types.GroceryReceipt | null)), BookOrder | FlightConfirmation | GroceryReceipt>(
         raw,
-        (
-          a,
-        ): a is
-          | (partial_types.BookOrder | null)
-          | (partial_types.FlightConfirmation | null)
-          | (partial_types.GroceryReceipt | null) => a,
+        (a): a is ((partial_types.BookOrder | null) | (partial_types.FlightConfirmation | null) | (partial_types.GroceryReceipt | null)) => a,
         (a): a is BookOrder | FlightConfirmation | GroceryReceipt => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   DescribeImage(
-    img: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      img: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'DescribeImage',
+        "DescribeImage",
         {
-          img: img,
+          "img": img
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4667,26 +4658,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   DescribeImage2(
-    classWithImage: ClassWithImage,
-    img2: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      classWithImage: ClassWithImage,img2: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'DescribeImage2',
+        "DescribeImage2",
         {
-          classWithImage: classWithImage,
-          img2: img2,
+          "classWithImage": classWithImage,"img2": img2
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4702,26 +4691,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   DescribeImage3(
-    classWithImage: ClassWithImage,
-    img2: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      classWithImage: ClassWithImage,img2: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'DescribeImage3',
+        "DescribeImage3",
         {
-          classWithImage: classWithImage,
-          img2: img2,
+          "classWithImage": classWithImage,"img2": img2
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4737,26 +4724,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   DescribeImage4(
-    classWithImage: ClassWithImage,
-    img2: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      classWithImage: ClassWithImage,img2: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'DescribeImage4',
+        "DescribeImage4",
         {
-          classWithImage: classWithImage,
-          img2: img2,
+          "classWithImage": classWithImage,"img2": img2
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4772,55 +4757,57 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  DifferentiateUnions(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): BamlStream<
-    (partial_types.OriginalA | null) | (partial_types.OriginalB | null),
-    OriginalA | OriginalB
-  > {
+  
+  DifferentiateUnions(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<((partial_types.OriginalA | null) | (partial_types.OriginalB | null)), OriginalA | OriginalB> {
     try {
       const raw = this.runtime.streamFunction(
-        'DifferentiateUnions',
-        {},
+        "DifferentiateUnions",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<(partial_types.OriginalA | null) | (partial_types.OriginalB | null), OriginalA | OriginalB>(
+      return new BamlStream<((partial_types.OriginalA | null) | (partial_types.OriginalB | null)), OriginalA | OriginalB>(
         raw,
-        (a): a is (partial_types.OriginalA | null) | (partial_types.OriginalB | null) => a,
+        (a): a is ((partial_types.OriginalA | null) | (partial_types.OriginalB | null)) => a,
         (a): a is OriginalA | OriginalB => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   DummyOutputFunction(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.DummyOutput, DummyOutput> {
     try {
       const raw = this.runtime.streamFunction(
-        'DummyOutputFunction',
+        "DummyOutputFunction",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4836,24 +4823,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   DynamicFunc(
-    input: DynamicClassOne,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: DynamicClassOne,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.DynamicClassTwo, DynamicClassTwo> {
     try {
       const raw = this.runtime.streamFunction(
-        'DynamicFunc',
+        "DynamicFunc",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4869,24 +4856,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   DynamicInputOutput(
-    input: DynInputOutput,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: DynInputOutput,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.DynInputOutput, DynInputOutput> {
     try {
       const raw = this.runtime.streamFunction(
-        'DynamicInputOutput',
+        "DynamicInputOutput",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4902,24 +4889,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   DynamicListInputOutput(
-    input: DynInputOutput[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: DynInputOutput[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<(partial_types.DynInputOutput | null)[], DynInputOutput[]> {
     try {
       const raw = this.runtime.streamFunction(
-        'DynamicListInputOutput',
+        "DynamicListInputOutput",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4935,20 +4922,25 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  ExpectFailure(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): BamlStream<string, string> {
+  
+  ExpectFailure(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'ExpectFailure',
-        {},
+        "ExpectFailure",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -4963,24 +4955,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ExtractContactInfo(
-    document: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      document: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.ContactInfo, ContactInfo> {
     try {
       const raw = this.runtime.streamFunction(
-        'ExtractContactInfo',
+        "ExtractContactInfo",
         {
-          document: document,
+          "document": document
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -4996,24 +4988,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ExtractHobby(
-    text: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      text: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<(string | Hobby | null)[], (string | Hobby)[]> {
     try {
       const raw = this.runtime.streamFunction(
-        'ExtractHobby',
+        "ExtractHobby",
         {
-          text: text,
+          "text": text
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5029,24 +5021,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ExtractNames(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<(string | null)[], string[]> {
     try {
       const raw = this.runtime.streamFunction(
-        'ExtractNames',
+        "ExtractNames",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5062,24 +5054,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ExtractPeople(
-    text: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      text: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<(partial_types.Person | null)[], Person[]> {
     try {
       const raw = this.runtime.streamFunction(
-        'ExtractPeople',
+        "ExtractPeople",
         {
-          text: text,
+          "text": text
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5095,26 +5087,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ExtractReceiptInfo(
-    email: string,
-    reason: 'curiosity' | 'personal_finance',
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      email: string,reason: "curiosity" | "personal_finance",
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.ReceiptInfo, ReceiptInfo> {
     try {
       const raw = this.runtime.streamFunction(
-        'ExtractReceiptInfo',
+        "ExtractReceiptInfo",
         {
-          email: email,
-          reason: reason,
+          "email": email,"reason": reason
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5130,26 +5120,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ExtractResume(
-    resume: string,
-    img?: Image | null,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      resume: string,img?: Image | null,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.Resume, Resume> {
     try {
       const raw = this.runtime.streamFunction(
-        'ExtractResume',
+        "ExtractResume",
         {
-          resume: resume,
-          img: img ?? null,
+          "resume": resume,"img": img ?? null
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5165,24 +5153,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ExtractResume2(
-    resume: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      resume: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.Resume, Resume> {
     try {
       const raw = this.runtime.streamFunction(
-        'ExtractResume2',
+        "ExtractResume2",
         {
-          resume: resume,
+          "resume": resume
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5198,90 +5186,90 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnClassOptionalOutput(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<(partial_types.ClassOptionalOutput | null) | null, ClassOptionalOutput | null> {
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<((partial_types.ClassOptionalOutput | null) | null), ClassOptionalOutput | null> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnClassOptionalOutput',
+        "FnClassOptionalOutput",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<(partial_types.ClassOptionalOutput | null) | null, ClassOptionalOutput | null>(
+      return new BamlStream<((partial_types.ClassOptionalOutput | null) | null), ClassOptionalOutput | null>(
         raw,
-        (a): a is (partial_types.ClassOptionalOutput | null) | null => a,
+        (a): a is ((partial_types.ClassOptionalOutput | null) | null) => a,
         (a): a is ClassOptionalOutput | null => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnClassOptionalOutput2(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<(partial_types.ClassOptionalOutput2 | null) | null, ClassOptionalOutput2 | null> {
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<((partial_types.ClassOptionalOutput2 | null) | null), ClassOptionalOutput2 | null> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnClassOptionalOutput2',
+        "FnClassOptionalOutput2",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<(partial_types.ClassOptionalOutput2 | null) | null, ClassOptionalOutput2 | null>(
+      return new BamlStream<((partial_types.ClassOptionalOutput2 | null) | null), ClassOptionalOutput2 | null>(
         raw,
-        (a): a is (partial_types.ClassOptionalOutput2 | null) | null => a,
+        (a): a is ((partial_types.ClassOptionalOutput2 | null) | null) => a,
         (a): a is ClassOptionalOutput2 | null => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnEnumListOutput(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<(EnumOutput | null)[], EnumOutput[]> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnEnumListOutput',
+        "FnEnumListOutput",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5297,24 +5285,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnEnumOutput(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<types.EnumOutput, EnumOutput> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnEnumOutput',
+        "FnEnumOutput",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5330,24 +5318,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnLiteralClassInputOutput(
-    input: LiteralClassHello,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: LiteralClassHello,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.LiteralClassHello, LiteralClassHello> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnLiteralClassInputOutput',
+        "FnLiteralClassInputOutput",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5363,63 +5351,57 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnLiteralUnionClassInputOutput(
-    input: LiteralClassOne | LiteralClassTwo,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<
-    (partial_types.LiteralClassOne | null) | (partial_types.LiteralClassTwo | null),
-    LiteralClassOne | LiteralClassTwo
-  > {
+      input: LiteralClassOne | LiteralClassTwo,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<((partial_types.LiteralClassOne | null) | (partial_types.LiteralClassTwo | null)), LiteralClassOne | LiteralClassTwo> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnLiteralUnionClassInputOutput',
+        "FnLiteralUnionClassInputOutput",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<
-        (partial_types.LiteralClassOne | null) | (partial_types.LiteralClassTwo | null),
-        LiteralClassOne | LiteralClassTwo
-      >(
+      return new BamlStream<((partial_types.LiteralClassOne | null) | (partial_types.LiteralClassTwo | null)), LiteralClassOne | LiteralClassTwo>(
         raw,
-        (a): a is (partial_types.LiteralClassOne | null) | (partial_types.LiteralClassTwo | null) => a,
+        (a): a is ((partial_types.LiteralClassOne | null) | (partial_types.LiteralClassTwo | null)) => a,
         (a): a is LiteralClassOne | LiteralClassTwo => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnNamedArgsSingleStringOptional(
-    myString?: string | null,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myString?: string | null,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnNamedArgsSingleStringOptional',
+        "FnNamedArgsSingleStringOptional",
         {
-          myString: myString ?? null,
+          "myString": myString ?? null
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5435,24 +5417,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnOutputBool(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<boolean, boolean> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnOutputBool',
+        "FnOutputBool",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5468,24 +5450,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnOutputClass(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.TestOutputClass, TestOutputClass> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnOutputClass',
+        "FnOutputClass",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5501,24 +5483,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnOutputClassList(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<(partial_types.TestOutputClass | null)[], TestOutputClass[]> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnOutputClassList',
+        "FnOutputClassList",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5534,24 +5516,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnOutputClassNested(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.TestClassNested, TestClassNested> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnOutputClassNested',
+        "FnOutputClassNested",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5567,24 +5549,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnOutputClassWithEnum(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.TestClassWithEnum, TestClassWithEnum> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnOutputClassWithEnum',
+        "FnOutputClassWithEnum",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5600,24 +5582,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnOutputInt(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<number, number> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnOutputInt',
+        "FnOutputInt",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5633,24 +5615,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnOutputLiteralBool(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<false, false> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnOutputLiteralBool',
+        "FnOutputLiteralBool",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5666,24 +5648,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnOutputLiteralInt(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<5, 5> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnOutputLiteralInt',
+        "FnOutputLiteralInt",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5699,57 +5681,57 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnOutputLiteralString(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<'example output', 'example output'> {
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<"example output", "example output"> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnOutputLiteralString',
+        "FnOutputLiteralString",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<'example output', 'example output'>(
+      return new BamlStream<"example output", "example output">(
         raw,
-        (a): a is 'example output' => a,
-        (a): a is 'example output' => a,
+        (a): a is "example output" => a,
+        (a): a is "example output" => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnOutputStringList(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<(string | null)[], string[]> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnOutputStringList',
+        "FnOutputStringList",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5765,24 +5747,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnTestAliasedEnumOutput(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<types.TestEnum, TestEnum> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnTestAliasedEnumOutput',
+        "FnTestAliasedEnumOutput",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5798,24 +5780,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnTestClassAlias(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.TestClassAlias, TestClassAlias> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnTestClassAlias',
+        "FnTestClassAlias",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5831,24 +5813,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   FnTestNamedArgsSingleEnum(
-    myArg: NamedArgsSingleEnum,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myArg: NamedArgsSingleEnum,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'FnTestNamedArgsSingleEnum',
+        "FnTestNamedArgsSingleEnum",
         {
-          myArg: myArg,
+          "myArg": myArg
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5864,24 +5846,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   GetDataType(
-    text: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      text: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.RaysData, RaysData> {
     try {
       const raw = this.runtime.streamFunction(
-        'GetDataType',
+        "GetDataType",
         {
-          text: text,
+          "text": text
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5897,24 +5879,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   GetOrderInfo(
-    email: Email,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      email: Email,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.OrderInfo, OrderInfo> {
     try {
       const raw = this.runtime.streamFunction(
-        'GetOrderInfo',
+        "GetOrderInfo",
         {
-          email: email,
+          "email": email
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5930,24 +5912,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   GetQuery(
-    query: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      query: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.SearchParams, SearchParams> {
     try {
       const raw = this.runtime.streamFunction(
-        'GetQuery',
+        "GetQuery",
         {
-          query: query,
+          "query": query
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -5963,133 +5945,123 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   InOutEnumMapKey(
-    i1: Partial<Record<types.MapKey, string>>,
-    i2: Partial<Record<types.MapKey, string>>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<Record<MapKey, string | null>, Partial<Record<types.MapKey, string>>> {
+      i1: Partial<Record<types.MapKey, string>>,i2: Partial<Record<types.MapKey, string>>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<(Record<MapKey, (string | null)> ), Partial<Record<types.MapKey, string>>> {
     try {
       const raw = this.runtime.streamFunction(
-        'InOutEnumMapKey',
+        "InOutEnumMapKey",
         {
-          i1: i1,
-          i2: i2,
+          "i1": i1,"i2": i2
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<Record<MapKey, string | null>, Partial<Record<types.MapKey, string>>>(
+      return new BamlStream<(Record<MapKey, (string | null)> ), Partial<Record<types.MapKey, string>>>(
         raw,
-        (a): a is Record<MapKey, string | null> => a,
+        (a): a is (Record<MapKey, (string | null)> ) => a,
         (a): a is Partial<Record<types.MapKey, string>> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   InOutLiteralStringUnionMapKey(
-    i1: Partial<Record<'one' | 'two' | 'three' | 'four', string>>,
-    i2: Partial<Record<'one' | 'two' | 'three' | 'four', string>>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<
-    Record<'one' | 'two' | 'three' | 'four', string | null>,
-    Partial<Record<'one' | 'two' | 'three' | 'four', string>>
-  > {
+      i1: Partial<Record<"one" | "two" | "three" | "four", string>>,i2: Partial<Record<"one" | "two" | "three" | "four", string>>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<(Record<"one" | "two" | "three" | "four", (string | null)> ), Partial<Record<"one" | "two" | "three" | "four", string>>> {
     try {
       const raw = this.runtime.streamFunction(
-        'InOutLiteralStringUnionMapKey',
+        "InOutLiteralStringUnionMapKey",
         {
-          i1: i1,
-          i2: i2,
+          "i1": i1,"i2": i2
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<
-        Record<'one' | 'two' | 'three' | 'four', string | null>,
-        Partial<Record<'one' | 'two' | 'three' | 'four', string>>
-      >(
+      return new BamlStream<(Record<"one" | "two" | "three" | "four", (string | null)> ), Partial<Record<"one" | "two" | "three" | "four", string>>>(
         raw,
-        (a): a is Record<'one' | 'two' | 'three' | 'four', string | null> => a,
-        (a): a is Partial<Record<'one' | 'two' | 'three' | 'four', string>> => a,
+        (a): a is (Record<"one" | "two" | "three" | "four", (string | null)> ) => a,
+        (a): a is Partial<Record<"one" | "two" | "three" | "four", string>> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   InOutSingleLiteralStringMapKey(
-    m: Partial<Record<'key', string>>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<Record<'key', string | null>, Partial<Record<'key', string>>> {
+      m: Partial<Record<"key", string>>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<(Record<"key", (string | null)> ), Partial<Record<"key", string>>> {
     try {
       const raw = this.runtime.streamFunction(
-        'InOutSingleLiteralStringMapKey',
+        "InOutSingleLiteralStringMapKey",
         {
-          m: m,
+          "m": m
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<Record<'key', string | null>, Partial<Record<'key', string>>>(
+      return new BamlStream<(Record<"key", (string | null)> ), Partial<Record<"key", string>>>(
         raw,
-        (a): a is Record<'key', string | null> => a,
-        (a): a is Partial<Record<'key', string>> => a,
+        (a): a is (Record<"key", (string | null)> ) => a,
+        (a): a is Partial<Record<"key", string>> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   JsonTypeAliasCycle(
-    input: JsonValue,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: JsonValue,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<JsonValue, JsonValue> {
     try {
       const raw = this.runtime.streamFunction(
-        'JsonTypeAliasCycle',
+        "JsonTypeAliasCycle",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6105,90 +6077,91 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   LiteralUnionsTest(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<1 | true | 'string output', 1 | true | 'string output'> {
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<(1 | true | "string output"), 1 | true | "string output"> {
     try {
       const raw = this.runtime.streamFunction(
-        'LiteralUnionsTest',
+        "LiteralUnionsTest",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<1 | true | 'string output', 1 | true | 'string output'>(
+      return new BamlStream<(1 | true | "string output"), 1 | true | "string output">(
         raw,
-        (a): a is 1 | true | 'string output' => a,
-        (a): a is 1 | true | 'string output' => a,
+        (a): a is (1 | true | "string output") => a,
+        (a): a is 1 | true | "string output" => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  MakeBlockConstraint(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): BamlStream<
-    Checked<partial_types.BlockConstraint, 'cross_field'>,
-    Checked<BlockConstraint, 'cross_field'>
-  > {
+  
+  MakeBlockConstraint(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<Checked<partial_types.BlockConstraint,"cross_field">, Checked<BlockConstraint,"cross_field">> {
     try {
       const raw = this.runtime.streamFunction(
-        'MakeBlockConstraint',
-        {},
+        "MakeBlockConstraint",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<
-        Checked<partial_types.BlockConstraint, 'cross_field'>,
-        Checked<BlockConstraint, 'cross_field'>
-      >(
+      return new BamlStream<Checked<partial_types.BlockConstraint,"cross_field">, Checked<BlockConstraint,"cross_field">>(
         raw,
-        (a): a is Checked<partial_types.BlockConstraint, 'cross_field'> => a,
-        (a): a is Checked<BlockConstraint, 'cross_field'> => a,
+        (a): a is Checked<partial_types.BlockConstraint,"cross_field"> => a,
+        (a): a is Checked<BlockConstraint,"cross_field"> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  MakeNestedBlockConstraint(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): BamlStream<
-    partial_types.NestedBlockConstraint,
-    NestedBlockConstraint
-  > {
+  
+  MakeNestedBlockConstraint(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<partial_types.NestedBlockConstraint, NestedBlockConstraint> {
     try {
       const raw = this.runtime.streamFunction(
-        'MakeNestedBlockConstraint',
-        {},
+        "MakeNestedBlockConstraint",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -6203,23 +6176,25 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  MakeSemanticContainer(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): BamlStream<
-    partial_types.SemanticContainer,
-    SemanticContainer
-  > {
+  
+  MakeSemanticContainer(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<partial_types.SemanticContainer, SemanticContainer> {
     try {
       const raw = this.runtime.streamFunction(
-        'MakeSemanticContainer',
-        {},
+        "MakeSemanticContainer",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -6234,57 +6209,57 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   MapAlias(
-    m: Record<string, string[]>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<Record<string, (string | null)[]>, Record<string, string[]>> {
+      m: Record<string, string[]>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<(Record<string, (string | null)[]> ), Record<string, string[]>> {
     try {
       const raw = this.runtime.streamFunction(
-        'MapAlias',
+        "MapAlias",
         {
-          m: m,
+          "m": m
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<Record<string, (string | null)[]>, Record<string, string[]>>(
+      return new BamlStream<(Record<string, (string | null)[]> ), Record<string, string[]>>(
         raw,
-        (a): a is Record<string, (string | null)[]> => a,
+        (a): a is (Record<string, (string | null)[]> ) => a,
         (a): a is Record<string, string[]> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   MergeAliasAttributes(
-    money: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      money: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.MergeAttrs, MergeAttrs> {
     try {
       const raw = this.runtime.streamFunction(
-        'MergeAliasAttributes',
+        "MergeAliasAttributes",
         {
-          money: money,
+          "money": money
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6300,24 +6275,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   MyFunc(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.DynamicOutput, DynamicOutput> {
     try {
       const raw = this.runtime.streamFunction(
-        'MyFunc',
+        "MyFunc",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6333,72 +6308,57 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   NestedAlias(
-    c: number | string | boolean | number | string[] | Record<string, string[]>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<
-    | ((number | null) | (string | null) | (boolean | null) | (number | null) | null)
-    | (string | null)[]
-    | (Record<string, (string | null)[]> | null),
-    number | string | boolean | number | string[] | Record<string, string[]>
-  > {
+      c: number | string | boolean | number | string[] | Record<string, string[]>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<(((number | null) | (string | null) | (boolean | null) | (number | null) | null) | (string | null)[] | (Record<string, (string | null)[]> | null)), number | string | boolean | number | string[] | Record<string, string[]>> {
     try {
       const raw = this.runtime.streamFunction(
-        'NestedAlias',
+        "NestedAlias",
         {
-          c: c,
+          "c": c
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<
-        | ((number | null) | (string | null) | (boolean | null) | (number | null) | null)
-        | (string | null)[]
-        | (Record<string, (string | null)[]> | null),
-        number | string | boolean | number | string[] | Record<string, string[]>
-      >(
+      return new BamlStream<(((number | null) | (string | null) | (boolean | null) | (number | null) | null) | (string | null)[] | (Record<string, (string | null)[]> | null)), number | string | boolean | number | string[] | Record<string, string[]>>(
         raw,
-        (
-          a,
-        ): a is
-          | ((number | null) | (string | null) | (boolean | null) | (number | null) | null)
-          | (string | null)[]
-          | (Record<string, (string | null)[]> | null) => a,
+        (a): a is (((number | null) | (string | null) | (boolean | null) | (number | null) | null) | (string | null)[] | (Record<string, (string | null)[]> | null)) => a,
         (a): a is number | string | boolean | number | string[] | Record<string, string[]> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   NullLiteralClassHello(
-    s: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      s: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.ClassForNullLiteral, ClassForNullLiteral> {
     try {
       const raw = this.runtime.streamFunction(
-        'NullLiteralClassHello',
+        "NullLiteralClassHello",
         {
-          s: s,
+          "s": s
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6414,34 +6374,31 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   OptionalTest_Function(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<((partial_types.OptionalTest_ReturnType | null) | null)[], (OptionalTest_ReturnType | null)[]> {
     try {
       const raw = this.runtime.streamFunction(
-        'OptionalTest_Function',
+        "OptionalTest_Function",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<
-        ((partial_types.OptionalTest_ReturnType | null) | null)[],
-        (OptionalTest_ReturnType | null)[]
-      >(
+      return new BamlStream<((partial_types.OptionalTest_ReturnType | null) | null)[], (OptionalTest_ReturnType | null)[]>(
         raw,
         (a): a is ((partial_types.OptionalTest_ReturnType | null) | null)[] => a,
         (a): a is (OptionalTest_ReturnType | null)[] => a,
@@ -6450,24 +6407,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   PredictAge(
-    name: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      name: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.FooAny, FooAny> {
     try {
       const raw = this.runtime.streamFunction(
-        'PredictAge',
+        "PredictAge",
         {
-          name: name,
+          "name": name
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6483,96 +6440,90 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   PredictAgeBare(
-    inp: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<Checked<number, 'too_big'>, Checked<number, 'too_big'>> {
+      inp: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<Checked<number,"too_big">, Checked<number,"too_big">> {
     try {
       const raw = this.runtime.streamFunction(
-        'PredictAgeBare',
+        "PredictAgeBare",
         {
-          inp: inp,
+          "inp": inp
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<Checked<number, 'too_big'>, Checked<number, 'too_big'>>(
+      return new BamlStream<Checked<number,"too_big">, Checked<number,"too_big">>(
         raw,
-        (a): a is Checked<number, 'too_big'> => a,
-        (a): a is Checked<number, 'too_big'> => a,
+        (a): a is Checked<number,"too_big"> => a,
+        (a): a is Checked<number,"too_big"> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   PrimitiveAlias(
-    p: number | string | boolean | number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<
-    (number | null) | (string | null) | (boolean | null) | (number | null),
-    number | string | boolean | number
-  > {
+      p: number | string | boolean | number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<((number | null) | (string | null) | (boolean | null) | (number | null)), number | string | boolean | number> {
     try {
       const raw = this.runtime.streamFunction(
-        'PrimitiveAlias',
+        "PrimitiveAlias",
         {
-          p: p,
+          "p": p
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<
-        (number | null) | (string | null) | (boolean | null) | (number | null),
-        number | string | boolean | number
-      >(
+      return new BamlStream<((number | null) | (string | null) | (boolean | null) | (number | null)), number | string | boolean | number>(
         raw,
-        (a): a is (number | null) | (string | null) | (boolean | null) | (number | null) => a,
+        (a): a is ((number | null) | (string | null) | (boolean | null) | (number | null)) => a,
         (a): a is number | string | boolean | number => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   PromptTestClaude(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'PromptTestClaude',
+        "PromptTestClaude",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6588,24 +6539,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   PromptTestClaudeChat(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'PromptTestClaudeChat',
+        "PromptTestClaudeChat",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6621,24 +6572,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   PromptTestClaudeChatNoSystem(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'PromptTestClaudeChatNoSystem',
+        "PromptTestClaudeChatNoSystem",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6654,24 +6605,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   PromptTestOpenAI(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'PromptTestOpenAI',
+        "PromptTestOpenAI",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6687,24 +6638,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   PromptTestOpenAIChat(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'PromptTestOpenAIChat',
+        "PromptTestOpenAIChat",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6720,24 +6671,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   PromptTestOpenAIChatNoSystem(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'PromptTestOpenAIChatNoSystem',
+        "PromptTestOpenAIChatNoSystem",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6753,24 +6704,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   PromptTestStreaming(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'PromptTestStreaming',
+        "PromptTestStreaming",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6786,24 +6737,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   RecursiveAliasCycle(
-    input: RecAliasOne,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: RecAliasOne,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<RecAliasOne, RecAliasOne> {
     try {
       const raw = this.runtime.streamFunction(
-        'RecursiveAliasCycle',
+        "RecursiveAliasCycle",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6819,24 +6770,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   RecursiveClassWithAliasIndirection(
-    cls: NodeWithAliasIndirection,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      cls: NodeWithAliasIndirection,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.NodeWithAliasIndirection, NodeWithAliasIndirection> {
     try {
       const raw = this.runtime.streamFunction(
-        'RecursiveClassWithAliasIndirection',
+        "RecursiveClassWithAliasIndirection",
         {
-          cls: cls,
+          "cls": cls
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6852,57 +6803,57 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ReturnAliasWithMergedAttributes(
-    money: Checked<number, 'gt_ten'>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<Checked<number, 'gt_ten'>, Checked<number, 'gt_ten'>> {
+      money: Checked<number,"gt_ten">,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<Checked<number,"gt_ten">, Checked<number,"gt_ten">> {
     try {
       const raw = this.runtime.streamFunction(
-        'ReturnAliasWithMergedAttributes',
+        "ReturnAliasWithMergedAttributes",
         {
-          money: money,
+          "money": money
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<Checked<number, 'gt_ten'>, Checked<number, 'gt_ten'>>(
+      return new BamlStream<Checked<number,"gt_ten">, Checked<number,"gt_ten">>(
         raw,
-        (a): a is Checked<number, 'gt_ten'> => a,
-        (a): a is Checked<number, 'gt_ten'> => a,
+        (a): a is Checked<number,"gt_ten"> => a,
+        (a): a is Checked<number,"gt_ten"> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ReturnFailingAssert(
-    inp: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      inp: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<number, number> {
     try {
       const raw = this.runtime.streamFunction(
-        'ReturnFailingAssert',
+        "ReturnFailingAssert",
         {
-          inp: inp,
+          "inp": inp
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6918,24 +6869,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ReturnJsonEntry(
-    s: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      s: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<JsonTemplate, JsonTemplate> {
     try {
       const raw = this.runtime.streamFunction(
-        'ReturnJsonEntry',
+        "ReturnJsonEntry",
         {
-          s: s,
+          "s": s
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6951,24 +6902,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   ReturnMalformedConstraints(
-    a: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      a: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.MalformedConstraints, MalformedConstraints> {
     try {
       const raw = this.runtime.streamFunction(
-        'ReturnMalformedConstraints',
+        "ReturnMalformedConstraints",
         {
-          a: a,
+          "a": a
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -6984,24 +6935,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   SchemaDescriptions(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.Schema, Schema> {
     try {
       const raw = this.runtime.streamFunction(
-        'SchemaDescriptions',
+        "SchemaDescriptions",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7017,24 +6968,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   SimpleRecursiveListAlias(
-    input: RecursiveListAlias,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: RecursiveListAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<RecursiveListAlias, RecursiveListAlias> {
     try {
       const raw = this.runtime.streamFunction(
-        'SimpleRecursiveListAlias',
+        "SimpleRecursiveListAlias",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7050,24 +7001,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   SimpleRecursiveMapAlias(
-    input: RecursiveMapAlias,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: RecursiveMapAlias,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<RecursiveMapAlias, RecursiveMapAlias> {
     try {
       const raw = this.runtime.streamFunction(
-        'SimpleRecursiveMapAlias',
+        "SimpleRecursiveMapAlias",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7083,24 +7034,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   StreamBigNumbers(
-    digits: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      digits: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.BigNumbers, BigNumbers> {
     try {
       const raw = this.runtime.streamFunction(
-        'StreamBigNumbers',
+        "StreamBigNumbers",
         {
-          digits: digits,
+          "digits": digits
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7116,26 +7067,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   StreamFailingAssertion(
-    theme: string,
-    length: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      theme: string,length: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.TwoStoriesOneTitle, TwoStoriesOneTitle> {
     try {
       const raw = this.runtime.streamFunction(
-        'StreamFailingAssertion',
+        "StreamFailingAssertion",
         {
-          theme: theme,
-          length: length,
+          "theme": theme,"length": length
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7151,24 +7100,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   StreamOneBigNumber(
-    digits: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      digits: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<number, number> {
     try {
       const raw = this.runtime.streamFunction(
-        'StreamOneBigNumber',
+        "StreamOneBigNumber",
         {
-          digits: digits,
+          "digits": digits
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7184,24 +7133,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   StreamUnionIntegers(
-    digits: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      digits: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<((number | null) | (string | null) | null)[], (number | string)[]> {
     try {
       const raw = this.runtime.streamFunction(
-        'StreamUnionIntegers',
+        "StreamUnionIntegers",
         {
-          digits: digits,
+          "digits": digits
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7217,26 +7166,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   StreamingCompoundNumbers(
-    digits: number,
-    yapping: boolean,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      digits: number,yapping: boolean,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.CompoundBigNumbers, CompoundBigNumbers> {
     try {
       const raw = this.runtime.streamFunction(
-        'StreamingCompoundNumbers',
+        "StreamingCompoundNumbers",
         {
-          digits: digits,
-          yapping: yapping,
+          "digits": digits,"yapping": yapping
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7252,24 +7199,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TakeRecAliasDep(
-    input: RecursiveAliasDependency,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: RecursiveAliasDependency,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.RecursiveAliasDependency, RecursiveAliasDependency> {
     try {
       const raw = this.runtime.streamFunction(
-        'TakeRecAliasDep',
+        "TakeRecAliasDep",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7285,24 +7232,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAnthropic(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAnthropic',
+        "TestAnthropic",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7318,24 +7265,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAnthropicShorthand(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAnthropicShorthand',
+        "TestAnthropicShorthand",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7351,24 +7298,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAws(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAws',
+        "TestAws",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7384,24 +7331,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAwsInvalidAccessKey(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAwsInvalidAccessKey',
+        "TestAwsInvalidAccessKey",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7417,24 +7364,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAwsInvalidProfile(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAwsInvalidProfile',
+        "TestAwsInvalidProfile",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7450,24 +7397,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAwsInvalidRegion(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAwsInvalidRegion',
+        "TestAwsInvalidRegion",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7483,24 +7430,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAwsInvalidSessionToken(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAwsInvalidSessionToken',
+        "TestAwsInvalidSessionToken",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7516,24 +7463,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAzure(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAzure',
+        "TestAzure",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7549,24 +7496,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAzureFailure(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAzureFailure',
+        "TestAzureFailure",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7582,24 +7529,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAzureO1NoMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAzureO1NoMaxTokens',
+        "TestAzureO1NoMaxTokens",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7615,24 +7562,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAzureO1WithMaxCompletionTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAzureO1WithMaxCompletionTokens',
+        "TestAzureO1WithMaxCompletionTokens",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7648,24 +7595,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAzureO1WithMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAzureO1WithMaxTokens',
+        "TestAzureO1WithMaxTokens",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7681,24 +7628,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestAzureWithMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestAzureWithMaxTokens',
+        "TestAzureWithMaxTokens",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7714,26 +7661,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestCaching(
-    input: string,
-    not_cached: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,not_cached: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestCaching',
+        "TestCaching",
         {
-          input: input,
-          not_cached: not_cached,
+          "input": input,"not_cached": not_cached
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7749,23 +7694,25 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  TestFallbackClient(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): BamlStream<
-    string,
-    string
-  > {
+  
+  TestFallbackClient(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFallbackClient',
-        {},
+        "TestFallbackClient",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -7780,24 +7727,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFallbackToShorthand(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFallbackToShorthand',
+        "TestFallbackToShorthand",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7813,24 +7760,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleBool(
-    myBool: boolean,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myBool: boolean,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleBool',
+        "TestFnNamedArgsSingleBool",
         {
-          myBool: myBool,
+          "myBool": myBool
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7846,24 +7793,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleClass(
-    myArg: NamedArgsSingleClass,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myArg: NamedArgsSingleClass,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleClass',
+        "TestFnNamedArgsSingleClass",
         {
-          myArg: myArg,
+          "myArg": myArg
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7879,24 +7826,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleEnumList(
-    myArg: NamedArgsSingleEnumList[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myArg: NamedArgsSingleEnumList[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleEnumList',
+        "TestFnNamedArgsSingleEnumList",
         {
-          myArg: myArg,
+          "myArg": myArg
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7912,24 +7859,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleFloat(
-    myFloat: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myFloat: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleFloat',
+        "TestFnNamedArgsSingleFloat",
         {
-          myFloat: myFloat,
+          "myFloat": myFloat
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7945,24 +7892,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleInt(
-    myInt: number,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myInt: number,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleInt',
+        "TestFnNamedArgsSingleInt",
         {
-          myInt: myInt,
+          "myInt": myInt
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -7978,129 +7925,123 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleMapStringToClass(
-    myMap: Record<string, StringToClassEntry>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<Record<string, partial_types.StringToClassEntry | null>, Record<string, StringToClassEntry>> {
+      myMap: Record<string, StringToClassEntry>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<(Record<string, (partial_types.StringToClassEntry | null)> ), Record<string, StringToClassEntry>> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleMapStringToClass',
+        "TestFnNamedArgsSingleMapStringToClass",
         {
-          myMap: myMap,
+          "myMap": myMap
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<
-        Record<string, partial_types.StringToClassEntry | null>,
-        Record<string, StringToClassEntry>
-      >(
+      return new BamlStream<(Record<string, (partial_types.StringToClassEntry | null)> ), Record<string, StringToClassEntry>>(
         raw,
-        (a): a is Record<string, partial_types.StringToClassEntry | null> => a,
+        (a): a is (Record<string, (partial_types.StringToClassEntry | null)> ) => a,
         (a): a is Record<string, StringToClassEntry> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleMapStringToMap(
-    myMap: Record<string, Record<string, string>>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<Record<string, Record<string, string | null> | null>, Record<string, Record<string, string>>> {
+      myMap: Record<string, Record<string, string>>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<(Record<string, (Record<string, (string | null)> | null)> ), Record<string, Record<string, string>>> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleMapStringToMap',
+        "TestFnNamedArgsSingleMapStringToMap",
         {
-          myMap: myMap,
+          "myMap": myMap
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<
-        Record<string, Record<string, string | null> | null>,
-        Record<string, Record<string, string>>
-      >(
+      return new BamlStream<(Record<string, (Record<string, (string | null)> | null)> ), Record<string, Record<string, string>>>(
         raw,
-        (a): a is Record<string, Record<string, string | null> | null> => a,
+        (a): a is (Record<string, (Record<string, (string | null)> | null)> ) => a,
         (a): a is Record<string, Record<string, string>> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleMapStringToString(
-    myMap: Record<string, string>,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
-  ): BamlStream<Record<string, string | null>, Record<string, string>> {
+      myMap: Record<string, string>,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<(Record<string, (string | null)> ), Record<string, string>> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleMapStringToString',
+        "TestFnNamedArgsSingleMapStringToString",
         {
-          myMap: myMap,
+          "myMap": myMap
         },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       )
-      return new BamlStream<Record<string, string | null>, Record<string, string>>(
+      return new BamlStream<(Record<string, (string | null)> ), Record<string, string>>(
         raw,
-        (a): a is Record<string, string | null> => a,
+        (a): a is (Record<string, (string | null)> ) => a,
         (a): a is Record<string, string> => a,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleString(
-    myString: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myString: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleString',
+        "TestFnNamedArgsSingleString",
         {
-          myString: myString,
+          "myString": myString
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8116,24 +8057,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleStringArray(
-    myStringArray: string[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myStringArray: string[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleStringArray',
+        "TestFnNamedArgsSingleStringArray",
         {
-          myStringArray: myStringArray,
+          "myStringArray": myStringArray
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8149,24 +8090,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestFnNamedArgsSingleStringList(
-    myArg: string[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myArg: string[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestFnNamedArgsSingleStringList',
+        "TestFnNamedArgsSingleStringList",
         {
-          myArg: myArg,
+          "myArg": myArg
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8182,24 +8123,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestGemini(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestGemini',
+        "TestGemini",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8215,23 +8156,25 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  TestGeminiOpenAiGeneric(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): BamlStream<
-    string,
-    string
-  > {
+  
+  TestGeminiOpenAiGeneric(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestGeminiOpenAiGeneric',
-        {},
+        "TestGeminiOpenAiGeneric",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -8246,24 +8189,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestGeminiSystem(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestGeminiSystem',
+        "TestGeminiSystem",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8279,24 +8222,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestGeminiSystemAsChat(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestGeminiSystemAsChat',
+        "TestGeminiSystemAsChat",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8312,24 +8255,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestImageInput(
-    img: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      img: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestImageInput',
+        "TestImageInput",
         {
-          img: img,
+          "img": img
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8345,24 +8288,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestImageInputAnthropic(
-    img: Image,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      img: Image,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestImageInputAnthropic',
+        "TestImageInputAnthropic",
         {
-          img: img,
+          "img": img
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8378,24 +8321,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestImageListInput(
-    imgs: Image[],
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      imgs: Image[],
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestImageListInput',
+        "TestImageListInput",
         {
-          imgs: imgs,
+          "imgs": imgs
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8411,24 +8354,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestMemory(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.TestMemoryOutput, TestMemoryOutput> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestMemory',
+        "TestMemory",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8444,26 +8387,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestMulticlassNamedArgs(
-    myArg: NamedArgsSingleClass,
-    myArg2: NamedArgsSingleClass,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myArg: NamedArgsSingleClass,myArg2: NamedArgsSingleClass,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestMulticlassNamedArgs',
+        "TestMulticlassNamedArgs",
         {
-          myArg: myArg,
-          myArg2: myArg2,
+          "myArg": myArg,"myArg2": myArg2
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8479,24 +8420,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestNamedArgsLiteralBool(
-    myBool: true,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myBool: true,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestNamedArgsLiteralBool',
+        "TestNamedArgsLiteralBool",
         {
-          myBool: myBool,
+          "myBool": myBool
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8512,24 +8453,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestNamedArgsLiteralInt(
-    myInt: 1,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myInt: 1,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestNamedArgsLiteralInt',
+        "TestNamedArgsLiteralInt",
         {
-          myInt: myInt,
+          "myInt": myInt
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8545,24 +8486,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestNamedArgsLiteralString(
-    myString: 'My String',
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      myString: "My String",
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestNamedArgsLiteralString',
+        "TestNamedArgsLiteralString",
         {
-          myString: myString,
+          "myString": myString
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8578,24 +8519,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestOllama(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestOllama',
+        "TestOllama",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8611,24 +8552,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestOpenAI(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestOpenAI',
+        "TestOpenAI",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8644,24 +8585,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestOpenAILegacyProvider(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestOpenAILegacyProvider',
+        "TestOpenAILegacyProvider",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8677,24 +8618,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestOpenAIO1NoMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestOpenAIO1NoMaxTokens',
+        "TestOpenAIO1NoMaxTokens",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8710,24 +8651,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestOpenAIO1WithMaxCompletionTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestOpenAIO1WithMaxCompletionTokens',
+        "TestOpenAIO1WithMaxCompletionTokens",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8743,24 +8684,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestOpenAIO1WithMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestOpenAIO1WithMaxTokens',
+        "TestOpenAIO1WithMaxTokens",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8776,24 +8717,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestOpenAIShorthand(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestOpenAIShorthand',
+        "TestOpenAIShorthand",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8809,24 +8750,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestOpenAIWithMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestOpenAIWithMaxTokens',
+        "TestOpenAIWithMaxTokens",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8842,24 +8783,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestOpenAIWithNullMaxTokens(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestOpenAIWithNullMaxTokens',
+        "TestOpenAIWithNullMaxTokens",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -8875,23 +8816,25 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  TestRetryConstant(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): BamlStream<
-    string,
-    string
-  > {
+  
+  TestRetryConstant(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestRetryConstant',
-        {},
+        "TestRetryConstant",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -8906,23 +8849,25 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  TestRetryExponential(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): BamlStream<
-    string,
-    string
-  > {
+  
+  TestRetryExponential(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestRetryExponential',
-        {},
+        "TestRetryExponential",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -8937,23 +8882,25 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  TestSingleFallbackClient(__baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry }): BamlStream<
-    string,
-    string
-  > {
+  
+  TestSingleFallbackClient(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestSingleFallbackClient',
-        {},
+        "TestSingleFallbackClient",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -8968,24 +8915,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestUniverseQuestion(
-    question: UniverseQuestionInput,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      question: UniverseQuestionInput,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.UniverseQuestion, UniverseQuestion> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestUniverseQuestion',
+        "TestUniverseQuestion",
         {
-          question: question,
+          "question": question
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -9001,24 +8948,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   TestVertex(
-    input: string,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestVertex',
+        "TestVertex",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -9034,23 +8981,25 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
-  TestVertexWithSystemInstructions(__baml_options__?: {
-    tb?: TypeBuilder
-    clientRegistry?: ClientRegistry
-  }): BamlStream<string, string> {
+  
+  TestVertexWithSystemInstructions(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): BamlStream<string, string> {
     try {
       const raw = this.runtime.streamFunction(
-        'TestVertexWithSystemInstructions',
-        {},
+        "TestVertexWithSystemInstructions",
+        {
+          
+        },
         undefined,
         this.ctx_manager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -9065,24 +9014,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   UnionTest_Function(
-    input: string | boolean,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      input: string | boolean,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<partial_types.UnionTest_ReturnType, UnionTest_ReturnType> {
     try {
       const raw = this.runtime.streamFunction(
-        'UnionTest_Function',
+        "UnionTest_Function",
         {
-          input: input,
+          "input": input
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -9098,24 +9047,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   UseBlockConstraint(
-    inp: BlockConstraintForParam,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      inp: BlockConstraintForParam,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<number, number> {
     try {
       const raw = this.runtime.streamFunction(
-        'UseBlockConstraint',
+        "UseBlockConstraint",
         {
-          inp: inp,
+          "inp": inp
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -9131,24 +9080,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   UseMalformedConstraints(
-    a: MalformedConstraints2,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      a: MalformedConstraints2,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<number, number> {
     try {
       const raw = this.runtime.streamFunction(
-        'UseMalformedConstraints',
+        "UseMalformedConstraints",
         {
-          a: a,
+          "a": a
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -9164,24 +9113,24 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
-
+  
   UseNestedBlockConstraint(
-    inp: NestedBlockConstraintForParam,
-    __baml_options__?: { tb?: TypeBuilder; clientRegistry?: ClientRegistry },
+      inp: NestedBlockConstraintForParam,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BamlStream<number, number> {
     try {
       const raw = this.runtime.streamFunction(
-        'UseNestedBlockConstraint',
+        "UseNestedBlockConstraint",
         {
-          inp: inp,
+          "inp": inp
         },
         undefined,
         this.ctx_manager.cloneContext(),
@@ -9197,17 +9146,15 @@ class BamlStreamClient {
       )
     } catch (error) {
       if (error instanceof Error) {
-        const bamlError = createBamlValidationError(error)
+        const bamlError = createBamlValidationError(error);
         if (bamlError instanceof BamlValidationError) {
-          throw bamlError
+          throw bamlError;
         }
       }
-      throw error
+      throw error;
     }
   }
+  
 }
 
-export const b = new BamlAsyncClient(
-  DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME,
-  DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX,
-)
+export const b = new BamlAsyncClient(DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME, DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX)
