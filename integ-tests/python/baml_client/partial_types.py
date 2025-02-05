@@ -375,6 +375,9 @@ class SemanticContainer(BaseModel):
     three_small_things: List["SmallThing"]
     final_string: Optional[str] = None
 
+class SimpleTag(BaseModel):
+    field: Optional[str] = None
+
 class SmallThing(BaseModel):
     i_16_digits: int
     i_8_digits: Optional[int] = None

@@ -495,6 +495,9 @@ class SemanticContainer(BaseModel):
     three_small_things: List["SmallThing"]
     final_string: str
 
+class SimpleTag(BaseModel):
+    field: str
+
 class SmallThing(BaseModel):
     i_16_digits: int
     i_8_digits: int
@@ -546,6 +549,10 @@ class UnionTest_ReturnType(BaseModel):
 class WithReasoning(BaseModel):
     value: str
     reasoning: str
+
+JsonEntry: TypeAlias = Union["SimpleTag", "JsonTemplate"]
+
+JsonTemplate: TypeAlias = Dict[str, "JsonEntry"]
 
 RecursiveMapAlias: TypeAlias = Dict[str, "RecursiveMapAlias"]
 
