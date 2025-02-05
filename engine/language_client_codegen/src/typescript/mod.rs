@@ -1,7 +1,7 @@
 mod generate_types;
 mod typescript_language_features;
 
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::{HashMap, BTreeMap}, path::PathBuf};
 
 use anyhow::Result;
 use baml_types::LiteralValue;
@@ -62,7 +62,7 @@ struct ReactServerStreaming {
 struct ReactServerStreamingTypes {
     funcs: Vec<TypescriptFunction>,
     types: Vec<String>,
-    partial_return_types: HashMap<String, String>,
+    partial_return_types: IndexMap<String, String>,
 }
 
 #[derive(askama::Template)]
@@ -94,7 +94,7 @@ struct SyncTypescriptClient {
 struct TypescriptClient {
     funcs: Vec<TypescriptFunction>,
     types: Vec<String>,
-    partial_return_types: HashMap<String, String>,
+    partial_return_types: IndexMap<String, String>,
 }
 
 impl From<TypescriptClient> for AsyncTypescriptClient {
@@ -241,7 +241,7 @@ impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for TypescriptCli
     type Error = anyhow::Error;
 
     fn try_from((ir, _): (&IntermediateRepr, &crate::GeneratorArgs)) -> Result<Self> {
-        let functions: Vec<TypescriptFunction> = ir
+        let mut functions: Vec<TypescriptFunction> = ir
             .walk_functions()
             .map(|f| {
                 let configs = f.walk_impls();
@@ -274,15 +274,23 @@ impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for TypescriptCli
             .flatten()
             .collect();
 
-        // Collect all types including recursive aliases
-        let types = ir
+        // Sort functions by name
+        functions.sort_by(|a, b| a.name.cmp(&b.name));
+
+        // Collect and sort all types including recursive aliases
+        let mut types: Vec<String> = ir
             .walk_classes()
             .map(|c| c.name().to_string())
             .chain(ir.walk_enums().map(|e| e.name().to_string()))
             .chain(ir.walk_alias_cycles().map(|a| a.item.0.clone()))
             .collect();
+        types.sort();
 
-        let partial_return_types = functions.iter().map(|f| (f.name.clone(), f.partial_return_type.clone())).collect();
+        let mut partial_return_types: IndexMap<String, String> = functions
+            .iter()
+            .map(|f| (f.name.clone(), f.partial_return_type.clone()))
+            .collect();
+        partial_return_types.sort_keys();
 
         Ok(TypescriptClient {
             funcs: functions,

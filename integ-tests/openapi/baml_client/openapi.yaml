@@ -2528,19 +2528,19 @@ components:
             title: CompletionRequest
             type: object
             properties:
+              language:
+                type: string
               prefix:
                 type: string
               suffix:
-                type: string
-              language:
                 type: string
               __baml_options__:
                 nullable: true
                 $ref: '#/components/schemas/BamlOptions'
             required:
+            - language
             - prefix
             - suffix
-            - language
             additionalProperties: false
     CustomTask:
       required: true
@@ -2816,10 +2816,10 @@ components:
             title: ExtractResumeRequest
             type: object
             properties:
-              resume:
-                type: string
               img:
                 $ref: '#/components/schemas/BamlImage'
+              resume:
+                type: string
               __baml_options__:
                 nullable: true
                 $ref: '#/components/schemas/BamlOptions'
@@ -3806,16 +3806,16 @@ components:
             title: StreamFailingAssertionRequest
             type: object
             properties:
-              theme:
-                type: string
               length:
                 type: integer
+              theme:
+                type: string
               __baml_options__:
                 nullable: true
                 $ref: '#/components/schemas/BamlOptions'
             required:
-            - theme
             - length
+            - theme
             additionalProperties: false
     StreamOneBigNumber:
       required: true
@@ -4939,112 +4939,6 @@ components:
       - KEY_ONE
       - KEY_TWO
       type: string
-    Category:
-      enum:
-      - Refund
-      - CancelOrder
-      - TechnicalSupport
-      - AccountIssue
-      - Question
-      type: string
-    Category2:
-      enum:
-      - Refund
-      - CancelOrder
-      - TechnicalSupport
-      - AccountIssue
-      - Question
-      type: string
-    Category3:
-      enum:
-      - Refund
-      - CancelOrder
-      - TechnicalSupport
-      - AccountIssue
-      - Question
-      type: string
-    Color:
-      enum:
-      - RED
-      - BLUE
-      - GREEN
-      - YELLOW
-      - BLACK
-      - WHITE
-      type: string
-    DataType:
-      enum:
-      - Resume
-      - Event
-      type: string
-    DynEnumOne:
-      enum: []
-      type: string
-    DynEnumTwo:
-      enum: []
-      type: string
-    EnumInClass:
-      enum:
-      - ONE
-      - TWO
-      type: string
-    EnumOutput:
-      enum:
-      - ONE
-      - TWO
-      - THREE
-      type: string
-    Hobby:
-      enum:
-      - SPORTS
-      - MUSIC
-      - READING
-      type: string
-    MapKey:
-      enum:
-      - A
-      - B
-      - C
-      type: string
-    NamedArgsSingleEnum:
-      enum:
-      - ONE
-      - TWO
-      type: string
-    NamedArgsSingleEnumList:
-      enum:
-      - ONE
-      - TWO
-      type: string
-    OptionalTest_CategoryType:
-      enum:
-      - Aleph
-      - Beta
-      - Gamma
-      type: string
-    OrderStatus:
-      enum:
-      - ORDERED
-      - SHIPPED
-      - DELIVERED
-      - CANCELLED
-      type: string
-    Tag:
-      enum:
-      - Security
-      - AI
-      - Blockchain
-      type: string
-    TestEnum:
-      enum:
-      - A
-      - B
-      - C
-      - D
-      - E
-      - F
-      - G
-      type: string
     AnotherObject:
       type: object
       properties:
@@ -5092,13 +4986,13 @@ components:
     BlockConstraint:
       type: object
       properties:
-        foo:
-          type: integer
         bar:
           type: string
+        foo:
+          type: integer
       required:
-      - foo
       - bar
+      - foo
       additionalProperties: false
     BlockConstraintForParam:
       type: object
@@ -5116,18 +5010,42 @@ components:
       properties:
         orderId:
           type: string
-        title:
-          type: string
-        quantity:
-          type: integer
         price:
           type: number
+        quantity:
+          type: integer
+        title:
+          type: string
       required:
       - orderId
-      - title
-      - quantity
       - price
+      - quantity
+      - title
       additionalProperties: false
+    Category:
+      enum:
+      - Refund
+      - CancelOrder
+      - TechnicalSupport
+      - AccountIssue
+      - Question
+      type: string
+    Category2:
+      enum:
+      - Refund
+      - CancelOrder
+      - TechnicalSupport
+      - AccountIssue
+      - Question
+      type: string
+    Category3:
+      enum:
+      - Refund
+      - CancelOrder
+      - TechnicalSupport
+      - AccountIssue
+      - Question
+      type: string
     ClassForNullLiteral:
       type: object
       properties:
@@ -5180,16 +5098,16 @@ components:
     ClassWithImage:
       type: object
       properties:
+        fake_image:
+          $ref: '#/components/schemas/FakeImage'
         myImage:
           $ref: '#/components/schemas/BamlImage'
         param2:
           type: string
-        fake_image:
-          $ref: '#/components/schemas/FakeImage'
       required:
+      - fake_image
       - myImage
       - param2
-      - fake_image
       additionalProperties: false
     ClassWithoutDone:
       type: object
@@ -5202,14 +5120,21 @@ components:
       - i_16_digits
       - s_20_words
       additionalProperties: false
+    Color:
+      enum:
+      - RED
+      - BLUE
+      - GREEN
+      - YELLOW
+      - BLACK
+      - WHITE
+      type: string
     ComplexMemoryObject:
       type: object
       properties:
-        id:
-          type: string
-        name:
-          type: string
         description:
+          type: string
+        id:
           type: string
         metadata:
           type: array
@@ -5218,27 +5143,29 @@ components:
             - type: string
             - type: integer
             - type: number
+        name:
+          type: string
       required:
-      - id
-      - name
       - description
+      - id
       - metadata
+      - name
       additionalProperties: false
     CompoundBigNumbers:
       type: object
       properties:
+        another:
+          $ref: '#/components/schemas/BigNumbers'
         big:
           $ref: '#/components/schemas/BigNumbers'
         big_nums:
           type: array
           items:
             $ref: '#/components/schemas/BigNumbers'
-        another:
-          $ref: '#/components/schemas/BigNumbers'
       required:
+      - another
       - big
       - big_nums
-      - another
       additionalProperties: false
     ContactInfo:
       type: object
@@ -5268,6 +5195,11 @@ components:
           - $ref: '#/components/schemas/GroceryReceipt'
       required: []
       additionalProperties: false
+    DataType:
+      enum:
+      - Resume
+      - Event
+      type: string
     DummyOutput:
       type: object
       properties:
@@ -5279,6 +5211,12 @@ components:
       - nonce
       - nonce2
       additionalProperties: false
+    DynEnumOne:
+      enum: []
+      type: string
+    DynEnumTwo:
+      enum: []
+      type: string
     DynInputOutput:
       type: object
       properties:
@@ -5322,13 +5260,13 @@ components:
             checks:
               type: object
               properties:
-                no_infants:
-                  $ref: '#components/schemas/Check'
                 earth_aged:
                   $ref: '#components/schemas/Check'
+                no_infants:
+                  $ref: '#components/schemas/Check'
               required:
-              - no_infants
               - earth_aged
+              - no_infants
               additionalProperties: false
           required:
           - value
@@ -5340,37 +5278,37 @@ components:
     Education:
       type: object
       properties:
+        degree:
+          type: string
+        graduation_date:
+          type: string
         institution:
           type: string
         location:
-          type: string
-        degree:
           type: string
         major:
           type: array
           items:
             type: string
-        graduation_date:
-          type: string
       required:
+      - degree
       - institution
       - location
-      - degree
       - major
       additionalProperties: false
     Email:
       type: object
       properties:
-        subject:
-          type: string
         body:
           type: string
         from_address:
           type: string
+        subject:
+          type: string
       required:
-      - subject
       - body
       - from_address
+      - subject
       additionalProperties: false
     EmailAddress:
       type: object
@@ -5380,22 +5318,33 @@ components:
       required:
       - value
       additionalProperties: false
+    EnumInClass:
+      enum:
+      - ONE
+      - TWO
+      type: string
+    EnumOutput:
+      enum:
+      - ONE
+      - TWO
+      - THREE
+      type: string
     Event:
       type: object
       properties:
-        title:
-          type: string
         date:
-          type: string
-        location:
           type: string
         description:
           type: string
+        location:
+          type: string
+        title:
+          type: string
       required:
-      - title
       - date
-      - location
       - description
+      - location
+      - title
       additionalProperties: false
     FakeImage:
       type: object
@@ -5408,30 +5357,26 @@ components:
     FlightConfirmation:
       type: object
       properties:
-        confirmationNumber:
+        arrivalTime:
           type: string
-        flightNumber:
+        confirmationNumber:
           type: string
         departureTime:
           type: string
-        arrivalTime:
+        flightNumber:
           type: string
         seatNumber:
           type: string
       required:
-      - confirmationNumber
-      - flightNumber
-      - departureTime
       - arrivalTime
+      - confirmationNumber
+      - departureTime
+      - flightNumber
       - seatNumber
       additionalProperties: false
     FooAny:
       type: object
       properties:
-        planetary_age:
-          oneOf:
-          - $ref: '#/components/schemas/Martian'
-          - $ref: '#/components/schemas/Earthling'
         certainty:
           type: object
           properties:
@@ -5449,6 +5394,10 @@ components:
           - value
           - checks
           additionalProperties: false
+        planetary_age:
+          oneOf:
+          - $ref: '#/components/schemas/Martian'
+          - $ref: '#/components/schemas/Earthling'
         species:
           type: object
           properties:
@@ -5459,22 +5408,22 @@ components:
               properties:
                 regex_bad:
                   $ref: '#components/schemas/Check'
-                trivial:
-                  $ref: '#components/schemas/Check'
                 regex_good:
+                  $ref: '#components/schemas/Check'
+                trivial:
                   $ref: '#components/schemas/Check'
               required:
               - regex_bad
-              - trivial
               - regex_good
+              - trivial
               additionalProperties: false
           required:
           - value
           - checks
           additionalProperties: false
       required:
-      - planetary_age
       - certainty
+      - planetary_age
       - species
       additionalProperties: false
     Forest:
@@ -5490,54 +5439,50 @@ components:
     FormatterTest0:
       type: object
       properties:
-        lorem:
-          type: string
         ipsum:
           type: string
+        lorem:
+          type: string
       required:
-      - lorem
       - ipsum
+      - lorem
       additionalProperties: false
     FormatterTest1:
       type: object
       properties:
-        lorem:
-          type: string
         ipsum:
           type: string
+        lorem:
+          type: string
       required:
-      - lorem
       - ipsum
+      - lorem
       additionalProperties: false
     FormatterTest2:
       type: object
       properties:
-        lorem:
-          type: string
         ipsum:
           type: string
+        lorem:
+          type: string
       required:
-      - lorem
       - ipsum
+      - lorem
       additionalProperties: false
     FormatterTest3:
       type: object
       properties:
-        lorem:
-          type: string
         ipsum:
           type: string
+        lorem:
+          type: string
       required:
-      - lorem
       - ipsum
+      - lorem
       additionalProperties: false
     GroceryReceipt:
       type: object
       properties:
-        receiptId:
-          type: string
-        storeName:
-          type: string
         items:
           type: array
           items:
@@ -5545,27 +5490,37 @@ components:
             - type: string
             - type: integer
             - type: number
+        receiptId:
+          type: string
+        storeName:
+          type: string
         totalAmount:
           type: number
       required:
+      - items
       - receiptId
       - storeName
-      - items
       - totalAmount
       additionalProperties: false
+    Hobby:
+      enum:
+      - SPORTS
+      - MUSIC
+      - READING
+      type: string
     InnerClass:
       type: object
       properties:
+        inner:
+          $ref: '#/components/schemas/InnerClass2'
         prop1:
           type: string
         prop2:
           type: string
-        inner:
-          $ref: '#/components/schemas/InnerClass2'
       required:
+      - inner
       - prop1
       - prop2
-      - inner
       additionalProperties: false
     InnerClass2:
       type: object
@@ -5613,10 +5568,10 @@ components:
     LinkedListAliasNode:
       type: object
       properties:
-        value:
-          type: integer
         next:
           $ref: '#/components/schemas/LinkedListAliasNode'
+        value:
+          type: integer
       required:
       - value
       additionalProperties: false
@@ -5675,6 +5630,12 @@ components:
       required:
       - foo
       additionalProperties: false
+    MapKey:
+      enum:
+      - A
+      - B
+      - C
+      type: string
     Martian:
       type: object
       properties:
@@ -5701,16 +5662,16 @@ components:
     MemoryObject:
       type: object
       properties:
+        description:
+          type: string
         id:
           type: string
         name:
           type: string
-        description:
-          type: string
       required:
+      - description
       - id
       - name
-      - description
       additionalProperties: false
     MergeAttrs:
       type: object
@@ -5740,26 +5701,36 @@ components:
       properties:
         key:
           type: string
-        key_two:
-          type: boolean
         key_three:
           type: integer
+        key_two:
+          type: boolean
       required:
       - key
-      - key_two
       - key_three
+      - key_two
       additionalProperties: false
+    NamedArgsSingleEnum:
+      enum:
+      - ONE
+      - TWO
+      type: string
+    NamedArgsSingleEnumList:
+      enum:
+      - ONE
+      - TWO
+      type: string
     Nested:
       type: object
       properties:
+        prop20:
+          $ref: '#/components/schemas/Nested2'
         prop3:
           oneOf:
           - type: string
         prop4:
           oneOf:
           - type: string
-        prop20:
-          $ref: '#/components/schemas/Nested2'
       required:
       - prop20
       additionalProperties: false
@@ -5818,10 +5789,10 @@ components:
     NodeWithAliasIndirection:
       type: object
       properties:
-        value:
-          type: integer
         next:
           $ref: '#/components/schemas/NodeWithAliasIndirection'
+        value:
+          type: integer
       required:
       - value
       additionalProperties: false
@@ -5838,6 +5809,12 @@ components:
             type: string
       required: []
       additionalProperties: false
+    OptionalTest_CategoryType:
+      enum:
+      - Aleph
+      - Beta
+      - Gamma
+      type: string
     OptionalTest_Prop1:
       type: object
       properties:
@@ -5866,15 +5843,22 @@ components:
     OrderInfo:
       type: object
       properties:
+        estimated_arrival_date:
+          type: string
         order_status:
           $ref: '#/components/schemas/OrderStatus'
         tracking_number:
           type: string
-        estimated_arrival_date:
-          type: string
       required:
       - order_status
       additionalProperties: false
+    OrderStatus:
+      enum:
+      - ORDERED
+      - SHIPPED
+      - DELIVERED
+      - CANCELLED
+      type: string
     OriginalA:
       type: object
       properties:
@@ -5894,10 +5878,10 @@ components:
     Person:
       type: object
       properties:
-        name:
-          type: string
         hair_color:
           $ref: '#/components/schemas/Color'
+        name:
+          type: string
       required: []
       additionalProperties: false
     PhoneNumber:
@@ -5953,18 +5937,18 @@ components:
     ReceiptItem:
       type: object
       properties:
-        name:
-          type: string
         description:
           type: string
-        quantity:
-          type: integer
+        name:
+          type: string
         price:
           type: number
+        quantity:
+          type: integer
       required:
       - name
-      - quantity
       - price
+      - quantity
       additionalProperties: false
     Recipe:
       type: object
@@ -5992,35 +5976,50 @@ components:
     Resume:
       type: object
       properties:
-        name:
-          type: string
+        education:
+          type: array
+          items:
+            type: string
         email:
-          type: string
-        phone:
           type: string
         experience:
           type: array
           items:
             $ref: '#/components/schemas/Education'
-        education:
-          type: array
-          items:
-            type: string
+        name:
+          type: string
+        phone:
+          type: string
         skills:
           type: array
           items:
             type: string
       required:
-      - name
-      - email
-      - phone
-      - experience
       - education
+      - email
+      - experience
+      - name
+      - phone
       - skills
       additionalProperties: false
     Schema:
       type: object
       properties:
+        nested_attrs:
+          type: array
+          items:
+            oneOf:
+            - type: string
+            - $ref: '#/components/schemas/Nested'
+        other_group:
+          oneOf:
+          - type: string
+          - oneOf:
+            - type: integer
+            - type: string
+        parens:
+          oneOf:
+          - type: string
         prop1:
           oneOf:
           - type: string
@@ -6039,45 +6038,30 @@ components:
           - type: array
             items:
               $ref: '#/components/schemas/Nested'
-        nested_attrs:
-          type: array
-          items:
-            oneOf:
-            - type: string
-            - $ref: '#/components/schemas/Nested'
-        parens:
-          oneOf:
-          - type: string
-        other_group:
-          oneOf:
-          - type: string
-          - oneOf:
-            - type: integer
-            - type: string
       required:
+      - nested_attrs
+      - other_group
       - prop2
       - prop5
       - prop6
-      - nested_attrs
-      - other_group
       additionalProperties: false
     SearchParams:
       type: object
       properties:
-        dateRange:
-          type: integer
-        location:
-          type: array
-          items:
-            type: string
-        jobTitle:
-          $ref: '#/components/schemas/WithReasoning'
         company:
           $ref: '#/components/schemas/WithReasoning'
+        dateRange:
+          type: integer
         description:
           type: array
           items:
             $ref: '#/components/schemas/WithReasoning'
+        jobTitle:
+          $ref: '#/components/schemas/WithReasoning'
+        location:
+          type: array
+          items:
+            type: string
         tags:
           type: array
           items:
@@ -6085,17 +6069,13 @@ components:
             - $ref: '#/components/schemas/Tag'
             - type: string
       required:
-      - location
       - description
+      - location
       - tags
       additionalProperties: false
     SemanticContainer:
       type: object
       properties:
-        sixteen_digit_number:
-          type: integer
-        string_with_twenty_words:
-          type: string
         class_1:
           $ref: '#/components/schemas/ClassWithoutDone'
         class_2:
@@ -6104,21 +6084,25 @@ components:
           $ref: '#/components/schemas/ClassWithBlockDone'
         class_needed:
           $ref: '#/components/schemas/ClassWithoutDone'
+        final_string:
+          type: string
+        sixteen_digit_number:
+          type: integer
+        string_with_twenty_words:
+          type: string
         three_small_things:
           type: array
           items:
             $ref: '#/components/schemas/SmallThing'
-        final_string:
-          type: string
       required:
-      - sixteen_digit_number
-      - string_with_twenty_words
       - class_1
       - class_2
       - class_done_needed
       - class_needed
-      - three_small_things
       - final_string
+      - sixteen_digit_number
+      - string_with_twenty_words
+      - three_small_things
       additionalProperties: false
     SimpleTag:
       type: object
@@ -6155,6 +6139,12 @@ components:
       required:
       - word
       additionalProperties: false
+    Tag:
+      enum:
+      - Security
+      - AI
+      - Blockchain
+      type: string
     TestClassAlias:
       type: object
       properties:
@@ -6197,6 +6187,16 @@ components:
       - prop1
       - prop2
       additionalProperties: false
+    TestEnum:
+      enum:
+      - A
+      - B
+      - C
+      - D
+      - E
+      - F
+      - G
+      type: string
     TestMemoryOutput:
       type: object
       properties:
@@ -6232,27 +6232,27 @@ components:
     Tree:
       type: object
       properties:
-        data:
-          type: integer
         children:
           $ref: '#/components/schemas/Forest'
+        data:
+          type: integer
       required:
-      - data
       - children
+      - data
       additionalProperties: false
     TwoStoriesOneTitle:
       type: object
       properties:
-        title:
-          type: string
         story_a:
           type: string
         story_b:
           type: string
+        title:
+          type: string
       required:
-      - title
       - story_a
       - story_b
+      - title
       additionalProperties: false
     UnionTest_ReturnType:
       type: object
@@ -6283,13 +6283,13 @@ components:
     UniverseQuestion:
       type: object
       properties:
-        question:
-          type: string
         answer:
           type: string
+        question:
+          type: string
       required:
-      - question
       - answer
+      - question
       additionalProperties: false
     UniverseQuestionInput:
       type: object
@@ -6302,11 +6302,11 @@ components:
     WithReasoning:
       type: object
       properties:
-        value:
-          type: string
         reasoning:
           type: string
+        value:
+          type: string
       required:
-      - value
       - reasoning
+      - value
       additionalProperties: false

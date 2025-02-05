@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createBamlValidationError = exports.BamlValidationError = exports.BamlClientFinishReasonError = void 0;
+exports.BamlValidationError = exports.BamlClientFinishReasonError = void 0;
+exports.createBamlValidationError = createBamlValidationError;
 class BamlClientFinishReasonError extends Error {
     prompt;
     raw_output;
@@ -86,4 +87,3 @@ function createBamlValidationError(error) {
     // otherwise return the original error
     return error;
 }
-exports.createBamlValidationError = createBamlValidationError;
