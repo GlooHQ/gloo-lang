@@ -653,6 +653,11 @@ export interface SemanticContainer {
   
 }
 
+export interface SimpleTag {
+  field: string
+  
+}
+
 export interface SmallThing {
   i_16_digits: number
   i_8_digits: number
@@ -728,6 +733,10 @@ export interface WithReasoning {
   reasoning: string
   
 }
+
+type JsonEntry = SimpleTag | JsonTemplate
+
+type JsonTemplate = Record<string, JsonEntry>
 
 type RecursiveMapAlias = Record<string, RecursiveMapAlias>
 

@@ -453,6 +453,10 @@ export interface SemanticContainer {
     final_string?: (string | null)
 }
 
+export interface SimpleTag {
+    field?: (string | null)
+}
+
 export interface SmallThing {
     i_16_digits: number
     i_8_digits?: (number | null)

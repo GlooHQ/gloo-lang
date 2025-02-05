@@ -221,6 +221,7 @@ module Baml
     class Schema < T::Struct; end
     class SearchParams < T::Struct; end
     class SemanticContainer < T::Struct; end
+    class SimpleTag < T::Struct; end
     class SmallThing < T::Struct; end
     class SomeClassNestedDynamic < T::Struct; end
     class StringToClassEntry < T::Struct; end
@@ -1348,6 +1349,18 @@ module Baml
           class_needed: props[:class_needed],
           three_small_things: props[:three_small_things],
           final_string: props[:final_string],
+        )
+
+        @props = props
+      end
+    end
+    class SimpleTag < T::Struct
+      include Baml::Sorbet::Struct
+      const :field, String
+
+      def initialize(props)
+        super(
+          field: props[:field],
         )
 
         @props = props
