@@ -86,7 +86,7 @@ navigation:
       - section: Framework Integration
         icon: fa-solid fa-plug
         contents:
-          - section: Next.js
+          - section: React/Next.js
             icon: fa-brands fa-react
             contents:
               # - page: Overview
@@ -94,7 +94,7 @@ navigation:
               #   path: 01-guide/08-integrations/01-nextjs-overview.mdx
               - page: App Router Setup
                 icon: fa-regular fa-route
-                path: 01-guide/08-integrations/02-nextjs-app-router.mdx
+                path: 01-guide/08-frameworks/01-react-nextjs/01-app-router.mdx
               # - page: Pages Router Setup
               #   icon: fa-regular fa-file-code
               #   path: 01-guide/08-integrations/03-nextjs-pages-router.mdx
@@ -130,9 +130,6 @@ navigation:
               - page: AWS
                 icon: fa-brands fa-aws
                 path: 01-guide/03-development/deploying/aws.mdx
-              - page: NextJs
-                icon: fa-brands fa-react
-                path: 01-guide/03-development/deploying/nextjs.mdx
               - page: Docker
                 icon: fa-brands fa-docker
                 path: 01-guide/03-development/deploying/docker.mdx
@@ -420,6 +417,25 @@ navigation:
             path: 03-reference/baml/enum.mdx
           - page: generator
             path: 03-reference/generator.mdx
+      - section: Generators
+        contents:
+          - page: Overview
+            path: 03-reference/08-generators/overview.mdx
+          - section: Language Generators
+            contents:
+              - page: TypeScript
+                path: 03-reference/08-generators/01-languages/01-typescript.mdx
+              - page: Python (Pydantic)
+                path: 03-reference/08-generators/01-languages/02-python-pydantic.mdx
+              - page: Ruby (Sorbet)
+                path: 03-reference/08-generators/01-languages/03-ruby-sorbet.mdx
+              - page: OpenAPI (REST)
+                path: 03-reference/08-generators/01-languages/04-rest-openapi.mdx
+          - section: Framework Generators
+            contents:
+              - page: React/Next.js
+                path: 03-reference/08-generators/02-frameworks/01-react-nextjs.mdx
+
       - section: Attributes
         contents:
           - page: What are attributes?
