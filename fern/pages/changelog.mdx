@@ -4,6 +4,29 @@ title: Changelog
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.75.0](https://github.com/boundaryml/baml/compare/0.74.0..0.75.0) - 2025-02-06
+
+### Features
+
+- Implement tests for dynamic types (#1343) - ([7f852d0](https://github.com/boundaryml/baml/commit/7f852d02892637b3a6e9637e59b26c2ec822e626)) - Antonio Sarosi
+
+### Bug Fixes
+
+- issue with o1 models not accepting max_tokens (#1410) - ([3831243](https://github.com/boundaryml/baml/commit/383124339dd71a5097f61a75b2e5c7121f5e9a8d)) - Chris Watts
+- Fix panic when recursive type alias is used as class field (#1399) - ([f36f80c](https://github.com/boundaryml/baml/commit/f36f80c7d1f8fa4d5b4f52baaac3772cd054f8cf)) - Antonio Sarosi
+- Fix infinite cycles in client fallbacks (#1401) - ([7b7eec0](https://github.com/boundaryml/baml/commit/7b7eec01412e52429f447c7edebfead7f96e2601)) - Antonio Sarosi
+- Fix panic when using type alias that points to enum (#1407) - ([8994ba6](https://github.com/boundaryml/baml/commit/8994ba6011c70d22e5d9852c0e15b54b683addbb)) - Antonio Sarosi
+- Track Pending fields in Semantic Streaming (#1411) - ([026bc21](https://github.com/boundaryml/baml/commit/026bc21c4b9d5c687c413342a202b6b09f5504b0)) - Greg Hale
+- In prompt rendering, recurse into recursive type alias unions (#1416) - ([a648559](https://github.com/boundaryml/baml/commit/a6485597c0e44c9b44ba9fc89dbe423b3dd9b61e)) - Antonio Sarosi
+
+### Documentation
+
+- fix typos in root README.md (#1402) - ([cc132ad](https://github.com/boundaryml/baml/commit/cc132ad2d035df42b67ef37f1c696b496e08a4ca)) - Prashanth Rao
+- Update pydantic.mdx (#1398) - ([6c3df5a](https://github.com/boundaryml/baml/commit/6c3df5abfe88f7787256d31cf922b3c7580f9346)) - hellovai
+- Update README.md (#1409) - ([207114e](https://github.com/boundaryml/baml/commit/207114e8e4dc1f5964ff98e55b2258cf80619a26)) - aaronvg
+- Add docs for dynamic types tests (#1307) - ([9c068e0](https://github.com/boundaryml/baml/commit/9c068e06475aaa7ab1caffdc569e181c4f3bd0af)) - Antonio Sarosi
+
+
 ## [0.74.0](https://github.com/boundaryml/baml/compare/0.73.5..0.74.0) - 2025-01-30
 
 ### Features
