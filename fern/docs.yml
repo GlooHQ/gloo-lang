@@ -89,30 +89,9 @@ navigation:
           - section: React/Next.js
             icon: fa-brands fa-react
             contents:
-              # - page: Overview
-              #   icon: fa-regular fa-circle-info
-              #   path: 01-guide/08-integrations/01-nextjs-overview.mdx
               - page: App Router Setup
                 icon: fa-regular fa-route
                 path: 01-guide/08-frameworks/01-react-nextjs/01-app-router.mdx
-              # - page: Pages Router Setup
-              #   icon: fa-regular fa-file-code
-              #   path: 01-guide/08-integrations/03-nextjs-pages-router.mdx
-              # - page: React Server Components
-              #   icon: fa-regular fa-server
-              #   path: 01-guide/08-integrations/04-nextjs-rsc.mdx
-              # - page: Streaming
-              #   icon: fa-regular fa-faucet
-              #   path: 01-guide/08-integrations/05-nextjs-streaming.mdx
-              # - page: Environment Setup
-              #   icon: fa-regular fa-gear
-              #   path: 01-guide/08-integrations/06-nextjs-environment.mdx
-              # - page: Deployment
-              #   icon: fa-regular fa-rocket
-              #   path: 01-guide/08-integrations/07-nextjs-deployment.mdx
-              # - page: Examples
-              #   icon: fa-regular fa-code
-              #   path: 01-guide/08-integrations/08-nextjs-examples.mdx
       - section: Development
         contents:
           - page: Environment Variables
