@@ -1,7 +1,10 @@
 mod generate_types;
 mod typescript_language_features;
 
-use std::{collections::{HashMap, BTreeMap}, path::PathBuf};
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::PathBuf,
+};
 
 use anyhow::Result;
 use baml_types::LiteralValue;
@@ -21,15 +24,17 @@ mod framework {
     #[derive(Debug, Clone, Copy)]
     pub enum TypescriptFramework {
         None,
-        React
+        React,
     }
 
     impl TypescriptFramework {
-        pub fn from_generator_type(output_type: Option<GeneratorOutputType>) -> Self {
+        pub fn from_generator_type(output_type: Option<GeneratorOutputType>) -> Option<Self> {
             match output_type {
-                Some(GeneratorOutputType::TypescriptReact) => Self::React,
-                Some(GeneratorOutputType::Typescript) | None => Self::None,
-                Some(_) => panic!("Invalid generator type for TypeScript framework"),
+                Some(GeneratorOutputType::TypescriptReact) => Some(Self::React),
+                Some(GeneratorOutputType::Typescript) | None => Some(Self::None),
+                Some(GeneratorOutputType::OpenApi) => None,
+                Some(GeneratorOutputType::PythonPydantic) => None,
+                Some(GeneratorOutputType::RubySorbet) => None,
             }
         }
     }
@@ -75,7 +80,6 @@ struct ReactClientHooks {
 #[derive(askama::Template)]
 #[template(path = "react/types.ts.j2", escape = "none")]
 struct ReactTypes {}
-
 
 #[derive(askama::Template)]
 #[template(path = "async_client.ts.j2", escape = "none")]
@@ -182,12 +186,12 @@ struct InlinedBaml {
 #[template(path = "tracing.ts.j2", escape = "none")]
 struct TypescriptTracing {}
 
-
 pub(crate) fn generate(
     ir: &IntermediateRepr,
     generator: &crate::GeneratorArgs,
 ) -> Result<IndexMap<PathBuf, String>> {
-    let framework = TypescriptFramework::from_generator_type(generator.client_type);
+    let framework = TypescriptFramework::from_generator_type(generator.client_type)
+        .expect("Invalid generator type for TypeScript framework");
     let mut collector = FileCollector::<TypescriptLanguageFeatures>::new();
 
     // Add base TypeScript files
@@ -209,8 +213,14 @@ pub(crate) fn generate(
         TypescriptFramework::React => {
             collector.add_template::<ReactTypes>("react/types.ts", (ir, generator))?;
             collector.add_template::<ReactServerActions>("react/server.ts", (ir, generator))?;
-            collector.add_template::<ReactServerStreaming>("react/server_streaming.ts", (ir, generator))?;
-            collector.add_template::<ReactServerStreamingTypes>("react/server_streaming_types.ts", (ir, generator))?;
+            collector.add_template::<ReactServerStreaming>(
+                "react/server_streaming.ts",
+                (ir, generator),
+            )?;
+            collector.add_template::<ReactServerStreamingTypes>(
+                "react/server_streaming_types.ts",
+                (ir, generator),
+            )?;
             collector.add_template::<ReactClientHooks>("react/client.tsx", (ir, generator))?;
         }
         TypescriptFramework::None => {}
@@ -394,7 +404,11 @@ impl ToTypeReferenceInClientDefinition for FieldType {
         let use_module_prefix = !is_partial_type;
         let with_state = metadata.1.state;
         let constraints = metadata.0;
-        let module_prefix = if use_module_prefix { "types." } else { "partial_types." };
+        let module_prefix = if use_module_prefix {
+            "types."
+        } else {
+            "partial_types."
+        };
         let (base_rep, optional) = match base_type {
             FieldType::Class(name) => {
                 if needed {
@@ -424,9 +438,7 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 };
                 res
             }
-            FieldType::Literal(value) => {
-                (value.to_string(), false)
-            }
+            FieldType::Literal(value) => (value.to_string(), false),
             FieldType::List(inner) => (
                 format!("{}[]", inner.to_partial_type_ref(ir, false).0),
                 true,
