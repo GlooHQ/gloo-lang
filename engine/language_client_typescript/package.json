@@ -40,7 +40,7 @@
     ".": {
       "types": "./artifacts/index.d.ts",
       "node": "./artifacts/index.js",
-      "default": "./artifacts/client.js"
+      "default": "./artifacts/index.js"
     },
     "./type_builder": {
       "types": "./artifacts/type_builder.d.ts",

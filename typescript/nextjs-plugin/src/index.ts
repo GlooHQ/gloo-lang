@@ -24,11 +24,12 @@ type GenericNextConfig = {
   experimental?: {
     serverComponentsExternalPackages?: string[]
     turbo?: {
-      rules: {
-        '*.node': {
-          loaders: string[]
-          as: string
-        }
+      rules?: Record<string, any>
+      resolveAlias?: Record<string, any>
+      resolve?: {
+        alias?: Record<string, any>
+        conditionNames?: string[]
+        preferRelative?: boolean
       }
     }
   }
@@ -48,6 +49,17 @@ export function withBaml(bamlConfig: BamlNextConfig = {}) {
     const useNewConfig = majorVersion >= 14
     const isTurbo = Boolean(process.env.TURBOPACK === '1')
 
+    if (isTurbo) {
+      console.warn(
+        '\x1b[33m%s\x1b[0m',
+        `
+⚠️  Warning: @boundaryml/baml-nextjs-plugin does not yet support Turbopack
+   Please remove the --turbo flag from your "next dev" command.
+   Example: "next dev" instead of "next dev --turbo"
+      `,
+      )
+    }
+
     const turboConfig = isTurbo
       ? {
           ...(nextConfig.experimental?.turbo || {}),
@@ -62,10 +74,18 @@ export function withBaml(bamlConfig: BamlNextConfig = {}) {
       ...nextConfig,
       ...(useNewConfig
         ? {
-            serverExternalPackages: [...((nextConfig as any)?.serverExternalPackages || []), '@boundaryml/baml'],
             experimental: {
               ...(nextConfig.experimental || {}),
               ...(isTurbo ? { turbo: turboConfig } : {}),
+              // In Turbo mode, we don't add it to serverExternalPackages to avoid the conflict
+              ...(isTurbo
+                ? {}
+                : {
+                    serverExternalPackages: [
+                      ...((nextConfig as any)?.serverExternalPackages || []),
+                      '@boundaryml/baml',
+                    ],
+                  }),
             },
           }
         : {
