@@ -5,6 +5,7 @@ use crate::{
     UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection,
 };
 use anyhow::Result;
+use secrecy::SecretString;
 
 use baml_types::{GetEnvVar, StringOr, UnresolvedValue};
 use indexmap::IndexMap;
@@ -54,7 +55,7 @@ impl<Meta> UnresolvedOpenAI<Meta> {
 
 pub struct ResolvedOpenAI {
     pub base_url: String,
-    pub api_key: Option<String>,
+    pub api_key: Option<SecretString>,
     role_selection: RolesSelection,
     pub allowed_metadata: AllowedRoleMetadata,
     supported_request_modes: SupportedRequestModes,
@@ -167,7 +168,8 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
             .api_key
             .as_ref()
             .map(|key| key.resolve(ctx))
-            .transpose()?;
+            .transpose()?
+            .map(|key| SecretString::from(key));
 
         let role_selection = self.role_selection.resolve(ctx)?;
 

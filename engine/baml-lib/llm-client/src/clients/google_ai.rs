@@ -8,6 +8,7 @@ use crate::{
 
 use baml_types::{EvaluationContext, StringOr, UnresolvedValue};
 use indexmap::IndexMap;
+use secrecy::SecretString;
 
 use super::helpers::{Error, PropertyHandler, UnresolvedUrl};
 
@@ -50,7 +51,7 @@ impl<Meta> UnresolvedGoogleAI<Meta> {
 
 pub struct ResolvedGoogleAI {
     role_selection: RolesSelection,
-    pub api_key: String,
+    pub api_key: SecretString,
     pub model: String,
     pub base_url: String,
     pub headers: IndexMap<String, String>,
@@ -121,7 +122,7 @@ impl<Meta: Clone> UnresolvedGoogleAI<Meta> {
 
         Ok(ResolvedGoogleAI {
             role_selection,
-            api_key,
+            api_key: SecretString::from(api_key),
             model,
             base_url,
             headers,
