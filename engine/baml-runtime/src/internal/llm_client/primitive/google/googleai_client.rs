@@ -30,6 +30,7 @@ use internal_llm_client::google_ai::ResolvedGoogleAI;
 use internal_llm_client::{
     AllowedRoleMetadata, ClientProvider, ResolvedClientProperty, UnresolvedClientProperty,
 };
+use secrecy::ExposeSecret;
 use serde_json::json;
 use std::collections::HashMap;
 
@@ -268,6 +269,7 @@ impl RequestBuilder for GoogleAIClient {
         prompt: either::Either<&String, &[RenderedChatMessage]>,
         allow_proxy: bool,
         stream: bool,
+        expose_secrets: bool,
     ) -> Result<reqwest::RequestBuilder> {
         let mut should_stream = "generateContent";
         if stream {
@@ -293,7 +295,11 @@ impl RequestBuilder for GoogleAIClient {
             req = req.header(key, value);
         }
 
-        req = req.header("x-goog-api-key", self.properties.api_key.clone());
+        if expose_secrets {
+            req = req.header("x-goog-api-key", self.properties.api_key.expose_secret());
+        } else {
+            req = req.header("x-goog-api-key", "<SECRET_HIDDEN>");
+        }
 
         let mut body = json!(self.properties.properties);
         let body_obj = body.as_object_mut().unwrap();

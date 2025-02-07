@@ -1009,6 +1009,7 @@ dependencies = [
  "ring",
  "rstest",
  "scopeguard",
+ "secrecy",
  "send_wrapper 0.6.0",
  "serde",
  "serde-wasm-bindgen 0.6.5",
@@ -2947,6 +2948,7 @@ dependencies = [
  "env_logger",
  "indexmap 2.2.6",
  "log",
+ "secrecy",
  "serde",
  "serde_json",
  "strum",
@@ -4622,6 +4624,16 @@ checksum = "da046153aa2352493d6cb7da4b6e5c0c057d8a1d0a9aa8560baffdd945acd414"
 dependencies = [
  "ring",
  "untrusted",
+]
+
+[[package]]
+name = "secrecy"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e891af845473308773346dc847b2c23ee78fe442e0472ac50e22a18a93d3ae5a"
+dependencies = [
+ "serde",
+ "zeroize",
 ]
 
 [[package]]

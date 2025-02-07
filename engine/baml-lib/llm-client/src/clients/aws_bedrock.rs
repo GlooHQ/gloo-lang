@@ -5,6 +5,7 @@ use crate::{
     UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection,
 };
 use anyhow::Result;
+use secrecy::SecretString;
 
 use baml_types::{EvaluationContext, GetEnvVar, StringOr};
 
@@ -67,7 +68,7 @@ pub struct ResolvedAwsBedrock {
     pub model: String,
     pub region: Option<String>,
     pub access_key_id: Option<String>,
-    pub secret_access_key: Option<String>,
+    pub secret_access_key: Option<SecretString>,
     pub session_token: Option<String>,
     pub profile: Option<String>,
     pub inference_config: Option<InferenceConfiguration>,
@@ -186,7 +187,7 @@ impl UnresolvedAwsBedrock {
         };
 
         let secret_access_key = match self.secret_access_key.as_ref() {
-            Some(secret_access_key) => Some(secret_access_key.resolve(ctx)?),
+            Some(secret_access_key) => Some(SecretString::from(secret_access_key.resolve(ctx)?)),
             None => None,
         };
 
@@ -211,7 +212,7 @@ impl UnresolvedAwsBedrock {
                         _ => None,
                     };
                     let secret_access_key = match ctx.get_env_var("AWS_SECRET_ACCESS_KEY") {
-                        Ok(key) if !key.is_empty() => Some(key),
+                        Ok(key) if !key.is_empty() => Some(SecretString::from(key)),
                         _ => None,
                     };
                     let session_token = match ctx.get_env_var("AWS_SESSION_TOKEN") {

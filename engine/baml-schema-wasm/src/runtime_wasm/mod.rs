@@ -1603,6 +1603,7 @@ impl WasmFunction {
                 RenderCurlSettings {
                     stream,
                     as_shell_commands: !expand_images,
+                    expose_secrets: false,
                 },
                 wasm_call_context.node_index,
             )
