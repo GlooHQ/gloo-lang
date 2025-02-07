@@ -2,7 +2,7 @@
 use anyhow::{Context, Result};
 pub use internal_llm_client::ClientProvider;
 use internal_llm_client::{ClientSpec, PropertyHandler, UnresolvedClientProperty};
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 use std::sync::Arc;
 
 use baml_types::{BamlMap, BamlValue};
@@ -21,6 +21,7 @@ pub enum PrimitiveClient {
 #[derive(Clone, Deserialize, Debug)]
 pub struct ClientProperty {
     pub name: String,
+    #[serde(deserialize_with = "deserialize_client_provider")]
     pub provider: ClientProvider,
     pub retry_policy: Option<String>,
     options: BamlMap<String, BamlValue>,
@@ -125,4 +126,12 @@ where
         .into_iter()
         .map(|client: ClientProperty| (client.name.clone(), client))
         .collect())
+}
+
+fn deserialize_client_provider<'de, D>(deserializer: D) -> Result<ClientProvider, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s: &str = Deserialize::deserialize(deserializer)?;
+    ClientProvider::from_str(s).map_err(|e| serde::de::Error::custom(e.to_string()))
 }
