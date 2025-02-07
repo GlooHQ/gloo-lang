@@ -115,6 +115,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
+      - uses: astral-sh/setup-uv@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
