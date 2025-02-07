@@ -149,7 +149,7 @@ SAP works with any model on day-1, without depending on tool-use or function-cal
 
 To learn more about SAP you can read this post: [Schema-Aligned Parsing](https://www.boundaryml.com/blog/schema-aligned-parsing).
 
-See it in action with: [Deepseek-R1](https://www.boundaryml.com/blog/2025-01-20-deepseek-r1) and [OpenAI O1](https://www.boundaryml.com/blog/2025-12-06-o1-pro).
+See it in action with: [Deepseek-R1](https://www.boundaryml.com/blog/deepseek-r1-function-calling) and [OpenAI O1](https://www.boundaryml.com/blog/openai-o1).
 
 ### Streaming (when it's a first class citizen)
 
