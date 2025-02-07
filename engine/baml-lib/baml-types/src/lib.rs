@@ -2,6 +2,8 @@ mod constraint;
 mod map;
 mod media;
 mod minijinja;
+pub mod rpc;
+pub mod tracing;
 
 mod baml_value;
 mod field_type;
