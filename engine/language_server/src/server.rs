@@ -7,9 +7,7 @@ use std::panic::PanicInfo;
 
 use lsp_server::Message;
 use lsp_types::{
-    ClientCapabilities, DiagnosticOptions, DiagnosticServerCapabilities,
-    DidChangeWatchedFilesRegistrationOptions, FileSystemWatcher, MessageType, ServerCapabilities,
-    TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions, Url,
+    ClientCapabilities, DiagnosticOptions, DiagnosticServerCapabilities, DidChangeWatchedFilesRegistrationOptions, FileSystemWatcher, InitializeParams, MessageType, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions, Url
 };
 use schedule::Task;
 
@@ -18,9 +16,9 @@ use self::schedule::event_loop_thread;
 use crate::session::{AllSettings, ClientSettings, Session};
 use crate::PositionEncoding;
 
-mod api;
-mod client;
-mod connection;
+pub mod api;
+pub mod client;
+pub mod connection;
 mod schedule;
 
 use crate::message::try_show_message;
@@ -29,19 +27,20 @@ pub(crate) use connection::ClientSender;
 pub(crate) type Result<T> = std::result::Result<T, api::Error>;
 
 pub(crate) struct Server {
-    connection: Connection,
-    client_capabilities: ClientCapabilities,
-    worker_threads: NonZeroUsize,
-    session: Session,
+    pub connection: Connection,
+    pub client_capabilities: ClientCapabilities,
+    pub worker_threads: NonZeroUsize,
+    pub session: Session,
 }
 
 impl Server {
-    pub(crate) fn new(worker_threads: NonZeroUsize) -> crate::Result<Self> {
-        let connection = ConnectionInitializer::stdio();
 
+    pub fn new(worker_threads: NonZeroUsize) -> crate::Result<Self> {
+
+        let connection = ConnectionInitializer::stdio();
         let (id, init_params) = connection.initialize_start()?;
 
-        let client_capabilities = init_params.capabilities;
+        let client_capabilities = init_params.capabilities.clone();
         let position_encoding = Self::find_best_position_encoding(&client_capabilities);
         let server_capabilities = Self::server_capabilities(position_encoding);
 
@@ -51,8 +50,15 @@ impl Server {
             crate::SERVER_NAME,
             crate::version(),
         )?;
+        Self::new_with_connection(worker_threads, connection, init_params)
+    }
+
+    pub fn new_with_connection(worker_threads: NonZeroUsize, connection: Connection, init_params: InitializeParams) -> crate::Result<Self> {
 
         crate::message::init_messenger(connection.make_sender());
+
+        let client_capabilities = init_params.capabilities.clone();
+        let position_encoding = Self::find_best_position_encoding(&client_capabilities);
 
         let AllSettings {
             global_settings,
@@ -112,7 +118,7 @@ impl Server {
         })
     }
 
-    pub(crate) fn run(self) -> crate::Result<()> {
+    pub fn run(self) -> crate::Result<()> {
         // The new PanicInfoHook name requires MSRV >= 1.82
         #[allow(deprecated)]
         type PanicHook = Box<dyn Fn(&PanicInfo<'_>) + 'static + Sync + Send>;
@@ -243,7 +249,7 @@ impl Server {
         }
     }
 
-    fn find_best_position_encoding(client_capabilities: &ClientCapabilities) -> PositionEncoding {
+    pub fn find_best_position_encoding(client_capabilities: &ClientCapabilities) -> PositionEncoding {
         client_capabilities
             .general
             .as_ref()
@@ -257,7 +263,7 @@ impl Server {
             .unwrap_or_default()
     }
 
-    fn server_capabilities(position_encoding: PositionEncoding) -> ServerCapabilities {
+    pub fn server_capabilities(position_encoding: PositionEncoding) -> ServerCapabilities {
         ServerCapabilities {
             position_encoding: Some(position_encoding.into()),
             diagnostic_provider: Some(DiagnosticServerCapabilities::Options(DiagnosticOptions {

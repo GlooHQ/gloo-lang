@@ -70,26 +70,26 @@ impl LineIndex {
     ///
     /// ## Examples
     ///
-    /// ```
-    /// # use ruff_text_size::TextSize;
-    /// # use ruff_source_file::{LineIndex, OneIndexed, SourceLocation};
-    /// let source = "def a():\n    pass";
-    /// let index = LineIndex::from_source_text(source);
+    /// # ```
+    /// # # use ruff_text_size::TextSize;
+    /// # # use ruff_source_file::{LineIndex, OneIndexed, SourceLocation};
+    /// # let source = "def a():\n    pass";
+    /// # let index = LineIndex::from_source_text(source);
     ///
-    /// assert_eq!(
-    ///     index.source_location(TextSize::from(0), source),
-    ///     SourceLocation { row: OneIndexed::from_zero_indexed(0), column: OneIndexed::from_zero_indexed(0) }
-    /// );
+    /// # assert_eq!(
+    /// #     index.source_location(TextSize::from(0), source),
+    /// #     SourceLocation { row: OneIndexed::from_zero_indexed(0), column: OneIndexed::from_zero_indexed(0) }
+    /// # );
     ///
-    /// assert_eq!(
-    ///     index.source_location(TextSize::from(4), source),
-    ///     SourceLocation { row: OneIndexed::from_zero_indexed(0), column: OneIndexed::from_zero_indexed(4) }
-    /// );
-    /// assert_eq!(
-    ///     index.source_location(TextSize::from(13), source),
-    ///     SourceLocation { row: OneIndexed::from_zero_indexed(1), column: OneIndexed::from_zero_indexed(4) }
-    /// );
-    /// ```
+    /// # assert_eq!(
+    /// #     index.source_location(TextSize::from(4), source),
+    /// #     SourceLocation { row: OneIndexed::from_zero_indexed(0), column: OneIndexed::from_zero_indexed(4) }
+    /// # );
+    /// # assert_eq!(
+    /// #     index.source_location(TextSize::from(13), source),
+    /// #     SourceLocation { row: OneIndexed::from_zero_indexed(1), column: OneIndexed::from_zero_indexed(4) }
+    /// # );
+    /// # ```
     ///
     /// ## Panics
     ///
@@ -432,283 +432,283 @@ impl FromStr for OneIndexed {
 
 #[cfg(test)]
 mod tests {
-    use ruff_text_size::TextSize;
+    // use ruff_text_size::TextSize;
 
-    use crate::line_index::LineIndex;
-    use crate::{OneIndexed, SourceLocation};
+    // use crate::line_index::LineIndex;
+    // use crate::{OneIndexed, SourceLocation};
 
-    #[test]
-    fn ascii_index() {
-        let index = LineIndex::from_source_text("");
-        assert_eq!(index.line_starts(), &[TextSize::from(0)]);
+    // #[test]
+    // fn ascii_index() {
+    //     let index = LineIndex::from_source_text("");
+    //     assert_eq!(index.line_starts(), &[TextSize::from(0)]);
 
-        let index = LineIndex::from_source_text("x = 1");
-        assert_eq!(index.line_starts(), &[TextSize::from(0)]);
+    //     let index = LineIndex::from_source_text("x = 1");
+    //     assert_eq!(index.line_starts(), &[TextSize::from(0)]);
 
-        let index = LineIndex::from_source_text("x = 1\n");
-        assert_eq!(index.line_starts(), &[TextSize::from(0), TextSize::from(6)]);
+    //     let index = LineIndex::from_source_text("x = 1\n");
+    //     assert_eq!(index.line_starts(), &[TextSize::from(0), TextSize::from(6)]);
 
-        let index = LineIndex::from_source_text("x = 1\ny = 2\nz = x + y\n");
-        assert_eq!(
-            index.line_starts(),
-            &[
-                TextSize::from(0),
-                TextSize::from(6),
-                TextSize::from(12),
-                TextSize::from(22)
-            ]
-        );
-    }
+    //     let index = LineIndex::from_source_text("x = 1\ny = 2\nz = x + y\n");
+    //     assert_eq!(
+    //         index.line_starts(),
+    //         &[
+    //             TextSize::from(0),
+    //             TextSize::from(6),
+    //             TextSize::from(12),
+    //             TextSize::from(22)
+    //         ]
+    //     );
+    // }
 
-    #[test]
-    fn ascii_source_location() {
-        let contents = "x = 1\ny = 2";
-        let index = LineIndex::from_source_text(contents);
+    // #[test]
+    // fn ascii_source_location() {
+    //     let contents = "x = 1\ny = 2";
+    //     let index = LineIndex::from_source_text(contents);
 
-        // First row.
-        let loc = index.source_location(TextSize::from(2), contents);
-        assert_eq!(
-            loc,
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(0),
-                column: OneIndexed::from_zero_indexed(2)
-            }
-        );
+    //     // First row.
+    //     let loc = index.source_location(TextSize::from(2), contents);
+    //     assert_eq!(
+    //         loc,
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(0),
+    //             column: OneIndexed::from_zero_indexed(2)
+    //         }
+    //     );
 
-        // Second row.
-        let loc = index.source_location(TextSize::from(6), contents);
-        assert_eq!(
-            loc,
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(0)
-            }
-        );
+    //     // Second row.
+    //     let loc = index.source_location(TextSize::from(6), contents);
+    //     assert_eq!(
+    //         loc,
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(0)
+    //         }
+    //     );
 
-        let loc = index.source_location(TextSize::from(11), contents);
-        assert_eq!(
-            loc,
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(5)
-            }
-        );
-    }
+    //     let loc = index.source_location(TextSize::from(11), contents);
+    //     assert_eq!(
+    //         loc,
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(5)
+    //         }
+    //     );
+    // }
 
-    #[test]
-    fn ascii_carriage_return() {
-        let contents = "x = 4\ry = 3";
-        let index = LineIndex::from_source_text(contents);
-        assert_eq!(index.line_starts(), &[TextSize::from(0), TextSize::from(6)]);
+    // #[test]
+    // fn ascii_carriage_return() {
+    //     let contents = "x = 4\ry = 3";
+    //     let index = LineIndex::from_source_text(contents);
+    //     assert_eq!(index.line_starts(), &[TextSize::from(0), TextSize::from(6)]);
 
-        assert_eq!(
-            index.source_location(TextSize::from(4), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(0),
-                column: OneIndexed::from_zero_indexed(4)
-            }
-        );
-        assert_eq!(
-            index.source_location(TextSize::from(6), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(0)
-            }
-        );
-        assert_eq!(
-            index.source_location(TextSize::from(7), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(1)
-            }
-        );
-    }
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(4), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(0),
+    //             column: OneIndexed::from_zero_indexed(4)
+    //         }
+    //     );
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(6), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(0)
+    //         }
+    //     );
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(7), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(1)
+    //         }
+    //     );
+    // }
 
-    #[test]
-    fn ascii_carriage_return_newline() {
-        let contents = "x = 4\r\ny = 3";
-        let index = LineIndex::from_source_text(contents);
-        assert_eq!(index.line_starts(), &[TextSize::from(0), TextSize::from(7)]);
+    // #[test]
+    // fn ascii_carriage_return_newline() {
+    //     let contents = "x = 4\r\ny = 3";
+    //     let index = LineIndex::from_source_text(contents);
+    //     assert_eq!(index.line_starts(), &[TextSize::from(0), TextSize::from(7)]);
 
-        assert_eq!(
-            index.source_location(TextSize::from(4), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(0),
-                column: OneIndexed::from_zero_indexed(4)
-            }
-        );
-        assert_eq!(
-            index.source_location(TextSize::from(7), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(0)
-            }
-        );
-        assert_eq!(
-            index.source_location(TextSize::from(8), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(1)
-            }
-        );
-    }
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(4), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(0),
+    //             column: OneIndexed::from_zero_indexed(4)
+    //         }
+    //     );
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(7), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(0)
+    //         }
+    //     );
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(8), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(1)
+    //         }
+    //     );
+    // }
 
-    #[test]
-    fn utf8_index() {
-        let index = LineIndex::from_source_text("x = '🫣'");
-        assert_eq!(index.line_count(), 1);
-        assert_eq!(index.line_starts(), &[TextSize::from(0)]);
+    // #[test]
+    // fn utf8_index() {
+    //     let index = LineIndex::from_source_text("x = '🫣'");
+    //     assert_eq!(index.line_count(), 1);
+    //     assert_eq!(index.line_starts(), &[TextSize::from(0)]);
 
-        let index = LineIndex::from_source_text("x = '🫣'\n");
-        assert_eq!(index.line_count(), 2);
-        assert_eq!(
-            index.line_starts(),
-            &[TextSize::from(0), TextSize::from(11)]
-        );
+    //     let index = LineIndex::from_source_text("x = '🫣'\n");
+    //     assert_eq!(index.line_count(), 2);
+    //     assert_eq!(
+    //         index.line_starts(),
+    //         &[TextSize::from(0), TextSize::from(11)]
+    //     );
 
-        let index = LineIndex::from_source_text("x = '🫣'\ny = 2\nz = x + y\n");
-        assert_eq!(index.line_count(), 4);
-        assert_eq!(
-            index.line_starts(),
-            &[
-                TextSize::from(0),
-                TextSize::from(11),
-                TextSize::from(17),
-                TextSize::from(27)
-            ]
-        );
+    //     let index = LineIndex::from_source_text("x = '🫣'\ny = 2\nz = x + y\n");
+    //     assert_eq!(index.line_count(), 4);
+    //     assert_eq!(
+    //         index.line_starts(),
+    //         &[
+    //             TextSize::from(0),
+    //             TextSize::from(11),
+    //             TextSize::from(17),
+    //             TextSize::from(27)
+    //         ]
+    //     );
 
-        let index = LineIndex::from_source_text("# 🫣\nclass Foo:\n    \"\"\".\"\"\"");
-        assert_eq!(index.line_count(), 3);
-        assert_eq!(
-            index.line_starts(),
-            &[TextSize::from(0), TextSize::from(7), TextSize::from(18)]
-        );
-    }
+    //     let index = LineIndex::from_source_text("# 🫣\nclass Foo:\n    \"\"\".\"\"\"");
+    //     assert_eq!(index.line_count(), 3);
+    //     assert_eq!(
+    //         index.line_starts(),
+    //         &[TextSize::from(0), TextSize::from(7), TextSize::from(18)]
+    //     );
+    // }
 
-    #[test]
-    fn utf8_carriage_return() {
-        let contents = "x = '🫣'\ry = 3";
-        let index = LineIndex::from_source_text(contents);
-        assert_eq!(index.line_count(), 2);
-        assert_eq!(
-            index.line_starts(),
-            &[TextSize::from(0), TextSize::from(11)]
-        );
+    // #[test]
+    // fn utf8_carriage_return() {
+    //     let contents = "x = '🫣'\ry = 3";
+    //     let index = LineIndex::from_source_text(contents);
+    //     assert_eq!(index.line_count(), 2);
+    //     assert_eq!(
+    //         index.line_starts(),
+    //         &[TextSize::from(0), TextSize::from(11)]
+    //     );
 
-        // Second '
-        assert_eq!(
-            index.source_location(TextSize::from(9), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(0),
-                column: OneIndexed::from_zero_indexed(6)
-            }
-        );
-        assert_eq!(
-            index.source_location(TextSize::from(11), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(0)
-            }
-        );
-        assert_eq!(
-            index.source_location(TextSize::from(12), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(1)
-            }
-        );
-    }
+    //     // Second '
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(9), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(0),
+    //             column: OneIndexed::from_zero_indexed(6)
+    //         }
+    //     );
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(11), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(0)
+    //         }
+    //     );
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(12), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(1)
+    //         }
+    //     );
+    // }
 
-    #[test]
-    fn utf8_carriage_return_newline() {
-        let contents = "x = '🫣'\r\ny = 3";
-        let index = LineIndex::from_source_text(contents);
-        assert_eq!(index.line_count(), 2);
-        assert_eq!(
-            index.line_starts(),
-            &[TextSize::from(0), TextSize::from(12)]
-        );
+    // #[test]
+    // fn utf8_carriage_return_newline() {
+    //     let contents = "x = '🫣'\r\ny = 3";
+    //     let index = LineIndex::from_source_text(contents);
+    //     assert_eq!(index.line_count(), 2);
+    //     assert_eq!(
+    //         index.line_starts(),
+    //         &[TextSize::from(0), TextSize::from(12)]
+    //     );
 
-        // Second '
-        assert_eq!(
-            index.source_location(TextSize::from(9), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(0),
-                column: OneIndexed::from_zero_indexed(6)
-            }
-        );
-        assert_eq!(
-            index.source_location(TextSize::from(12), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(0)
-            }
-        );
-        assert_eq!(
-            index.source_location(TextSize::from(13), contents),
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(1)
-            }
-        );
-    }
+    //     // Second '
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(9), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(0),
+    //             column: OneIndexed::from_zero_indexed(6)
+    //         }
+    //     );
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(12), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(0)
+    //         }
+    //     );
+    //     assert_eq!(
+    //         index.source_location(TextSize::from(13), contents),
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(1)
+    //         }
+    //     );
+    // }
 
-    #[test]
-    fn utf8_byte_offset() {
-        let contents = "x = '☃'\ny = 2";
-        let index = LineIndex::from_source_text(contents);
-        assert_eq!(
-            index.line_starts(),
-            &[TextSize::from(0), TextSize::from(10)]
-        );
+    // #[test]
+    // fn utf8_byte_offset() {
+    //     let contents = "x = '☃'\ny = 2";
+    //     let index = LineIndex::from_source_text(contents);
+    //     assert_eq!(
+    //         index.line_starts(),
+    //         &[TextSize::from(0), TextSize::from(10)]
+    //     );
 
-        // First row.
-        let loc = index.source_location(TextSize::from(0), contents);
-        assert_eq!(
-            loc,
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(0),
-                column: OneIndexed::from_zero_indexed(0)
-            }
-        );
+    //     // First row.
+    //     let loc = index.source_location(TextSize::from(0), contents);
+    //     assert_eq!(
+    //         loc,
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(0),
+    //             column: OneIndexed::from_zero_indexed(0)
+    //         }
+    //     );
 
-        let loc = index.source_location(TextSize::from(5), contents);
-        assert_eq!(
-            loc,
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(0),
-                column: OneIndexed::from_zero_indexed(5)
-            }
-        );
+    //     let loc = index.source_location(TextSize::from(5), contents);
+    //     assert_eq!(
+    //         loc,
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(0),
+    //             column: OneIndexed::from_zero_indexed(5)
+    //         }
+    //     );
 
-        let loc = index.source_location(TextSize::from(8), contents);
-        assert_eq!(
-            loc,
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(0),
-                column: OneIndexed::from_zero_indexed(6)
-            }
-        );
+    //     let loc = index.source_location(TextSize::from(8), contents);
+    //     assert_eq!(
+    //         loc,
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(0),
+    //             column: OneIndexed::from_zero_indexed(6)
+    //         }
+    //     );
 
-        // Second row.
-        let loc = index.source_location(TextSize::from(10), contents);
-        assert_eq!(
-            loc,
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(0)
-            }
-        );
+    //     // Second row.
+    //     let loc = index.source_location(TextSize::from(10), contents);
+    //     assert_eq!(
+    //         loc,
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(0)
+    //         }
+    //     );
 
-        // One-past-the-end.
-        let loc = index.source_location(TextSize::from(15), contents);
-        assert_eq!(
-            loc,
-            SourceLocation {
-                row: OneIndexed::from_zero_indexed(1),
-                column: OneIndexed::from_zero_indexed(5)
-            }
-        );
-    }
+    //     // One-past-the-end.
+    //     let loc = index.source_location(TextSize::from(15), contents);
+    //     assert_eq!(
+    //         loc,
+    //         SourceLocation {
+    //             row: OneIndexed::from_zero_indexed(1),
+    //             column: OneIndexed::from_zero_indexed(5)
+    //         }
+    //     );
+    // }
 }

@@ -77,8 +77,9 @@ pub fn on_wasm_init() {
     console_error_panic_hook::set_once();
 }
 
+// TODO: (Greg) Move this into language_server.
 #[wasm_bindgen(getter_with_clone, inspectable)]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WasmProject {
     #[wasm_bindgen(readonly)]
     pub root_dir_name: String,

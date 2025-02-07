@@ -39,15 +39,15 @@ pub struct Session {
     /// when the mutable reference ([`MutIndexGuard`]) is dropped.
     ///
     /// [`index_mut`]: Session::index_mut
-    index: Option<Arc<index::Index>>,
+    pub index: Option<Arc<index::Index>>,
 
     /// Maps workspace folders to their respective project databases.
-    projects_by_workspace_folder: BTreeMap<PathBuf, Project>,
+    pub projects_by_workspace_folder: BTreeMap<PathBuf, Project>,
 
     /// The global position encoding, negotiated during LSP initialization.
-    position_encoding: PositionEncoding,
+    pub position_encoding: PositionEncoding,
     /// Tracks what LSP features the client supports and doesn't support.
-    resolved_client_capabilities: Arc<ResolvedClientCapabilities>,
+    pub resolved_client_capabilities: Arc<ResolvedClientCapabilities>,
 }
 
 impl Session {

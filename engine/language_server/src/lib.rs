@@ -12,8 +12,8 @@ mod message;
 
 mod edit;
 mod logging;
-mod server;
-mod session;
+pub mod server;
+pub mod session;
 mod system;
 mod tests;
 

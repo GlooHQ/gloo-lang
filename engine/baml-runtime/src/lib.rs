@@ -10,7 +10,7 @@ pub mod cli;
 pub mod client_registry;
 pub mod errors;
 pub mod request;
-mod runtime;
+pub mod runtime;
 pub mod runtime_interface;
 pub mod test_constraints;
 pub mod tracing;
@@ -72,7 +72,7 @@ static TOKIO_SINGLETON: OnceLock<std::io::Result<Arc<tokio::runtime::Runtime>>> 
 
 #[derive(Clone)]
 pub struct BamlRuntime {
-    pub(crate) inner: InternalBamlRuntime,
+    pub inner: InternalBamlRuntime,
     tracer: Arc<BamlTracer>,
     env_vars: HashMap<String, String>,
     #[cfg(not(target_arch = "wasm32"))]
