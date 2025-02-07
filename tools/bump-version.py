@@ -225,11 +225,11 @@ def main(
     run("pnpm generate")
 
     os.chdir(os.path.join(repo_root, "integ-tests/python"))
-    run("poetry install")
+    run("uv sync")
     run(
-        f"env -u CONDA_PREFIX poetry run maturin develop --manifest-path {repo_root}/engine/language_client_python/Cargo.toml"
+        f"uv run maturin develop --uv --manifest-path {repo_root}/engine/language_client_python/Cargo.toml"
     )
-    run("poetry run baml-cli generate --from ../baml_src")
+    run("uv run baml-cli generate --from ../baml_src")
 
     # Run integration tests
     ts_tests_status, python_tests_status = run_integration_tests(repo_root)
@@ -289,7 +289,7 @@ def run_integration_tests(repo_root: str) -> tuple[str, str]:
     os.chdir(os.path.join(repo_root, "integ-tests/python"))
     python_tests_status = "✅ Python integ tests"
     try:
-        run("infisical run --env=test -- poetry run pytest")
+        run("infisical run --env=test -- uv run pytest")
     except sp.CalledProcessError:
         python_tests_status = "❌ Python integ tests"
         print("Python integ tests failed, but continuing...")
