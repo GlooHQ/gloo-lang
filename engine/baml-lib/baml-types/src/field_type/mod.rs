@@ -85,11 +85,9 @@ pub enum FieldType {
     Union(Vec<FieldType>),
     Tuple(Vec<FieldType>),
     Optional(Box<FieldType>),
-    RecursiveTypeAlias(String),
-    WithMetadata {
+    Constrained {
         base: Box<FieldType>,
         constraints: Vec<Constraint>,
-        streaming_behavior: StreamingBehavior,
     },
 }
 
@@ -97,9 +95,9 @@ pub enum FieldType {
 impl std::fmt::Display for FieldType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FieldType::Enum(name)
-            | FieldType::Class(name)
-            | FieldType::RecursiveTypeAlias(name) => write!(f, "{name}"),
+            FieldType::Enum(name) | FieldType::Class(name) => {
+                write!(f, "{name}")
+            }
             FieldType::Primitive(t) => write!(f, "{t}"),
             FieldType::Literal(v) => write!(f, "{v}"),
             FieldType::Union(choices) => {
@@ -127,7 +125,7 @@ impl std::fmt::Display for FieldType {
             FieldType::Map(k, v) => write!(f, "map<{k}, {v}>"),
             FieldType::List(t) => write!(f, "{t}[]"),
             FieldType::Optional(t) => write!(f, "{t}?"),
-            FieldType::WithMetadata { base, .. } => base.fmt(f),
+            FieldType::Constrained { base, .. } => base.fmt(f),
         }
     }
 }
@@ -138,7 +136,7 @@ impl FieldType {
             FieldType::Primitive(_) => true,
             FieldType::Optional(t) => t.is_primitive(),
             FieldType::List(t) => t.is_primitive(),
-            FieldType::WithMetadata { base, .. } => base.is_primitive(),
+            FieldType::Constrained { base, .. } => base.is_primitive(),
             _ => false,
         }
     }
@@ -148,7 +146,7 @@ impl FieldType {
             FieldType::Optional(_) => true,
             FieldType::Primitive(TypeValue::Null) => true,
             FieldType::Union(types) => types.iter().any(FieldType::is_optional),
-            FieldType::WithMetadata { base, .. } => base.is_optional(),
+            FieldType::Constrained { base, .. } => base.is_optional(),
             _ => false,
         }
     }
@@ -157,52 +155,190 @@ impl FieldType {
         match self {
             FieldType::Primitive(TypeValue::Null) => true,
             FieldType::Optional(t) => t.is_null(),
-            FieldType::WithMetadata { base, .. } => base.is_null(),
+            FieldType::Constrained { base, .. } => base.is_null(),
             _ => false,
         }
     }
 
-    pub fn streaming_behavior(&self) -> Option<&StreamingBehavior> {
-        match self {
-            FieldType::WithMetadata {
-                streaming_behavior, ..
-            } => Some(streaming_behavior),
-            _ => None,
-        }
-    }
-}
+    /// BAML does not support class-based subtyping. Nonetheless some builtin
+    /// BAML types are subtypes of others, and we need to be able to test this
+    /// when checking the types of values.
+    ///
+    /// For examples of pairs of types and their subtyping relationship, see
+    /// this module's test suite.
+    ///
+    /// Consider renaming this to `is_assignable_to`.
+    pub fn is_subtype_of(&self, other: &FieldType) -> bool {
+        if self == other {
+            true
+        } else {
+            if let FieldType::Union(items) = other {
+                if items.iter().any(|item| self.is_subtype_of(item)) {
+                    return true;
+                }
+            }
+            match (self, other) {
+                (FieldType::Primitive(TypeValue::Null), FieldType::Optional(_)) => true,
+                (FieldType::Optional(self_item), FieldType::Optional(other_item)) => {
+                    self_item.is_subtype_of(other_item)
+                }
+                (_, FieldType::Optional(t)) => self.is_subtype_of(t),
+                (FieldType::Optional(_), _) => false,
 
-/// Metadata on a type that determines how it behaves under streaming conditions.
-#[derive(Clone, Debug, PartialEq, serde::Serialize)]
-pub struct StreamingBehavior {
-    /// A type with the `done` property will not be visible in a stream until
-    /// we are certain that it is completely available (i.e. the parser did
-    /// not finalize it through any early termination, enough tokens were available
-    /// from the LLM response to be certain that it is done).
-    pub done: bool,
+                // Handle types that nest other types.
+                (FieldType::List(self_item), FieldType::List(other_item)) => {
+                    self_item.is_subtype_of(other_item)
+                }
+                (FieldType::List(_), _) => false,
 
-    /// A type with the `state` property will be represented in client code as
-    /// a struct: `{value: T, streaming_state: "incomplete" | "complete"}`.
-    pub state: bool,
-}
+                (FieldType::Map(self_k, self_v), FieldType::Map(other_k, other_v)) => {
+                    other_k.is_subtype_of(self_k) && (**self_v).is_subtype_of(other_v)
+                }
+                (FieldType::Map(_, _), _) => false,
 
-impl StreamingBehavior {
-    pub fn combine(&self, other: &StreamingBehavior) -> StreamingBehavior {
-        StreamingBehavior {
-            done: self.done || other.done,
-            state: self.state || other.state,
-        }
-    }
-}
+                (
+                    FieldType::Constrained {
+                        base: self_base,
+                        constraints: self_cs,
+                    },
+                    FieldType::Constrained {
+                        base: other_base,
+                        constraints: other_cs,
+                    },
+                ) => self_base.is_subtype_of(other_base) && self_cs == other_cs,
+                (FieldType::Constrained { base, .. }, _) => base.is_subtype_of(other),
+                (_, FieldType::Constrained { base, .. }) => self.is_subtype_of(base),
+                (
+                    FieldType::Literal(LiteralValue::Bool(_)),
+                    FieldType::Primitive(TypeValue::Bool),
+                ) => true,
+                (FieldType::Literal(LiteralValue::Bool(_)), _) => {
+                    self.is_subtype_of(&FieldType::Primitive(TypeValue::Bool))
+                }
+                (
+                    FieldType::Literal(LiteralValue::Int(_)),
+                    FieldType::Primitive(TypeValue::Int),
+                ) => true,
+                (FieldType::Literal(LiteralValue::Int(_)), _) => {
+                    self.is_subtype_of(&FieldType::Primitive(TypeValue::Int))
+                }
+                (
+                    FieldType::Literal(LiteralValue::String(_)),
+                    FieldType::Primitive(TypeValue::String),
+                ) => true,
+                (FieldType::Literal(LiteralValue::String(_)), _) => {
+                    self.is_subtype_of(&FieldType::Primitive(TypeValue::String))
+                }
 
-impl Default for StreamingBehavior {
-    fn default() -> Self {
-        StreamingBehavior {
-            done: false,
-            state: false,
+                (FieldType::Union(self_items), _) => self_items
+                    .iter()
+                    .all(|self_item| self_item.is_subtype_of(other)),
+
+                (FieldType::Tuple(self_items), FieldType::Tuple(other_items)) => {
+                    self_items.len() == other_items.len()
+                        && self_items
+                            .iter()
+                            .zip(other_items)
+                            .all(|(self_item, other_item)| self_item.is_subtype_of(other_item))
+                }
+                (FieldType::Tuple(_), _) => false,
+
+                (FieldType::Primitive(_), _) => false,
+                (FieldType::Enum(_), _) => false,
+                (FieldType::Class(_), _) => false,
+            }
         }
     }
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+
+    fn mk_int() -> FieldType {
+        FieldType::Primitive(TypeValue::Int)
+    }
+    fn mk_bool() -> FieldType {
+        FieldType::Primitive(TypeValue::Bool)
+    }
+    fn mk_str() -> FieldType {
+        FieldType::Primitive(TypeValue::String)
+    }
+
+    fn mk_optional(ft: FieldType) -> FieldType {
+        FieldType::Optional(Box::new(ft))
+    }
+
+    fn mk_list(ft: FieldType) -> FieldType {
+        FieldType::List(Box::new(ft))
+    }
+
+    fn mk_tuple(ft: Vec<FieldType>) -> FieldType {
+        FieldType::Tuple(ft)
+    }
+    fn mk_union(ft: Vec<FieldType>) -> FieldType {
+        FieldType::Union(ft)
+    }
+    fn mk_str_map(ft: FieldType) -> FieldType {
+        FieldType::Map(Box::new(mk_str()), Box::new(ft))
+    }
+
+    #[test]
+    fn subtype_trivial() {
+        assert!(mk_int().is_subtype_of(&mk_int()))
+    }
+
+    #[test]
+    fn subtype_union() {
+        let i = mk_int();
+        let u = mk_union(vec![mk_int(), mk_str()]);
+        assert!(i.is_subtype_of(&u));
+        assert!(!u.is_subtype_of(&i));
+
+        let u3 = mk_union(vec![mk_int(), mk_bool(), mk_str()]);
+        assert!(i.is_subtype_of(&u3));
+        assert!(u.is_subtype_of(&u3));
+        assert!(!u3.is_subtype_of(&u));
+    }
+
+    #[test]
+    fn subtype_optional() {
+        let i = mk_int();
+        let o = mk_optional(mk_int());
+        assert!(i.is_subtype_of(&o));
+        assert!(!o.is_subtype_of(&i));
+    }
+
+    #[test]
+    fn subtype_list() {
+        let l_i = mk_list(mk_int());
+        let l_o = mk_list(mk_optional(mk_int()));
+        assert!(l_i.is_subtype_of(&l_o));
+        assert!(!l_o.is_subtype_of(&l_i));
+    }
+
+    #[test]
+    fn subtype_tuple() {
+        let x = mk_tuple(vec![mk_int(), mk_optional(mk_int())]);
+        let y = mk_tuple(vec![mk_int(), mk_int()]);
+        assert!(y.is_subtype_of(&x));
+        assert!(!x.is_subtype_of(&y));
+    }
+
+    #[test]
+    fn subtype_map_of_list_of_unions() {
+        let x = mk_str_map(mk_list(FieldType::Class("Foo".to_string())));
+        let y = mk_str_map(mk_list(mk_union(vec![
+            mk_str(),
+            mk_int(),
+            FieldType::Class("Foo".to_string()),
+        ])));
+        assert!(x.is_subtype_of(&y));
+    }
+
+    #[test]
+    fn subtype_media() {
+        let x = FieldType::Primitive(TypeValue::Media(BamlMediaType::Audio));
+        assert!(x.is_subtype_of(&x));
+    }
+}
