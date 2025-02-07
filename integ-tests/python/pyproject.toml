@@ -19,3 +19,9 @@ dependencies = [
 
 [dependency-groups]
 dev = ["types-assertpy"]
+
+[tool.uv]
+package = false
+
+[tool.setuptools.packages.find]
+include = ["app*", "baml_client*"]
