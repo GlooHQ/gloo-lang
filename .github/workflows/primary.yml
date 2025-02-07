@@ -124,5 +124,4 @@ jobs:
       - name: run python tests
         run: |
           cd integ-tests/python
-          poetry install
           ./run_tests.sh
