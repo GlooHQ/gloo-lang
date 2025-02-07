@@ -18,9 +18,9 @@ This directory contains integration tests for the BAML Python client. These test
 
 ## Setup
 
-1. Install Poetry dependencies:
+1. Install Python deps
 ```bash
-poetry install
+uv sync
 ```
 
 2. Build and install the Python client:
@@ -74,7 +74,7 @@ infisical run --env=test -- uv run pytest --no-cov
 - `app/` - Example application code
 - `docker-tests/` - Docker-based integration tests
 - `pyproject.toml` - Python project configuration
-- `poetry.lock` - Locked dependencies
+- `uv.lock` - Locked dependencies
 
 ## Debugging Tests
 
@@ -138,11 +138,11 @@ BAML_LOG=trace infisical run --env=test -- uv run pytest
      ```bash
      # Clean and rebuild
      rm -rf target/
-     env -u CONDA_PREFIX uv run maturin develop --manifest-path ../../engine/language_client_python/Cargo.toml
+     uv run maturin develop --uv --manifest-path ../../engine/language_client_python/Cargo.toml
      ```
-   - For Poetry issues:
+   - For Python deps issues:
      ```bash
-     poetry install --sync
+     uv sync
      ```
 
 3. **Test Timeouts**
