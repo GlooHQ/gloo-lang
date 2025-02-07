@@ -83,10 +83,15 @@ navigation:
           - page: REST API (other languages)
             icon: fa-regular fa-network-wired
             path: 01-guide/02-languages/rest.mdx
-
-          - page: NextJS
+      - section: Framework Integration
+        icon: fa-solid fa-plug
+        contents:
+          - section: React/Next.js
             icon: fa-brands fa-react
-            path: 01-guide/08-integrations/nextjs.mdx
+            contents:
+              - page: App Router Setup
+                icon: fa-regular fa-route
+                path: 01-guide/08-frameworks/01-react-nextjs/01-app-router.mdx
       - section: Development
         contents:
           - page: Environment Variables
@@ -104,9 +109,6 @@ navigation:
               - page: AWS
                 icon: fa-brands fa-aws
                 path: 01-guide/03-development/deploying/aws.mdx
-              - page: NextJs
-                icon: fa-brands fa-react
-                path: 01-guide/03-development/deploying/nextjs.mdx
               - page: Docker
                 icon: fa-brands fa-docker
                 path: 01-guide/03-development/deploying/docker.mdx
@@ -289,6 +291,44 @@ navigation:
       #     - page: PHP
       #       icon: fa-brands fa-php
       #       path: 01-guide/introduction.mdx
+      #     - page: b
+      #       path: 01-guide/introduction.mdx
+      #     - page: async_client
+      #       path: 01-guide/introduction.mdx
+      #     - page: sync_client
+      #       path: 01-guide/introduction.mdx
+      #     - page: reset_baml_env_vars
+      #       path: 01-guide/introduction.mdx
+      #     - page: trace
+      #       path: 01-guide/introduction.mdx
+      #     - page: set_tags
+      #       path: 01-guide/introduction.mdx
+      # - section: "baml_client: Typescript"
+      #   contents:
+      #     - page: TypeBuilder
+      #       path: 01-guide/introduction.mdx
+      #     - page: ClientRegistry
+      #       path: 01-guide/introduction.mdx
+      #     - page: BamlError
+      #       path: 01-guide/introduction.mdx
+      #     - page: BamlImageTs
+      #       path: 01-guide/introduction.mdx
+      #     - page: BamlAudioTs
+      #       path: 01-guide/introduction.mdx
+      #     - page: b
+      #       path: 01-guide/introduction.mdx
+      #     - page: async_client
+      #       path: 01-guide/introduction.mdx
+      #     - page: sync_client
+      #       path: 01-guide/introduction.mdx
+      #     - page: resetBamlEnvVars
+      #       path: 01-guide/introduction.mdx
+      #     - page: trace_async
+      #       path: 01-guide/introduction.mdx
+      #     - page: trace_sync
+      #       path: 01-guide/introduction.mdx
+      #     - page: set_tags
+      #       path: 01-guide/introduction.mdx
   - tab: reference
     layout:
       #     - page: Changelog
@@ -356,6 +396,25 @@ navigation:
             path: 03-reference/baml/enum.mdx
           - page: generator
             path: 03-reference/generator.mdx
+      - section: Generators
+        contents:
+          - page: Overview
+            path: 03-reference/08-generators/overview.mdx
+          - section: Language Generators
+            contents:
+              - page: TypeScript
+                path: 03-reference/08-generators/01-languages/01-typescript.mdx
+              - page: Python (Pydantic)
+                path: 03-reference/08-generators/01-languages/02-python-pydantic.mdx
+              - page: Ruby (Sorbet)
+                path: 03-reference/08-generators/01-languages/03-ruby-sorbet.mdx
+              - page: OpenAPI (REST)
+                path: 03-reference/08-generators/01-languages/04-rest-openapi.mdx
+          - section: Framework Generators
+            contents:
+              - page: React/Next.js
+                path: 03-reference/08-generators/02-frameworks/01-react-nextjs.mdx
+
       - section: Attributes
         contents:
           - page: What are attributes?
