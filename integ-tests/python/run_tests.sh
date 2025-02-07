@@ -4,6 +4,7 @@
 
 set -euxo pipefail
 
+uv sync
 uv run maturin develop --uv --manifest-path ../../engine/language_client_python/Cargo.toml
 uv run baml-cli generate --from ../baml_src
 
