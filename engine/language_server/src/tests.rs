@@ -3,16 +3,27 @@ use crossbeam_channel::{Sender, Receiver};
 use tracing_subscriber::field::debug;
 use std::num::NonZeroUsize;
 use indexmap::IndexMap;
+use serde_json::json;
+use std::thread;
 
 use crate::server::Server;
 use crate::server::connection::ConnectionInitializer;
 use lsp_server::Message;
 
 
-struct TestServer {
-    server: Server,
-    sender: Sender<Message>,
-    receiver: Receiver<Message>,
+pub struct TestServer {
+    // pub server: Server,
+    pub thread_join_handle: thread::JoinHandle<()>,
+    pub sender: Sender<Message>,
+    pub receiver: Receiver<Message>,
+}
+
+impl TestServer {
+  pub fn req_respond(&self, req: lsp_server::Message) -> Result<lsp_server::Message, anyhow::Error> {
+    self.sender.send(req)?;
+    let resp = self.receiver.recv()?;
+    Ok(resp)
+  }
 }
 
 struct TestCase {
@@ -24,11 +35,27 @@ struct TestCase {
 
 impl TestCase {
     pub fn run(self) -> anyhow::Result<()> {
+        eprintln!("new_test_server");
         let test_server = new_test_server(NonZeroUsize::new(1).unwrap())?;
-        for (file_name, file) in self.files {
+        eprintln!("about to loop");
+        for (file_name, file_content) in self.files {
+            let resp = test_server.req_respond(lsp_server::Message::Notification(lsp_server::Notification{
+              method: "textDocument/didOpen".to_string(),
+              params: json!({
+                "textDocument": {
+                  "uri": format!("file:///{}", file_name),
+                  "languageId": "baml",
+                  "version": 1,
+                  "text": file_content
+                }
+              }),
+            }))?;
+            dbg!(resp);
             dbg!(file_name);
         }
-        test_server.server.connection.handle_shutdown();
+        // test_server.server.connection.handle_shutdown();
+        // test_server.server.connection.close()?;
+        test_server.thread_join_handle.join().unwrap();
         // dbg!(&test_server.server.session.projects_by_workspace_folder);
         Ok(())
     }
@@ -43,26 +70,54 @@ impl TestCase {
 
 pub fn new_test_server(worker_threads: NonZeroUsize) -> crate::Result<TestServer> {
 
-    let (server_connection, client_connection) = lsp_server::Connection::memory();
+  let initialize = lsp_server::Message::Request(lsp_server::Request{
+    id: lsp_server::RequestId::from(1),
+    method: "initialize".to_string(),
+    params: json!({
+      "capabilities": {},
+      "rootPath": "./",
+    }),
+  });
+  let (server_connection, client_connection) = lsp_server::Connection::memory();
+  
+  client_connection.sender.send(initialize).unwrap();
+  let thread_join_handle = thread::spawn(move || {
+
     let connection = ConnectionInitializer::new(server_connection);
-    let (id, init_params) = connection.initialize_start()?;
+    let (id, init_params) = connection.initialize_start().unwrap();
 
     let client_capabilities = init_params.capabilities.clone();
     let position_encoding = Server::find_best_position_encoding(&client_capabilities);
     let server_capabilities = Server::server_capabilities(position_encoding);
+    eprintln!("E");
 
     let connection = connection.initialize_finish(
         id,
         &server_capabilities,
         crate::SERVER_NAME,
         crate::version(),
-    )?;
-    let server = Server::new_with_connection(worker_threads, connection, init_params)?;
-    Ok(TestServer {
-        server,
-        sender: client_connection.sender,
-        receiver: client_connection.receiver
-    })
+    ).unwrap();
+
+    eprintln!("F");
+    let server = Server::new_with_connection(worker_threads, connection, init_params).unwrap();
+    server.run().unwrap();
+  });
+
+  let handshake = client_connection.receiver.recv()?;
+  dbg!(&handshake);
+  eprintln!("ABOUT TO SEND POST_HANDSHAKE");
+  client_connection.sender.send(lsp_server::Message::Notification(lsp_server::Notification{
+    method: "initialized".to_string(),
+    params: json!({})
+  }))?;
+  eprintln!("FINISHED SEND POST_HANDSHAKE");
+
+
+  Ok(TestServer {
+      thread_join_handle,
+      sender: client_connection.sender,
+      receiver: client_connection.receiver
+  })
 }
 
 static SINGLE_FILE: &str = r##"

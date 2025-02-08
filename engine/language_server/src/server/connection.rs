@@ -42,6 +42,7 @@ impl ConnectionInitializer {
         &self,
     ) -> crate::Result<(lsp::RequestId, lsp_types::InitializeParams)> {
         let (id, params) = self.connection.initialize_start()?;
+        eprintln!("done with initialize_start");
         Ok((id, serde_json::from_value(params)?))
     }
 
@@ -54,6 +55,7 @@ impl ConnectionInitializer {
         name: &str,
         version: &str,
     ) -> crate::Result<Connection> {
+        eprintln!("a");
         self.connection.initialize_finish(
             id,
             serde_json::json!({
@@ -64,6 +66,7 @@ impl ConnectionInitializer {
                 }
             }),
         )?;
+        eprintln!("b");
         let Self {
             connection: lsp::Connection { sender, receiver },
             threads,

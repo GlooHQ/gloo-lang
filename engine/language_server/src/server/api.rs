@@ -1,5 +1,5 @@
 use crate::{server::schedule::Task, session::Session};
-use lsp_server as server;
+use lsp_server;
 
 // use crate::system::{url_to_any_system_path, AnySystemPath};
 
@@ -15,7 +15,7 @@ use self::traits::{NotificationHandler, RequestHandler};
 
 use super::{client::Responder, schedule::BackgroundSchedule, Result};
 
-pub(super) fn request<'a>(req: server::Request) -> Task<'a> {
+pub(super) fn request<'a>(req: lsp_server::Request) -> Task<'a> {
     let id = req.id.clone();
 
     match req.method.as_str() {
@@ -58,7 +58,7 @@ pub(super) fn request<'a>(req: server::Request) -> Task<'a> {
     })
 }
 
-pub(super) fn notification<'a>(notif: server::Notification) -> Task<'a> {
+pub(super) fn notification<'a>(notif: lsp_server::Notification) -> Task<'a> {
     match notif.method.as_str() {
         notification::DidChangeTextDocumentHandler::METHOD => {
             local_notification_task::<notification::DidChangeTextDocumentHandler>(notif)
@@ -96,7 +96,7 @@ pub(super) fn notification<'a>(notif: server::Notification) -> Task<'a> {
 }
 
 fn _local_request_task<'a, R: traits::SyncRequestHandler>(
-    req: server::Request,
+    req: lsp_server::Request,
 ) -> super::Result<Task<'a>> {
     let (id, params) = cast_request::<R>(req)?;
     Ok(Task::local(|session, notifier, requester, responder| {
@@ -106,7 +106,7 @@ fn _local_request_task<'a, R: traits::SyncRequestHandler>(
 }
 
 fn background_request_task<'a, R: traits::BackgroundDocumentRequestHandler>(
-    req: server::Request,
+    req: lsp_server::Request,
     schedule: BackgroundSchedule,
 ) -> super::Result<Task<'a>> {
     let (id, params) = cast_request::<R>(req)?;
@@ -138,7 +138,7 @@ fn background_request_task<'a, R: traits::BackgroundDocumentRequestHandler>(
 }
 
 fn local_notification_task<'a, N: traits::SyncNotificationHandler>(
-    notif: server::Notification,
+    notif: lsp_server::Notification,
 ) -> super::Result<Task<'a>> {
     let (id, params) = cast_notification::<N>(notif)?;
     Ok(Task::local(move |session, notifier, requester, _| {
@@ -151,7 +151,7 @@ fn local_notification_task<'a, N: traits::SyncNotificationHandler>(
 
 #[allow(dead_code)]
 fn background_notification_thread<'a, N: traits::BackgroundDocumentNotificationHandler>(
-    req: server::Notification,
+    req: lsp_server::Notification,
     schedule: BackgroundSchedule,
 ) -> super::Result<Task<'a>> {
     let (id, params) = cast_notification::<N>(req)?;
@@ -174,9 +174,9 @@ fn background_notification_thread<'a, N: traits::BackgroundDocumentNotificationH
 /// It is *highly* recommended to not override this function in your
 /// implementation.
 fn cast_request<Req>(
-    request: server::Request,
+    request: lsp_server::Request,
 ) -> super::Result<(
-    server::RequestId,
+    lsp_server::RequestId,
     <<Req as RequestHandler>::RequestType as lsp_types::request::Request>::Params,
 )>
 where
@@ -185,20 +185,20 @@ where
     request
         .extract(Req::METHOD)
         .map_err(|err| match err {
-            json_err @ server::ExtractError::JsonError { .. } => {
+            json_err @ lsp_server::ExtractError::JsonError { .. } => {
                 anyhow::anyhow!("JSON parsing failure:\n{json_err}")
             }
-            server::ExtractError::MethodMismatch(_) => {
+            lsp_server::ExtractError::MethodMismatch(_) => {
                 unreachable!("A method mismatch should not be possible here unless you've used a different handler (`Req`) \
                     than the one whose method name was matched against earlier.")
             }
         })
-        .with_failure_code(server::ErrorCode::InternalError)
+        .with_failure_code(lsp_server::ErrorCode::InternalError)
 }
 
 /// Sends back a response to the server using a [`Responder`].
 fn respond<Req>(
-    id: server::RequestId,
+    id: lsp_server::RequestId,
     result: crate::server::Result<
         <<Req as traits::RequestHandler>::RequestType as lsp_types::request::Request>::Result,
     >,
@@ -218,7 +218,7 @@ fn respond<Req>(
 /// Tries to cast a serialized request from the server into
 /// a parameter type for a specific request handler.
 fn cast_notification<N>(
-    notification: server::Notification,
+    notification: lsp_server::Notification,
 ) -> super::Result<
     (
         &'static str,
@@ -229,36 +229,36 @@ fn cast_notification<N>(
         notification
             .extract(N::METHOD)
             .map_err(|err| match err {
-                json_err @ server::ExtractError::JsonError { .. } => {
+                json_err @ lsp_server::ExtractError::JsonError { .. } => {
                     anyhow::anyhow!("JSON parsing failure:\n{json_err}")
                 }
-                server::ExtractError::MethodMismatch(_) => {
+                lsp_server::ExtractError::MethodMismatch(_) => {
                     unreachable!("A method mismatch should not be possible here unless you've used a different handler (`N`) \
                         than the one whose method name was matched against earlier.")
                 }
             })
-            .with_failure_code(server::ErrorCode::InternalError)?,
+            .with_failure_code(lsp_server::ErrorCode::InternalError)?,
     ))
 }
 
 pub(crate) struct Error {
-    pub(crate) code: server::ErrorCode,
+    pub(crate) code: lsp_server::ErrorCode,
     pub(crate) error: anyhow::Error,
 }
 
 /// A trait to convert result types into the server result type, [`super::Result`].
 trait LSPResult<T> {
-    fn with_failure_code(self, code: server::ErrorCode) -> super::Result<T>;
+    fn with_failure_code(self, code: lsp_server::ErrorCode) -> super::Result<T>;
 }
 
 impl<T, E: Into<anyhow::Error>> LSPResult<T> for core::result::Result<T, E> {
-    fn with_failure_code(self, code: server::ErrorCode) -> super::Result<T> {
+    fn with_failure_code(self, code: lsp_server::ErrorCode) -> super::Result<T> {
         self.map_err(|err| Error::new(err.into(), code))
     }
 }
 
 impl Error {
-    pub(crate) fn new(err: anyhow::Error, code: server::ErrorCode) -> Self {
+    pub(crate) fn new(err: anyhow::Error, code: lsp_server::ErrorCode) -> Self {
         Self { code, error: err }
     }
 }

@@ -30,6 +30,8 @@ impl SyncNotificationHandler for DidOpenTextDocumentHandler {
         let document = TextDocument::new(params.text_document.text, params.text_document.version);
         session.open_text_document(params.text_document.uri, document);
 
+        dbg!(&session.index);
+
         // match path {
         //     AnySystemPath::System(path) => {
         //         let db = match session.project_db_for_path_mut(path.as_std_path()) {
