@@ -1,0 +1,470 @@
+---
+title: Logger
+---
+
+<Warning>
+`Logger` is in proposal stage and may change. It is not yet available in any language. Please leave feedback on our discord.
+</Warning>
+
+The `Logger` class allows you to inspect the internal state of BAML function calls, including raw HTTP requests, responses, usage metrics, and timing information.
+
+## Quick Start
+
+<Tabs>
+<Tab title="Python">
+```python
+from baml_client import b
+
+# Create a logger
+logger = b.create_logger()
+
+# Use it with a function call
+result = b.ExtractResume("...", baml_options={"logger": logger})
+
+# Access logging information
+print(logger.last.usage)  # Print usage metrics
+print(logger.last.raw_response[-1])  # Print final response
+```
+</Tab>
+
+<Tab title="TypeScript">
+```typescript
+import {b} from 'baml_client'
+
+// Create a logger
+const logger = b.createLogger()
+
+// Use it with a function call
+const result = await b.ExtractResume("...", { logger })
+
+// Access logging information
+console.log(logger.last?.usage)  # Print usage metrics
+console.log(logger.last?.raw_response.at(-1))  # Print final response
+```
+</Tab>
+
+<Tab title="Ruby">
+```ruby
+require_relative "baml_client/client"
+
+# Create a logger
+logger = Baml.Client.create_internal_logger
+
+# Use it with a function call
+res = Baml.Client.extract_resume(input: '...', baml_options: { logger: logger })
+
+# Access logging information
+print(logger.last.usage)  # Print usage metrics
+print(logger.last.raw_response.at(-1))  # Print final response
+```
+</Tab>
+</Tabs>
+
+## Common Use Cases
+
+### Basic Logging
+
+<Tabs>
+<Tab title="Python">
+```python
+from baml_client import b
+
+def run():
+    logger = b.create_logger()
+    # logger will be modified by the function to include all internal state
+    res = b.ExtractResume("...", baml_options={"logger": logger})
+    # This will print the return type of the function
+    print(res)
+
+    # This is guaranteed to be set by the function
+    assert logger.last is not None
+
+    # This will print the id of the last request
+    print(logger.last.id)
+
+    # This will print the usage of the last request
+    # (due to fallbacks and retries, others may also exist)
+    print(logger.last.usage)
+
+    # This will print the raw request of the last request
+    print(logger.last.raw_request)
+
+    # This will print the raw response of the last request
+    print(logger.last.raw_response[-1])
+
+    # This will print the raw text we used to run the parser.
+    print(logger.last.pre_parser)
+```
+</Tab>
+
+<Tab title="TypeScript">
+```typescript
+import {b} from 'baml_client'
+
+async function run() {
+    const logger = b.createLogger()
+    // logger will be modified by the function to include all internal state
+    const res = await b.ExtractResume("...", { logger })
+    // This will print the return type of the function
+    console.log(res)
+
+    // This is guaranteed to be set by the function
+    assert(logger.last)
+
+    // This will print the id of the last request
+    console.log(logger.last.id)
+
+    // This will print the usage of the last request
+    // (due to fallbacks and retries, others may also exist)
+    console.log(logger.last.usage)
+
+    // This will print the raw request of the last request
+    console.log(logger.last.raw_request)
+
+    // This will print the raw response of the last request
+    console.log(logger.last.raw_response.at(-1))
+
+    // This will print the raw text we used to run the parser.
+    console.log(logger.last.pre_parser)
+}
+```
+</Tab>
+
+<Tab title="Ruby">
+```ruby
+require_relative "baml_client/client"
+
+def run
+    logger = Baml.Client.create_internal_logger
+    # ExtractResume will now use MyAmazingClient as the calling client
+    res = Baml.Client.extract_resume(input: '...', baml_options: { logger: logger })
+
+    # This will print the return type of the function
+    print(res)
+
+    # This is guaranteed to be set by the function
+    raise "Assertion failed" unless logger.last
+
+    # This will print the id of the last request
+    print(logger.last.id)
+
+    # This will print the usage of the last request
+    # (due to fallbacks and retries, others may also exist)
+    print(logger.last.usage)
+
+    # This will print the raw request of the last request
+    print(logger.last.raw_request)
+
+    # This will print the raw response of the last request
+    print(logger.last.raw_response.at(-1))
+
+    # This will print the raw text we used to run the parser.
+    print(logger.last.pre_parser)
+end
+
+# Call the function
+run
+```
+</Tab>
+</Tabs>
+
+### Working with Multiple Functions
+
+The Logger works seamlessly with BAML's [`id`](./id) functionality and [`with_options`](./with_options) for tracking multiple function calls. This is particularly useful when running functions in parallel.
+
+<Tabs>
+<Tab title="Python">
+```python
+from baml_client import b
+
+def run():
+    logger = b.create_logger()
+    # You can use `b.id` to include the id along with the return value
+    first_id, resume = b.id.ExtractResume("...", baml_options={"logger": logger})
+    second_id, invoice = b.id.ExtractInvoice("...", baml_options={"logger": logger})
+
+    # List of all requests
+    print(logger.logs)
+
+    # The first request usage is available
+    print(logger.id(first_id).usage)
+
+    # The second request usage is also available
+    print(logger.id(second_id).usage)
+
+    # The total usage of all requests
+    print(logger.usage)
+```
+</Tab>
+
+<Tab title="TypeScript">
+```typescript
+import {b} from 'baml_client'
+
+async function run() {
+    const logger = b.createLogger()
+    const [{ id: first_id, data: resume }, { id: second_id, data: invoice }] = await Promise.all([
+        b.id.ExtractResume("...", { logger }),
+        b.id.ExtractInvoice("...", { logger })
+    ])
+
+    // List of all requests
+    console.log(logger.logs)
+
+    // The first request usage is available
+    console.log(logger.id(first_id)?.usage)
+
+    // The second request usage is also available
+    console.log(logger.id(second_id)?.usage)
+
+    // The total usage of all requests
+    console.log(logger.usage)
+}
+```
+</Tab>
+
+<Tab title="Ruby">
+```ruby
+require_relative "baml_client/client"
+
+def run
+    logger = Baml.Client.create_internal_logger
+    first_id, resume = Baml.Client.id.extract_resume(input: '...', baml_options: { logger: logger })
+    second_id, invoice = Baml.Client.id.extract_invoice(input: '...', baml_options: { logger: logger })
+
+    # List of all requests
+    print(logger.logs)
+
+    # The first request usage is available
+    print(logger.id(first_id).usage)
+
+    # The second request usage is also available
+    print(logger.id(second_id).usage)
+
+    # The total usage of all requests
+    print(logger.usage)
+end
+```
+</Tab>
+</Tabs>
+
+### Managing Logger State
+
+<Tabs>
+<Tab title="Python">
+```python
+from baml_client import b
+
+def run():
+    logger = b.create_logger()
+    res = b.ExtractResume("...", baml_options={"logger": logger})
+    # Remove all logs and free up memory
+    logger.clear()
+
+    # Reuse the same logger
+    res = b.ExtractInvoice("...", baml_options={"logger": logger})
+```
+</Tab>
+
+<Tab title="TypeScript">
+```typescript
+import {b} from 'baml_client'
+
+async function run() {
+    const logger = b.createLogger()
+    const res = await b.ExtractResume("...", { logger })
+    // Remove all logs and free up memory
+    logger.clear()
+
+    // Reuse the same logger
+    const res = await b.ExtractInvoice("...", { logger })
+}
+```
+</Tab>
+
+<Tab title="Ruby">
+```ruby
+require_relative "baml_client/client"
+
+def run
+    logger = Baml.Client.create_internal_logger
+    res = Baml.Client.extract_resume(input: '...', baml_options: { logger: logger })
+    # Remove all logs and free up memory
+    logger.clear()
+
+    # Reuse the same logger
+    res = Baml.Client.extract_invoice(input: '...', baml_options: { logger: logger })
+end
+```
+</Tab>
+</Tabs>
+
+### Usage Tracking
+
+<Tabs>
+<Tab title="Python">
+```python
+from baml_client import b
+
+def run():
+    logger_a = b.create_logger()
+    res = b.ExtractResume("...", baml_options={"logger": logger_a})
+
+    logger_b = b.create_logger()
+    res = b.ExtractInvoice("...", baml_options={"logger": logger_b})
+
+    # Merge the usage of both logs
+    logger_a.merge(logger_b)
+
+    # The total usage of both logs is now available
+    print(logger_a.usage)
+```
+</Tab>
+
+<Tab title="TypeScript">
+```typescript
+import {b} from 'baml_client'
+
+async function run() {
+    const logger_a = b.createLogger()
+    const res = await b.ExtractResume("...", { logger: logger_a })
+
+    const logger_b = b.createLogger()
+    const res = await b.ExtractInvoice("...", { logger: logger_b })
+
+    // Merge the usage of both logs
+    logger_a.merge(logger_b)
+
+    // The total usage of both logs is now available
+    console.log(logger_a.usage)
+}
+```
+</Tab>
+
+<Tab title="Ruby">
+```ruby
+require_relative "baml_client/client"
+
+def run
+    logger_a = Baml.Client.create_internal_logger
+    res = Baml.Client.extract_resume(input: '...', baml_options: { logger: logger_a })
+
+    logger_b = Baml.Client.create_internal_logger
+    res = Baml.Client.extract_invoice(input: '...', baml_options: { logger: logger_b })
+
+    # Merge the usage of both logs
+    logger_a.merge(logger_b)
+
+    # The total usage of both logs is now available
+    print(logger_a.usage)
+end
+```
+</Tab>
+</Tabs>
+
+## API Reference
+
+### Logger Class
+
+Logger provides properties to introspect the internal state of a BAML function.
+
+| Property | Type | Description |
+|--------|------|-------------|
+| `logs` | `List[FunctionLog]` | A list of all function calls (ordered from oldest to newest) |
+| `last` | `FunctionLog \| null` | The most recent function log. |
+| `usage` | `Usage` | The total usage of all requests. |
+
+
+Logger provides the following methods:
+
+| Method | Type | Description |
+|--------|------|-------------|
+| `merge(other: Logger)` | `void` | Merge the usage of two logs into caller. |
+| `id(id: string)` | `FunctionLog \| null` | Get the function log by id. |
+| `clear()` | `void` | Clears all logs. |
+
+### FunctionLog Class
+
+The `FunctionLog` class has the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `string` | The id of the request. |
+| `function_name` | `string` | The name of the function. |
+| `type` | `"call" \| "stream"` | The manner in which the function was called. |
+| `timing` | `Timing` | The timing of the request. |
+| `usage` | `Usage` | The usage of the request (aggregated from all calls). |
+| `calls` | `(LLMCall \| LLMStreamCall)[]` | Every call made to the LLM (including fallbacks and retries). Sorted from oldest to newest. |
+| `raw_llm_response` | `string \| null` | The raw text from the best matching LLM. |
+| `metadata` | `Map[str, any]` | Any user provided metadata. |
+
+The `FunctionLog` class has the following methods:
+
+| Method | Type | Description |
+|--------|------|-------------|
+| `selected_call()` | `LLMCall \| LLMStreamCall \| null` | The selected call that was used for parsing. |
+
+### Timing Class
+
+The `Timing` class has the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `start_time_utc_ms` | `int` | The start time of the request. |
+| `duration_ms` | `int` | The duration of the request. |
+| `time_to_first_parsed_ms` | `int` | The time to first parsed response. |
+
+#### Timing > StreamTiming
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `time_to_first_token_ms` | `int` | The time to first token. |
+
+### Usage Class
+
+The `Usage` class has the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `input_tokens` | `int` | The number of tokens used in the input. |
+| `output_tokens` | `int` | The number of tokens used in the output. |
+
+<Info>
+Note: Usage may not include all things like "thinking_tokens" or "cached_tokens". For that you may need to look at the raw HTTP response.
+</Info>
+
+### LLMCall Class
+
+The `LLMCall` class has the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `client_name` | `str` | The name of the client used. |
+| `provider` | `str` | The provider of the client used. |
+| `timing` | `Timing` | The timing of the request. |
+| `request` | `json` | The raw request (often http) sent to the client. |
+| `response` | `json \| null` | The raw response (often http) from the client. |
+| `usage` | `Usage \| null` | The usage of the request (if available). |
+| `selected` | `bool` | Whether this call was selected and used for parsing. |
+
+
+#### LLMCall > LLMStreamCall
+
+The `LLMStreamCall` class additionally has the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `chunks` | `json[]` | The raw chunks of each stream part (often http) from the client. |
+| `timing` | `StreamTiming` | The timing of the request. |
+
+## Related Topics
+- [Using with_options](./with_options) - Learn how to configure logging globally
+- [Function IDs](./id) - Track specific function calls
+- [TypeBuilder](./typebuilder) - Build custom types for your BAML functions
+- [Client Registry](./client-registry) - Manage LLM clients and their configurations
+
+## Best Practices
+1. Use a single logger instance when tracking related function calls in a chain.
+2. Clear the logger when reusing it for unrelated operations
+3. Consider using `with_options` for consistent logging across multiple function calls
+4. Use function IDs when tracking specific calls in parallel operations
