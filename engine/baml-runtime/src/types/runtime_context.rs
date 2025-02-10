@@ -51,6 +51,7 @@ cfg_if::cfg_if!(
 pub struct RuntimeContext {
     // path to baml_src in the local filesystem
     pub baml_src: Arc<BamlSrcReader>,
+    pub tracer_tx: tokio::sync::mpsc::UnboundedSender<String>,
     env: HashMap<String, String>,
     pub tags: HashMap<String, BamlValue>,
     pub client_overrides: Option<(Option<String>, HashMap<String, Arc<LLMProvider>>)>,
@@ -83,6 +84,7 @@ impl RuntimeContext {
         type_alias_overrides: IndexMap<String, FieldType>,
         recursive_type_alias_overrides: Vec<IndexMap<String, FieldType>>,
     ) -> RuntimeContext {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         RuntimeContext {
             baml_src,
             env,

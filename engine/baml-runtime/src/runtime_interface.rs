@@ -46,6 +46,7 @@ pub trait RuntimeInterface {
         tracer: Arc<BamlTracer>,
         ctx: RuntimeContext,
         #[cfg(not(target_arch = "wasm32"))] tokio_runtime: Arc<tokio::runtime::Runtime>,
+        tctx: btrace::TraceContext,
     ) -> Result<FunctionResultStream>;
 }
 

@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::internal::llm_client::ResolveMediaUrls;
 use anyhow::Result;
 use baml_types::{BamlMap, BamlMedia, BamlMediaContent, BamlMediaType};
+use btrace::WithTraceContext;
 use internal_baml_core::ir::ClientWalker;
 use internal_baml_jinja::{ChatMessagePart, RenderContext_Client, RenderedChatMessage};
 use internal_llm_client::openai::ResolvedOpenAI;
@@ -164,6 +165,23 @@ impl WithChat for OpenAIClient {
                 self,
                 either::Either::Right(prompt),
                 false,
+            )
+            .btrace(
+                tracing_core::Level::INFO,
+                "openai_chat",
+                json!({
+                    "prompt": prompt,
+                }),
+                |v| match v {
+                    Ok((response, ..)) => json!({
+                        "llm.response": format!("{:?}", response),
+                    }),
+                    Err(e) => json!({
+                        "exception": {
+                            "message": format!("{:?}", e),
+                        },
+                    }),
+                },
             )
             .await
             {
@@ -364,6 +382,14 @@ impl SseResponseTrait for OpenAIClient {
                         };
                         if let Some(choice) = event.choices.first() {
                             if let Some(content) = choice.delta.content.as_ref() {
+                                btrace::log(
+                                    btrace::Level::INFO,
+                                    "openai_client".to_string(),
+                                    "event".to_string(),
+                                    json!({
+                                        "delta.content": content,
+                                    }),
+                                );
                                 inner.content += content.as_str();
                             }
                             inner.model = event.model;

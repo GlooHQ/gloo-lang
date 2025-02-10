@@ -1,8 +1,11 @@
 use anyhow::Result;
 use async_std::stream::StreamExt;
+use baml_types::BamlValue;
+use btrace::WithTraceContext;
 use baml_types::{BamlValue, BamlValueWithMeta};
 use internal_baml_core::ir::repr::IntermediateRepr;
 use jsonish::BamlValueWithFlags;
+use serde_json::json;
 use web_time::Duration;
 
 use crate::{
@@ -80,6 +83,16 @@ where
                     stream_part
                 })
                 .fold(None, |_, current| Some(current))
+                .btrace(
+                    tracing::Level::INFO,
+                    format!("stream_run::{}", node.provider.name()),
+                    json!({
+                        "prompt": prompt,
+                        "params": params,
+                        "node": node.scope.name(),
+                    }),
+                    |_| serde_json::Value::Null,
+                )
                 .await
                 .unwrap_or_else(|| {
                     LLMResponse::LLMFailure(LLMErrorResponse {
@@ -116,6 +129,13 @@ where
             }
             _ => None,
         };
+        let (parsed_response, response_value) = match parsed_response {
+            Some(Ok(v)) => (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v)))),
+            Some(Err(e)) => (None, Some(Err(e))),
+            None => (None, None),
+        };
+        // parsed_response.map(|r| r.and_then(|v| parsed_value_to_response(v)));
+        let node_name = node.scope.name();
         let sleep_duration = node.error_sleep_duration().cloned();
         results.push((node.scope, final_response, response_value));
 
@@ -125,7 +145,18 @@ where
             .map_or(false, |(_, r, _)| matches!(r, LLMResponse::Success(_)))
         {
             break;
-        } else if let Some(duration) = sleep_duration {
+        }
+        btrace::log(
+            tracing_core::Level::INFO,
+            format!("baml_src::{}", node.provider.name()),
+            "Failed to start stream".to_string(),
+            json!({
+                "sleep_duration": sleep_duration,
+                "baml.llm_client": node_name,
+            }),
+        );
+
+        if let Some(duration) = sleep_duration {
             total_sleep_duration += duration;
             async_std::task::sleep(duration).await;
         }

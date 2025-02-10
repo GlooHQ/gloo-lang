@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use internal_baml_core::ir::repr::IntermediateRepr;
+use serde_json::json;
 
 use std::sync::Arc;
 
@@ -14,6 +15,7 @@ use crate::{
     type_builder::TypeBuilder,
     FunctionResult, RuntimeContextManager,
 };
+use btrace::WithTraceContext;
 
 /// Wrapper that holds a stream of responses from a BAML function call.
 ///
@@ -29,6 +31,7 @@ pub struct FunctionResultStream {
     pub(crate) tracer: Arc<BamlTracer>,
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) tokio_runtime: Arc<tokio::runtime::Runtime>,
+    pub(crate) tctx: btrace::TraceContext,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -94,19 +97,43 @@ impl FunctionResultStream {
         let rctx = ctx.create_ctx(tb, cb);
         let res = match rctx {
             Ok(rctx) => {
-                let (history, _) = orchestrate_stream(
-                    local_orchestrator,
-                    self.ir.as_ref(),
-                    &rctx,
-                    &self.renderer,
-                    &baml_types::BamlValue::Map(local_params),
-                    |content| self.renderer.parse(self.ir.as_ref(), content, true),
-                    |content| self.renderer.parse(self.ir.as_ref(), content, false),
-                    on_event,
-                )
-                .await;
-
-                FunctionResult::new_chain(history)
+                btrace::BAML_TRACE_CTX
+                    .scope(
+                        self.tctx.clone(),
+                        async {
+                            let (history, _) = orchestrate_stream(
+                                local_orchestrator,
+                                self.ir.as_ref(),
+                                &rctx,
+                                &self.renderer,
+                                &baml_types::BamlValue::Map(local_params),
+                                |content| self.renderer.parse(self.ir.as_ref(), content, true),
+                                |content| self.renderer.parse(self.ir.as_ref(), content, false),
+                                on_event,
+                            )
+                            .await;
+                            FunctionResult::new_chain(history)
+                        }
+                        .btrace(
+                            tracing::Level::INFO,
+                            format!("baml_stream_function::{}", self.function_name),
+                            json!({}),
+                            |result| match result {
+                                Ok(result) => match result.parsed_content() {
+                                    Ok(content) => json!({
+                                        "result": format!("TODO: actually return this as a json object: {}", content.to_string()),
+                                    }),
+                                    Err(e) => json!({
+                                        "exception": format!("parse error: {}", e)
+                                    }),
+                                },
+                                Err(e) => json!({
+                                    "exception": e.to_string()
+                                }),
+                            },
+                        ),
+                    )
+                    .await
             }
             Err(e) => Err(e),
         };

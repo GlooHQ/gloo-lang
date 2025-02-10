@@ -1,23 +1,24 @@
-use anyhow::Context;
-use baml_types::rpc::TraceEventUploadRequest;
-use baml_types::tracing::TraceEventBatch;
-use std::io::Write;
-use std::{fs::OpenOptions, pin::pin};
+use anyhow::{Context, Result};
+use std::pin::pin;
 
-use super::TraceEvent;
+use baml_types::rpc::TraceEventUploadRequest;
+use std::time::Instant;
+
+use baml_types::tracing::events::LogEvent;
+use serde::{Deserialize, Serialize};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 pub struct TracerThread {
-    rx: UnboundedReceiverStream<TraceEvent>,
+    rx: UnboundedReceiverStream<LogEvent>,
 }
 
 impl TracerThread {
-    pub fn new(rx: tokio::sync::mpsc::UnboundedReceiver<TraceEvent>) -> Self {
+    pub fn new(rx: tokio::sync::mpsc::UnboundedReceiver<LogEvent>) -> Self {
         Self {
             rx: UnboundedReceiverStream::new(rx),
         }
     }
 
-    pub fn run(rx: tokio::sync::mpsc::UnboundedReceiver<TraceEvent>) {
+    pub fn run(rx: tokio::sync::mpsc::UnboundedReceiver<LogEvent>) {
         std::thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(

@@ -103,7 +103,10 @@ url = "2.5.2"
 uuid = { version = "1.8.0", features = ["v4", "v7", "serde"] }
 walkdir = "2.5.0"
 web-time = "1.1.0"
-
+tokio = { version = "1", default-features = false, features = [
+  "macros",
+  "time",
+] }
 
 [workspace.package]
 version = "0.75.0"

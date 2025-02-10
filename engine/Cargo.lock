@@ -960,6 +960,7 @@ dependencies = [
  "axum-extra",
  "baml-types",
  "base64 0.22.1",
+ "btrace",
  "bytes",
  "cfg-if",
  "chrono",
@@ -1025,6 +1026,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tracing",
+ "tracing-core",
  "tracing-subscriber",
  "url",
  "uuid",
@@ -1092,7 +1094,11 @@ dependencies = [
  "serde",
  "serde_json",
  "strum",
+<<<<<<< HEAD
  "time",
+=======
+ "tokio",
+>>>>>>> tracingv2
  "tracing-core",
  "web-time",
 ]
@@ -1276,7 +1282,10 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+<<<<<<< HEAD
  "time",
+=======
+>>>>>>> tracingv2
  "tokio",
  "tokio-stream",
  "tracing-core",
@@ -4583,10 +4592,14 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
+<<<<<<< HEAD
  "baml-types",
  "env_logger",
  "log",
  "reqwest",
+=======
+ "log",
+>>>>>>> tracingv2
  "serde_json",
  "tokio",
  "tracing",

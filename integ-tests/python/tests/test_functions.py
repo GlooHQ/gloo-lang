@@ -605,7 +605,7 @@ async def test_anthropic_shorthand_streaming():
 
 @pytest.mark.asyncio
 async def test_fallback_to_shorthand():
-    res = await b.TestFallbackToShorthand(input="Mt Rainier is tall")
+    res = await b.stream.TestFallbackToShorthand(input="Mt Rainier is tall").get_final_response()
     assert len(res) > 0, "Expected non-empty result but got empty."
 
 
