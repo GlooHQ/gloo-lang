@@ -69,6 +69,7 @@ baml-schema-build = { path ="../baml-schema-wasm" }
 # baml project dependency
 serde-wasm-bindgen = "0.4"
 crossbeam-channel = "0.5.14"
+filetime = "0.2.25"
 
 
 [dev-dependencies]

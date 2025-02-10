@@ -128,7 +128,7 @@ pub fn trim_line(s: &str) -> String {
 pub struct BamlProject {
     pub root_dir_name: String,
     // This is the version of the file on disk
-    files: HashMap<String, String>,
+    pub files: HashMap<String, String>,
     // This is the version of the file that is currently being edited
     // (unsaved changes)
     unsaved_files: HashMap<String, String>,

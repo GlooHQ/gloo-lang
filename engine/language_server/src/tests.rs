@@ -39,7 +39,7 @@ impl TestCase {
         let test_server = new_test_server(NonZeroUsize::new(1).unwrap())?;
         eprintln!("about to loop");
         for (file_name, file_content) in self.files {
-            let resp = test_server.req_respond(lsp_server::Message::Notification(lsp_server::Notification{
+            let _resp = test_server.sender.send(lsp_server::Message::Notification(lsp_server::Notification{
               method: "textDocument/didOpen".to_string(),
               params: json!({
                 "textDocument": {
@@ -50,13 +50,37 @@ impl TestCase {
                 }
               }),
             }))?;
-            dbg!(resp);
-            dbg!(file_name);
+
+            // Consume the post-opening notification.
+            eprintln!("Awaiting didOpen notif");
+            let didOpenNotification = test_server.receiver.recv();
+            eprintln!("Got didOpen notif");
+            dbg!(&didOpenNotification);
         }
-        // test_server.server.connection.handle_shutdown();
-        // test_server.server.connection.close()?;
+        
+        for (req, expected_responses) in self.interactions {
+          test_server.sender.send(req)?;
+          for expected_response in expected_responses {
+            let response = test_server.receiver.recv()?;
+            match (&response, expected_response) {
+              (lsp_server::Message::Response(r1), lsp_server::Message::Response(r2)) => {
+                assert_eq!(r1.result, r2.result);
+              },
+              (_, lsp_server::Message::Response(r2)) => {
+                panic!("Expected response {r2:?}, got {response:?}");
+              },
+              (lsp_server::Message::Notification(n1), lsp_server::Message::Notification(n2)) => {
+                assert_eq!(n1.method, n2.method);
+                assert_eq!(n1.params, n2.params);
+              },
+              (_, lsp_server::Message::Notification(n2)) => {
+                panic!("Expected notification {n2:?}, got {response:?}");
+              },
+              _ => panic!("Should only expect responses and notifications."),
+            }
+          }
+        }
         test_server.thread_join_handle.join().unwrap();
-        // dbg!(&test_server.server.session.projects_by_workspace_folder);
         Ok(())
     }
 
@@ -89,7 +113,6 @@ pub fn new_test_server(worker_threads: NonZeroUsize) -> crate::Result<TestServer
     let client_capabilities = init_params.capabilities.clone();
     let position_encoding = Server::find_best_position_encoding(&client_capabilities);
     let server_capabilities = Server::server_capabilities(position_encoding);
-    eprintln!("E");
 
     let connection = connection.initialize_finish(
         id,
@@ -98,20 +121,15 @@ pub fn new_test_server(worker_threads: NonZeroUsize) -> crate::Result<TestServer
         crate::version(),
     ).unwrap();
 
-    eprintln!("F");
     let server = Server::new_with_connection(worker_threads, connection, init_params).unwrap();
     server.run().unwrap();
   });
 
-  let handshake = client_connection.receiver.recv()?;
-  dbg!(&handshake);
-  eprintln!("ABOUT TO SEND POST_HANDSHAKE");
+  let _handshake = client_connection.receiver.recv()?;
   client_connection.sender.send(lsp_server::Message::Notification(lsp_server::Notification{
     method: "initialized".to_string(),
     params: json!({})
   }))?;
-  eprintln!("FINISHED SEND POST_HANDSHAKE");
-
 
   Ok(TestServer {
       thread_join_handle,

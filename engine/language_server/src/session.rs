@@ -13,6 +13,7 @@ use lsp_types::{ClientCapabilities, TextDocumentContentChangeEvent, Url};
 // use ruff_db::system::SystemPath;
 // use ruff_db::Db;
 
+use crate::baml_db::{File, FileRevision, FileStatus};
 use crate::baml_project::Project;
 use crate::edit::{DocumentKey, DocumentVersion};
 // use crate::system::{url_to_any_system_path, AnySystemPath, LSPSystem};
@@ -265,13 +266,19 @@ impl DocumentSnapshot {
         self.position_encoding
     }
 
-    // pub(crate) fn file(&self, db: &ProjectDatabase) -> Option<File> {
-    //     match url_to_any_system_path(self.document_ref.file_url()).ok()? {
-    //         AnySystemPath::System(path) => system_path_to_file(db, path).ok(),
-    //         AnySystemPath::SystemVirtual(virtual_path) => db
-    //             .files()
-    //             .try_virtual_file(&virtual_path)
-    //             .map(|virtual_file| virtual_file.file()),
-    //     }
-    // }
+    /// 
+    pub(crate) fn file(&self, db: &Project) -> Option<File> {
+        let url = self.document_ref.file_url();
+        let path = url.to_file_path().ok()?;
+        let path_str = path.to_str()?.to_string();
+        let file_is_in_db = db.baml_project.files.contains_key(&path_str);
+        if file_is_in_db {
+            Some(File {
+                path: path_str,
+                permissions: None,
+                revision: FileRevision::now(),
+                status: FileStatus::Exists,
+            })
+        } else { None }
+    }
 }

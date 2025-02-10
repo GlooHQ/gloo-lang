@@ -18,7 +18,7 @@ impl NotificationHandler for DidOpenTextDocumentHandler {
 impl SyncNotificationHandler for DidOpenTextDocumentHandler {
     fn run(
         session: &mut Session,
-        _notifier: Notifier,
+        notifier: Notifier,
         _requester: &mut Requester,
         params: DidOpenTextDocumentParams,
     ) -> Result<()> {
@@ -30,8 +30,7 @@ impl SyncNotificationHandler for DidOpenTextDocumentHandler {
         let document = TextDocument::new(params.text_document.text, params.text_document.version);
         session.open_text_document(params.text_document.uri, document);
 
-        dbg!(&session.index);
-
+        notifier.
         // match path {
         //     AnySystemPath::System(path) => {
         //         let db = match session.project_db_for_path_mut(path.as_std_path()) {

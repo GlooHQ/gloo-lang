@@ -49,13 +49,13 @@ impl BackgroundDocumentRequestHandler for DocumentDiagnosticRequestHandler {
 }
 
 fn compute_diagnostics(snapshot: &DocumentSnapshot, db: &Project) -> Vec<Diagnostic> {
-    // let Some(file) = snapshot.file(db) else {
-    //     tracing::info!(
-    //         "No file found for snapshot for `{}`",
-    //         snapshot.query().file_url()
-    //     );
-    //     return vec![];
-    // };
+    let Some(file) = snapshot.file(db) else {
+        tracing::info!(
+            "No file found for snapshot for `{}`",
+            snapshot.query().file_url()
+        );
+        return vec![];
+    };
 
     // let diagnostics = match db.check_file(file) {
     //     Ok(diagnostics) => diagnostics,
