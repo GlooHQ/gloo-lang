@@ -734,10 +734,6 @@ export interface WithReasoning {
   
 }
 
-type JsonEntry = SimpleTag | JsonTemplate
-
-type JsonTemplate = Record<string, JsonEntry>
-
 type RecursiveMapAlias = Record<string, RecursiveMapAlias>
 
 type RecursiveListAlias = RecursiveListAlias[]
@@ -753,3 +749,7 @@ type JsonValue = number | string | boolean | number | JsonObject | JsonArray
 type JsonObject = Record<string, JsonValue>
 
 type JsonArray = JsonValue[]
+
+type JsonEntry = SimpleTag | JsonTemplate
+
+type JsonTemplate = Record<string, JsonEntry>

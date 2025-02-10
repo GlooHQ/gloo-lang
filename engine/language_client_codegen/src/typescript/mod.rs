@@ -226,7 +226,7 @@ impl ToTypeReferenceInClientDefinition for FieldType {
                 if needed {
                     (format!("{module_prefix}{name}"), false)
                 } else {
-                    (format!("{module_prefix}{name} | null"), true)
+                    (format!("({module_prefix}{name} | null)"), true)
                 }
             }
             FieldType::RecursiveTypeAlias(name) => (name.to_owned(), !needed),

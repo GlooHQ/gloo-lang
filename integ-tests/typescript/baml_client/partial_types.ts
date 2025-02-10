@@ -45,8 +45,8 @@ export interface BigNumbers {
 
 export interface BinaryNode {
     data?: (number | null)
-    left: (partial_types.BinaryNode | null | null)
-    right: (partial_types.BinaryNode | null | null)
+    left: ((partial_types.BinaryNode | null) | null)
+    right: ((partial_types.BinaryNode | null) | null)
 }
 
 export interface Blah {
@@ -82,11 +82,11 @@ export interface ClassOptionalOutput {
 export interface ClassOptionalOutput2 {
     prop1: ((string | null) | null)
     prop2: ((string | null) | null)
-    prop3: (partial_types.Blah | null | null)
+    prop3: ((partial_types.Blah | null) | null)
 }
 
 export interface ClassToRecAlias {
-    list?: partial_types.LinkedListAliasNode | null
+    list?: (partial_types.LinkedListAliasNode | null)
 }
 
 export interface ClassWithBlockDone {
@@ -97,7 +97,7 @@ export interface ClassWithBlockDone {
 export interface ClassWithImage {
     myImage?: (Image | null)
     param2?: (string | null)
-    fake_image?: partial_types.FakeImage | null
+    fake_image?: (partial_types.FakeImage | null)
 }
 
 export interface ClassWithoutDone {
@@ -113,20 +113,20 @@ export interface ComplexMemoryObject {
 }
 
 export interface CompoundBigNumbers {
-    big?: partial_types.BigNumbers | null
-    big_nums?: partial_types.BigNumbers | null[]
-    another?: partial_types.BigNumbers | null
+    big?: (partial_types.BigNumbers | null)
+    big_nums?: (partial_types.BigNumbers | null)[]
+    another?: (partial_types.BigNumbers | null)
 }
 
 export interface ContactInfo {
-    primary?: (partial_types.PhoneNumber | null | partial_types.EmailAddress | null | null)
-    secondary?: (partial_types.PhoneNumber | null | partial_types.EmailAddress | null | (null | null) | null)
+    primary?: ((partial_types.PhoneNumber | null) | (partial_types.EmailAddress | null) | null)
+    secondary?: ((partial_types.PhoneNumber | null) | (partial_types.EmailAddress | null) | (null | null) | null)
 }
 
 export interface CustomTaskResult {
-    bookOrder?: (partial_types.BookOrder | null | ((null | null) | null) | null)
-    flightConfirmation?: (partial_types.FlightConfirmation | null | ((null | null) | null) | null)
-    groceryReceipt?: (partial_types.GroceryReceipt | null | ((null | null) | null) | null)
+    bookOrder?: ((partial_types.BookOrder | null) | ((null | null) | null) | null)
+    flightConfirmation?: ((partial_types.FlightConfirmation | null) | ((null | null) | null) | null)
+    groceryReceipt?: ((partial_types.GroceryReceipt | null) | ((null | null) | null) | null)
 }
 
 export interface DummyOutput {
@@ -146,7 +146,7 @@ export interface DynamicClassOne {
 
 export interface DynamicClassTwo {
     hi?: (string | null)
-    some_class?: partial_types.SomeClassNestedDynamic | null
+    some_class?: (partial_types.SomeClassNestedDynamic | null)
     status?: (string | DynEnumOne | null)
     [key: string]: any;
 }
@@ -197,13 +197,13 @@ export interface FlightConfirmation {
 }
 
 export interface FooAny {
-    planetary_age?: (partial_types.Martian | null | partial_types.Earthling | null | null)
+    planetary_age?: ((partial_types.Martian | null) | (partial_types.Earthling | null) | null)
     certainty?: Checked<(number | null),"unreasonably_certain">
     species?: Checked<(string | null),"regex_bad" | "regex_good" | "trivial">
 }
 
 export interface Forest {
-    trees?: partial_types.Tree | null[]
+    trees?: (partial_types.Tree | null)[]
 }
 
 export interface FormatterTest0 {
@@ -236,7 +236,7 @@ export interface GroceryReceipt {
 export interface InnerClass {
     prop1?: (string | null)
     prop2?: (string | null)
-    inner?: partial_types.InnerClass2 | null
+    inner?: (partial_types.InnerClass2 | null)
 }
 
 export interface InnerClass2 {
@@ -251,17 +251,17 @@ export interface InputClass {
 
 export interface InputClassNested {
     key?: (string | null)
-    nested?: partial_types.InputClass | null
+    nested?: (partial_types.InputClass | null)
 }
 
 export interface LinkedList {
-    head: (partial_types.Node | null | null)
+    head: ((partial_types.Node | null) | null)
     len?: (number | null)
 }
 
 export interface LinkedListAliasNode {
     value?: (number | null)
-    next: (partial_types.LinkedListAliasNode | null | null)
+    next: ((partial_types.LinkedListAliasNode | null) | null)
 }
 
 export interface LiteralClassHello {
@@ -315,7 +315,7 @@ export interface NamedArgsSingleClass {
 export interface Nested {
     prop3?: ((string | null) | ((null | null) | null) | null)
     prop4?: ((string | null) | ((null | null) | null) | null)
-    prop20?: partial_types.Nested2 | null
+    prop20?: (partial_types.Nested2 | null)
 }
 
 export interface Nested2 {
@@ -324,21 +324,21 @@ export interface Nested2 {
 }
 
 export interface NestedBlockConstraint {
-    nbc?: Checked<partial_types.BlockConstraint | null,"cross_field">
+    nbc?: Checked<(partial_types.BlockConstraint | null),"cross_field">
 }
 
 export interface NestedBlockConstraintForParam {
-    nbcfp?: partial_types.BlockConstraintForParam | null
+    nbcfp?: (partial_types.BlockConstraintForParam | null)
 }
 
 export interface Node {
     data?: (number | null)
-    next: (partial_types.Node | null | null)
+    next: ((partial_types.Node | null) | null)
 }
 
 export interface NodeWithAliasIndirection {
     value?: (number | null)
-    next: (partial_types.NodeWithAliasIndirection | null | null)
+    next: ((partial_types.NodeWithAliasIndirection | null) | null)
 }
 
 export interface OptionalListAndMap {
@@ -352,7 +352,7 @@ export interface OptionalTest_Prop1 {
 }
 
 export interface OptionalTest_ReturnType {
-    omega_1: (partial_types.OptionalTest_Prop1 | null | null)
+    omega_1: ((partial_types.OptionalTest_Prop1 | null) | null)
     omega_2: ((string | null) | null)
     omega_3?: ((OptionalTest_CategoryType | null) | null)[]
 }
@@ -389,11 +389,11 @@ export interface Quantity {
 
 export interface RaysData {
     dataType?: (DataType | null)
-    value?: (partial_types.Resume | null | partial_types.Event | null | null)
+    value?: ((partial_types.Resume | null) | (partial_types.Event | null) | null)
 }
 
 export interface ReceiptInfo {
-    items?: partial_types.ReceiptItem | null[]
+    items?: (partial_types.ReceiptItem | null)[]
     total_cost: ((number | null) | null)
     venue?: ("barisa" | "ox_burger" | null)
 }
@@ -406,7 +406,7 @@ export interface ReceiptItem {
 }
 
 export interface Recipe {
-    ingredients?: (Record<string, partial_types.Quantity | null> | null)
+    ingredients?: (Record<string, (partial_types.Quantity | null)> | null)
     recipe_type?: ("breakfast" | "dinner" | null)
 }
 
@@ -418,17 +418,17 @@ export interface Resume {
     name?: (string | null)
     email?: (string | null)
     phone?: (string | null)
-    experience?: partial_types.Education | null[]
+    experience?: (partial_types.Education | null)[]
     education?: (string | null)[]
     skills?: (string | null)[]
 }
 
 export interface Schema {
     prop1?: ((string | null) | ((null | null) | null) | null)
-    prop2?: (partial_types.Nested | null | (string | null) | null)
+    prop2?: ((partial_types.Nested | null) | (string | null) | null)
     prop5?: ((string | null) | ((null | null) | null) | null)[]
-    prop6?: ((string | null) | partial_types.Nested | null[] | null)
-    nested_attrs?: ((string | null) | ((null | null) | null) | partial_types.Nested | null | null)[]
+    prop6?: ((string | null) | (partial_types.Nested | null)[] | null)
+    nested_attrs?: ((string | null) | ((null | null) | null) | (partial_types.Nested | null) | null)[]
     parens?: ((string | null) | ((null | null) | null) | null)
     other_group?: ((string | null) | ((number | null) | (string | null) | null) | null)
 }
@@ -436,20 +436,20 @@ export interface Schema {
 export interface SearchParams {
     dateRange: ((number | null) | null)
     location?: (string | null)[]
-    jobTitle: (partial_types.WithReasoning | null | null)
-    company: (partial_types.WithReasoning | null | null)
-    description?: partial_types.WithReasoning | null[]
+    jobTitle: ((partial_types.WithReasoning | null) | null)
+    company: ((partial_types.WithReasoning | null) | null)
+    description?: (partial_types.WithReasoning | null)[]
     tags?: ((Tag | null) | (string | null) | null)[]
 }
 
 export interface SemanticContainer {
     sixteen_digit_number?: (number | null)
     string_with_twenty_words: string
-    class_1?: partial_types.ClassWithoutDone | null
+    class_1?: (partial_types.ClassWithoutDone | null)
     class_2: types.ClassWithBlockDone
     class_done_needed: types.ClassWithBlockDone
     class_needed: partial_types.ClassWithoutDone
-    three_small_things?: partial_types.SmallThing | null[]
+    three_small_things?: (partial_types.SmallThing | null)[]
     final_string?: (string | null)
 }
 
@@ -481,7 +481,7 @@ export interface TestClassAlias {
 
 export interface TestClassNested {
     prop1?: (string | null)
-    prop2?: partial_types.InnerClass | null
+    prop2?: (partial_types.InnerClass | null)
 }
 
 export interface TestClassWithEnum {
@@ -490,8 +490,8 @@ export interface TestClassWithEnum {
 }
 
 export interface TestMemoryOutput {
-    items?: (partial_types.MemoryObject | null | partial_types.ComplexMemoryObject | null | partial_types.AnotherObject | null | null)[]
-    more_items?: (partial_types.MemoryObject | null | partial_types.ComplexMemoryObject | null | partial_types.AnotherObject | null | null)[]
+    items?: ((partial_types.MemoryObject | null) | (partial_types.ComplexMemoryObject | null) | (partial_types.AnotherObject | null) | null)[]
+    more_items?: ((partial_types.MemoryObject | null) | (partial_types.ComplexMemoryObject | null) | (partial_types.AnotherObject | null) | null)[]
 }
 
 export interface TestOutputClass {
@@ -501,7 +501,7 @@ export interface TestOutputClass {
 
 export interface Tree {
     data?: (number | null)
-    children?: partial_types.Forest | null
+    children?: (partial_types.Forest | null)
 }
 
 export interface TwoStoriesOneTitle {
