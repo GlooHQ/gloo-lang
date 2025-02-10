@@ -36,7 +36,7 @@
 | - | - |
 | What is BAML? | BAML is a new programming language for builing AI applications. |
 | Do I need to write my whole app in BAML? | Nope, only the AI parts, you can then use BAML with any existing language of your choice! [python](/python), [typescript](/ts), and [more](/more). |
-| Is BAML stable? | We are still not 1.0, and we ship updates weekly. We rarely, if at all do breaking changes |
+| Is BAML stable? | Yes, many companies use it in production! We ship updates weekly and rarely have breaking changes |
 | Why a new language? | [Jump to section](#why-a-new-programming-language) |
 | Why a lamb? | Baaaaa-ml. LAMB == BAML |
 
@@ -141,19 +141,19 @@ Introducing testing, for prompts.
 
 ### Structured outputs with any LLM
 
-JSON is amazing for REST APIs, but way too strict and verbose for LLMs. LLMs need something flexible. We created the SAP (schema-aligned parsing) algorithm to support the flexible outputs LLMs can provide, like markdown within a json blob or chain-of-thought prior to answering.
+JSON is amazing for REST APIs, but way too strict and verbose for LLMs. LLMs need something flexible. We created the SAP (schema-aligned parsing) algorithm to support the flexible outputs LLMs can provide, like markdown within a JSON blob or chain-of-thought prior to answering.
 
 ![Chain of Thought](https://www.boundaryml.com/blog/2025-01-24-ai-agents-need-a-new-syntax/09-cot.gif)
 
 SAP works with any model on day-1, without depending on tool-use or function-calling APIs.
 
-To learn more about SAP you can read this post: [Schema Aligned Parsing](https://www.boundaryml.com/blog/schema-aligned-parsing).
+To learn more about SAP you can read this post: [Schema-Aligned Parsing](https://www.boundaryml.com/blog/schema-aligned-parsing).
 
 See it in action with: [Deepseek-R1](https://www.boundaryml.com/blog/2025-01-20-deepseek-r1) and [OpenAI O1](https://www.boundaryml.com/blog/2025-12-06-o1-pro).
 
 ### Streaming (when it's a first class citizen)
 
-Streaming is way harder than it should be. With our [python/typescript/ruby] generated code, streaming becomes natural and type-safe.
+Streaming is way harder than it should be. With our [Python/Typescript/Ruby] generated code, streaming becomes natural and type-safe.
 
 ![Streaming](https://www.boundaryml.com/blog/2025-01-24-ai-agents-need-a-new-syntax/10-streaming-client.gif#still)
 
@@ -164,7 +164,7 @@ Streaming is way harder than it should be. With our [python/typescript/ruby] gen
     - No network requests beyond model calls you explicitly set
     - Not stored or used for any training data
 - BAML files can be saved locally on your machine and checked into Github for easy diffs.
-- Built in Rust. So fast, you can't even tell its there.
+- Built in Rust. So fast, you can't even tell it's there.
 
 ## BAML's Design Philosophy
 
@@ -196,7 +196,7 @@ function Home() {
 }
 ```
 
-New syntax can be incredible at expressing new ideas. Plus the idea of mainting hundreds of f-strings for prompts kind of disgusts us 🤮. Strings are bad for maintable codebases. We prefer structured strings.
+New syntax can be incredible at expressing new ideas. Plus the idea of maintaining hundreds of f-strings for prompts kind of disgusts us 🤮. Strings are bad for maintainable codebases. We prefer structured strings.
 
 The goal of BAML is to give you the expressiveness of English, but the structure of code.
 

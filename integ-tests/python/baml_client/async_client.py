@@ -2281,6 +2281,29 @@ class BamlAsyncClient:
       )
       return cast(types.CompoundBigNumbers, raw.cast_to(types, types, partial_types, False))
     
+    async def TakeRecAliasDep(
+        self,
+        input: types.RecursiveAliasDependency,
+        baml_options: BamlCallOptions = {},
+    ) -> types.RecursiveAliasDependency:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TakeRecAliasDep",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(types.RecursiveAliasDependency, raw.cast_to(types, types, partial_types, False))
+    
     async def TestAnthropic(
         self,
         input: str,
@@ -2479,6 +2502,98 @@ class BamlAsyncClient:
 
       raw = await self.__runtime.call_function(
         "TestAzureFailure",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestAzureO1NoMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestAzureO1NoMaxTokens",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestAzureO1WithMaxCompletionTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestAzureO1WithMaxCompletionTokens",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestAzureO1WithMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestAzureO1WithMaxTokens",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestAzureWithMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestAzureWithMaxTokens",
         {
           "input": input,
         },
@@ -3109,6 +3224,29 @@ class BamlAsyncClient:
       )
       return cast(str, raw.cast_to(types, types, partial_types, False))
     
+    async def TestOpenAI(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestOpenAI",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
     async def TestOpenAILegacyProvider(
         self,
         input: str,
@@ -3132,6 +3270,75 @@ class BamlAsyncClient:
       )
       return cast(str, raw.cast_to(types, types, partial_types, False))
     
+    async def TestOpenAIO1NoMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestOpenAIO1NoMaxTokens",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestOpenAIO1WithMaxCompletionTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestOpenAIO1WithMaxCompletionTokens",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestOpenAIO1WithMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestOpenAIO1WithMaxTokens",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
     async def TestOpenAIShorthand(
         self,
         input: str,
@@ -3146,6 +3353,52 @@ class BamlAsyncClient:
 
       raw = await self.__runtime.call_function(
         "TestOpenAIShorthand",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestOpenAIWithMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestOpenAIWithMaxTokens",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types, partial_types, False))
+    
+    async def TestOpenAIWithNullMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "TestOpenAIWithNullMaxTokens",
         {
           "input": input,
         },
@@ -6289,6 +6542,36 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def TakeRecAliasDep(
+        self,
+        input: types.RecursiveAliasDependency,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.RecursiveAliasDependency, types.RecursiveAliasDependency]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TakeRecAliasDep",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[partial_types.RecursiveAliasDependency, types.RecursiveAliasDependency](
+        raw,
+        lambda x: cast(partial_types.RecursiveAliasDependency, x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(types.RecursiveAliasDependency, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
     def TestAnthropic(
         self,
         input: str,
@@ -6543,6 +6826,126 @@ class BamlStreamClient:
 
       raw = self.__runtime.stream_function(
         "TestAzureFailure",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestAzureO1NoMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestAzureO1NoMaxTokens",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestAzureO1WithMaxCompletionTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestAzureO1WithMaxCompletionTokens",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestAzureO1WithMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestAzureO1WithMaxTokens",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestAzureWithMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestAzureWithMaxTokens",
         {
           "input": input,
         },
@@ -7369,6 +7772,36 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def TestOpenAI(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestOpenAI",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
     def TestOpenAILegacyProvider(
         self,
         input: str,
@@ -7399,6 +7832,96 @@ class BamlStreamClient:
         self.__ctx_manager.get(),
       )
     
+    def TestOpenAIO1NoMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestOpenAIO1NoMaxTokens",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestOpenAIO1WithMaxCompletionTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestOpenAIO1WithMaxCompletionTokens",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestOpenAIO1WithMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestOpenAIO1WithMaxTokens",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
     def TestOpenAIShorthand(
         self,
         input: str,
@@ -7413,6 +7936,66 @@ class BamlStreamClient:
 
       raw = self.__runtime.stream_function(
         "TestOpenAIShorthand",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestOpenAIWithMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestOpenAIWithMaxTokens",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, types, partial_types, True)),
+        lambda x: cast(str, x.cast_to(types, types, partial_types, False)),
+        self.__ctx_manager.get(),
+      )
+    
+    def TestOpenAIWithNullMaxTokens(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "TestOpenAIWithNullMaxTokens",
         {
           "input": input,
         },

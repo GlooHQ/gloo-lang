@@ -19,6 +19,7 @@ test_partial_deserializer_streaming!(
 const NUMBERS_STATE: &str = r#"
 class Foo {
   nums int[] @stream.with_state
+  bar int @stream.with_state
 }
 "#;
 
@@ -27,7 +28,7 @@ test_partial_deserializer_streaming!(
     NUMBERS_STATE,
     "{'nums': [1,2",
     FieldType::class("Foo"),
-    {"nums": {"value": [1], "state": "Incomplete"}}
+    {"nums": {"value": [1], "state": "Incomplete"}, "bar": {"value": null, "state": "Pending"}}
 );
 
 const TOPLEVEL_DONE: &str = r#"

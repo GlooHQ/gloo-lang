@@ -337,6 +337,9 @@ class Recipe(BaseModel):
     ingredients: Dict[str, Optional["Quantity"]]
     recipe_type: Optional[Union[Optional[Literal["breakfast"]], Optional[Literal["dinner"]]]] = None
 
+class RecursiveAliasDependency(BaseModel):
+    value: Optional["JsonValue"] = None
+
 class Resume(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None

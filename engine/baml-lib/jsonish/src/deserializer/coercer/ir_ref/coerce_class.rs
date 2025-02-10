@@ -196,7 +196,6 @@ impl TypeCoercer for Class {
                             None => Some(BamlValueWithFlags::Null(
                                 DeserializerConditions::new()
                                     .with_flag(Flag::OptionalDefaultFromNoValue)
-                                    .with_flag(Flag::Incomplete),
                             )),
                         };
 
@@ -213,7 +212,7 @@ impl TypeCoercer for Class {
                                 Some(BamlValueWithFlags::Null(
                                     DeserializerConditions::new()
                                         .with_flag(Flag::OptionalDefaultFromNoValue)
-                                        .with_flag(Flag::Incomplete),
+                                        .with_flag(Flag::Pending),
                                 ))
                             } else {
                                 None
@@ -224,7 +223,7 @@ impl TypeCoercer for Class {
                                 Some(BamlValueWithFlags::Null(
                                     DeserializerConditions::new()
                                         .with_flag(Flag::OptionalDefaultFromNoValue)
-                                        .with_flag(Flag::Incomplete),
+                                        .with_flag(Flag::Pending),
                                 ))
                             } else {
                                 None

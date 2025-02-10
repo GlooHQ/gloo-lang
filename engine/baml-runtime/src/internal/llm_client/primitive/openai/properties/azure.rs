@@ -50,16 +50,7 @@ pub fn resolve_properties(
 
     let supported_request_modes = properties.pull_supported_request_modes()?;
 
-
-    let properties = {
-        let mut properties = properties.finalize();
-        // Azure has very low default max_tokens, so we set it to 4096
-        properties
-            .entry("max_tokens".into())
-        .or_insert_with(|| 4096.into());
-        properties
-    };
-
+    let properties = properties.finalize();
 
     Ok(PostRequestProperties {
         default_role,
