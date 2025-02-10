@@ -5,9 +5,8 @@ use crate::{
     UnresolvedAllowedRoleMetadata, UnresolvedFinishReasonFilter, UnresolvedRolesSelection,
 };
 use anyhow::Result;
-use secrecy::SecretString;
 
-use baml_types::{GetEnvVar, StringOr, UnresolvedValue};
+use baml_types::{ApiKeyWithProvenance, GetEnvVar, StringOr, UnresolvedValue};
 use indexmap::IndexMap;
 
 use super::helpers::{Error, PropertyHandler, UnresolvedUrl};
@@ -55,7 +54,7 @@ impl<Meta> UnresolvedOpenAI<Meta> {
 
 pub struct ResolvedOpenAI {
     pub base_url: String,
-    pub api_key: Option<SecretString>,
+    pub api_key: Option<ApiKeyWithProvenance>,
     role_selection: RolesSelection,
     pub allowed_metadata: AllowedRoleMetadata,
     supported_request_modes: SupportedRequestModes,
@@ -167,9 +166,8 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         let api_key = self
             .api_key
             .as_ref()
-            .map(|key| key.resolve(ctx))
-            .transpose()?
-            .map(|key| SecretString::from(key));
+            .map(|key| key.resolve_api_key(ctx))
+            .transpose()?;
 
         let role_selection = self.role_selection.resolve(ctx)?;
 
@@ -180,10 +178,15 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
             .collect::<Result<IndexMap<_, _>>>()?;
 
         // First, get the model to determine if it's an O1 model
-        let model = self.properties.get("model")
+        let model = self
+            .properties
+            .get("model")
             .and_then(|(_, v)| v.as_str())
             .map(|s| s.to_string());
-        let is_o1_model = model.as_ref().map(|s| s.starts_with("o1-") || s.eq("o1")).unwrap_or(false);
+        let is_o1_model = model
+            .as_ref()
+            .map(|s| s.starts_with("o1-") || s.eq("o1"))
+            .unwrap_or(false);
 
         // For O1 models, check if max_tokens is explicitly set (not null)
         if is_o1_model {
@@ -197,7 +200,8 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         }
 
         // First resolve all properties except max_tokens
-        let mut properties = self.properties
+        let mut properties = self
+            .properties
             .iter()
             .filter(|(k, (_, v))| {
                 // For O1 models, filter out max_tokens
@@ -223,7 +227,8 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         // 2. max_completion_tokens is not present (to avoid conflicts)
         if !is_o1_model
             && !self.properties.contains_key("max_tokens")
-            && !self.properties.contains_key("max_completion_tokens") {
+            && !self.properties.contains_key("max_completion_tokens")
+        {
             properties.insert("max_tokens".to_string(), serde_json::json!(4096));
         }
 

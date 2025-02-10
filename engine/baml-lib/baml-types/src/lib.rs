@@ -18,5 +18,6 @@ pub use map::Map as BamlMap;
 pub use media::{BamlMedia, BamlMediaContent, BamlMediaType, MediaBase64, MediaUrl};
 pub use minijinja::JinjaExpression;
 pub use value_expr::{
-    EvaluationContext, GetEnvVar, Resolvable, ResolvedValue, StringOr, UnresolvedValue,
+    ApiKeyWithProvenance, EvaluationContext, GetEnvVar, Resolvable, ResolvedValue, StringOr,
+    UnresolvedValue,
 };

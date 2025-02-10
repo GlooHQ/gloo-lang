@@ -343,11 +343,7 @@ impl RequestBuilder for AnthropicClient {
         for (key, value) in &self.properties.headers {
             req = req.header(key, value);
         }
-        let api_key = if expose_secrets {
-            self.properties.api_key.expose_secret()
-        } else {
-            "<SECRET_HIDDEN>"
-        };
+        let api_key = self.properties.api_key.render(expose_secrets);
         req = req.header("x-api-key", api_key);
 
         if allow_proxy {
