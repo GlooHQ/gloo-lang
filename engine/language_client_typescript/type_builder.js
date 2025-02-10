@@ -1,147 +1,148 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EnumBuilder = exports.ClassBuilder = exports.TypeBuilder = void 0;
-const native_1 = require("./native");
-class TypeBuilder {
-    tb;
-    classes;
-    enums;
-    constructor({ classes, enums }) {
+var native_1 = require("./native");
+var TypeBuilder = /** @class */ (function () {
+    function TypeBuilder(_a) {
+        var classes = _a.classes, enums = _a.enums;
         this.classes = classes;
         this.enums = enums;
         this.tb = new native_1.TypeBuilder();
     }
-    _tb() {
+    TypeBuilder.prototype._tb = function () {
         return this.tb;
-    }
-    null() {
+    };
+    TypeBuilder.prototype.null = function () {
         return this.tb.null();
-    }
-    string() {
+    };
+    TypeBuilder.prototype.string = function () {
         return this.tb.string();
-    }
-    literalString(value) {
+    };
+    TypeBuilder.prototype.literalString = function (value) {
         return this.tb.literalString(value);
-    }
-    literalInt(value) {
+    };
+    TypeBuilder.prototype.literalInt = function (value) {
         return this.tb.literalInt(value);
-    }
-    literalBool(value) {
+    };
+    TypeBuilder.prototype.literalBool = function (value) {
         return this.tb.literalBool(value);
-    }
-    int() {
+    };
+    TypeBuilder.prototype.int = function () {
         return this.tb.int();
-    }
-    float() {
+    };
+    TypeBuilder.prototype.float = function () {
         return this.tb.float();
-    }
-    bool() {
+    };
+    TypeBuilder.prototype.bool = function () {
         return this.tb.bool();
-    }
-    list(type) {
+    };
+    TypeBuilder.prototype.list = function (type) {
         return this.tb.list(type);
-    }
-    map(keyType, valueType) {
+    };
+    TypeBuilder.prototype.map = function (keyType, valueType) {
         return this.tb.map(keyType, valueType);
-    }
-    union(types) {
+    };
+    TypeBuilder.prototype.union = function (types) {
         return this.tb.union(types);
-    }
-    classBuilder(name, properties) {
+    };
+    TypeBuilder.prototype.classBuilder = function (name, properties) {
         return new ClassBuilder(this.tb, name, new Set(properties));
-    }
-    enumBuilder(name, values) {
+    };
+    TypeBuilder.prototype.enumBuilder = function (name, values) {
         return new EnumBuilder(this.tb, name, new Set(values));
-    }
-    addClass(name) {
+    };
+    TypeBuilder.prototype.addClass = function (name) {
         if (this.classes.has(name)) {
-            throw new Error(`Class ${name} already exists`);
+            throw new Error("Class ".concat(name, " already exists"));
         }
         if (this.enums.has(name)) {
-            throw new Error(`Enum ${name} already exists`);
+            throw new Error("Enum ".concat(name, " already exists"));
         }
         this.classes.add(name);
         return new ClassBuilder(this.tb, name);
-    }
-    addEnum(name) {
+    };
+    TypeBuilder.prototype.addEnum = function (name) {
         if (this.classes.has(name)) {
-            throw new Error(`Class ${name} already exists`);
+            throw new Error("Class ".concat(name, " already exists"));
         }
         if (this.enums.has(name)) {
-            throw new Error(`Enum ${name} already exists`);
+            throw new Error("Enum ".concat(name, " already exists"));
         }
         this.enums.add(name);
         return new EnumBuilder(this.tb, name);
-    }
-}
+    };
+    return TypeBuilder;
+}());
 exports.TypeBuilder = TypeBuilder;
-class ClassBuilder {
-    properties;
-    bldr;
-    constructor(tb, name, properties = new Set()) {
+var ClassBuilder = /** @class */ (function () {
+    function ClassBuilder(tb, name, properties) {
+        if (properties === void 0) { properties = new Set(); }
         this.properties = properties;
         this.bldr = tb.getClass(name);
     }
-    type() {
+    ClassBuilder.prototype.type = function () {
         return this.bldr.field();
-    }
-    listProperties() {
-        return Array.from(this.properties).map((name) => [name, new ClassPropertyBuilder(this.bldr.property(name))]);
-    }
-    addProperty(name, type) {
+    };
+    ClassBuilder.prototype.listProperties = function () {
+        var _this = this;
+        return Array.from(this.properties).map(function (name) { return [name, new ClassPropertyBuilder(_this.bldr.property(name))]; });
+    };
+    ClassBuilder.prototype.addProperty = function (name, type) {
         if (this.properties.has(name)) {
-            throw new Error(`Property ${name} already exists.`);
+            throw new Error("Property ".concat(name, " already exists."));
         }
         this.properties.add(name);
         return new ClassPropertyBuilder(this.bldr.property(name).setType(type));
-    }
-    property(name) {
+    };
+    ClassBuilder.prototype.property = function (name) {
         if (!this.properties.has(name)) {
-            throw new Error(`Property ${name} not found.`);
+            throw new Error("Property ".concat(name, " not found."));
         }
         return new ClassPropertyBuilder(this.bldr.property(name));
-    }
-}
+    };
+    return ClassBuilder;
+}());
 exports.ClassBuilder = ClassBuilder;
-class ClassPropertyBuilder {
-    bldr;
-    constructor(bldr) {
+var ClassPropertyBuilder = /** @class */ (function () {
+    function ClassPropertyBuilder(bldr) {
         this.bldr = bldr;
     }
-    alias(alias) {
+    ClassPropertyBuilder.prototype.alias = function (alias) {
         this.bldr.alias(alias);
         return this;
-    }
-    description(description) {
+    };
+    ClassPropertyBuilder.prototype.description = function (description) {
         this.bldr.description(description);
         return this;
-    }
-}
-class EnumBuilder {
-    values;
-    bldr;
-    constructor(tb, name, values = new Set()) {
+    };
+    return ClassPropertyBuilder;
+}());
+var EnumBuilder = /** @class */ (function () {
+    function EnumBuilder(tb, name, values) {
+        if (values === void 0) { values = new Set(); }
         this.values = values;
         this.bldr = tb.getEnum(name);
     }
-    type() {
+    EnumBuilder.prototype.type = function () {
         return this.bldr.field();
-    }
-    value(name) {
+    };
+    EnumBuilder.prototype.value = function (name) {
         if (!this.values.has(name)) {
-            throw new Error(`Value ${name} not found.`);
+            throw new Error("Value ".concat(name, " not found."));
         }
         return this.bldr.value(name);
-    }
-    listValues() {
-        return Array.from(this.values).map((name) => [name, this.bldr.value(name)]);
-    }
-    addValue(name) {
+    };
+    EnumBuilder.prototype.listValues = function () {
+        var _this = this;
+        return Array.from(this.values).map(function (name) { return [name, _this.bldr.value(name)]; });
+    };
+    EnumBuilder.prototype.addValue = function (name) {
         if (this.values.has(name)) {
-            throw new Error(`Value ${name} already exists.`);
+            throw new Error("Value ".concat(name, " already exists."));
         }
         this.values.add(name);
         return this.bldr.value(name);
-    }
-}
+    };
+    return EnumBuilder;
+}());
 exports.EnumBuilder = EnumBuilder;

@@ -91,7 +91,12 @@ pub fn throw_baml_validation_error(prompt: &str, raw_output: &str, message: &str
     napi::Error::new(napi::Status::GenericFailure, error_json.to_string())
 }
 
-pub fn throw_baml_client_finish_reason_error(prompt: &str, raw_output: &str, message: &str, finish_reason: Option<&str>) -> napi::Error {
+pub fn throw_baml_client_finish_reason_error(
+    prompt: &str,
+    raw_output: &str,
+    message: &str,
+    finish_reason: Option<&str>,
+) -> napi::Error {
     let error_json = serde_json::json!({
         "type": "BamlClientFinishReasonError",
         "prompt": prompt,

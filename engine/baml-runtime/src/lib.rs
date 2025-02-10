@@ -8,11 +8,11 @@ pub(crate) mod internal;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod cli;
 pub mod client_registry;
-pub mod test_constraints;
 pub mod errors;
 pub mod request;
 mod runtime;
 pub mod runtime_interface;
+pub mod test_constraints;
 pub mod tracing;
 pub mod type_builder;
 mod types;
@@ -64,8 +64,8 @@ pub use internal_baml_core::internal_baml_diagnostics;
 pub use internal_baml_core::internal_baml_diagnostics::Diagnostics as DiagnosticsError;
 pub use internal_baml_core::ir::{scope_diagnostics, FieldType, IRHelper, TypeValue};
 
-use crate::test_constraints::{evaluate_test_constraints, TestConstraintsResult};
 use crate::internal::llm_client::LLMResponse;
+use crate::test_constraints::{evaluate_test_constraints, TestConstraintsResult};
 
 #[cfg(not(target_arch = "wasm32"))]
 static TOKIO_SINGLETON: OnceLock<std::io::Result<Arc<tokio::runtime::Runtime>>> = OnceLock::new();
@@ -217,11 +217,13 @@ impl BamlRuntime {
         test_name: &str,
         ctx: &RuntimeContextManager,
         on_event: Option<F>,
+        cancel_rx: tokio::sync::oneshot::Receiver<()>,
     ) -> (Result<TestResponse>, Option<uuid::Uuid>)
     where
-        F: Fn(FunctionResult),
+        F: Fn(FunctionResult) + Clone,
     {
         let span = self.tracer.start_span(test_name, ctx, &Default::default());
+        let span_id = span.as_ref().map(|s| s.span_id);
 
         let type_builder = self
             .inner
@@ -242,7 +244,22 @@ impl BamlRuntime {
                 #[cfg(not(target_arch = "wasm32"))]
                 self.async_runtime.clone(),
             )?;
-            let (response_res, span_uuid) = stream.run(on_event, ctx, None, None).await;
+
+            // Create a future that completes when cancellation is requested
+            let cancel_fut = async {
+                let _ = cancel_rx.await;
+                Ok::<Option<()>, anyhow::Error>(None)
+            };
+
+            // Race between the test execution and cancellation
+            let (response_res, span_uuid) = tokio::select! {
+                res = stream.run(on_event.clone(), ctx, None, None) => res,
+                _ = cancel_fut => {
+                    // Test was cancelled
+                    return Err(anyhow::anyhow!("Test cancelled by user"));
+                }
+            };
+
             log::info!("response_res: {:#?}", response_res);
             let res = response_res?;
             let (_, llm_resp, val) = res
@@ -267,8 +284,14 @@ impl BamlRuntime {
             } else {
                 match val {
                     Some(Ok(value)) => {
-                        let value_with_constraints = value.0.map_meta(|(_,constraints,_)| constraints.clone());
-                        evaluate_test_constraints(&params, &value_with_constraints, complete_resp, constraints)
+                        let value_with_constraints =
+                            value.0.map_meta(|(_, constraints, _)| constraints.clone());
+                        evaluate_test_constraints(
+                            &params,
+                            &value_with_constraints,
+                            complete_resp,
+                            constraints,
+                        )
                     }
                     _ => TestConstraintsResult::empty(),
                 }

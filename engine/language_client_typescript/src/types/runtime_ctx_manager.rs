@@ -34,4 +34,9 @@ impl RuntimeContextManager {
     pub fn context_depth(&self) -> u32 {
         self.inner.context_depth() as u32
     }
+
+    #[napi]
+    pub fn set_cancelled(&self) {
+        self.inner.create_ctx_with_default().cancel();
+    }
 }

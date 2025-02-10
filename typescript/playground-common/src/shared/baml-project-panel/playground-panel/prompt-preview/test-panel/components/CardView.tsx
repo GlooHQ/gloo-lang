@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { useAtomValue, useSetAtom } from 'jotai'
-import { Play } from 'lucide-react'
+import { Play, Square } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { Button } from '~/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 import { cn } from '~/lib/utils'
-import { selectedItemAtom, testCaseResponseAtom, type TestState } from '../../../atoms'
+import { type TestState, selectedItemAtom, testCaseResponseAtom } from '../../../atoms'
 import { FunctionTestName } from '../../../function-test-name'
 import { type TestHistoryRun } from '../atoms'
 import { useRunTests } from '../test-runner'
@@ -37,7 +37,7 @@ interface TestId {
 const TestResult = ({ testId, historicalResponse }: { testId: TestId; historicalResponse?: TestState }) => {
   const response = useAtomValue(testCaseResponseAtom(testId))
   const displayResponse = historicalResponse || response
-  const { setRunningTests } = useRunTests()
+  const { setRunningTests, cancelTest } = useRunTests()
   const setSelectedItem = useSetAtom(selectedItemAtom)
   const selectedItem = useAtomValue(selectedItemAtom)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -72,19 +72,34 @@ const TestResult = ({ testId, historicalResponse }: { testId: TestId; historical
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='w-6 h-6 shrink-0'
-                  onClick={() => {
-                    setRunningTests([testId])
-                  }}
-                >
-                  <Play className='w-4 h-4' fill='#a855f7' stroke='#a855f7' />
-                </Button>
+                {displayResponse.status === 'running' ? (
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='w-6 h-6 shrink-0'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      cancelTest(testId)
+                    }}
+                  >
+                    <Square className='w-4 h-4 text-red-400 fill-red-400' />
+                  </Button>
+                ) : (
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='w-6 h-6 shrink-0'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setRunningTests([testId])
+                    }}
+                  >
+                    <Play className='w-4 h-4' fill='#a855f7' stroke='#a855f7' />
+                  </Button>
+                )}
               </TooltipTrigger>
               <TooltipContent>
-                <p>Re-run test</p>
+                <p>{displayResponse.status === 'running' ? 'Cancel test' : 'Re-run test'}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

@@ -32,4 +32,9 @@ impl RuntimeContextManager {
     fn context_depth(&self) -> usize {
         self.inner.context_depth()
     }
+
+    #[pyo3()]
+    fn set_cancelled(&self) {
+        // self.create_ctx_with_default().cancel();
+    }
 }

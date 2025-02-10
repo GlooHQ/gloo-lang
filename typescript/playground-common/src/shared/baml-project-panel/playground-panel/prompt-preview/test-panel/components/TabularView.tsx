@@ -2,24 +2,24 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAtom, useAtomValue } from 'jotai'
-import { Check, Copy, Play } from 'lucide-react'
+import { Check, Copy, Play, Square } from 'lucide-react'
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
+import { vscode } from '@/shared/baml-project-panel/vscode'
 import { WasmFunctionResponse, WasmTestResponse } from '@gloo-ai/baml-schema-wasm-web'
+import { useMemo } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { Button } from '~/components/ui/button'
-import { selectedItemAtom, testcaseObjectAtom, TestState } from '../../../atoms'
+import { ScrollArea } from '~/components/ui/scroll-area'
+import { TestState, selectedItemAtom, testcaseObjectAtom } from '../../../atoms'
 import { type TestHistoryRun } from '../atoms'
 import { useRunTests } from '../test-runner'
 import { getExplanation, getStatus, getTestStateResponse } from '../testStateUtils'
-import { ResponseViewType, tabularViewConfigAtom } from './atoms'
 import { MarkdownRenderer } from './MarkdownRenderer'
 import { ParsedResponseRenderer } from './ParsedResponseRender'
 import { TestStatus } from './TestStatus'
-import { ScrollArea } from '~/components/ui/scroll-area'
-import { vscode } from '@/shared/baml-project-panel/vscode'
-import { useMemo } from 'react'
+import { ResponseViewType, tabularViewConfigAtom } from './atoms'
 interface TabularViewProps {
   currentRun: TestHistoryRun
 }
@@ -110,7 +110,7 @@ const ResponseContent = ({
 
 export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
   const [config, setConfig] = useAtom(tabularViewConfigAtom)
-  const { setRunningTests } = useRunTests() // Add runTest to the destructuring
+  const { setRunningTests, cancelTest } = useRunTests() // Add cancelTest to the destructuring
   const [selectedItem, setSelectedItem] = useAtom(selectedItemAtom)
 
   const toggleConfig = (key: keyof typeof config) => {
@@ -204,6 +204,7 @@ export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
         <TableBody>
           {currentRun.tests.map((test, index) => {
             const isSelected = selectedItem?.[0] === test.functionName && selectedItem?.[1] === test.testName
+            const isRunning = test.response.status === 'running'
 
             return (
               <TableRow
@@ -217,22 +218,41 @@ export const TabularView: React.FC<TabularViewProps> = ({ currentRun }) => {
               >
                 <TableCell className='px-1 py-1'>
                   <div className='flex flex-col items-center space-y-2'>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      onClick={(e) => {
-                        e.stopPropagation() // Prevent row selection when clicking the button
-                        setRunningTests([
-                          {
-                            functionName: test.functionName,
-                            testName: test.testName,
-                          },
-                        ])
-                      }}
-                      className='w-6 h-6'
-                    >
-                      <Play className='w-4 h-4 text-purple-400' />
-                    </Button>
+                    <div className='flex gap-1'>
+                      {isRunning ? (
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={(e) => {
+                            e.stopPropagation() // Prevent row selection when clicking the button
+                            cancelTest({
+                              functionName: test.functionName,
+                              testName: test.testName,
+                            })
+                          }}
+                          className='w-6 h-6'
+                        >
+                          <Square className='w-4 h-4 text-red-400' />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={(e) => {
+                            e.stopPropagation() // Prevent row selection when clicking the button
+                            setRunningTests([
+                              {
+                                functionName: test.functionName,
+                                testName: test.testName,
+                              },
+                            ])
+                          }}
+                          className='w-6 h-6'
+                        >
+                          <Play className='w-4 h-4 text-purple-400' />
+                        </Button>
+                      )}
+                    </div>
                     <span
                       className='text-xs truncate whitespace-pre-wrap break-all cursor-pointer text-muted-foreground hover:text-primary'
                       onClick={(e) => {

@@ -11,8 +11,8 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use uuid::Uuid;
 use jsonish::ResponseBamlValue;
+use uuid::Uuid;
 
 use crate::{
     client_registry::ClientRegistry, internal::llm_client::LLMResponse,
@@ -43,9 +43,9 @@ cfg_if! {
 
 #[derive(Debug, Clone)]
 pub struct TracingSpan {
-    span_id: Uuid,
-    params: BamlMap<String, BamlValue>,
-    start_time: web_time::SystemTime,
+    pub span_id: Uuid,
+    pub params: BamlMap<String, BamlValue>,
+    pub start_time: web_time::SystemTime,
 }
 
 pub struct BamlTracer {

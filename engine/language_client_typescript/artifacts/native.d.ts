@@ -85,7 +85,6 @@ export declare class RuntimeContextManager {
   upsertTags(tags: any): void
   deepClone(): RuntimeContextManager
   contextDepth(): number
-  setCancelled(): void
 }
 
 export declare class TraceStats {

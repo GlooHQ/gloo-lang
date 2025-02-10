@@ -2,22 +2,22 @@
 
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { Braces, Bug, BugIcon, ChevronDown, Copy, FileJson, PlayCircle, Settings, Workflow } from 'lucide-react'
+import { Braces, Bug, BugIcon, ChevronDown, Copy, FileJson, PlayCircle, Settings, Square, Workflow } from 'lucide-react'
 import React from 'react'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { areTestsRunningAtom, selectedItemAtom, showEnvDialogAtom } from './atoms'
-import { FunctionTestName } from './function-test-name'
-import { useRunTests } from './prompt-preview/test-panel/test-runner'
-import { cn } from '@/lib/utils'
 import { areEnvVarsMissingAtom } from './atoms'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { TooltipProvider } from '@/components/ui/tooltip'
+import { FunctionTestName } from './function-test-name'
 import { renderedPromptAtom } from './prompt-preview/prompt-preview-content'
+import { useRunTests } from './prompt-preview/test-panel/test-runner'
 export const renderModeAtom = atom<'prompt' | 'curl' | 'tokens'>('prompt')
 
 const RunButton: React.FC = () => {
-  const { setRunningTests } = useRunTests()
+  const { setRunningTests, cancelAllTests } = useRunTests()
   const isRunning = useAtomValue(areTestsRunningAtom)
   const selected = useAtomValue(selectedItemAtom)
   return (
@@ -25,15 +25,26 @@ const RunButton: React.FC = () => {
       variant='default'
       size='sm'
       className='items-center px-2 space-x-2 h-7 text-sm text-white bg-purple-500 hover:bg-purple-700 disabled:bg-muted disabled:text-muted-foreground dark:bg-purple-600 dark:text-foreground dark:hover:bg-purple-800'
-      disabled={isRunning || selected === undefined}
+      disabled={!isRunning && selected === undefined}
       onClick={() => {
-        if (selected) {
+        if (isRunning) {
+          cancelAllTests()
+        } else if (selected) {
           void setRunningTests([{ functionName: selected[0], testName: selected[1] }])
         }
       }}
     >
-      <PlayCircle className='mr-0 w-4 h-4' />
-      <div className='text-xs'>Run {selected ? selected[1] : ''}</div>
+      {isRunning ? (
+        <>
+          <Square className='mr-0 w-4 h-4' />
+          <div className='text-xs'>Stop</div>
+        </>
+      ) : (
+        <>
+          <PlayCircle className='mr-0 w-4 h-4' />
+          <div className='text-xs'>Run {selected ? selected[1] : ''}</div>
+        </>
+      )}
     </Button>
   )
 }

@@ -1,6 +1,7 @@
 mod call;
 mod stream;
 
+use futures::StreamExt;
 use web_time::Duration; // Add this line
 
 use crate::RenderCurlSettings;
@@ -192,6 +193,11 @@ impl WithRenderRawCurl for OrchestratorNode {
 
 impl WithSingleCallable for OrchestratorNode {
     async fn single_call(&self, ctx: &RuntimeContext, prompt: &RenderedPrompt) -> LLMResponse {
+        // Check if the context has been cancelled
+        if ctx.is_cancelled() {
+            return LLMResponse::UserFailure("Request cancelled".to_string());
+        }
+
         self.scope
             .scope
             .iter()
@@ -201,12 +207,31 @@ impl WithSingleCallable for OrchestratorNode {
             })
             .map(|a| a.increment_index())
             .for_each(drop);
-        self.provider.single_call(ctx, prompt).await
+
+        // Create a future that checks for cancellation periodically
+        let response_future = self.provider.single_call(ctx, prompt);
+        let cancel_check = async {
+            while !ctx.is_cancelled() {
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            }
+        };
+
+        // Race between the response and cancellation
+        tokio::select! {
+            response = response_future => response,
+            _ = cancel_check => LLMResponse::UserFailure("Request cancelled".to_string()),
+        }
     }
 }
 
 impl WithStreamable for OrchestratorNode {
     async fn stream(&self, ctx: &RuntimeContext, prompt: &RenderedPrompt) -> StreamResponse {
+        // Check if the context has been cancelled
+        if ctx.is_cancelled() {
+            log::info!("Request cancelled due to context cancellation before stream start");
+            return Err(LLMResponse::UserFailure("Request cancelled".to_string()));
+        }
+
         self.scope
             .scope
             .iter()
@@ -216,7 +241,25 @@ impl WithStreamable for OrchestratorNode {
             })
             .map(|a| a.increment_index())
             .for_each(drop);
-        self.provider.stream(ctx, prompt).await
+
+        // Create a stream that checks for cancellation before yielding each chunk
+        let stream = self.provider.stream(ctx, prompt).await?;
+        let cancelled = ctx.cancelled.clone();
+
+        // Create a new stream that checks for cancellation
+        let stream = async_stream::stream! {
+            let mut s = stream;
+            while let Some(chunk) = s.next().await {
+                // Check for cancellation before yielding each chunk
+                if cancelled.load(std::sync::atomic::Ordering::SeqCst) {
+                    log::info!("Request cancelled during stream processing");
+                    break;
+                }
+                yield chunk;
+            }
+            log::info!("Stream completed or cancelled");
+        };
+        Ok(Box::pin(stream))
     }
 }
 

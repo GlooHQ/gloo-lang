@@ -2,7 +2,11 @@ use anyhow::Result;
 use baml_types::{BamlValue, EvaluationContext, UnresolvedValue};
 use indexmap::IndexMap;
 use internal_baml_core::ir::FieldType;
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    sync::atomic::{AtomicBool, Ordering},
+    sync::Arc,
+};
 
 use crate::internal::llm_client::llm_provider::LLMProvider;
 
@@ -58,6 +62,7 @@ pub struct RuntimeContext {
     pub enum_overrides: IndexMap<String, RuntimeEnumOverride>,
     pub type_alias_overrides: IndexMap<String, FieldType>,
     pub recursive_type_alias_overrides: Vec<IndexMap<String, FieldType>>,
+    pub cancelled: Arc<AtomicBool>,
 }
 
 impl RuntimeContext {
@@ -92,6 +97,7 @@ impl RuntimeContext {
             enum_overrides,
             type_alias_overrides,
             recursive_type_alias_overrides,
+            cancelled: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -111,5 +117,18 @@ impl RuntimeContext {
                 e
             ),
         }
+    }
+
+    pub fn is_cancelled(&self) -> bool {
+        let cancelled = self.cancelled.load(Ordering::SeqCst);
+        if cancelled {
+            log::info!("Context is cancelled");
+        }
+        cancelled
+    }
+
+    pub fn cancel(&self) {
+        log::info!("Setting context cancelled flag");
+        self.cancelled.store(true, Ordering::SeqCst);
     }
 }

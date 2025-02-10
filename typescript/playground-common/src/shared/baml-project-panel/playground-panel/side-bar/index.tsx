@@ -2,9 +2,11 @@
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { Dialog, DialogContent } from '@radix-ui/react-dialog'
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -14,20 +16,19 @@ import {
   Play,
   Search,
   Settings,
+  Square,
   XCircle,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import * as React from 'react'
 import { Button } from '~/components/ui/button'
+import { vscode } from '../../vscode'
 import { runtimeStateAtom, selectedItemAtom } from '../atoms'
+import { Loader } from '../prompt-preview/components'
 import { selectedHistoryIndexAtom, testHistoryAtom } from '../prompt-preview/test-panel/atoms'
 import { useRunTests } from '../prompt-preview/test-panel/test-runner'
 import { getStatus } from '../prompt-preview/test-panel/testStateUtils'
 import EnvVars from './env-vars'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { atomWithStorage } from 'jotai/utils'
-import { vscode } from '../../vscode'
-import { Loader } from '../prompt-preview/components'
 
 interface FunctionData {
   name: string
@@ -270,10 +271,11 @@ interface TestItemProps {
 function TestItem({ label, isLast = false, isSelected = false, searchTerm = '', functionName }: TestItemProps) {
   const testHistory = useAtomValue(testHistoryAtom)
   const selectedIndex = useAtomValue(selectedHistoryIndexAtom)
-  const { setRunningTests } = useRunTests()
+  const { setRunningTests, cancelTest } = useRunTests()
 
   const currentRun = testHistory[selectedIndex]
   const testResult = currentRun?.tests.find((t) => t.functionName === functionName && t.testName === label)
+  const isRunning = testResult?.response.status === 'running'
 
   // TODO: coalesce with the other status in TestStatus.tsx
   const getStatusIcon = () => {
@@ -302,6 +304,11 @@ function TestItem({ label, isLast = false, isSelected = false, searchTerm = '', 
   const handleRunTest = (e: React.MouseEvent) => {
     e.stopPropagation()
     setRunningTests([{ functionName, testName: label }])
+  }
+
+  const handleCancelTest = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    cancelTest({ functionName, testName: label })
   }
 
   const highlightText = (text: string) => {
@@ -345,14 +352,20 @@ function TestItem({ label, isLast = false, isSelected = false, searchTerm = '', 
             {highlightText(label)}
           </span>
         </div>
-        <Button
-          variant='ghost'
-          size='sm'
-          className='p-0 w-6 h-6 opacity-0 transition-opacity group-hover:opacity-100'
-          onClick={handleRunTest}
-        >
-          <Play className='w-3 h-3' />
-        </Button>
+        {isRunning ? (
+          <Button variant='ghost' size='sm' className='p-0 w-6 h-6' onClick={handleCancelTest}>
+            <Square className='w-3 h-3 text-red-400 fill-red-400' />
+          </Button>
+        ) : (
+          <Button
+            variant='ghost'
+            size='sm'
+            className='p-0 w-6 h-6 opacity-0 transition-opacity group-hover:opacity-100'
+            onClick={handleRunTest}
+          >
+            <Play className='w-3 h-3' />
+          </Button>
+        )}
       </div>
     </motion.div>
   )

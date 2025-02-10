@@ -35,6 +35,8 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 
 use self::runtime_prompt::WasmScope;
+use lazy_static::lazy_static;
+use tokio::sync::oneshot;
 use wasm_bindgen::JsValue;
 
 type JsResult<T> = core::result::Result<T, JsError>;
@@ -248,21 +250,8 @@ impl WasmProject {
             })?;
 
         BamlRuntime::from_file_content(&self.root_dir_name, &hm, env_vars)
-            .map(|r| WasmRuntime { runtime: r })
-            .map_err(|e| match e.downcast::<DiagnosticsError>() {
-                Ok(e) => {
-                    let wasm_error = WasmDiagnosticError {
-                        errors: e,
-                        all_files: hm.keys().map(|s| s.to_string()).collect(),
-                    }
-                    .into();
-                    wasm_error
-                }
-                Err(e) => {
-                    log::debug!("Error: {:#?}", e);
-                    JsValue::from_str(&e.to_string())
-                }
-            })
+            .map(|rt| WasmRuntime::new(rt))
+            .map_err(|e| JsValue::from_str(&format!("Failed to create runtime: {}", e)))
     }
 
     #[wasm_bindgen]
@@ -290,6 +279,12 @@ impl WasmProject {
 #[wasm_bindgen(inspectable, getter_with_clone)]
 pub struct WasmRuntime {
     runtime: BamlRuntime,
+}
+
+impl WasmRuntime {
+    pub fn new(runtime: BamlRuntime) -> Self {
+        Self { runtime }
+    }
 }
 
 #[wasm_bindgen(getter_with_clone, inspectable)]
@@ -982,32 +977,31 @@ impl WasmRuntime {
                     test_cases: f
                         .walk_tests()
                         .map(|tc| {
-                            let params = match tc.test_case_params(&ctx) {
-                                Ok(params) => Ok(params
-                                    .iter()
-                                    .map(|(k, v)| {
-                                        let as_str = match v {
-                                            Ok(v) => match serde_json::to_string(v) {
-                                                Ok(s) => Ok(s),
-                                                Err(e) => Err(e.to_string()),
-                                            },
-                                            Err(e) => Err(e.to_string()),
-                                        };
+                            let params = tc
+                                .test_case_params(&ctx)
+                                .map(|params| {
+                                    params
+                                        .iter()
+                                        .map(|(k, v)| {
+                                            let value_result = match v {
+                                                Ok(v) => serde_json::to_string(v).ok(),
+                                                Err(_) => None,
+                                            };
 
-                                        let (value, error) = match as_str {
-                                            Ok(s) => (Some(s), None),
-                                            Err(e) => (None, Some(e)),
-                                        };
+                                            let error = match v {
+                                                Ok(_) => None,
+                                                Err(e) => Some(e.to_string()),
+                                            };
 
-                                        WasmParam {
-                                            name: k.to_string(),
-                                            value,
-                                            error,
-                                        }
-                                    })
-                                    .collect()),
-                                Err(e) => Err(e.to_string()),
-                            };
+                                            WasmParam {
+                                                name: k.to_string(),
+                                                value: value_result,
+                                                error,
+                                            }
+                                        })
+                                        .collect::<Vec<WasmParam>>()
+                                })
+                                .map_err(|e| e.to_string());
 
                             let (mut params, error) = match params {
                                 Ok(p) => (p, None),
@@ -1018,14 +1012,11 @@ impl WasmRuntime {
                             f.inputs().iter().for_each(|(param_name, t)| {
                                 if !params.iter().any(|p| p.name == *param_name) && !t.is_optional()
                                 {
-                                    params.insert(
-                                        0,
-                                        WasmParam {
-                                            name: param_name.to_string(),
-                                            value: None,
-                                            error: Some("Missing parameter".to_string()),
-                                        },
-                                    );
+                                    params.push(WasmParam {
+                                        name: param_name.to_string(),
+                                        value: None,
+                                        error: Some("Missing parameter".to_string()),
+                                    });
                                 }
                             });
 
@@ -1310,38 +1301,37 @@ impl WasmRuntime {
             .ir()
             .walk_tests()
             .map(|tc| {
-                let params = match tc.test_case_params(&ctx) {
-                    Ok(params) => Ok(params
-                        .iter()
-                        .map(|(k, v)| {
-                            let as_str = match v {
-                                Ok(v) => match serde_json::to_string(v) {
-                                    Ok(s) => Ok(s),
-                                    Err(e) => Err(e.to_string()),
-                                },
-                                Err(e) => Err(e.to_string()),
-                            };
+                let params = tc
+                    .test_case_params(&ctx)
+                    .map(|params| {
+                        params
+                            .iter()
+                            .map(|(k, v)| {
+                                let value_result = match v {
+                                    Ok(v) => serde_json::to_string(v).ok(),
+                                    Err(_) => None,
+                                };
 
-                            let (value, error) = match as_str {
-                                Ok(s) => (Some(s), None),
-                                Err(e) => (None, Some(e)),
-                            };
+                                let error = match v {
+                                    Ok(_) => None,
+                                    Err(e) => Some(e.to_string()),
+                                };
 
-                            WasmParam {
-                                name: k.to_string(),
-                                value,
-                                error,
-                            }
-                        })
-                        .collect()),
-                    Err(e) => Err(e.to_string()),
-                };
+                                WasmParam {
+                                    name: k.to_string(),
+                                    value: value_result,
+                                    error,
+                                }
+                            })
+                            .collect::<Vec<WasmParam>>()
+                    })
+                    .map_err(|e| e.to_string());
 
                 let (mut params, error) = match params {
                     Ok(p) => (p, None),
                     Err(e) => (Vec::new(), Some(e)),
                 };
-                // Any missing params should be set to an error
+
                 // Any missing params should be set to an error
                 tc.function().inputs().iter().for_each(|func_params| {
                     let (param_name, t) = func_params;
@@ -1635,9 +1625,33 @@ impl WasmFunction {
             BamlValue::String("wasm".to_string()),
             js_fn_to_baml_src_reader(get_baml_src_cb),
         );
-        let (test_response, span) = rt
-            .run_test(&function_name, &test_name, &ctx, Some(cb))
-            .await;
+
+        // Create a oneshot channel for cancellation
+        let (cancel_tx, cancel_rx) = tokio::sync::oneshot::channel();
+
+        // Store the sender in a static for later cancellation
+        let cancel_key = format!("{}:{}", function_name, test_name);
+        CANCEL_SENDERS
+            .lock()
+            .unwrap()
+            .insert(cancel_key.clone(), cancel_tx);
+
+        let test_fut = rt.run_test(&function_name, &test_name, &ctx, Some(cb), cancel_rx);
+
+        // Use select to race between completion and cancellation
+        let result = match test_fut.await {
+            Ok((response, uuid)) => (response, uuid),
+            Err(e) => {
+                // Clean up the cancel sender
+                CANCEL_SENDERS.lock().unwrap().remove(&cancel_key);
+                return Err(JsValue::from_str(&format!("Test error: {}", e)));
+            }
+        };
+
+        let (test_response, span) = result;
+
+        // Clean up the cancel sender
+        CANCEL_SENDERS.lock().unwrap().remove(&cancel_key);
 
         log::info!("test_response: {:#?}", test_response);
 
@@ -1725,4 +1739,21 @@ impl ToJsValue for OrchestrationScope {
         }
         array.into()
     }
+}
+
+// Add a new function to handle cancellation from JS
+#[wasm_bindgen]
+pub fn cancel_test(function_name: String, test_name: String) -> Result<(), JsValue> {
+    let cancel_key: String = format!("{}:{}", function_name, test_name);
+    if let Some(cancel_tx) = CANCEL_SENDERS.lock().unwrap().remove(&cancel_key) {
+        // Send cancellation signal
+        let _ = cancel_tx.send(());
+    }
+    Ok(())
+}
+
+// Add static storage for cancel senders
+lazy_static! {
+    static ref CANCEL_SENDERS: std::sync::Mutex<HashMap<String, tokio::sync::oneshot::Sender<()>>> =
+        std::sync::Mutex::new(HashMap::new());
 }
