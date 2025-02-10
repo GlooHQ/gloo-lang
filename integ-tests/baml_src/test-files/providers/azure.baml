@@ -74,6 +74,28 @@ client<llm> AzureWithNullMaxTokens {
   }
 }
 
+// Test O3 model without max_tokens (should not add default)
+function TestAzureO3NoMaxTokens(input: string) -> string {
+  client AzureO3
+  prompt #"
+    {{ _.role("user") }}
+    Write a nice haiku, given the user input. Make sure to reference the input in the haiku.
+
+    Input: {{ input }}
+  "#
+}
+
+// Test O3 model with explicit max_completion_tokens (should keep user value)
+function TestAzureO3WithMaxCompletionTokens(input: string) -> string {
+  client AzureO3WithMaxCompletionTokens
+  prompt #"
+    {{ _.role("user") }}
+    Write a nice haiku, given the user input. Make sure to reference the input in the haiku.
+
+    Input: {{ input }}
+  "#
+}
+
 // Add test cases to verify the behavior
 test TestAzureClients {
   functions [
@@ -81,7 +103,9 @@ test TestAzureClients {
     TestAzureO1NoMaxTokens,
     TestAzureO1WithMaxTokens,
     TestAzureWithMaxTokens,
-    TestAzureO1WithMaxCompletionTokens
+    TestAzureO1WithMaxCompletionTokens,
+    TestAzureO3NoMaxTokens,
+    TestAzureO3WithMaxCompletionTokens
   ]
   args {
     input "Cherry blossoms"

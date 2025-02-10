@@ -2812,6 +2812,56 @@ export class BamlSyncClient {
     }
   }
   
+  TestAzureO3NoMaxTokens(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): string {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "TestAzureO3NoMaxTokens",
+      {
+        "input": input
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed(false) as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  TestAzureO3WithMaxCompletionTokens(
+      input: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): string {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "TestAzureO3WithMaxCompletionTokens",
+      {
+        "input": input
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed(false) as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
   TestAzureWithMaxTokens(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
