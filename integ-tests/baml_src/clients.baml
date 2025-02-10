@@ -355,3 +355,27 @@ client<llm> GPT4WithMaxTokens {
     max_tokens 1000
   }
 }
+
+// Azure O3 client without max_tokens (should not add default)
+client<llm> AzureO3 {
+  provider azure-openai
+  options {
+    resource_name "west-us-azure-baml"
+    deployment_id "o3-mini"
+    api_version "2024-08-01-preview"
+    api_key env.AZURE_OPENAI_API_KEY
+    max_tokens null
+  }
+}
+
+// Azure O3 client with explicit max_completion_tokens
+client<llm> AzureO3WithMaxCompletionTokens {
+  provider azure-openai
+  options {
+    resource_name "west-us-azure-baml"
+    deployment_id "o3-mini"
+    api_version "2024-08-01-preview"
+    api_key env.AZURE_OPENAI_API_KEY
+    max_completion_tokens 1000
+  }
+}
