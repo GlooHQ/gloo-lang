@@ -550,6 +550,10 @@ class WithReasoning(BaseModel):
     value: str
     reasoning: str
 
+JsonEntry: TypeAlias = Union["SimpleTag", "JsonTemplate"]
+
+JsonTemplate: TypeAlias = Dict[str, "JsonEntry"]
+
 RecursiveMapAlias: TypeAlias = Dict[str, "RecursiveMapAlias"]
 
 RecursiveListAlias: TypeAlias = List["RecursiveListAlias"]
@@ -565,7 +569,3 @@ JsonValue: TypeAlias = Union[int, str, bool, float, "JsonObject", "JsonArray"]
 JsonObject: TypeAlias = Dict[str, "JsonValue"]
 
 JsonArray: TypeAlias = List["JsonValue"]
-
-JsonEntry: TypeAlias = Union["SimpleTag", "JsonTemplate"]
-
-JsonTemplate: TypeAlias = Dict[str, "JsonEntry"]
