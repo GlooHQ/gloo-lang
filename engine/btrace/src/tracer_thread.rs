@@ -5,7 +5,7 @@ use std::time::Instant;
 
 use super::TraceEvent;
 use serde::{Deserialize, Serialize};
-use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
+use tokio_stream::wrappers::UnboundedReceiverStream;
 pub struct TracerThread {
     rx: UnboundedReceiverStream<TraceEvent>,
 }
@@ -50,6 +50,8 @@ impl TracerThread {
                 else {
                     continue;
                 };
+
+                // send the payload out
 
                 let Ok(_) = upload_file(&presigned_url, &body).await else {
                     continue;

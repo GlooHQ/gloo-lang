@@ -1,5 +1,5 @@
-mod events;
-mod storage;
+pub mod events;
+pub mod storage;
 
 // use serde::{Deserialize, Serialize};
 

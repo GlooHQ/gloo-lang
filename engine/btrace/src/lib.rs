@@ -1,6 +1,14 @@
-use baml_types::tracing::{
-    SpanId, TraceEvent, TraceLog, TraceMetadata, TraceSpanEnd, TraceSpanStart, TraceTags,
+// use baml_types::tracing::{
+//     SpanId, TraceEvent, TraceLog, TraceMetadata, TraceSpanEnd, TraceSpanStart, TraceTags,
+// };
+
+use baml_types::tracing::events::{
+    BamlOptions, ContentId, FunctionEnd, FunctionId, FunctionStart, LogEvent, LogEventContent,
+    TraceTags,
 };
+
+use std::sync::Arc;
+
 #[cfg(not(target_arch = "wasm32"))]
 mod tracer_thread;
 
@@ -11,7 +19,7 @@ pub use tracing_core::Level;
 #[derive(Clone, Debug)]
 pub enum InstrumentationScope {
     Root,
-    Child { parent_span_id: SpanId },
+    Child { parent_span_id: FunctionId },
 }
 
 #[derive(Clone)]
@@ -19,19 +27,19 @@ pub struct TraceContext {
     /// The scope used for all spans/logs within this context.
     pub scope: InstrumentationScope,
     /// The channel used to send trace events to the trace agent.
-    pub tx: tokio::sync::mpsc::UnboundedSender<TraceEvent>,
+    pub tx: tokio::sync::mpsc::UnboundedSender<Arc<LogEvent>>,
     pub tags: TraceTags,
 }
 
 impl TraceContext {
-    fn child_ctx(&self) -> (Self, SpanId) {
+    fn child_ctx(&self) -> (Self, FunctionId) {
         let new_uuid = uuid::Uuid::now_v7().to_string();
         let span_id = match &self.scope {
-            InstrumentationScope::Root => SpanId(vec![new_uuid]),
+            InstrumentationScope::Root => FunctionId(new_uuid),
             InstrumentationScope::Child { parent_span_id } => {
-                let mut parent_span_id = parent_span_id.clone();
-                parent_span_id.0.push(new_uuid);
-                parent_span_id
+                let mut new_parent = parent_span_id.clone();
+                new_parent.0.push_str(new_uuid.as_str());
+                new_parent
             }
         };
         (
@@ -82,82 +90,125 @@ thread_local! {
 //     }
 // }
 
+/// In the new scheme, a basic log event is created via LogEventContent::Log. (Ensure that your
+/// `baml-types` crate now defines an appropriate variant; for example:
+///
+///   pub enum LogEventContent {
+///       Log { msg: String },
+///       FunctionStart(FunctionStart),
+///       FunctionEnd(FunctionEnd),
+///       ... // etc.
+///   }
+///
+/// If not, adjust this implementation accordingly.
 pub fn log(
     verbosity: tracing_core::Level,
     callsite: String,
     msg: String,
     fields: serde_json::Value,
 ) {
-    let Ok(ctx) = BAML_TRACE_CTX.try_with(|ctx| ctx.clone()) else {
+    // Try to grab the current trace context; if unavailable bail out.
+    let Ok(ctx) = BAML_TRACE_CTX.try_with(|ctx: &TraceContext| ctx.clone()) else {
         return;
     };
+
     let mut tags = ctx.tags.clone();
-    match fields {
-        serde_json::Value::Object(o) => tags.extend(o),
-        _ => (),
+    if let serde_json::Value::Object(o) = fields {
+        tags.extend(o);
     }
-    let _ = ctx.tx.send(TraceEvent::Log(TraceLog {
-        span_id: match ctx.scope {
-            InstrumentationScope::Root => SpanId(vec![]),
-            InstrumentationScope::Child { parent_span_id } => parent_span_id,
-        },
-        start_time: web_time::Instant::now(),
-        msg,
-        meta: TraceMetadata {
-            callsite,
-            verbosity,
-        },
+
+    // Determine span ID based on the current instrumentation scope.
+    let span_id = match ctx.scope {
+        InstrumentationScope::Root => FunctionId("".to_string()),
+        InstrumentationScope::Child { ref parent_span_id } => parent_span_id.clone(),
+    };
+
+    // Wrap the log event in an Arc so that we have only one copy.
+    let log_event = Arc::new(LogEvent {
+        span_id,
+        // Using an empty content span id here; adjust as needed.
+        content_span_id: ContentId("".to_string()),
+        span_chain: Vec::new(),
+        timestamp: web_time::Instant::now(),
+        content: LogEventContent::LogMessage { msg },
         tags,
-    }));
+    });
+
+    // Send a clone of the Arc to the channel.
+    let _ = ctx.tx.send(Arc::clone(&log_event));
+
+    // Also store the event in the global storage.
+    // Because 'put' is synchronous yet locking is async, we use a runtime to block.
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    let _ = rt.block_on(async {
+        let mut storage = baml_types::tracing::storage::GLOBAL_TRACE_STORAGE
+            .lock()
+            .await;
+        storage.put(Arc::clone(&log_event));
+    });
 }
 
+/// This macro instruments a synchronous function call by sending "span start" and "span end"
+/// events using the new LogEvent type. Note that we now use `FunctionStart` and `FunctionEnd`
+/// (which live in baml-types) instead of the old TraceSpanStart/TraceSpanEnd.
 macro_rules! impl_trace_scope {
     ($new_ctx:ident, $verbosity:ident, $name:ident, $fields:ident, $wrapped_fn:expr, $unwrapped_fn:expr, $then:expr) => {{
         let curr_ctx = BAML_TRACE_CTX.try_with(|ctx| ctx.clone());
-
         match curr_ctx {
             Ok(ctx) => {
                 let ($new_ctx, span_id) = ctx.child_ctx();
 
                 let name = $name.into();
                 let start_time = web_time::Instant::now();
-                let meta = TraceMetadata {
-                    callsite: name,
-                    verbosity: $verbosity,
-                };
-                let tags = $new_ctx.tags.clone();
-                let span = TraceSpanStart {
+
+                // Send a span start event.
+                let start_event = LogEvent {
                     span_id: span_id.clone(),
-                    start_time,
-                    meta: meta.clone(),
-                    fields: {
-                        let mut fields = $new_ctx.tags.clone();
-                        match $fields {
-                            serde_json::Value::Object(o) => fields.extend(o),
-                            _ => (),
+                    content_span_id: ContentId("".to_string()),
+                    span_chain: Vec::new(),
+                    timestamp: start_time,
+                    content: LogEventContent::FunctionStart(FunctionStart {
+                        name: name.clone(),
+                        // No arguments are provided in this context.
+                        args: Vec::new(),
+                        // Default options; adjust if you want to pass extra data.
+                        options: BamlOptions {
+                            type_builder: None,
+                            client_registry: None,
+                        },
+                    }),
+                    tags: {
+                        let mut fields_map = $new_ctx.tags.clone();
+                        if let serde_json::Value::Object(o) = $fields {
+                            fields_map.extend(o);
                         }
-                        fields
+                        fields_map
                     },
                 };
-                let _ = ctx.tx.send(TraceEvent::SpanStart(span));
+                let _ = ctx.tx.send(Arc::new(start_event));
 
                 let retval = $wrapped_fn;
 
-                let span = TraceSpanEnd {
+                // Send a span end event.
+                let end_event = LogEvent {
                     span_id,
-                    meta,
-                    start_time,
-                    duration: start_time.elapsed(),
-                    fields: {
-                        let mut fields = tags;
-                        match $then(&retval) {
-                            serde_json::Value::Object(o) => fields.extend(o),
-                            _ => (),
+                    content_span_id: ContentId("".to_string()),
+                    span_chain: Vec::new(),
+                    timestamp: web_time::Instant::now(),
+                    content: LogEventContent::FunctionEnd(FunctionEnd {
+                        // Because we cannot (in general) convert the return value to a BamlValue,
+                        // we use a placeholder. You might convert `retval` if you require this.
+                        result: Ok(serde_json::json!(null)),
+                    }),
+                    tags: {
+                        let mut fields_map = $new_ctx.tags.clone();
+                        if let serde_json::Value::Object(o) = $then(&retval) {
+                            fields_map.extend(o);
                         }
-                        fields
+                        fields_map
                     },
                 };
-                let _ = ctx.tx.send(TraceEvent::SpanEnd(span));
+                let _ = ctx.tx.send(Arc::new(end_event));
                 retval
             }
             Err(_) => $unwrapped_fn,
@@ -165,6 +216,7 @@ macro_rules! impl_trace_scope {
     }};
 }
 
+/// Instruments a synchronous function call with tracing.
 pub fn btrace<F, R, G>(
     verbosity: tracing_core::Level,
     name: impl Into<String>,
@@ -187,6 +239,7 @@ where
     )
 }
 
+/// A trait to add a trace–aware method to futures.
 pub trait WithTraceContext: Sized + std::future::Future {
     #[allow(async_fn_in_trait)]
     async fn btrace<F>(
@@ -211,5 +264,5 @@ pub trait WithTraceContext: Sized + std::future::Future {
     }
 }
 
-// Auto-implement the trait for all futures
+// Auto-implement the trait for all futures.
 impl<F> WithTraceContext for F where F: std::future::Future {}

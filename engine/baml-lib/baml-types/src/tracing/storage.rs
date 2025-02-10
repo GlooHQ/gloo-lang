@@ -1,8 +1,11 @@
+use once_cell::sync::Lazy;
 use std::{collections::HashMap, sync::Arc};
+use tokio::sync::Mutex;
 
 use super::events::{FunctionId, LogEvent};
 
-use tokio::sync::Mutex;
+pub static GLOBAL_TRACE_STORAGE: Lazy<Mutex<TraceStorage>> =
+    Lazy::new(|| Mutex::new(TraceStorage::default()));
 
 #[derive(Default)]
 pub struct TraceStorage {

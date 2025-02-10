@@ -1,14 +1,16 @@
-use anyhow::Result;
 use crate::BamlValue;
+use anyhow::Result;
 
 // TODO: use a prefixed UUID type for this
 type SpanId = String;
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct FunctionId(pub SpanId);
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct ContentId(pub SpanId);
+
+pub type TraceTags = serde_json::Map<String, serde_json::Value>;
 
 // THESE ARE NOT CLONEABLE!!
 pub struct LogEvent {
@@ -16,7 +18,6 @@ pub struct LogEvent {
      * (span_id, content_span_id) is a unique identifier for a log event
      * The query (span_id, *) gets all logs for a function call
      */
-    
     pub span_id: FunctionId,
     pub content_span_id: ContentId,
 
@@ -25,13 +26,16 @@ pub struct LogEvent {
     pub span_chain: Vec<FunctionId>,
 
     // The timestamp of the log
+    // idk what this does yet #[serde(with = "timestamp_serde")]
     pub timestamp: web_time::Instant,
     // The content of the log
     pub content: LogEventContent,
+
+    pub tags: TraceTags,
 }
 
-
 pub enum LogEventContent {
+    LogMessage { msg: String },
     // All start events
     FunctionStart(FunctionStart),
     // All end events
@@ -112,7 +116,6 @@ pub struct HTTPResponse {
     pub body: serde_json::Value,
 }
 
-
 pub struct LLMResponse {
     // since LLM requests could be made in parallel, we need to match the response to the request
     pub request_id: ContentId,
@@ -128,4 +131,3 @@ pub struct LLMUsage {
     pub output_tokens: Option<u64>,
     pub total_tokens: Option<u64>,
 }
-
