@@ -254,11 +254,7 @@ impl RequestBuilder for OpenAIClient {
             req = req.header(key, value);
         }
         if let Some(key) = &self.properties.api_key {
-            if expose_secrets {
-                req = req.bearer_auth(key.expose_secret());
-            } else {
-                req = req.bearer_auth("<SECRET_HIDDEN>");
-            }
+            req = req.bearer_auth(key.render(expose_secrets));
         }
 
         // Don't attach BAML creds to localhost requests, i.e. ollama

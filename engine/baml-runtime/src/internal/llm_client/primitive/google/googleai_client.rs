@@ -295,11 +295,10 @@ impl RequestBuilder for GoogleAIClient {
             req = req.header(key, value);
         }
 
-        if expose_secrets {
-            req = req.header("x-goog-api-key", self.properties.api_key.expose_secret());
-        } else {
-            req = req.header("x-goog-api-key", "<SECRET_HIDDEN>");
-        }
+        req = req.header(
+            "x-goog-api-key",
+            self.properties.api_key.render(expose_secrets),
+        );
 
         let mut body = json!(self.properties.properties);
         let body_obj = body.as_object_mut().unwrap();

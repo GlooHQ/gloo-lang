@@ -7,7 +7,7 @@ use crate::{
 use anyhow::Result;
 use secrecy::SecretString;
 
-use baml_types::{EvaluationContext, GetEnvVar, StringOr};
+use baml_types::{ApiKeyWithProvenance, EvaluationContext, GetEnvVar, StringOr};
 
 use super::helpers::{Error, PropertyHandler};
 
@@ -68,7 +68,7 @@ pub struct ResolvedAwsBedrock {
     pub model: String,
     pub region: Option<String>,
     pub access_key_id: Option<String>,
-    pub secret_access_key: Option<SecretString>,
+    pub secret_access_key: Option<ApiKeyWithProvenance>,
     pub session_token: Option<String>,
     pub profile: Option<String>,
     pub inference_config: Option<InferenceConfiguration>,
@@ -186,10 +186,11 @@ impl UnresolvedAwsBedrock {
             None => None,
         };
 
-        let secret_access_key = match self.secret_access_key.as_ref() {
-            Some(secret_access_key) => Some(SecretString::from(secret_access_key.resolve(ctx)?)),
-            None => None,
-        };
+        let secret_access_key = self
+            .secret_access_key
+            .as_ref()
+            .map(|key| key.resolve_api_key(ctx))
+            .transpose()?;
 
         let session_token = match self.session_token.as_ref() {
             Some(session_token) => {
@@ -212,7 +213,10 @@ impl UnresolvedAwsBedrock {
                         _ => None,
                     };
                     let secret_access_key = match ctx.get_env_var("AWS_SECRET_ACCESS_KEY") {
-                        Ok(key) if !key.is_empty() => Some(SecretString::from(key)),
+                        Ok(key) if !key.is_empty() => Some(ApiKeyWithProvenance {
+                            api_key: SecretString::from(key),
+                            provenance: Some("AWS_SECRET_ACCESS_KEY".to_string()),
+                        }),
                         _ => None,
                     };
                     let session_token = match ctx.get_env_var("AWS_SESSION_TOKEN") {

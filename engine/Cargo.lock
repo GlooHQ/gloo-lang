@@ -1088,6 +1088,7 @@ dependencies = [
  "log",
  "minijinja",
  "once_cell",
+ "secrecy",
  "serde",
  "serde_json",
  "strum",

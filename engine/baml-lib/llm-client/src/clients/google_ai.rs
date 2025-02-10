@@ -6,9 +6,8 @@ use crate::{
     FinishReasonFilter, RolesSelection, UnresolvedFinishReasonFilter, UnresolvedRolesSelection
 };
 
-use baml_types::{EvaluationContext, StringOr, UnresolvedValue};
+use baml_types::{ApiKeyWithProvenance, EvaluationContext, StringOr, UnresolvedValue};
 use indexmap::IndexMap;
-use secrecy::SecretString;
 
 use super::helpers::{Error, PropertyHandler, UnresolvedUrl};
 
@@ -51,7 +50,7 @@ impl<Meta> UnresolvedGoogleAI<Meta> {
 
 pub struct ResolvedGoogleAI {
     role_selection: RolesSelection,
-    pub api_key: SecretString,
+    pub api_key: ApiKeyWithProvenance,
     pub model: String,
     pub base_url: String,
     pub headers: IndexMap<String, String>,
@@ -102,7 +101,7 @@ impl<Meta: Clone> UnresolvedGoogleAI<Meta> {
     }
 
     pub fn resolve(&self, ctx: &EvaluationContext<'_>) -> Result<ResolvedGoogleAI> {
-        let api_key = self.api_key.resolve(ctx)?;
+        let api_key = self.api_key.resolve_api_key(ctx)?;
         let role_selection = self.role_selection.resolve(ctx)?;
 
         let model = self
@@ -122,7 +121,7 @@ impl<Meta: Clone> UnresolvedGoogleAI<Meta> {
 
         Ok(ResolvedGoogleAI {
             role_selection,
-            api_key: SecretString::from(api_key),
+            api_key,
             model,
             base_url,
             headers,
