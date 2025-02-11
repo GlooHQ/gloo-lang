@@ -1,0 +1,66 @@
+Client: GPT4 (gpt-4o-2024-08-06) - 3061ms. StopReason: stop. Tokens(in/out): 221/78
+---PROMPT---
+[chat] system: You are an expert extraction algorithm. Only extract relevant information from the text. If you do not know the value of an attribute asked to extract, return null for the attribute's value.
+
+Color
+----
+- RED
+- BLUE
+- GREEN
+- YELLOW
+- BLACK
+- WHITE
+- BROWN
+
+Answer with a JSON Array using this schema:
+[
+  {
+    name: string or null,
+    hair_color: Color or null,
+    age: int or null,
+    extra: {
+      height: int,
+      weight: int,
+    } or null,
+    job: 'Programmer' or 'Architect' or 'Musician' or null,
+    hobbies: [
+      'SPORTS' or 'MUSIC' or 'READING' or 'VideoGames' or 'BikeRiding'
+    ],
+  }
+]
+user: My name is John Doe. I'm 30 years old. My height is 6 feet and I weigh 180 pounds. My hair is brown. I work as a programmer and enjoy bike riding.
+
+---LLM REPLY---
+```json
+[
+  {
+    "name": "John Doe",
+    "hair_color": "BROWN",
+    "age": 30,
+    "extra": {
+      "height": 72,
+      "weight": 180
+    },
+    "job": "Programmer",
+    "hobbies": [
+      "BikeRiding"
+    ]
+  }
+]
+```
+---Parsed Response (list<class Person>)---
+[
+  {
+    "name": "John Doe",
+    "hair_color": "BROWN",
+    "age": 30,
+    "extra": {
+      "height": 72,
+      "weight": 180
+    },
+    "job": "Programmer",
+    "hobbies": [
+      "BikeRiding"
+    ]
+  }
+]

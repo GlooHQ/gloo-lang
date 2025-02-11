@@ -76,4 +76,84 @@ describe('Dynamic Type Tests', () => {
       expect(res.height['meters']).toEqual(1.8)
     })
   })
+
+  describe('Extend From Baml', () => {
+    it('should extend existing class', async () => {
+      let tb = new TypeBuilder()
+      tb.extendFromBaml(`
+        class ExtraPersonInfo {
+            height int
+            weight int
+        }
+
+        dynamic Person {
+            age int?
+            extra ExtraPersonInfo?
+        }
+      `)
+      let res = await b.ExtractPeople(
+        "My name is John Doe. I'm 30 years old. I'm 6 feet tall and weigh 180 pounds. My hair is yellow.",
+        { tb },
+      )
+      expect(res).toEqual([{name: "John Doe", age: 30, extra: {height: 6, weight: 180}, hair_color: "YELLOW"}])
+    })
+
+    it('should extend existing enum', async () => {
+      let tb = new TypeBuilder()
+      tb.extendFromBaml(`
+        dynamic Hobby {
+          VideoGames
+          BikeRiding
+        }
+      `)
+      let res = await b.ExtractHobby("I play video games", { tb })
+      expect(res).toEqual(["VideoGames"])
+    })
+
+    it('should extend both class and enum', async () => {
+      let tb = new TypeBuilder()
+      tb.extendFromBaml(`
+        class ExtraPersonInfo {
+            height int
+            weight int
+        }
+
+        enum Job {
+            Programmer
+            Architect
+            Musician
+        }
+
+        dynamic Hobby {
+            VideoGames
+            BikeRiding
+        }
+
+        dynamic Color {
+            BROWN
+        }
+
+        dynamic Person {
+            age int?
+            extra ExtraPersonInfo?
+            job Job?
+            hobbies Hobby[]
+        }
+      `)
+      let res = await b.ExtractPeople(
+        "My name is John Doe. I'm 30 years old. My height is 6 feet and I weigh 180 pounds. My hair is brown. I work as a programmer and enjoy bike riding.",
+        { tb },
+      )
+      expect(res).toEqual([
+        {
+          name: "John Doe",
+          age: 30,
+          hair_color: "BROWN",
+          job: "Programmer",
+          hobbies: ["BikeRiding"],
+          extra: {height: 6, weight: 180},
+        }
+      ])
+    })
+  })
 })
