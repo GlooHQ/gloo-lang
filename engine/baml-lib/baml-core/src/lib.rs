@@ -171,9 +171,9 @@ fn validate_test_type_builders(
     }
 }
 
-pub fn run_validation_pipeline_type_builder_ast(
-    diagnostics: &mut Diagnostics,
+pub fn run_validation_pipeline_on_db(
     db: &mut internal_baml_parser_database::ParserDatabase,
+    diagnostics: &mut Diagnostics,
 ) {
     validate::validate(db, Default::default(), diagnostics);
     if diagnostics.has_errors() {

@@ -251,33 +251,30 @@ impl TypeBuilder {
         Arc::clone(&self.recursive_type_aliases)
     }
 
-    pub fn extend_from_baml(&self, baml: &str, rt: &crate::BamlRuntime) {
+    pub fn extend_from_baml(&self, baml: &str, rt: &crate::BamlRuntime) -> anyhow::Result<()> {
         use internal_baml_core::{
             internal_baml_diagnostics::{Diagnostics, SourceFile},
             internal_baml_parser_database::ParserDatabase,
+            internal_baml_schema_ast::parse_type_builder_block_from_str,
             ir::repr::IntermediateRepr,
-            run_validation_pipeline_type_builder_ast, validate_type_builder_block,
+            run_validation_pipeline_on_db, validate_type_builder_block,
         };
 
         let path = std::path::PathBuf::from("TypeBuilder::extend_from_baml.baml");
-        eprintln!("Parsing BAML : {:?}", baml);
-        eprintln!("Parsing BAML : {:?}", baml.trim_start());
         let source = SourceFile::from((path.clone().into(), baml.trim_start()));
 
         let mut diagnostics = Diagnostics::new(path);
-
         diagnostics.set_source(&source);
 
-        let type_builder_block = internal_baml_schema_ast::parse_type_builder_block_from_str(
+        let type_builder_block = parse_type_builder_block_from_str(
             // TODO: What the fuck?
             &format!("type_builder {{\n{}\n}}", baml.trim_start()),
             &mut diagnostics,
         )
-        .unwrap();
+        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
 
-        // TODO: Runtime error.
         if diagnostics.has_errors() {
-            panic!("Source code was invalid: \n{:?}", diagnostics.errors());
+            anyhow::bail!("{}", diagnostics.to_pretty_string());
         }
 
         // TODO: A bunch of mem usage here but at least we drop this one at the
@@ -288,25 +285,22 @@ impl TypeBuilder {
             validate_type_builder_block(&mut diagnostics, &scoped_db, &type_builder_block);
         scoped_db.add_ast(local_ast);
 
-        // TODO: Runtime error.
         if let Err(d) = scoped_db.validate(&mut diagnostics) {
             diagnostics.push(d);
-            panic!("Source code was invalid: \n{:?}", diagnostics.errors());
+            anyhow::bail!("{}", diagnostics.to_pretty_string());
         }
 
-        run_validation_pipeline_type_builder_ast(&mut diagnostics, &mut scoped_db);
+        run_validation_pipeline_on_db(&mut scoped_db, &mut diagnostics);
 
-        // TODO: Runtime error.
         if diagnostics.has_errors() {
-            panic!("Source code was invalid: \n{:?}", diagnostics.errors());
+            anyhow::bail!("{}", diagnostics.to_pretty_string());
         }
 
         let (classes, enums, type_aliases, recursive_aliases) =
             IntermediateRepr::type_builder_entries_from_scoped_db(&scoped_db, &rt.inner.db)
-                .expect("Can't extract types fix this TODO");
+                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
 
         for cls in classes {
-            eprintln!("Class: {}", cls.elem.name);
             let mutex = self.class(&cls.elem.name);
             let class_builder = mutex.lock().unwrap();
             for f in &cls.elem.static_fields {
@@ -331,7 +325,7 @@ impl TypeBuilder {
             .unwrap()
             .extend(recursive_aliases);
 
-        eprintln!("TypeBuilder: {:#?}", self);
+        Ok(())
     }
 
     pub fn to_overrides(
