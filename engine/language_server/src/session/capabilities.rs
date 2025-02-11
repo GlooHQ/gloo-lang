@@ -3,16 +3,16 @@ use lsp_types::ClientCapabilities;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 #[allow(clippy::struct_excessive_bools)]
-pub(crate) struct ResolvedClientCapabilities {
-    pub(crate) code_action_deferred_edit_resolution: bool,
-    pub(crate) apply_edit: bool,
-    pub(crate) document_changes: bool,
-    pub(crate) workspace_refresh: bool,
-    pub(crate) pull_diagnostics: bool,
+pub struct ResolvedClientCapabilities {
+    pub code_action_deferred_edit_resolution: bool,
+    pub apply_edit: bool,
+    pub document_changes: bool,
+    pub workspace_refresh: bool,
+    pub pull_diagnostics: bool,
 }
 
 impl ResolvedClientCapabilities {
-    pub(super) fn new(client_capabilities: &ClientCapabilities) -> Self {
+    pub fn new(client_capabilities: &ClientCapabilities) -> Self {
         let code_action_settings = client_capabilities
             .text_document
             .as_ref()
@@ -62,7 +62,7 @@ impl ResolvedClientCapabilities {
 }
 
 impl std::fmt::Display for ResolvedClientCapabilities {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // display_settings! {
         //     formatter = f,
         //     namespace = "capabilities",

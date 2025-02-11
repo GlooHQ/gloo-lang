@@ -53,9 +53,12 @@ impl TestCase {
 
             // Consume the post-opening notification.
             eprintln!("Awaiting didOpen notif");
-            let didOpenNotification = test_server.receiver.recv();
+            let did_open_notification = test_server.receiver.recv();
             eprintln!("Got didOpen notif");
-            dbg!(&didOpenNotification);
+            dbg!(&did_open_notification);
+            let next_notification = test_server.receiver.recv();
+            eprintln!("Got next notif");
+            dbg!(&next_notification);
         }
         
         for (req, expected_responses) in self.interactions {

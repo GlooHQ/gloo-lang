@@ -1,27 +1,32 @@
-
 use serde::{Serialize, Deserialize};
 use internal_baml_diagnostics::Diagnostics;
 use internal_baml_codegen::GenerateOutput;
 use baml_types::BamlValue;
 use baml_types::{TypeValue, BamlMediaType};
 use baml_runtime::{
-    internal::llm_client::LLMResponse, BamlRuntime, DiagnosticsError, IRHelper, RenderedPrompt,
-    runtime::InternalBamlRuntime
+    // internal::llm_client::LLMResponse,
+    BamlRuntime, DiagnosticsError, IRHelper,
+    // RenderedPrompt,
+    // runtime::InternalBamlRuntime
 };
 
 use baml_schema_build::runtime_wasm::{
-    SymbolLocation, WasmDiagnosticError, WasmError, WasmFunction, WasmGeneratorConfig, WasmParam, WasmParentFunction, WasmSpan, WasmTestCase
+    SymbolLocation, WasmDiagnosticError,
+    // WasmError,
+    WasmFunction, WasmGeneratorConfig, WasmParam, WasmParentFunction, WasmSpan, WasmTestCase
 };
 use lsp_types::{GotoDefinitionParams, Url};
 use lsp_types::{
-    Hover, HoverContents, HoverParams, LocationLink, Position, Range, TextDocumentItem,
+    Hover, HoverContents,
+    // HoverParams,
+    LocationLink, Position, Range, TextDocumentItem,
 };
 use position_utils::get_word_at_position;
-use rustc_hash::FxHashSet;
+// use rustc_hash::FxHashSet;
 use std::collections::HashMap;
 use std::io;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::path::Path;
+// use std::sync::Arc;
 use std::time::Instant;
 
 mod file_utils;
@@ -131,7 +136,7 @@ pub struct BamlProject {
     pub files: HashMap<String, String>,
     // This is the version of the file that is currently being edited
     // (unsaved changes)
-    unsaved_files: HashMap<String, String>,
+    pub unsaved_files: HashMap<String, String>,
 }
 
 impl BamlProject {
@@ -617,9 +622,12 @@ pub struct Project {
 
 impl Project {
     /// Creates a new `Project` instance.
-    pub fn new<F>(baml_project: BamlProject, on_success: F) -> Self
-    where
-        F: Fn(WasmDiagnosticError, HashMap<String, String>) + 'static,
+    pub fn new(
+        baml_project: BamlProject,
+        // on_success: F
+    ) -> Self
+    // where
+    //     F: Fn(WasmDiagnosticError, HashMap<String, String>) + 'static,
     {
         Self {
             baml_project,
@@ -634,10 +642,10 @@ impl Project {
     pub fn check_version(
         &self,
         generator: &WasmGeneratorConfig,
-        is_diagnostic: bool,
+        _is_diagnostic: bool,
     ) -> Option<String> {
+        Some(generator.version.clone())
         // Call your actual WASM runtime version check here.
-        None
     }
 
     /// Iterates over all generators and prints error messages if version mismatches are found.

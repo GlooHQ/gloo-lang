@@ -1,6 +1,6 @@
 //! Data model, state management, and configuration resolution.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -14,7 +14,7 @@ use lsp_types::{ClientCapabilities, TextDocumentContentChangeEvent, Url};
 // use ruff_db::Db;
 
 use crate::baml_db::{File, FileRevision, FileStatus};
-use crate::baml_project::Project;
+use crate::baml_project::{BamlProject, Project};
 use crate::edit::{DocumentKey, DocumentVersion};
 // use crate::system::{url_to_any_system_path, AnySystemPath, LSPSystem};
 use crate::{PositionEncoding, TextDocument};
@@ -72,7 +72,13 @@ impl Session {
             // TODO(dhruvmanila): Get the values from the client settings
             // let metadata = ProjectMetadata::discover(system_path, &system)?;
             // TODO(micha): Handle the case where the program settings are incorrect more gracefully.
-            // workspaces.insert(path, ProjectDatabase::new(metadata, system)?);
+            workspaces.insert(path, Project::new(
+                BamlProject {
+                    root_dir_name: url.to_string(),
+                    files: HashMap::new(),
+                    unsaved_files: HashMap::new(),
+                }
+            ));
         }
 
         Ok(Self {
@@ -83,7 +89,9 @@ impl Session {
                 client_capabilities,
             )),
         })
+
     }
+
 
     // TODO(dhruvmanila): Ideally, we should have a single method for `workspace_db_for_path_mut`
     // and `default_workspace_db_mut` but the borrow checker doesn't allow that.

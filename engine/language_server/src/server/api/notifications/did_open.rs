@@ -27,8 +27,12 @@ impl SyncNotificationHandler for DidOpenTextDocumentHandler {
         //     return Ok(());
         // };
 
+        eprintln!("ADDING DOCUMENT");
         let document = TextDocument::new(params.text_document.text, params.text_document.version);
+
+        eprintln!("CALLING open_text_document");
         session.open_text_document(params.text_document.uri.clone(), document);
+        eprintln!("FINISHED CALLING open_text_document");
 
         // TODO: Only send this when clients do not support pull diagnostics?
         notifier.notify::<lsp_types::notification::PublishDiagnostics>( PublishDiagnosticsParams {
@@ -36,6 +40,8 @@ impl SyncNotificationHandler for DidOpenTextDocumentHandler {
             version: Some(params.text_document.version),
             diagnostics: vec![],
         }).expect("TODO");
+
+        eprintln!("PUSHED DIAGNOSTICS");
 
         // match path {
         //     AnySystemPath::System(path) => {
