@@ -46,13 +46,10 @@ from ..baml_client.types import (
     MergeAttrs,
     OptionalListAndMap,
     RecursiveAliasDependency,
-<<<<<<< HEAD
     Person,
     Color,
-=======
     JsonEntry,
     SimpleTag,
->>>>>>> canary
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
