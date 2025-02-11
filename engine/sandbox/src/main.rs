@@ -2,7 +2,6 @@ use anyhow::{Context, Result};
 use axum::{routing::get, Router};
 use std::rc::Rc;
 
-mod btrace;
 use btrace::WithTraceContext;
 mod web_server;
 
@@ -21,6 +20,7 @@ fn main() {
     let tctx = btrace::TraceContext {
         scope: btrace::InstrumentationScope::Root,
         tx,
+        tags: Default::default(),
     };
 
     let rt = tokio::runtime::Runtime::new().unwrap();

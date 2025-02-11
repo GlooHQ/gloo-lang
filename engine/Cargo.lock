@@ -4587,6 +4587,7 @@ dependencies = [
  "anyhow",
  "axum",
  "baml-types",
+ "btrace",
  "env_logger",
  "log",
  "reqwest",
