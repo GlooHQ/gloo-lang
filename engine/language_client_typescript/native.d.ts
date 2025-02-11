@@ -23,10 +23,10 @@ export declare class BamlRuntime {
   static fromFiles(rootPath: string, files: Record<string, string>, envVars: Record<string, string>): BamlRuntime
   reset(rootPath: string, files: Record<string, string>, envVars: Record<string, string>): void
   createContextManager(): RuntimeContextManager
-  callFunction(functionName: string, args: { [string]: any }, ctx: RuntimeContextManager, tb?: TypeBuilder | undefined | null, cb?: ClientRegistry | undefined | null): Promise<FunctionResult>
-  callFunctionSync(functionName: string, args: { [string]: any }, ctx: RuntimeContextManager, tb?: TypeBuilder | undefined | null, cb?: ClientRegistry | undefined | null): FunctionResult
-  streamFunction(functionName: string, args: { [string]: any }, cb: ((err: any, param: FunctionResult) => void) | undefined, ctx: RuntimeContextManager, tb?: TypeBuilder | undefined | null, clientRegistry?: ClientRegistry | undefined | null): FunctionResultStream
-  streamFunctionSync(functionName: string, args: { [string]: any }, cb: ((err: any, param: FunctionResult) => void) | undefined, ctx: RuntimeContextManager, tb?: TypeBuilder | undefined | null, clientRegistry?: ClientRegistry | undefined | null): FunctionResultStream
+  callFunction(functionName: string, args: { [name: string]: any }, ctx: RuntimeContextManager, tb?: TypeBuilder | undefined | null, cb?: ClientRegistry | undefined | null): Promise<FunctionResult>
+  callFunctionSync(functionName: string, args: { [name: string]: any }, ctx: RuntimeContextManager, tb?: TypeBuilder | undefined | null, cb?: ClientRegistry | undefined | null): FunctionResult
+  streamFunction(functionName: string, args: { [name: string]: any }, cb: ((err: any, param: FunctionResult) => void) | undefined, ctx: RuntimeContextManager, tb?: TypeBuilder | undefined | null, clientRegistry?: ClientRegistry | undefined | null): FunctionResultStream
+  streamFunctionSync(functionName: string, args: { [name: string]: any }, cb: ((err: any, param: FunctionResult) => void) | undefined, ctx: RuntimeContextManager, tb?: TypeBuilder | undefined | null, clientRegistry?: ClientRegistry | undefined | null): FunctionResultStream
   setLogEventCallback(func?: undefined | ((err: any, param: BamlLogEvent) => void)): void
   flush(): void
   drainStats(): TraceStats
@@ -50,7 +50,7 @@ export declare class ClassPropertyBuilder {
 
 export declare class ClientRegistry {
   constructor()
-  addLlmClient(name: string, provider: string, options: { [string]: any }, retryPolicy?: string | undefined | null): void
+  addLlmClient(name: string, provider: string, options: { [key: string]: any }, retryPolicy?: string | undefined | null): void
   setPrimary(primary: string): void
 }
 
