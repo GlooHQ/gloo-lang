@@ -260,7 +260,7 @@ impl TypeBuilder {
             run_validation_pipeline_on_db, validate_type_builder_entries,
         };
 
-        let path = std::path::PathBuf::from("TypeBuilder::extend_from_baml.baml");
+        let path = std::path::PathBuf::from("TypeBuilder::extend_from_baml");
         let source = SourceFile::from((path.clone().into(), baml));
 
         let mut diagnostics = Diagnostics::new(path);
