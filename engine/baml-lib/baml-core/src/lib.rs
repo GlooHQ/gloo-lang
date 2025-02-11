@@ -150,7 +150,7 @@ fn validate_test_type_builders(
             continue;
         };
 
-        let local_ast = validate_type_builder_block(diagnostics, db, type_builder);
+        let local_ast = validate_type_builder_entries(diagnostics, db, &type_builder.entries);
 
         scoped_db.add_ast(local_ast);
 
@@ -185,13 +185,13 @@ pub fn run_validation_pipeline_on_db(
 /// TODO: #1343 Temporary solution until we implement scoping in the AST.
 ///
 /// See [`validate_test_type_builders`] for more information.
-pub fn validate_type_builder_block(
+pub fn validate_type_builder_entries(
     diagnostics: &mut Diagnostics,
     db: &internal_baml_parser_database::ParserDatabase,
-    type_builder: &ast::TypeBuilderBlock,
+    entries: &[ast::TypeBuilderEntry],
 ) -> ast::SchemaAst {
     let mut local_ast = ast::SchemaAst::new();
-    for type_def in &type_builder.entries {
+    for type_def in entries {
         local_ast.tops.push(match type_def {
             ast::TypeBuilderEntry::Class(c) => {
                 if c.attributes.iter().any(|attr| attr.name.name() == "dynamic") {

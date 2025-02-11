@@ -32,44 +32,7 @@ pub fn parse_type_builder_block(
 
             // Block content.
             Rule::type_builder_contents => {
-                let mut pending_block_comment = None;
-
-                for nested in current.into_inner() {
-                    match nested.as_rule() {
-                        Rule::comment_block => pending_block_comment = Some(nested),
-
-                        Rule::type_expression_block => {
-                            let type_expr = parse_type_expression_block(
-                                nested,
-                                pending_block_comment.take(),
-                                diagnostics,
-                            );
-
-                            match type_expr.sub_type {
-                                SubType::Class => entries.push(TypeBuilderEntry::Class(type_expr)),
-                                SubType::Enum => entries.push(TypeBuilderEntry::Enum(type_expr)),
-                                SubType::Dynamic => {
-                                    entries.push(TypeBuilderEntry::Dynamic(type_expr))
-                                }
-                                _ => {} // may need to save other somehow for error propagation
-                            }
-                        }
-
-                        Rule::type_alias => {
-                            let assignment = parse_assignment(nested, diagnostics);
-                            entries.push(TypeBuilderEntry::TypeAlias(assignment));
-                        }
-
-                        Rule::BLOCK_LEVEL_CATCH_ALL => {
-                            diagnostics.push_error(DatamodelError::new_validation_error(
-                                "Syntax error in type builder block",
-                                diagnostics.span(nested.as_span()),
-                            ))
-                        }
-
-                        _ => parsing_catch_all(nested, "type_builder_contents"),
-                    }
-                }
+                parse_type_builder_contents(current, &mut entries, diagnostics);
             }
 
             // Last token, closing bracket.
@@ -82,21 +45,65 @@ pub fn parse_type_builder_block(
     Ok(TypeBuilderBlock { entries, span })
 }
 
-pub fn parse_type_builder_block_from_str(
+pub fn parse_type_builder_contents(
+    pair: Pair<'_>,
+    entries: &mut Vec<TypeBuilderEntry>,
+    diagnostics: &mut Diagnostics,
+) {
+    assert_correct_parser!(pair, Rule::type_builder_contents);
+
+    let mut pending_block_comment = None;
+
+    for current in pair.into_inner() {
+        match current.as_rule() {
+            Rule::comment_block => pending_block_comment = Some(current),
+
+            Rule::type_expression_block => {
+                let type_expr =
+                    parse_type_expression_block(current, pending_block_comment.take(), diagnostics);
+
+                match type_expr.sub_type {
+                    SubType::Class => entries.push(TypeBuilderEntry::Class(type_expr)),
+                    SubType::Enum => entries.push(TypeBuilderEntry::Enum(type_expr)),
+                    SubType::Dynamic => entries.push(TypeBuilderEntry::Dynamic(type_expr)),
+                    _ => {} // may need to save other somehow for error propagation
+                }
+            }
+
+            Rule::type_alias => {
+                let assignment = parse_assignment(current, diagnostics);
+                entries.push(TypeBuilderEntry::TypeAlias(assignment));
+            }
+
+            Rule::BLOCK_LEVEL_CATCH_ALL => {
+                diagnostics.push_error(DatamodelError::new_validation_error(
+                    "Syntax error in type builder block",
+                    diagnostics.span(current.as_span()),
+                ))
+            }
+
+            _ => parsing_catch_all(current, "type_builder_contents"),
+        }
+    }
+}
+
+pub fn parse_type_builder_contents_from_str(
     input: &str,
     diagnostics: &mut Diagnostics,
-) -> Result<TypeBuilderBlock, DatamodelError> {
+) -> Result<Vec<TypeBuilderEntry>, DatamodelError> {
     use internal_baml_diagnostics::{Diagnostics, SourceFile};
     use pest::Parser;
 
-    let parsed = crate::parser::BAMLParser::parse(Rule::type_builder_block, input)
+    let pair = crate::parser::BAMLParser::parse(Rule::type_builder_contents, input)
         .unwrap()
         .next()
         .unwrap();
 
-    let type_buider_block = parse_type_builder_block(parsed, diagnostics).unwrap();
+    let mut entries = Vec::new();
 
-    Ok(type_buider_block)
+    parse_type_builder_contents(pair, &mut entries, diagnostics);
+
+    Ok(entries)
 }
 
 #[cfg(test)]

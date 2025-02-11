@@ -255,23 +255,19 @@ impl TypeBuilder {
         use internal_baml_core::{
             internal_baml_diagnostics::{Diagnostics, SourceFile},
             internal_baml_parser_database::ParserDatabase,
-            internal_baml_schema_ast::parse_type_builder_block_from_str,
+            internal_baml_schema_ast::parse_type_builder_contents_from_str,
             ir::repr::IntermediateRepr,
-            run_validation_pipeline_on_db, validate_type_builder_block,
+            run_validation_pipeline_on_db, validate_type_builder_entries,
         };
 
         let path = std::path::PathBuf::from("TypeBuilder::extend_from_baml.baml");
-        let source = SourceFile::from((path.clone().into(), baml.trim_start()));
+        let source = SourceFile::from((path.clone().into(), baml));
 
         let mut diagnostics = Diagnostics::new(path);
         diagnostics.set_source(&source);
 
-        let type_builder_block = parse_type_builder_block_from_str(
-            // TODO: What the fuck?
-            &format!("type_builder {{\n{}\n}}", baml.trim_start()),
-            &mut diagnostics,
-        )
-        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+        let type_builder_entries = parse_type_builder_contents_from_str(baml, &mut diagnostics)
+            .map_err(|e| anyhow::anyhow!("{:?}", e))?;
 
         if diagnostics.has_errors() {
             anyhow::bail!("{}", diagnostics.to_pretty_string());
@@ -282,7 +278,7 @@ impl TypeBuilder {
         let mut scoped_db = rt.inner.db.clone();
 
         let local_ast =
-            validate_type_builder_block(&mut diagnostics, &scoped_db, &type_builder_block);
+            validate_type_builder_entries(&mut diagnostics, &scoped_db, &type_builder_entries);
         scoped_db.add_ast(local_ast);
 
         if let Err(d) = scoped_db.validate(&mut diagnostics) {
