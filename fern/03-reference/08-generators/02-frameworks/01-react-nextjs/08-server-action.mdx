@@ -1,0 +1,163 @@
+---
+title: ServerAction
+description: Type-safe server actions for Next.js App Router integration
+---
+
+Server actions are type-safe functions that can be called from both server and client components, with support for streaming responses. For client-side usage with hooks, see [useBamlAction](./use-baml-action).
+
+<Warning>
+  Server actions must be used in files marked with 'use server' directive or in server components. For streaming details, see [Stream Response](./stream-response).
+</Warning>
+
+<CodeBlocks>
+```typescript Type Definition
+type ServerAction<Input, Output> = (
+  ...args: Input extends any[] ? Input : [Input]
+) => Promise<Output> | ReadableStream<Uint8Array>
+```
+
+```typescript Example Usage
+// Basic server action
+const simpleAction: ServerAction<string, string> = async (input) => {
+  return `Processed: ${input}`
+}
+
+// Streaming server action
+const streamingAction: ServerAction<string, ReadableStream<Uint8Array>> = async (input) => {
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode("Processing..."))
+      controller.enqueue(new TextEncoder().encode(input))
+      controller.close()
+    }
+  })
+  return stream
+}
+```
+</CodeBlocks>
+
+## Type Parameters
+
+<ParamField
+  path="Input"
+  type="generic"
+>
+  The input type for the server action. Can be a single type or tuple type for multiple arguments.
+</ParamField>
+
+<ParamField
+  path="Output"
+  type="generic"
+>
+  The output type for the server action. Can be a direct value or ReadableStream for streaming responses. See [Return Types](./return-types) for type details.
+</ParamField>
+
+## Usage in Next.js
+
+Server actions can be used in various Next.js contexts:
+
+<CodeBlocks>
+```typescript Server Component
+// app/page.tsx
+import { processInput } from '@/baml_client/react/server'
+
+export default async function Page() {
+  // Direct server-side call
+  const result = await processInput("test input")
+  return <div>{result}</div>
+}
+```
+
+```typescript Form Action
+// app/form.tsx
+'use client'
+
+import { processInput } from '@/baml_client/react/server'
+
+export default function Form() {
+  return (
+    <form action={processInput}>
+      <input name="input" />
+      <button type="submit">Process</button>
+    </form>
+  )
+}
+```
+
+```typescript Streaming Component
+// app/streaming.tsx
+import { processStream } from '@/baml_client/react/server_streaming'
+
+export default async function StreamingPage() {
+  const stream = await processStream("test input")
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <StreamingResponse stream={stream} />
+    </Suspense>
+  )
+}
+```
+</CodeBlocks>
+
+## Error Handling
+
+Server actions should handle errors appropriately. For details on error types, see [Error Types](./error-types).
+
+## Best Practices
+
+1. **Type Safety**
+   ```typescript
+   // ✅ Good - Explicit types
+   const action: ServerAction<string, string> = async (input) => {
+     return input.toUpperCase()
+   }
+
+   // ❌ Bad - Implicit any
+   const action = async (input) => {
+     return input.toUpperCase()
+   }
+   ```
+
+2. **Input Validation**
+   ```typescript
+   // ✅ Good - Validate inputs
+   const action: ServerAction<string, string> = async (input) => {
+     if (!input || input.length === 0) {
+       throw new Error('Input is required')
+     }
+     return input
+   }
+
+   // ❌ Bad - No validation
+   const action: ServerAction<string, string> = async (input) => {
+     return input
+   }
+   ```
+
+3. **Resource Management**
+   ```typescript
+   // ✅ Good - Proper cleanup
+   const streamAction: ServerAction<string, ReadableStream> = async (input) => {
+     const controller = new AbortController()
+     const signal = controller.signal
+
+     return new ReadableStream({
+       start(controller) {
+         // Handle stream
+       },
+       cancel() {
+         controller.abort()
+       }
+     })
+   }
+
+   // ❌ Bad - No cleanup
+   const streamAction: ServerAction<string, ReadableStream> = async (input) => {
+     return new ReadableStream({
+       start(controller) {
+         // Handle stream
+       }
+     })
+   }
+   ```

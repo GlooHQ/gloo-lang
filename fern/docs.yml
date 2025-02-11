@@ -86,12 +86,9 @@ navigation:
       - section: Framework Integration
         icon: fa-solid fa-plug
         contents:
-          - section: React/Next.js
+          - page: React/Next.js
             icon: fa-brands fa-react
-            contents:
-              - page: App Router Setup
-                icon: fa-regular fa-route
-                path: 01-guide/08-frameworks/01-react-nextjs/01-app-router.mdx
+            path: 01-guide/08-frameworks/01-react-nextjs.mdx
       - section: Development
         contents:
           - page: Environment Variables
@@ -412,9 +409,26 @@ navigation:
                 path: 03-reference/08-generators/01-languages/04-rest-openapi.mdx
           - section: Framework Generators
             contents:
-              - page: React/Next.js
-                path: 03-reference/08-generators/02-frameworks/01-react-nextjs.mdx
-
+              - section: React/Next.js
+                contents:
+                  - page: Generator
+                    path: 03-reference/08-generators/02-frameworks/01-react-nextjs/01-generator.mdx
+                  - page: Generated Hooks
+                    path: 03-reference/08-generators/02-frameworks/01-react-nextjs/02-generated-hooks.mdx
+                  - page: useBamlAction
+                    path: 03-reference/08-generators/02-frameworks/01-react-nextjs/03-use-baml-action.mdx
+                  - page: Hook Props
+                    path: 03-reference/08-generators/02-frameworks/01-react-nextjs/04-hook-props.mdx
+                  - page: Hook Result
+                    path: 03-reference/08-generators/02-frameworks/01-react-nextjs/05-hook-result.mdx
+                  - page: Return Types
+                    path: 03-reference/08-generators/02-frameworks/01-react-nextjs/06-return-types.mdx
+                  - page: Stream Response
+                    path: 03-reference/08-generators/02-frameworks/01-react-nextjs/07-stream-response.mdx
+                  - page: Server Action
+                    path: 03-reference/08-generators/02-frameworks/01-react-nextjs/08-server-action.mdx
+                  - page: Error Types
+                    path: 03-reference/08-generators/02-frameworks/01-react-nextjs/09-error-types.mdx
       - section: Attributes
         contents:
           - page: What are attributes?
