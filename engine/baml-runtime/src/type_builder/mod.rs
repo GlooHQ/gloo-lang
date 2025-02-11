@@ -2,6 +2,10 @@ use std::sync::{Arc, Mutex};
 
 use baml_types::{BamlValue, FieldType};
 use indexmap::IndexMap;
+use internal_baml_core::{
+    internal_baml_parser_database::ParserDatabase, internal_baml_schema_ast,
+    ir::repr::IntermediateRepr,
+};
 
 use crate::runtime_context::{PropertyAttributes, RuntimeClassOverride, RuntimeEnumOverride};
 
@@ -192,6 +196,8 @@ pub struct TypeBuilder {
     enums: Arc<Mutex<IndexMap<String, Arc<Mutex<EnumBuilder>>>>>,
     type_aliases: Arc<Mutex<IndexMap<String, Arc<Mutex<TypeAliasBuilder>>>>>,
     recursive_type_aliases: Arc<Mutex<Vec<IndexMap<String, FieldType>>>>,
+
+    parser_database: ParserDatabase,
 }
 
 impl Default for TypeBuilder {
@@ -207,6 +213,7 @@ impl TypeBuilder {
             enums: Default::default(),
             type_aliases: Default::default(),
             recursive_type_aliases: Default::default(),
+            parser_database: Default::default(),
         }
     }
 
@@ -242,6 +249,89 @@ impl TypeBuilder {
 
     pub fn recursive_type_aliases(&self) -> Arc<Mutex<Vec<IndexMap<String, FieldType>>>> {
         Arc::clone(&self.recursive_type_aliases)
+    }
+
+    pub fn extend_from_baml(&self, baml: &str, rt: &crate::BamlRuntime) {
+        use internal_baml_core::{
+            internal_baml_diagnostics::{Diagnostics, SourceFile},
+            internal_baml_parser_database::ParserDatabase,
+            ir::repr::IntermediateRepr,
+            run_validation_pipeline_type_builder_ast, validate_type_builder_block,
+        };
+
+        let path = std::path::PathBuf::from("TypeBuilder::extend_from_baml.baml");
+        eprintln!("Parsing BAML : {:?}", baml);
+        eprintln!("Parsing BAML : {:?}", baml.trim_start());
+        let source = SourceFile::from((path.clone().into(), baml.trim_start()));
+
+        let mut diagnostics = Diagnostics::new(path);
+
+        diagnostics.set_source(&source);
+
+        let type_builder_block = internal_baml_schema_ast::parse_type_builder_block_from_str(
+            // TODO: What the fuck?
+            &format!("type_builder {{\n{}\n}}", baml.trim_start()),
+            &mut diagnostics,
+        )
+        .unwrap();
+
+        // TODO: Runtime error.
+        if diagnostics.has_errors() {
+            panic!("Source code was invalid: \n{:?}", diagnostics.errors());
+        }
+
+        // TODO: A bunch of mem usage here but at least we drop this one at the
+        // end of the function, unlike scoped DBs for type builders.
+        let mut scoped_db = rt.inner.db.clone();
+
+        let local_ast =
+            validate_type_builder_block(&mut diagnostics, &scoped_db, &type_builder_block);
+        scoped_db.add_ast(local_ast);
+
+        // TODO: Runtime error.
+        if let Err(d) = scoped_db.validate(&mut diagnostics) {
+            diagnostics.push(d);
+            panic!("Source code was invalid: \n{:?}", diagnostics.errors());
+        }
+
+        run_validation_pipeline_type_builder_ast(&mut diagnostics, &mut scoped_db);
+
+        // TODO: Runtime error.
+        if diagnostics.has_errors() {
+            panic!("Source code was invalid: \n{:?}", diagnostics.errors());
+        }
+
+        let (classes, enums, type_aliases, recursive_aliases) =
+            IntermediateRepr::type_builder_entries_from_scoped_db(&scoped_db, &rt.inner.db)
+                .expect("Can't extract types fix this TODO");
+
+        for cls in classes {
+            eprintln!("Class: {}", cls.elem.name);
+            let mutex = self.class(&cls.elem.name);
+            let class_builder = mutex.lock().unwrap();
+            for f in &cls.elem.static_fields {
+                class_builder
+                    .property(&f.elem.name)
+                    .lock()
+                    .unwrap()
+                    .r#type(f.elem.r#type.elem.to_owned());
+            }
+        }
+
+        for enm in enums {
+            let mutex = self.r#enum(&enm.elem.name);
+            let enum_builder = mutex.lock().unwrap();
+            for (variant, _) in &enm.elem.values {
+                enum_builder.value(&variant.elem.0).lock().unwrap();
+            }
+        }
+
+        self.recursive_type_aliases()
+            .lock()
+            .unwrap()
+            .extend(recursive_aliases);
+
+        eprintln!("TypeBuilder: {:#?}", self);
     }
 
     pub fn to_overrides(

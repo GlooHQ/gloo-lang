@@ -1577,6 +1577,50 @@ async def test_differing_unions():
 
 
 @pytest.mark.asyncio
+async def test_extend_from_baml_existing_class():
+    tb = TypeBuilder()
+    tb.extend_from_baml("""
+        class ExtendNestedClass {
+            a int
+            b int
+            c int
+        }
+
+        dynamic DynamicTypeBuilderClass {
+            extended ExtendNestedClass
+        }
+    """)
+    res = await b.UseDynamicTbClass(
+        json.dumps({
+            "a": 1,
+            "b": 2,
+            "c": 3,
+            "extended": {
+                "a": 4,
+                "b": 5,
+                "c": 6,
+            }
+        }),
+        {"tb": tb},
+    )
+    assert res.extended["a"] == 4
+    assert res.extended["b"] == 5
+    assert res.extended["c"] == 6
+
+
+@pytest.mark.asyncio
+async def test_extend_from_baml_existing_enum():
+    tb = TypeBuilder()
+    tb.extend_from_baml("""
+        dynamic DynamicTypeBuilderCategory {
+            Refund
+        }
+    """)
+    res = await b.UseDynamicTbEnum("I want a refund", {"tb": tb})
+    assert res == "Refund"
+
+
+@pytest.mark.asyncio
 async def test_return_failing_assert():
     with pytest.raises(errors.BamlValidationError):
         msg = await b.ReturnFailingAssert(1)

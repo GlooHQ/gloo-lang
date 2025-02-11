@@ -71,6 +71,12 @@ module Baml
     end
     class DynEnumTwo < T::Enum
     end
+    class DynamicTypeBuilderCategory < T::Enum
+      enums do
+        FeatureRequest = new("FeatureRequest")
+        CancelOrder = new("CancelOrder")
+      end
+    end
     class EnumInClass < T::Enum
       enums do
         ONE = new("ONE")
@@ -168,6 +174,7 @@ module Baml
     class DynamicClassOne < T::Struct; end
     class DynamicClassTwo < T::Struct; end
     class DynamicOutput < T::Struct; end
+    class DynamicTypeBuilderClass < T::Struct; end
     class Earthling < T::Struct; end
     class Education < T::Struct; end
     class Email < T::Struct; end
@@ -556,6 +563,22 @@ module Baml
 
       def initialize(props)
         super(
+        )
+
+        @props = props
+      end
+    end
+    class DynamicTypeBuilderClass < T::Struct
+      include Baml::Sorbet::Struct
+      const :a, Integer
+      const :b, Integer
+      const :c, Integer
+
+      def initialize(props)
+        super(
+          a: props[:a],
+          b: props[:b],
+          c: props[:c],
         )
 
         @props = props

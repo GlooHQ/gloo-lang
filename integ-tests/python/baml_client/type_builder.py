@@ -16,14 +16,16 @@
 import typing
 from baml_py.baml_py import FieldType, EnumValueBuilder, EnumBuilder, ClassBuilder
 from baml_py.type_builder import TypeBuilder as _TypeBuilder, ClassPropertyBuilder
+from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME
+
 
 class TypeBuilder(_TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["AnotherObject","BigNumbers","BinaryNode","Blah","BlockConstraint","BlockConstraintForParam","BookOrder","ClassForNullLiteral","ClassOptionalOutput","ClassOptionalOutput2","ClassToRecAlias","ClassWithBlockDone","ClassWithImage","ClassWithoutDone","ComplexMemoryObject","CompoundBigNumbers","ContactInfo","CustomTaskResult","DummyOutput","DynInputOutput","DynamicClassOne","DynamicClassTwo","DynamicOutput","Earthling","Education","Email","EmailAddress","Event","FakeImage","FlightConfirmation","FooAny","Forest","FormatterTest0","FormatterTest1","FormatterTest2","FormatterTest3","GroceryReceipt","InnerClass","InnerClass2","InputClass","InputClassNested","LinkedList","LinkedListAliasNode","LiteralClassHello","LiteralClassOne","LiteralClassTwo","MalformedConstraints","MalformedConstraints2","Martian","MemoryObject","MergeAttrs","NamedArgsSingleClass","Nested","Nested2","NestedBlockConstraint","NestedBlockConstraintForParam","Node","NodeWithAliasIndirection","OptionalListAndMap","OptionalTest_Prop1","OptionalTest_ReturnType","OrderInfo","OriginalA","OriginalB","Person","PhoneNumber","Quantity","RaysData","ReceiptInfo","ReceiptItem","Recipe","RecursiveAliasDependency","Resume","Schema","SearchParams","SemanticContainer","SmallThing","SomeClassNestedDynamic","StringToClassEntry","TestClassAlias","TestClassNested","TestClassWithEnum","TestMemoryOutput","TestOutputClass","Tree","TwoStoriesOneTitle","UnionTest_ReturnType","WithReasoning",]
+          ["AnotherObject","BigNumbers","BinaryNode","Blah","BlockConstraint","BlockConstraintForParam","BookOrder","ClassForNullLiteral","ClassOptionalOutput","ClassOptionalOutput2","ClassToRecAlias","ClassWithBlockDone","ClassWithImage","ClassWithoutDone","ComplexMemoryObject","CompoundBigNumbers","ContactInfo","CustomTaskResult","DummyOutput","DynInputOutput","DynamicClassOne","DynamicClassTwo","DynamicOutput","DynamicTypeBuilderClass","Earthling","Education","Email","EmailAddress","Event","FakeImage","FlightConfirmation","FooAny","Forest","FormatterTest0","FormatterTest1","FormatterTest2","FormatterTest3","GroceryReceipt","InnerClass","InnerClass2","InputClass","InputClassNested","LinkedList","LinkedListAliasNode","LiteralClassHello","LiteralClassOne","LiteralClassTwo","MalformedConstraints","MalformedConstraints2","Martian","MemoryObject","MergeAttrs","NamedArgsSingleClass","Nested","Nested2","NestedBlockConstraint","NestedBlockConstraintForParam","Node","NodeWithAliasIndirection","OptionalListAndMap","OptionalTest_Prop1","OptionalTest_ReturnType","OrderInfo","OriginalA","OriginalB","Person","PhoneNumber","Quantity","RaysData","ReceiptInfo","ReceiptItem","Recipe","RecursiveAliasDependency","Resume","Schema","SearchParams","SemanticContainer","SmallThing","SomeClassNestedDynamic","StringToClassEntry","TestClassAlias","TestClassNested","TestClassWithEnum","TestMemoryOutput","TestOutputClass","Tree","TwoStoriesOneTitle","UnionTest_ReturnType","WithReasoning",]
         ), enums=set(
-          ["AliasedEnum","Category","Category2","Category3","Color","DataType","DynEnumOne","DynEnumTwo","EnumInClass","EnumOutput","Hobby","MapKey","NamedArgsSingleEnum","NamedArgsSingleEnumList","OptionalTest_CategoryType","OrderStatus","Tag","TestEnum",]
-        ))
+          ["AliasedEnum","Category","Category2","Category3","Color","DataType","DynEnumOne","DynEnumTwo","DynamicTypeBuilderCategory","EnumInClass","EnumOutput","Hobby","MapKey","NamedArgsSingleEnum","NamedArgsSingleEnumList","OptionalTest_CategoryType","OrderStatus","Tag","TestEnum",]
+        ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
 
 
     
@@ -54,6 +56,12 @@ class TypeBuilder(_TypeBuilder):
     @property
     def DynamicOutput(self) -> "DynamicOutputBuilder":
         return DynamicOutputBuilder(self)
+
+
+    
+    @property
+    def DynamicTypeBuilderClass(self) -> "DynamicTypeBuilderClassBuilder":
+        return DynamicTypeBuilderClassBuilder(self)
 
 
     
@@ -90,6 +98,11 @@ class TypeBuilder(_TypeBuilder):
     @property
     def DynEnumTwo(self) -> "DynEnumTwoBuilder":
         return DynEnumTwoBuilder(self)
+
+
+    @property
+    def DynamicTypeBuilderCategory(self) -> "DynamicTypeBuilderCategoryBuilder":
+        return DynamicTypeBuilderCategoryBuilder(self)
 
 
     @property
@@ -285,6 +298,52 @@ class DynamicOutputProperties:
         self.__properties = properties
 
     
+
+    def __getattr__(self, name: str) -> ClassPropertyBuilder:
+        if name not in self.__properties:
+            raise AttributeError(f"Property {name} not found.")
+        return ClassPropertyBuilder(self.__bldr.property(name))
+
+class DynamicTypeBuilderClassBuilder:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("DynamicTypeBuilderClass")
+        self.__properties: typing.Set[str] = set([ "a",  "b",  "c", ])
+        self.__props = DynamicTypeBuilderClassProperties(self.__bldr, self.__properties)
+
+    def type(self) -> FieldType:
+        return self.__bldr.field()
+
+    @property
+    def props(self) -> "DynamicTypeBuilderClassProperties":
+        return self.__props
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
+
+    def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
+        if name in self.__properties:
+            raise ValueError(f"Property {name} already exists.")
+        return ClassPropertyBuilder(self.__bldr.property(name).type(type))
+
+class DynamicTypeBuilderClassProperties:
+    def __init__(self, cls_bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = cls_bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def a(self) -> ClassPropertyBuilder:
+        return ClassPropertyBuilder(self.__bldr.property("a"))
+
+    @property
+    def b(self) -> ClassPropertyBuilder:
+        return ClassPropertyBuilder(self.__bldr.property("b"))
+
+    @property
+    def c(self) -> ClassPropertyBuilder:
+        return ClassPropertyBuilder(self.__bldr.property("c"))
 
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
@@ -540,6 +599,51 @@ class DynEnumTwoValues:
         self.__bldr = enum_bldr
         self.__values = values
 
+    
+
+    def __getattr__(self, name: str) -> EnumValueBuilder:
+        if name not in self.__values:
+            raise AttributeError(f"Value {name} not found.")
+        return self.__bldr.value(name)
+
+class DynamicTypeBuilderCategoryBuilder:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.enum("DynamicTypeBuilderCategory")
+        self.__values: typing.Set[str] = set([ "FeatureRequest",  "CancelOrder", ])
+        self.__vals = DynamicTypeBuilderCategoryValues(self.__bldr, self.__values)
+
+    def type(self) -> FieldType:
+        return self.__bldr.field()
+
+    @property
+    def values(self) -> "DynamicTypeBuilderCategoryValues":
+        return self.__vals
+
+    def list_values(self) -> typing.List[typing.Tuple[str, EnumValueBuilder]]:
+        return [(name, self.__bldr.value(name)) for name in self.__values]
+
+    def add_value(self, name: str) -> EnumValueBuilder:
+        if name in self.__values:
+            raise ValueError(f"Value {name} already exists.")
+        self.__values.add(name)
+        return self.__bldr.value(name)
+
+class DynamicTypeBuilderCategoryValues:
+    def __init__(self, enum_bldr: EnumBuilder, values: typing.Set[str]):
+        self.__bldr = enum_bldr
+        self.__values = values
+
+    
+
+    @property
+    def FeatureRequest(self) -> EnumValueBuilder:
+        return self.__bldr.value("FeatureRequest")
+    
+
+    @property
+    def CancelOrder(self) -> EnumValueBuilder:
+        return self.__bldr.value("CancelOrder")
     
 
     def __getattr__(self, name: str) -> EnumValueBuilder:

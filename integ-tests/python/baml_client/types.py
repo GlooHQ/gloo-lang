@@ -88,6 +88,11 @@ class DynEnumOne(str, Enum):
 class DynEnumTwo(str, Enum):
     pass
 
+class DynamicTypeBuilderCategory(str, Enum):
+    
+    FeatureRequest = "FeatureRequest"
+    CancelOrder = "CancelOrder"
+
 class EnumInClass(str, Enum):
     
     ONE = "ONE"
@@ -253,6 +258,12 @@ class DynamicClassTwo(BaseModel):
 
 class DynamicOutput(BaseModel):
     model_config = ConfigDict(extra='allow')
+
+class DynamicTypeBuilderClass(BaseModel):
+    model_config = ConfigDict(extra='allow')
+    a: int
+    b: int
+    c: int
 
 class Earthling(BaseModel):
     age: Checked[int,Literal["earth_aged", "no_infants"]]

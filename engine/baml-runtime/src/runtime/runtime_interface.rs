@@ -368,6 +368,7 @@ impl RuntimeConstructor for InternalBamlRuntime {
 
         Ok(Self {
             ir: Arc::new(ir),
+            db: schema.db,
             diagnostics: schema.diagnostics,
             clients: Default::default(),
             retry_policies: Default::default(),

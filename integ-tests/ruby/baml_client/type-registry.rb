@@ -18,8 +18,8 @@ module Baml
     class TypeBuilder
         def initialize
             @registry = Baml::Ffi::TypeBuilder.new
-            @classes = Set[ "AnotherObject",  "BigNumbers",  "BinaryNode",  "Blah",  "BlockConstraint",  "BlockConstraintForParam",  "BookOrder",  "ClassForNullLiteral",  "ClassOptionalOutput",  "ClassOptionalOutput2",  "ClassToRecAlias",  "ClassWithBlockDone",  "ClassWithImage",  "ClassWithoutDone",  "ComplexMemoryObject",  "CompoundBigNumbers",  "ContactInfo",  "CustomTaskResult",  "DummyOutput",  "DynInputOutput",  "DynamicClassOne",  "DynamicClassTwo",  "DynamicOutput",  "Earthling",  "Education",  "Email",  "EmailAddress",  "Event",  "FakeImage",  "FlightConfirmation",  "FooAny",  "Forest",  "FormatterTest0",  "FormatterTest1",  "FormatterTest2",  "FormatterTest3",  "GroceryReceipt",  "InnerClass",  "InnerClass2",  "InputClass",  "InputClassNested",  "LinkedList",  "LinkedListAliasNode",  "LiteralClassHello",  "LiteralClassOne",  "LiteralClassTwo",  "MalformedConstraints",  "MalformedConstraints2",  "Martian",  "MemoryObject",  "MergeAttrs",  "NamedArgsSingleClass",  "Nested",  "Nested2",  "NestedBlockConstraint",  "NestedBlockConstraintForParam",  "Node",  "NodeWithAliasIndirection",  "OptionalListAndMap",  "OptionalTest_Prop1",  "OptionalTest_ReturnType",  "OrderInfo",  "OriginalA",  "OriginalB",  "Person",  "PhoneNumber",  "Quantity",  "RaysData",  "ReceiptInfo",  "ReceiptItem",  "Recipe",  "RecursiveAliasDependency",  "Resume",  "Schema",  "SearchParams",  "SemanticContainer",  "SmallThing",  "SomeClassNestedDynamic",  "StringToClassEntry",  "TestClassAlias",  "TestClassNested",  "TestClassWithEnum",  "TestMemoryOutput",  "TestOutputClass",  "Tree",  "TwoStoriesOneTitle",  "UnionTest_ReturnType",  "WithReasoning", ]
-            @enums = Set[ "AliasedEnum",  "Category",  "Category2",  "Category3",  "Color",  "DataType",  "DynEnumOne",  "DynEnumTwo",  "EnumInClass",  "EnumOutput",  "Hobby",  "MapKey",  "NamedArgsSingleEnum",  "NamedArgsSingleEnumList",  "OptionalTest_CategoryType",  "OrderStatus",  "Tag",  "TestEnum", ]
+            @classes = Set[ "AnotherObject",  "BigNumbers",  "BinaryNode",  "Blah",  "BlockConstraint",  "BlockConstraintForParam",  "BookOrder",  "ClassForNullLiteral",  "ClassOptionalOutput",  "ClassOptionalOutput2",  "ClassToRecAlias",  "ClassWithBlockDone",  "ClassWithImage",  "ClassWithoutDone",  "ComplexMemoryObject",  "CompoundBigNumbers",  "ContactInfo",  "CustomTaskResult",  "DummyOutput",  "DynInputOutput",  "DynamicClassOne",  "DynamicClassTwo",  "DynamicOutput",  "DynamicTypeBuilderClass",  "Earthling",  "Education",  "Email",  "EmailAddress",  "Event",  "FakeImage",  "FlightConfirmation",  "FooAny",  "Forest",  "FormatterTest0",  "FormatterTest1",  "FormatterTest2",  "FormatterTest3",  "GroceryReceipt",  "InnerClass",  "InnerClass2",  "InputClass",  "InputClassNested",  "LinkedList",  "LinkedListAliasNode",  "LiteralClassHello",  "LiteralClassOne",  "LiteralClassTwo",  "MalformedConstraints",  "MalformedConstraints2",  "Martian",  "MemoryObject",  "MergeAttrs",  "NamedArgsSingleClass",  "Nested",  "Nested2",  "NestedBlockConstraint",  "NestedBlockConstraintForParam",  "Node",  "NodeWithAliasIndirection",  "OptionalListAndMap",  "OptionalTest_Prop1",  "OptionalTest_ReturnType",  "OrderInfo",  "OriginalA",  "OriginalB",  "Person",  "PhoneNumber",  "Quantity",  "RaysData",  "ReceiptInfo",  "ReceiptItem",  "Recipe",  "RecursiveAliasDependency",  "Resume",  "Schema",  "SearchParams",  "SemanticContainer",  "SmallThing",  "SomeClassNestedDynamic",  "StringToClassEntry",  "TestClassAlias",  "TestClassNested",  "TestClassWithEnum",  "TestMemoryOutput",  "TestOutputClass",  "Tree",  "TwoStoriesOneTitle",  "UnionTest_ReturnType",  "WithReasoning", ]
+            @enums = Set[ "AliasedEnum",  "Category",  "Category2",  "Category3",  "Color",  "DataType",  "DynEnumOne",  "DynEnumTwo",  "DynamicTypeBuilderCategory",  "EnumInClass",  "EnumOutput",  "Hobby",  "MapKey",  "NamedArgsSingleEnum",  "NamedArgsSingleEnumList",  "OptionalTest_CategoryType",  "OrderStatus",  "Tag",  "TestEnum", ]
         end
 
         def string
@@ -135,6 +135,10 @@ module Baml
             ClassBuilder.new(@registry, "DynamicOutput", Set[])
         end
         
+        def DynamicTypeBuilderClass
+            ClassBuilder.new(@registry, "DynamicTypeBuilderClass", Set[ "a",  "b",  "c", ])
+        end
+        
         def OriginalB
             ClassBuilder.new(@registry, "OriginalB", Set[ "value", ])
         end
@@ -159,6 +163,10 @@ module Baml
         
         def DynEnumTwo
             EnumBuilder.new(@registry, "DynEnumTwo", Set[])
+        end
+        
+        def DynamicTypeBuilderCategory
+            EnumBuilder.new(@registry, "DynamicTypeBuilderCategory", Set[ "FeatureRequest",  "CancelOrder", ])
         end
         
         def Hobby

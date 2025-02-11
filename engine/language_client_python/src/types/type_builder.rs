@@ -109,6 +109,10 @@ impl TypeBuilder {
         }
         Ok(baml_types::FieldType::union(rs_types).into())
     }
+
+    pub fn extend_from_baml(&self, baml: &str, rt: &crate::runtime::BamlRuntime) {
+        self.inner.extend_from_baml(baml, &rt.inner);
+    }
 }
 
 #[pymethods]

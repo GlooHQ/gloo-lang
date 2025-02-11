@@ -11,7 +11,7 @@ use indexmap::IndexMap;
 
 use super::helpers::{Error, PropertyHandler, UnresolvedUrl};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UnresolvedOpenAI<Meta> {
     base_url: Option<either::Either<UnresolvedUrl, (StringOr, StringOr)>>,
     api_key: Option<StringOr>,
@@ -178,10 +178,15 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
             .collect::<Result<IndexMap<_, _>>>()?;
 
         // First, get the model to determine if it's an O1 model
-        let model = self.properties.get("model")
+        let model = self
+            .properties
+            .get("model")
             .and_then(|(_, v)| v.as_str())
             .map(|s| s.to_string());
-        let is_o1_model = model.as_ref().map(|s| s.starts_with("o1-") || s.eq("o1")).unwrap_or(false);
+        let is_o1_model = model
+            .as_ref()
+            .map(|s| s.starts_with("o1-") || s.eq("o1"))
+            .unwrap_or(false);
 
         // For O1 models, check if max_tokens is explicitly set (not null)
         if is_o1_model {
@@ -195,7 +200,8 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         }
 
         // First resolve all properties except max_tokens
-        let mut properties = self.properties
+        let mut properties = self
+            .properties
             .iter()
             .filter(|(k, (_, v))| {
                 // For O1 models, filter out max_tokens
@@ -221,7 +227,8 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         // 2. max_completion_tokens is not present (to avoid conflicts)
         if !is_o1_model
             && !self.properties.contains_key("max_tokens")
-            && !self.properties.contains_key("max_completion_tokens") {
+            && !self.properties.contains_key("max_completion_tokens")
+        {
             properties.insert("max_tokens".to_string(), serde_json::json!(4096));
         }
 

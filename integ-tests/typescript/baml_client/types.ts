@@ -84,6 +84,11 @@ export enum DynEnumOne {
 export enum DynEnumTwo {
 }
 
+export enum DynamicTypeBuilderCategory {
+  FeatureRequest = "FeatureRequest",
+  CancelOrder = "CancelOrder",
+}
+
 export enum EnumInClass {
   ONE = "ONE",
   TWO = "TWO",
@@ -298,6 +303,14 @@ export interface DynamicClassTwo {
 }
 
 export interface DynamicOutput {
+  
+  [key: string]: any;
+}
+
+export interface DynamicTypeBuilderClass {
+  a: number
+  b: number
+  c: number
   
   [key: string]: any;
 }

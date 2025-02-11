@@ -7,7 +7,7 @@ use std::{
 use crate::JinjaExpression;
 use indexmap::{IndexMap, IndexSet};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Resolvable<Id, Meta> {
     // Enums go into here.
     String(Id, Meta),

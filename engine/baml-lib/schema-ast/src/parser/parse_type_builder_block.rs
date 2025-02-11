@@ -13,7 +13,7 @@ use crate::{
 };
 use internal_baml_diagnostics::{DatamodelError, Diagnostics};
 
-pub(crate) fn parse_type_builder_block(
+pub fn parse_type_builder_block(
     pair: Pair<'_>,
     diagnostics: &mut Diagnostics,
 ) -> Result<TypeBuilderBlock, DatamodelError> {
@@ -80,6 +80,23 @@ pub(crate) fn parse_type_builder_block(
     }
 
     Ok(TypeBuilderBlock { entries, span })
+}
+
+pub fn parse_type_builder_block_from_str(
+    input: &str,
+    diagnostics: &mut Diagnostics,
+) -> Result<TypeBuilderBlock, DatamodelError> {
+    use internal_baml_diagnostics::{Diagnostics, SourceFile};
+    use pest::Parser;
+
+    let parsed = crate::parser::BAMLParser::parse(Rule::type_builder_block, input)
+        .unwrap()
+        .next()
+        .unwrap();
+
+    let type_buider_block = parse_type_builder_block(parsed, diagnostics).unwrap();
+
+    Ok(type_buider_block)
 }
 
 #[cfg(test)]

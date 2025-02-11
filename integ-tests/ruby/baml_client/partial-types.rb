@@ -43,6 +43,7 @@ module Baml
     class DynamicClassOne < T::Struct; end
     class DynamicClassTwo < T::Struct; end
     class DynamicOutput < T::Struct; end
+    class DynamicTypeBuilderClass < T::Struct; end
     class Earthling < T::Struct; end
     class Education < T::Struct; end
     class Email < T::Struct; end
@@ -431,6 +432,22 @@ module Baml
 
       def initialize(props)
         super(
+        )
+
+        @props = props
+      end
+    end
+    class DynamicTypeBuilderClass < T::Struct
+      include Baml::Sorbet::Struct
+      const :a, T.nilable(Integer)
+      const :b, T.nilable(Integer)
+      const :c, T.nilable(Integer)
+
+      def initialize(props)
+        super(
+          a: props[:a],
+          b: props[:b],
+          c: props[:c],
         )
 
         @props = props
