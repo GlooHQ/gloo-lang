@@ -119,14 +119,9 @@ impl FunctionResultStream {
                             format!("baml_stream_function::{}", self.function_name),
                             json!({}),
                             |result| match result {
-                                Ok(result) => match result.parsed_content() {
-                                    Ok(content) => json!({
-                                        "result": format!("TODO: actually return this as a json object: {}", content.to_string()),
-                                    }),
-                                    Err(e) => json!({
-                                        "exception": format!("parse error: {}", e)
-                                    }),
-                                },
+                                Ok(result) => json!({
+                                    "result": format!("TODO: actually return this as a json object: {}", result.to_string()),
+                                }),
                                 Err(e) => json!({
                                     "exception": e.to_string()
                                 }),

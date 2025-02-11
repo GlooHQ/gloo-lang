@@ -2,10 +2,7 @@ mod constraint;
 mod map;
 mod media;
 mod minijinja;
-<<<<<<< HEAD
 pub mod rpc;
-=======
->>>>>>> tracingv2
 pub mod tracing;
 
 pub mod baml_value;

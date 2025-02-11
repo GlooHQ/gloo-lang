@@ -131,7 +131,7 @@ pub fn log(
         // Using an empty content span id here; adjust as needed.
         content_span_id: ContentId("".to_string()),
         span_chain: Vec::new(),
-        timestamp: web_time::Instant::now(),
+        timestamp: OffsetDateTime::now_utc(),
         content: LogEventContent::LogMessage { msg },
         tags,
     });

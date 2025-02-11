@@ -8,11 +8,11 @@ pub(crate) mod internal;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod cli;
 pub mod client_registry;
-pub mod test_constraints;
 pub mod errors;
 pub mod request;
 mod runtime;
 pub mod runtime_interface;
+pub mod test_constraints;
 pub mod tracing;
 pub mod type_builder;
 mod types;
@@ -64,8 +64,8 @@ pub use internal_baml_core::internal_baml_diagnostics;
 pub use internal_baml_core::internal_baml_diagnostics::Diagnostics as DiagnosticsError;
 pub use internal_baml_core::ir::{scope_diagnostics, FieldType, IRHelper, TypeValue};
 
-use crate::test_constraints::{evaluate_test_constraints, TestConstraintsResult};
 use crate::internal::llm_client::LLMResponse;
+use crate::test_constraints::{evaluate_test_constraints, TestConstraintsResult};
 
 #[cfg(not(target_arch = "wasm32"))]
 static TOKIO_SINGLETON: OnceLock<std::io::Result<Arc<tokio::runtime::Runtime>>> = OnceLock::new();
@@ -76,7 +76,8 @@ pub struct BamlRuntime {
     env_vars: HashMap<String, String>,
     #[cfg(not(target_arch = "wasm32"))]
     pub async_runtime: Arc<tokio::runtime::Runtime>,
-    pub trace_agent_tx: tokio::sync::mpsc::UnboundedSender<baml_types::tracing::TraceEvent>,
+    pub trace_agent_tx:
+        tokio::sync::mpsc::UnboundedSender<Arc<baml_types::tracing::events::LogEvent>>,
 }
 
 impl BamlRuntime {
@@ -138,7 +139,8 @@ impl BamlRuntime {
             .map(|(k, v)| (k.as_ref().to_string(), v.as_ref().to_string()))
             .collect();
 
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        let (tx, rx) =
+            tokio::sync::mpsc::unbounded_channel::<Arc<baml_types::tracing::events::LogEvent>>();
         #[cfg(not(target_arch = "wasm32"))]
         btrace::TracerThread::run(rx);
 
@@ -284,8 +286,14 @@ impl BamlRuntime {
             } else {
                 match val {
                     Some(Ok(value)) => {
-                        let value_with_constraints = value.0.map_meta(|(_,constraints,_)| constraints.clone());
-                        evaluate_test_constraints(&params, &value_with_constraints, complete_resp, constraints)
+                        let value_with_constraints =
+                            value.0.map_meta(|(_, constraints, _)| constraints.clone());
+                        evaluate_test_constraints(
+                            &params,
+                            &value_with_constraints,
+                            complete_resp,
+                            constraints,
+                        )
                     }
                     _ => TestConstraintsResult::empty(),
                 }

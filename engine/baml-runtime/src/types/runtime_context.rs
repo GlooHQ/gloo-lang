@@ -87,6 +87,7 @@ impl RuntimeContext {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         RuntimeContext {
             baml_src,
+            tracer_tx: tx,
             env,
             tags,
             client_overrides,

@@ -1094,11 +1094,8 @@ dependencies = [
  "serde",
  "serde_json",
  "strum",
-<<<<<<< HEAD
  "time",
-=======
  "tokio",
->>>>>>> tracingv2
  "tracing-core",
  "web-time",
 ]
@@ -1282,10 +1279,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
-<<<<<<< HEAD
  "time",
-=======
->>>>>>> tracingv2
  "tokio",
  "tokio-stream",
  "tracing-core",
@@ -4592,14 +4586,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
-<<<<<<< HEAD
  "baml-types",
  "env_logger",
  "log",
  "reqwest",
-=======
- "log",
->>>>>>> tracingv2
  "serde_json",
  "tokio",
  "tracing",

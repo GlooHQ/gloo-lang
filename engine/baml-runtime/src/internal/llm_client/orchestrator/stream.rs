@@ -1,8 +1,7 @@
 use anyhow::Result;
 use async_std::stream::StreamExt;
-use baml_types::BamlValue;
-use btrace::WithTraceContext;
 use baml_types::{BamlValue, BamlValueWithMeta};
+use btrace::WithTraceContext;
 use internal_baml_core::ir::repr::IntermediateRepr;
 use jsonish::BamlValueWithFlags;
 use serde_json::json;
@@ -129,11 +128,7 @@ where
             }
             _ => None,
         };
-        let (parsed_response, response_value) = match parsed_response {
-            Some(Ok(v)) => (Some(Ok(v.clone())), Some(Ok(parsed_value_to_response(&v)))),
-            Some(Err(e)) => (None, Some(Err(e))),
-            None => (None, None),
-        };
+
         // parsed_response.map(|r| r.and_then(|v| parsed_value_to_response(v)));
         let node_name = node.scope.name();
         let sleep_duration = node.error_sleep_duration().cloned();

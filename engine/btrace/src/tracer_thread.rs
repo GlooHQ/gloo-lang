@@ -1,24 +1,24 @@
 use anyhow::{Context, Result};
-use std::pin::pin;
-
-use baml_types::rpc::TraceEventUploadRequest;
+use baml_types::rpc::{TraceEventBatch, TraceEventUploadRequest};
+use std::io::Write;
 use std::time::Instant;
+use std::{fs::OpenOptions, pin::pin, sync::Arc};
 
 use baml_types::tracing::events::LogEvent;
 use serde::{Deserialize, Serialize};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 pub struct TracerThread {
-    rx: UnboundedReceiverStream<LogEvent>,
+    rx: UnboundedReceiverStream<Arc<LogEvent>>,
 }
 
 impl TracerThread {
-    pub fn new(rx: tokio::sync::mpsc::UnboundedReceiver<LogEvent>) -> Self {
+    pub fn new(rx: tokio::sync::mpsc::UnboundedReceiver<Arc<LogEvent>>) -> Self {
         Self {
             rx: UnboundedReceiverStream::new(rx),
         }
     }
 
-    pub fn run(rx: tokio::sync::mpsc::UnboundedReceiver<LogEvent>) {
+    pub fn run(rx: tokio::sync::mpsc::UnboundedReceiver<Arc<LogEvent>>) {
         std::thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(
@@ -38,7 +38,9 @@ impl TracerThread {
         while let Some(events) = stream.next().await {
             let upload_request = TraceEventUploadRequest::V1 {
                 project_id: "project123".to_string(),
-                trace_event_batch: TraceEventBatch { events },
+                trace_event_batch: TraceEventBatch {
+                    events: events.into_iter().map(|e| e.clone()).collect(),
+                },
             };
 
             // Serialize the upload_request to JSON
