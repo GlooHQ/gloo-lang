@@ -155,13 +155,6 @@ export interface DynamicOutput {
     [key: string]: any;
 }
 
-export interface DynamicTypeBuilderClass {
-    a?: (number | null)
-    b?: (number | null)
-    c?: (number | null)
-    [key: string]: any;
-}
-
 export interface Earthling {
     age?: Checked<(number | null),"earth_aged" | "no_infants">
 }

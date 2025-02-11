@@ -46,6 +46,8 @@ from ..baml_client.types import (
     MergeAttrs,
     OptionalListAndMap,
     RecursiveAliasDependency,
+    Person,
+    Color,
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -1580,44 +1582,81 @@ async def test_differing_unions():
 async def test_extend_from_baml_existing_class():
     tb = TypeBuilder()
     tb.extend_from_baml("""
-        class ExtendNestedClass {
-            a int
-            b int
-            c int
+        class ExtraPersonInfo {
+            height int
+            weight int
         }
 
-        dynamic DynamicTypeBuilderClass {
-            extended ExtendNestedClass
+        dynamic Person {
+            age int?
+            extra ExtraPersonInfo?
         }
     """)
-    res = await b.UseDynamicTbClass(
-        json.dumps({
-            "a": 1,
-            "b": 2,
-            "c": 3,
-            "extended": {
-                "a": 4,
-                "b": 5,
-                "c": 6,
-            }
-        }),
+    res = await b.ExtractPeople(
+        "My name is John Doe. I'm 30 years old. I'm 6 feet tall and weigh 180 pounds. My hair is yellow.",
         {"tb": tb},
     )
-    assert res.extended["a"] == 4
-    assert res.extended["b"] == 5
-    assert res.extended["c"] == 6
+    assert res == [Person(name="John Doe", hair_color=Color.YELLOW, age=30, extra={"height": 6, "weight": 180})]
 
 
 @pytest.mark.asyncio
 async def test_extend_from_baml_existing_enum():
     tb = TypeBuilder()
     tb.extend_from_baml("""
-        dynamic DynamicTypeBuilderCategory {
-            Refund
+        dynamic Hobby {
+            VideoGames
+            BikeRiding
         }
     """)
-    res = await b.UseDynamicTbEnum("I want a refund", {"tb": tb})
-    assert res == "Refund"
+    res = await b.ExtractHobby("I play video games", {"tb": tb})
+    assert res == ["VideoGames"]
+
+
+@pytest.mark.asyncio
+async def test_extend_from_baml_both_classes_and_enums():
+    tb = TypeBuilder()
+    tb.extend_from_baml("""
+        class ExtraPersonInfo {
+            height int
+            weight int
+        }
+
+        enum Job {
+            Programmer
+            Architect
+            Musician
+        }
+
+        dynamic Hobby {
+            VideoGames
+            BikeRiding
+        }
+
+        dynamic Color {
+            BROWN
+        }
+
+        dynamic Person {
+            age int?
+            extra ExtraPersonInfo?
+            job Job?
+            hobbies Hobby[]
+        }
+    """)
+    res = await b.ExtractPeople(
+        "My name is John Doe. I'm 30 years old. My height is 6 feet and I weigh 180 pounds. My hair is brown. I work as a programmer and enjoy bike riding.",
+        {"tb": tb},
+    )
+    assert res == [
+        Person(
+            name="John Doe",
+            hair_color="BROWN",
+            age=30,
+            extra={"height": 6, "weight": 180},
+            job="Programmer",
+            hobbies=["BikeRiding"],
+        )
+    ]
 
 
 @pytest.mark.asyncio

@@ -3569,52 +3569,6 @@ class BamlAsyncClient:
       )
       return cast(int, raw.cast_to(types, types, partial_types, False))
     
-    async def UseDynamicTbClass(
-        self,
-        input: str,
-        baml_options: BamlCallOptions = {},
-    ) -> types.DynamicTypeBuilderClass:
-      __tb__ = baml_options.get("tb", None)
-      if __tb__ is not None:
-        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
-      else:
-        tb = None
-      __cr__ = baml_options.get("client_registry", None)
-
-      raw = await self.__runtime.call_function(
-        "UseDynamicTbClass",
-        {
-          "input": input,
-        },
-        self.__ctx_manager.get(),
-        tb,
-        __cr__,
-      )
-      return cast(types.DynamicTypeBuilderClass, raw.cast_to(types, types, partial_types, False))
-    
-    async def UseDynamicTbEnum(
-        self,
-        input: str,
-        baml_options: BamlCallOptions = {},
-    ) -> Union[types.DynamicTypeBuilderCategory, str]:
-      __tb__ = baml_options.get("tb", None)
-      if __tb__ is not None:
-        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
-      else:
-        tb = None
-      __cr__ = baml_options.get("client_registry", None)
-
-      raw = await self.__runtime.call_function(
-        "UseDynamicTbEnum",
-        {
-          "input": input,
-        },
-        self.__ctx_manager.get(),
-        tb,
-        __cr__,
-      )
-      return cast(Union[types.DynamicTypeBuilderCategory, str], raw.cast_to(types, types, partial_types, False))
-    
     async def UseMalformedConstraints(
         self,
         a: types.MalformedConstraints2,
@@ -8261,66 +8215,6 @@ class BamlStreamClient:
         raw,
         lambda x: cast(Optional[int], x.cast_to(types, types, partial_types, True)),
         lambda x: cast(int, x.cast_to(types, types, partial_types, False)),
-        self.__ctx_manager.get(),
-      )
-    
-    def UseDynamicTbClass(
-        self,
-        input: str,
-        baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlStream[partial_types.DynamicTypeBuilderClass, types.DynamicTypeBuilderClass]:
-      __tb__ = baml_options.get("tb", None)
-      if __tb__ is not None:
-        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
-      else:
-        tb = None
-      __cr__ = baml_options.get("client_registry", None)
-
-      raw = self.__runtime.stream_function(
-        "UseDynamicTbClass",
-        {
-          "input": input,
-        },
-        None,
-        self.__ctx_manager.get(),
-        tb,
-        __cr__,
-      )
-
-      return baml_py.BamlStream[partial_types.DynamicTypeBuilderClass, types.DynamicTypeBuilderClass](
-        raw,
-        lambda x: cast(partial_types.DynamicTypeBuilderClass, x.cast_to(types, types, partial_types, True)),
-        lambda x: cast(types.DynamicTypeBuilderClass, x.cast_to(types, types, partial_types, False)),
-        self.__ctx_manager.get(),
-      )
-    
-    def UseDynamicTbEnum(
-        self,
-        input: str,
-        baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlStream[Optional[Union[types.DynamicTypeBuilderCategory, str]], Union[types.DynamicTypeBuilderCategory, str]]:
-      __tb__ = baml_options.get("tb", None)
-      if __tb__ is not None:
-        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
-      else:
-        tb = None
-      __cr__ = baml_options.get("client_registry", None)
-
-      raw = self.__runtime.stream_function(
-        "UseDynamicTbEnum",
-        {
-          "input": input,
-        },
-        None,
-        self.__ctx_manager.get(),
-        tb,
-        __cr__,
-      )
-
-      return baml_py.BamlStream[Optional[Union[types.DynamicTypeBuilderCategory, str]], Union[types.DynamicTypeBuilderCategory, str]](
-        raw,
-        lambda x: cast(Optional[Union[types.DynamicTypeBuilderCategory, str]], x.cast_to(types, types, partial_types, True)),
-        lambda x: cast(Union[types.DynamicTypeBuilderCategory, str], x.cast_to(types, types, partial_types, False)),
         self.__ctx_manager.get(),
       )
     

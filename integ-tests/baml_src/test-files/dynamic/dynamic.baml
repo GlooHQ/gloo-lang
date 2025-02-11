@@ -91,38 +91,3 @@ function ClassifyDynEnumTwo(input: string) -> DynEnumTwo {
     {{ ctx.output_format }}
   "#
 }
-
-class DynamicTypeBuilderClass {
-  a int
-  b int
-  c int
-  @@dynamic
-}
-
-enum DynamicTypeBuilderCategory {
-  FeatureRequest
-  CancelOrder
-  @@dynamic
-}
-
-function UseDynamicTbClass(input: string) -> DynamicTypeBuilderClass {
-  client GPT35
-  prompt #"
-    Extract information from this input:
-
-    {{ input}}
-
-    {{ ctx.output_format }}
-  "#
-}
-
-function UseDynamicTbEnum(input: string) -> DynamicTypeBuilderCategory {
-  client GPT35
-  prompt #"
-    Classify the input:
-
-    {{ input}}
-
-    {{ ctx.output_format }}
-  "#
-}

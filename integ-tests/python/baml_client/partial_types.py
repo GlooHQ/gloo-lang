@@ -134,12 +134,6 @@ class DynamicClassTwo(BaseModel):
 class DynamicOutput(BaseModel):
     model_config = ConfigDict(extra='allow')
 
-class DynamicTypeBuilderClass(BaseModel):
-    model_config = ConfigDict(extra='allow')
-    a: Optional[int] = None
-    b: Optional[int] = None
-    c: Optional[int] = None
-
 class Earthling(BaseModel):
     age: Checked[Optional[int],Literal["earth_aged", "no_infants"]]
 
