@@ -46,8 +46,13 @@ from ..baml_client.types import (
     MergeAttrs,
     OptionalListAndMap,
     RecursiveAliasDependency,
+<<<<<<< HEAD
     Person,
     Color,
+=======
+    JsonEntry,
+    SimpleTag,
+>>>>>>> canary
 )
 import baml_client.types as types
 from ..baml_client.tracing import trace, set_tags, flush, on_log_event
@@ -396,6 +401,12 @@ class TestAllInputs:
     #     res = await b.TakeRecAliasDep(RecursiveAliasDependency(value=data))
     #     assert res == RecursiveAliasDependency(value=data)
     #     assert res.value["json"]["object"]["list"] == [1, 2, 3]
+
+
+    @pytest.mark.asyncio
+    async def test_union_of_recursive_alias_or_class(self):
+        res = await b.ReturnJsonEntry(json.dumps({"a": "A", "b": {"c": "C"}}, indent=4))
+        assert res == {"a": SimpleTag(field="A"), "b": {"c": SimpleTag(field="C")}}
 
 
 class MyCustomClass(NamedArgsSingleClass):

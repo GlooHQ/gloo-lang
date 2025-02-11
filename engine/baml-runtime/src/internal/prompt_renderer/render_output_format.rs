@@ -226,13 +226,13 @@ fn relevant_data_models<'a>(
     let mut classes = Vec::new();
     let mut recursive_classes = IndexSet::new();
     let mut structural_recursive_aliases = IndexMap::new();
-    let mut start: Vec<baml_types::FieldType> = vec![output.clone()];
+    let mut stack: Vec<baml_types::FieldType> = vec![output.clone()];
 
     // start.extend(ctx.type_alias_overrides.values().cloned());
 
     let eval_ctx = ctx.eval_ctx(false);
 
-    while let Some(output) = start.pop() {
+    while let Some(output) = stack.pop() {
         match ir.distribute_metadata(&output) {
             (FieldType::Enum(enm), (constraints, streaming_behavior)) => {
                 if checked_types.insert(output.to_string()) {
@@ -280,16 +280,16 @@ fn relevant_data_models<'a>(
             }
             (FieldType::List(inner), _) | (FieldType::Optional(inner), _) => {
                 if !checked_types.contains(&inner.to_string()) {
-                    start.push(inner.as_ref().clone());
+                    stack.push(inner.as_ref().clone());
                 }
             }
             (FieldType::Map(k, v), _) => {
                 if checked_types.insert(output.to_string()) {
                     if !checked_types.contains(&k.to_string()) {
-                        start.push(k.as_ref().clone());
+                        stack.push(k.as_ref().clone());
                     }
                     if !checked_types.contains(&v.to_string()) {
-                        start.push(v.as_ref().clone());
+                        stack.push(v.as_ref().clone());
                     }
                 }
             }
@@ -297,7 +297,7 @@ fn relevant_data_models<'a>(
                 if checked_types.insert(output.to_string()) {
                     for inner in options {
                         if !checked_types.contains(&inner.to_string()) {
-                            start.push(inner.clone());
+                            stack.push(inner.clone());
                         }
                     }
                 }
@@ -352,7 +352,7 @@ fn relevant_data_models<'a>(
 
                     for (_, t, _, _) in fields.iter().as_ref() {
                         if !checked_types.contains(&t.to_string()) {
-                            start.push(t.clone());
+                            stack.push(t.clone());
                         }
                     }
 
@@ -395,7 +395,12 @@ fn relevant_data_models<'a>(
                 for cycle in ir.structural_recursive_alias_cycles() {
                     if cycle.contains_key(name) {
                         for (alias, target) in cycle.iter() {
-                            structural_recursive_aliases.insert(alias.to_owned(), target.clone());
+                            if structural_recursive_aliases
+                                .insert(alias.to_owned(), target.clone())
+                                .is_none()
+                            {
+                                stack.push(target.clone());
+                            }
                         }
                     }
                 }
@@ -404,7 +409,12 @@ fn relevant_data_models<'a>(
                 for cycle in &ctx.recursive_type_alias_overrides {
                     if cycle.contains_key(name) {
                         for (alias, target) in cycle.iter() {
-                            structural_recursive_aliases.insert(alias.to_owned(), target.clone());
+                            if structural_recursive_aliases
+                                .insert(alias.to_owned(), target.clone())
+                                .is_none()
+                            {
+                                stack.push(target.clone());
+                            }
                         }
                     }
                 }

@@ -6,7 +6,7 @@ use crate::{
 };
 use anyhow::Result;
 
-use baml_types::{EvaluationContext, StringOr, UnresolvedValue};
+use baml_types::{ApiKeyWithProvenance, EvaluationContext, StringOr, UnresolvedValue};
 use indexmap::IndexMap;
 
 use super::helpers::{Error, PropertyHandler, UnresolvedUrl};
@@ -48,7 +48,7 @@ impl<Meta> UnresolvedAnthropic<Meta> {
 
 pub struct ResolvedAnthropic {
     pub base_url: String,
-    pub api_key: String,
+    pub api_key: ApiKeyWithProvenance,
     role_selection: RolesSelection,
     pub allowed_metadata: AllowedRoleMetadata,
     pub supported_request_modes: SupportedRequestModes,
@@ -132,7 +132,7 @@ impl<Meta: Clone> UnresolvedAnthropic<Meta> {
 
         Ok(ResolvedAnthropic {
             base_url,
-            api_key: self.api_key.resolve(ctx)?,
+            api_key: self.api_key.resolve_api_key(ctx)?,
             role_selection: self.role_selection.resolve(ctx)?,
             allowed_metadata: self.allowed_metadata.resolve(ctx)?,
             supported_request_modes: self.supported_request_modes.clone(),

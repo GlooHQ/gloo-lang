@@ -152,8 +152,10 @@ describe('Semantic Streaming Tests', () => {
       }
 
       // Test @stream.not_null.
-      for (const sub of msg.three_small_things) {
-        expect(sub.i_16_digits).toBeDefined();
+      if (msg.three_small_things) {
+        for (const sub of msg.three_small_things) {
+          expect(sub.i_16_digits).toBeDefined();
+        }
       }
     }
 

@@ -32,9 +32,4 @@ describe('Azure Provider', () => {
       await b.TestAzureFailure('Donkey Kong')
     }).rejects.toThrow('BamlClientError')
   })
-
-  // it('supports azure with null max_tokens', async () => {
-    // const result = await b.TestAzureWithNullMaxTokens('Donkey Kong')
-    // expect(result.choices[0].message.content).toBeDefined();
-  // })
 })

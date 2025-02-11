@@ -6,7 +6,7 @@ use crate::{
 };
 use anyhow::Result;
 
-use baml_types::{GetEnvVar, StringOr, UnresolvedValue};
+use baml_types::{ApiKeyWithProvenance, GetEnvVar, StringOr, UnresolvedValue};
 use indexmap::IndexMap;
 
 use super::helpers::{Error, PropertyHandler, UnresolvedUrl};
@@ -54,7 +54,7 @@ impl<Meta> UnresolvedOpenAI<Meta> {
 
 pub struct ResolvedOpenAI {
     pub base_url: String,
-    pub api_key: Option<String>,
+    pub api_key: Option<ApiKeyWithProvenance>,
     role_selection: RolesSelection,
     pub allowed_metadata: AllowedRoleMetadata,
     supported_request_modes: SupportedRequestModes,
@@ -141,7 +141,7 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
 
     pub fn resolve(
         &self,
-        _provider: &crate::ClientProvider,
+        provider: &crate::ClientProvider,
         ctx: &impl GetEnvVar,
     ) -> Result<ResolvedOpenAI> {
         let base_url = self
@@ -166,7 +166,7 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
         let api_key = self
             .api_key
             .as_ref()
-            .map(|key| key.resolve(ctx))
+            .map(|key| key.resolve_api_key(ctx))
             .transpose()?;
 
         let role_selection = self.role_selection.resolve(ctx)?;
@@ -177,60 +177,32 @@ impl<Meta: Clone> UnresolvedOpenAI<Meta> {
             .map(|(k, v)| Ok((k.clone(), v.resolve(ctx)?)))
             .collect::<Result<IndexMap<_, _>>>()?;
 
-        // First, get the model to determine if it's an O1 model
-        let model = self
-            .properties
-            .get("model")
-            .and_then(|(_, v)| v.as_str())
-            .map(|s| s.to_string());
-        let is_o1_model = model
-            .as_ref()
-            .map(|s| s.starts_with("o1-") || s.eq("o1"))
-            .unwrap_or(false);
+        let properties = {
+            let mut properties = self
+                .properties
+                .iter()
+                .map(|(k, (_, v))| Ok((k.clone(), v.resolve_serde::<serde_json::Value>(ctx)?)))
+                .collect::<Result<IndexMap<_, _>>>()?;
 
-        // For O1 models, check if max_tokens is explicitly set (not null)
-        if is_o1_model {
-            if let Some((_, v)) = self.properties.get("max_tokens") {
-                if let Ok(value) = v.resolve_serde::<serde_json::Value>(ctx) {
-                    if !value.is_null() {
-                        return Err(anyhow::anyhow!("max_tokens is not supported with O1 models. Use max_completion_tokens instead."));
-                    }
+            // Set default max_tokens for Azure OpenAI if:
+            // 1. It's an Azure client
+            // 2. max_completion_tokens is not set
+            // 3. max_tokens is not present
+            if matches!(
+                provider,
+                crate::ClientProvider::OpenAI(crate::OpenAIClientProviderVariant::Azure)
+            ) {
+                if !properties.contains_key("max_completion_tokens")
+                    && !properties.contains_key("max_tokens")
+                {
+                    properties.insert("max_tokens".into(), serde_json::json!(4096));
+                } else if properties.get("max_tokens").map_or(false, |v| v.is_null()) {
+                    properties.shift_remove("max_tokens");
                 }
             }
-        }
 
-        // First resolve all properties except max_tokens
-        let mut properties = self
-            .properties
-            .iter()
-            .filter(|(k, (_, v))| {
-                // For O1 models, filter out max_tokens
-                if k.as_str() == "max_tokens" {
-                    // Filter out if it's an O1 model or if max_tokens is explicitly set to null
-                    if is_o1_model {
-                        return false;
-                    }
-                    // Check if max_tokens is explicitly set to null
-                    if let Ok(value) = v.resolve_serde::<serde_json::Value>(ctx) {
-                        if value.is_null() {
-                            return false;
-                        }
-                    }
-                }
-                true
-            })
-            .map(|(k, (_, v))| Ok((k.clone(), v.resolve_serde::<serde_json::Value>(ctx)?)))
-            .collect::<Result<IndexMap<_, _>>>()?;
-
-        // Only add default max_tokens for non-O1 models when:
-        // 1. max_tokens is not present at all (not even as null)
-        // 2. max_completion_tokens is not present (to avoid conflicts)
-        if !is_o1_model
-            && !self.properties.contains_key("max_tokens")
-            && !self.properties.contains_key("max_completion_tokens")
-        {
-            properties.insert("max_tokens".to_string(), serde_json::json!(4096));
-        }
+            properties
+        };
 
         let query_params = self
             .query_params
