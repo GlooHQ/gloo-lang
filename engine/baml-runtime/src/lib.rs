@@ -77,7 +77,7 @@ pub struct BamlRuntime {
     #[cfg(not(target_arch = "wasm32"))]
     pub async_runtime: Arc<tokio::runtime::Runtime>,
     pub trace_agent_tx:
-        tokio::sync::mpsc::UnboundedSender<Arc<baml_types::tracing::events::LogEvent>>,
+        tokio::sync::mpsc::UnboundedSender<Arc<baml_types::tracing::events::TraceEvent>>,
 }
 
 impl BamlRuntime {
@@ -140,7 +140,7 @@ impl BamlRuntime {
             .collect();
 
         let (tx, rx) =
-            tokio::sync::mpsc::unbounded_channel::<Arc<baml_types::tracing::events::LogEvent>>();
+            tokio::sync::mpsc::unbounded_channel::<Arc<baml_types::tracing::events::TraceEvent>>();
         #[cfg(not(target_arch = "wasm32"))]
         btrace::TracerThread::run(rx);
 

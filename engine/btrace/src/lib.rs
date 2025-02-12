@@ -4,8 +4,8 @@
 
 use baml_types::baml_value::BamlValue;
 use baml_types::tracing::events::{
-    BamlOptions, ContentId, FunctionEnd, FunctionId, FunctionStart, LogEvent, LogEventContent,
-    TraceTags,
+    BamlOptions, ContentId, FunctionEnd, FunctionId, FunctionStart, TraceData, TraceEvent,
+    TraceLevel, TraceTags,
 };
 
 use std::sync::Arc;
@@ -29,7 +29,7 @@ pub struct TraceContext {
     /// The scope used for all spans/logs within this context.
     pub scope: InstrumentationScope,
     /// The channel used to send trace events to the trace agent.
-    pub tx: tokio::sync::mpsc::UnboundedSender<Arc<LogEvent>>,
+    pub tx: tokio::sync::mpsc::UnboundedSender<Arc<TraceEvent>>,
     pub tags: TraceTags,
 }
 
@@ -92,10 +92,10 @@ thread_local! {
 //     }
 // }
 
-/// In the new scheme, a basic log event is created via LogEventContent::Log. (Ensure that your
+/// In the new scheme, a basic log event is created via TraceData::Log. (Ensure that your
 /// `baml-types` crate now defines an appropriate variant; for example:
 ///
-///   pub enum LogEventContent {
+///   pub enum TraceData {
 ///       Log { msg: String },
 ///       FunctionStart(FunctionStart),
 ///       FunctionEnd(FunctionEnd),
@@ -126,13 +126,15 @@ pub fn log(
     };
 
     // Wrap the log event in an Arc so that we have only one copy.
-    let log_event = Arc::new(LogEvent {
+    let log_event = Arc::new(TraceEvent {
         span_id,
         // Using an empty content span id here; adjust as needed.
         content_span_id: ContentId("".to_string()),
         span_chain: Vec::new(),
         timestamp: OffsetDateTime::now_utc(),
-        content: LogEventContent::LogMessage { msg },
+        content: TraceData::LogMessage { msg },
+        callsite: callsite,
+        verbosity: TraceLevel::Info,
         tags,
     });
 
@@ -166,12 +168,12 @@ macro_rules! impl_trace_scope {
                 // Send a span start event.
                 let tags = $new_ctx.tags.clone();
 
-                let start_event = LogEvent {
+                let start_event = TraceEvent {
                     span_id: span_id.clone(),
                     content_span_id: ContentId("".to_string()),
                     span_chain: Vec::new(),
                     timestamp: start_time,
-                    content: LogEventContent::FunctionStart(FunctionStart {
+                    content: TraceData::FunctionStart(FunctionStart {
                         name: name.clone(),
                         // No arguments are provided in this context.
                         args: Vec::new(),
@@ -188,18 +190,20 @@ macro_rules! impl_trace_scope {
                         }
                         fields_map
                     },
+                    callsite: name.clone(),
+                    verbosity: TraceLevel::Info,
                 };
                 let _ = ctx.tx.send(Arc::new(start_event));
 
                 let retval = $wrapped_fn;
 
                 // Send a span end event.
-                let end_event = LogEvent {
+                let end_event = TraceEvent {
                     span_id,
                     content_span_id: ContentId("".to_string()),
                     span_chain: Vec::new(),
                     timestamp: OffsetDateTime::now_utc(),
-                    content: LogEventContent::FunctionEnd(FunctionEnd {
+                    content: TraceData::FunctionEnd(FunctionEnd {
                         // Because we cannot (in general) convert the return value to a BamlValue,
                         // we use a placeholder. You might convert `retval` if you require this.
                         result: Ok(BamlValue::String("".to_string())),
@@ -212,6 +216,8 @@ macro_rules! impl_trace_scope {
                         }
                         fields
                     },
+                    callsite: name.clone(),
+                    verbosity: TraceLevel::Info,
                 };
                 let _ = ctx.tx.send(Arc::new(end_event));
                 retval

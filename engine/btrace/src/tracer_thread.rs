@@ -4,21 +4,21 @@ use std::io::Write;
 use std::time::Instant;
 use std::{fs::OpenOptions, pin::pin, sync::Arc};
 
-use baml_types::tracing::events::LogEvent;
+use baml_types::tracing::events::TraceEvent;
 use serde::{Deserialize, Serialize};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 pub struct TracerThread {
-    rx: UnboundedReceiverStream<Arc<LogEvent>>,
+    rx: UnboundedReceiverStream<Arc<TraceEvent>>,
 }
 
 impl TracerThread {
-    pub fn new(rx: tokio::sync::mpsc::UnboundedReceiver<Arc<LogEvent>>) -> Self {
+    pub fn new(rx: tokio::sync::mpsc::UnboundedReceiver<Arc<TraceEvent>>) -> Self {
         Self {
             rx: UnboundedReceiverStream::new(rx),
         }
     }
 
-    pub fn run(rx: tokio::sync::mpsc::UnboundedReceiver<Arc<LogEvent>>) {
+    pub fn run(rx: tokio::sync::mpsc::UnboundedReceiver<Arc<TraceEvent>>) {
         std::thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(

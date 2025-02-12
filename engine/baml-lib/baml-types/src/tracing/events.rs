@@ -15,7 +15,7 @@ pub type TraceTags = serde_json::Map<String, serde_json::Value>;
 
 // THESE ARE NOT CLONEABLE!!
 #[derive(Debug, Serialize, Deserialize)]
-pub struct LogEvent {
+pub struct TraceEvent {
     /*
      * (span_id, content_span_id) is a unique identifier for a log event
      * The query (span_id, *) gets all logs for a function call
@@ -31,15 +31,23 @@ pub struct LogEvent {
     // idk what this does yet #[serde(with = "timestamp_serde")]
     #[serde(with = "timestamp_serde")]
     pub timestamp: OffsetDateTime,
+
+    /// human-readable callsite identifier, e.g. "ExtractResume" or "openai/gpt-4o/chat"
+    pub callsite: String,
+
+    /// verbosity level
+    #[serde(with = "level_serde")]
+    pub verbosity: TraceLevel,
+
     // The content of the log
-    pub content: LogEventContent,
+    pub content: TraceData,
 
     pub tags: TraceTags,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type", content = "data")]
-pub enum LogEventContent {
+pub enum TraceData {
     LogMessage {
         msg: String,
     },
@@ -226,12 +234,12 @@ mod level_serde {
     {
         let level_num: u32 = serde::Deserialize::deserialize(deserializer)?;
         match level_num {
-            0o100 => Ok(TraceLevel::Trace),
-            0o200 => Ok(TraceLevel::Debug),
-            0o300 => Ok(TraceLevel::Info),
-            0o400 => Ok(TraceLevel::Warn),
-            0o500 => Ok(TraceLevel::Error),
-            0o600 => Ok(TraceLevel::Fatal),
+            100 => Ok(TraceLevel::Trace),
+            200 => Ok(TraceLevel::Debug),
+            300 => Ok(TraceLevel::Info),
+            400 => Ok(TraceLevel::Warn),
+            500 => Ok(TraceLevel::Error),
+            600 => Ok(TraceLevel::Fatal),
             _ => Err(serde::de::Error::custom(format!(
                 "Invalid trace level: {}",
                 level_num
@@ -247,12 +255,12 @@ mod level_serde {
 #[repr(usize)]
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum TraceLevel {
-    Trace = 0o100,
-    Debug = 0o200,
-    Info = 0o300,
-    Warn = 0o400,
-    Error = 0o500,
-    Fatal = 0o600,
+    Trace = 100,
+    Debug = 200,
+    Info = 300,
+    Warn = 400,
+    Error = 500,
+    Fatal = 600,
 }
 
 impl Into<TraceLevel> for tracing_core::Level {
