@@ -77,10 +77,10 @@ describe('Dynamic Type Tests', () => {
     })
   })
 
-  describe('Extend From Baml', () => {
-    it('should extend existing class', async () => {
+  describe('Add Baml', () => {
+    it('should add to existing class', async () => {
       let tb = new TypeBuilder()
-      tb.extendFromBaml(`
+      tb.addBaml(`
         class ExtraPersonInfo {
             height int
             weight int
@@ -98,9 +98,9 @@ describe('Dynamic Type Tests', () => {
       expect(res).toEqual([{name: "John Doe", age: 30, extra: {height: 6, weight: 180}, hair_color: "YELLOW"}])
     })
 
-    it('should extend existing enum', async () => {
+    it('should add to existing enum', async () => {
       let tb = new TypeBuilder()
-      tb.extendFromBaml(`
+      tb.addBaml(`
         dynamic Hobby {
           VideoGames
           BikeRiding
@@ -110,9 +110,9 @@ describe('Dynamic Type Tests', () => {
       expect(res).toEqual(["VideoGames"])
     })
 
-    it('should extend both class and enum', async () => {
+    it('should add both class and enum', async () => {
       let tb = new TypeBuilder()
-      tb.extendFromBaml(`
+      tb.addBaml(`
         class ExtraPersonInfo {
             height int
             weight int

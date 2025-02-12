@@ -75,8 +75,8 @@ class TypeBuilder {
         this.enums.add(name);
         return new EnumBuilder(this.tb, name);
     }
-    extendFromBaml(baml) {
-        this.tb.extendFromBaml(baml, this.runtime);
+    addBaml(baml) {
+        this.tb.addBaml(baml, this.runtime);
     }
 }
 exports.TypeBuilder = TypeBuilder;

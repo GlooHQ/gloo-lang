@@ -112,8 +112,8 @@ export class TypeBuilder {
     return new EnumBuilder(this.tb, name)
   }
 
-  extendFromBaml(baml: string): void {
-    this.tb.extendFromBaml(baml, this.runtime)
+  addBaml(baml: string): void {
+    this.tb.addBaml(baml, this.runtime)
   }
 }
 

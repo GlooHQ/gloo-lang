@@ -251,7 +251,7 @@ impl TypeBuilder {
         Arc::clone(&self.recursive_type_aliases)
     }
 
-    pub fn extend_from_baml(&self, baml: &str, rt: &crate::BamlRuntime) -> anyhow::Result<()> {
+    pub fn add_baml(&self, baml: &str, rt: &crate::BamlRuntime) -> anyhow::Result<()> {
         use internal_baml_core::{
             internal_baml_diagnostics::{Diagnostics, SourceFile},
             internal_baml_parser_database::ParserDatabase,
@@ -260,7 +260,7 @@ impl TypeBuilder {
             run_validation_pipeline_on_db, validate_type_builder_entries,
         };
 
-        let path = std::path::PathBuf::from("TypeBuilder::extend_from_baml");
+        let path = std::path::PathBuf::from("TypeBuilder::add_baml");
         let source = SourceFile::from((path.clone().into(), baml));
 
         let mut diagnostics = Diagnostics::new(path);

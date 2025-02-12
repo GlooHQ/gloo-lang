@@ -369,9 +369,9 @@ describe "ruby<->baml integration tests" do
     )
   end
 
-  it "tests extend dynamic existing class" do
+  it "tests add baml existing class" do
     tb = Baml::TypeBuilder.new
-    tb.extend_from_baml("
+    tb.add_baml("
       class ExtraPersonInfo {
           height int
           weight int
@@ -392,9 +392,9 @@ describe "ruby<->baml integration tests" do
     )
   end
 
-  it "tests extend dynamic existing enum" do
+  it "tests add baml existing enum" do
     tb = Baml::TypeBuilder.new
-    tb.extend_from_baml("
+    tb.add_baml("
         dynamic Hobby {
             VideoGames
             BikeRiding
@@ -407,9 +407,9 @@ describe "ruby<->baml integration tests" do
     )
   end
 
-  it "tests extend both class and enum" do
+  it "tests add baml both class and enum" do
     tb = Baml::TypeBuilder.new
-    tb.extend_from_baml("
+    tb.add_baml("
       class ExtraPersonInfo {
           height int
           weight int

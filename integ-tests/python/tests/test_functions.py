@@ -1587,9 +1587,9 @@ async def test_differing_unions():
 
 
 @pytest.mark.asyncio
-async def test_extend_from_baml_existing_class():
+async def test_add_baml_existing_class():
     tb = TypeBuilder()
-    tb.extend_from_baml("""
+    tb.add_baml("""
         class ExtraPersonInfo {
             height int
             weight int
@@ -1608,9 +1608,9 @@ async def test_extend_from_baml_existing_class():
 
 
 @pytest.mark.asyncio
-async def test_extend_from_baml_existing_enum():
+async def test_add_baml_existing_enum():
     tb = TypeBuilder()
-    tb.extend_from_baml("""
+    tb.add_baml("""
         dynamic Hobby {
             VideoGames
             BikeRiding
@@ -1621,9 +1621,9 @@ async def test_extend_from_baml_existing_enum():
 
 
 @pytest.mark.asyncio
-async def test_extend_from_baml_both_classes_and_enums():
+async def test_add_baml_both_classes_and_enums():
     tb = TypeBuilder()
-    tb.extend_from_baml("""
+    tb.add_baml("""
         class ExtraPersonInfo {
             height int
             weight int

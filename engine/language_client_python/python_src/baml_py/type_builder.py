@@ -70,8 +70,8 @@ class TypeBuilder:
         self.__enums.add(name)
         return NewEnumBuilder(self._tb, name)
 
-    def extend_from_baml(self, baml: str):
-        return self._tb.extend_from_baml(baml, self.__runtime)
+    def add_baml(self, baml: str):
+        return self._tb.add_baml(baml, self.__runtime)
 
 
 class NewClassBuilder:

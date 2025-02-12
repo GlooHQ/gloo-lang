@@ -30,7 +30,7 @@ export declare class TypeBuilder {
     enumBuilder<Name extends string, T extends string>(name: Name, values: T[]): EnumBuilder<Name, T>;
     addClass<Name extends string>(name: Name): ClassBuilder<Name>;
     addEnum<Name extends string>(name: Name): EnumBuilder<Name>;
-    extendFromBaml(baml: string): void;
+    addBaml(baml: string): void;
 }
 export declare class ClassBuilder<ClassName extends string, Properties extends string = string> {
     private properties;

@@ -77,8 +77,8 @@ module Baml
             EnumBuilder.new(@registry, name)
         end
 
-        def extend_from_baml(baml)
-            @registry.extend_from_baml(baml, @runtime)
+        def add_baml(baml)
+            @registry.add_baml(baml, @runtime)
         end
 
         class ClassBuilder
