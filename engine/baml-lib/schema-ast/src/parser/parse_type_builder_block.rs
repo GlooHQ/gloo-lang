@@ -170,12 +170,12 @@ mod tests {
 
             /// Some doc
             /// comment
-            dynamic Cls {
+            dynamic class Cls {
                 e Example
                 s string
             }
 
-            dynamic Enm {
+            dynamic enum Enm {
                 C
                 D
             }
