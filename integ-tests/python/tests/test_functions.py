@@ -85,10 +85,11 @@ async def test_env_vars_reset():
         # Not allowed to call reset_baml_env_vars inside a traced function
         await atop_level_async_tracing()
 
-    with pytest.raises(errors.BamlClientHttpError):
+    with pytest.raises(errors.BamlClientHttpError) as excinfo:
         _ = await b.ExtractPeople(
             "My name is Harrison. My hair is black and I'm 6 feet tall. I'm pretty good around the hoop."
         )
+    assert excinfo.value.status_code == 401
 
     reset_baml_env_vars(os.environ.copy())
     people = await b.ExtractPeople(
@@ -1469,7 +1470,7 @@ async def test_arg_exceptions():
             baml_options={"client_registry": cr},
         )
 
-    with pytest.raises(errors.BamlClientHttpError):
+    with pytest.raises(errors.BamlClientHttpError) as excinfo:
         cr = baml_py.ClientRegistry()
         cr.add_llm_client(
             "MyClient", "openai", {"model": "gpt-4o-mini", "api_key": "INVALID_KEY"}
@@ -1479,6 +1480,21 @@ async def test_arg_exceptions():
             input="My name is Harrison. My hair is black and I'm 6 feet tall.",
             baml_options={"client_registry": cr},
         )
+    assert excinfo.value.status_code == 401
+
+    # test missing model
+    with pytest.raises(errors.BamlClientHttpError) as excinfo:
+        cr = baml_py.ClientRegistry()
+        cr.add_llm_client(
+            "MyClient", "openai", {"model": "random-model"}
+        )
+        cr.set_primary("MyClient")
+        await b.MyFunc(
+            input="My name is Harrison. My hair is black and I'm 6 feet tall.",
+            baml_options={"client_registry": cr},
+        )
+    assert excinfo.value.status_code == 404
+
 
     with pytest.raises(errors.BamlValidationError):
         await b.DummyOutputFunction("dummy input")
