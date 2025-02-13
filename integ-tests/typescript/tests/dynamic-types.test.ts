@@ -86,7 +86,7 @@ describe('Dynamic Type Tests', () => {
             weight int
         }
 
-        dynamic Person {
+        dynamic class Person {
             age int?
             extra ExtraPersonInfo?
         }
@@ -101,7 +101,7 @@ describe('Dynamic Type Tests', () => {
     it('should add to existing enum', async () => {
       let tb = new TypeBuilder()
       tb.addBaml(`
-        dynamic Hobby {
+        dynamic enum Hobby {
           VideoGames
           BikeRiding
         }
@@ -124,16 +124,16 @@ describe('Dynamic Type Tests', () => {
             Musician
         }
 
-        dynamic Hobby {
+        dynamic enum Hobby {
             VideoGames
             BikeRiding
         }
 
-        dynamic Color {
+        dynamic enum Color {
             BROWN
         }
 
-        dynamic Person {
+        dynamic class Person {
             age int?
             extra ExtraPersonInfo?
             job Job?

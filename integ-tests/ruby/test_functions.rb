@@ -377,7 +377,7 @@ describe "ruby<->baml integration tests" do
           weight int
       }
 
-      dynamic Person {
+      dynamic class Person {
           age int?
           extra ExtraPersonInfo?
       }
@@ -395,7 +395,7 @@ describe "ruby<->baml integration tests" do
   it "tests add baml existing enum" do
     tb = Baml::TypeBuilder.new
     tb.add_baml("
-        dynamic Hobby {
+        dynamic enum Hobby {
             VideoGames
             BikeRiding
         }
@@ -421,16 +421,16 @@ describe "ruby<->baml integration tests" do
           Musician
       }
 
-      dynamic Hobby {
+      dynamic enum Hobby {
           VideoGames
           BikeRiding
       }
 
-      dynamic Color {
+      dynamic enum Color {
           BROWN
       }
 
-      dynamic Person {
+      dynamic class Person {
           age int?
           extra ExtraPersonInfo?
           job Job?

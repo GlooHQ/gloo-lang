@@ -1595,7 +1595,7 @@ async def test_add_baml_existing_class():
             weight int
         }
 
-        dynamic Person {
+        dynamic class Person {
             age int?
             extra ExtraPersonInfo?
         }
@@ -1611,7 +1611,7 @@ async def test_add_baml_existing_class():
 async def test_add_baml_existing_enum():
     tb = TypeBuilder()
     tb.add_baml("""
-        dynamic Hobby {
+        dynamic enum Hobby {
             VideoGames
             BikeRiding
         }
@@ -1635,16 +1635,16 @@ async def test_add_baml_both_classes_and_enums():
             Musician
         }
 
-        dynamic Hobby {
+        dynamic enum Hobby {
             VideoGames
             BikeRiding
         }
 
-        dynamic Color {
+        dynamic enum Color {
             BROWN
         }
 
-        dynamic Person {
+        dynamic class Person {
             age int?
             extra ExtraPersonInfo?
             job Job?

@@ -234,6 +234,8 @@ pub fn validate_type_builder_entries(
                     dyn_type.span.to_owned(),
                 );
 
+                // TODO: Not necessary, the parser also does this now that we've
+                // change "dynamic ClassName" to "dynamic class ClassName".
                 dyn_type.is_dynamic_type_def = true;
 
                 // Resolve dynamic definition. It either appends to a
@@ -245,7 +247,18 @@ pub fn validate_type_builder_entries(
                                 diagnostics.push_error(DatamodelError::new_validation_error(
                                     &format!(
                                         "Type '{}' does not contain the `@@dynamic` attribute so it cannot be modified in a type builder block",
-                                         cls.name()
+                                        cls.name()
+                                    ),
+                                    dyn_type.span.to_owned(),
+                                ));
+                                continue;
+                            }
+
+                            if matches!(dyn_type.sub_type, ast::SubType::Enum) {
+                                diagnostics.push_error(DatamodelError::new_validation_error(
+                                    &format!(
+                                        "Type '{}' is a class, but the dynamic block is defined as 'dynamic enum'",
+                                        cls.name()
                                     ),
                                     dyn_type.span.to_owned(),
                                 ));
@@ -259,6 +272,17 @@ pub fn validate_type_builder_entries(
                                 diagnostics.push_error(DatamodelError::new_validation_error(
                                     &format!(
                                         "Type '{}' does not contain the `@@dynamic` attribute so it cannot be modified in a type builder block",
+                                        enm.name()
+                                    ),
+                                    dyn_type.span.to_owned(),
+                                ));
+                                continue;
+                            }
+
+                            if matches!(dyn_type.sub_type, ast::SubType::Class) {
+                                diagnostics.push_error(DatamodelError::new_validation_error(
+                                    &format!(
+                                        "Type '{}' is an enum, but the dynamic block is defined as 'dynamic class'",
                                         enm.name()
                                     ),
                                     dyn_type.span.to_owned(),

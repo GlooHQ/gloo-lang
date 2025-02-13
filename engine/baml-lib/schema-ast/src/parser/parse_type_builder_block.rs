@@ -58,6 +58,49 @@ pub fn parse_type_builder_contents(
         match current.as_rule() {
             Rule::comment_block => pending_block_comment = Some(current),
 
+            Rule::dynamic_type_expression_block => {
+                let dyn_type_expr_span = diagnostics.span(current.as_span());
+
+                for nested in current.into_inner() {
+                    match nested.as_rule() {
+                        Rule::identifier => {
+                            if nested.as_str() != "dynamic" {
+                                diagnostics.push_error(DatamodelError::new_validation_error(
+                                    &format!("Unexpected keyword '{nested}' in dynamic type definition. Use 'dynamic class' or 'dynamic enum'."),
+                                    diagnostics.span(nested.as_span()),
+                                ));
+                            }
+                        }
+
+                        Rule::type_expression_block => {
+                            let mut type_expr = parse_type_expression_block(
+                                nested,
+                                pending_block_comment.take(),
+                                diagnostics,
+                            );
+
+                            // Include the dynamic keyword in the span.
+                            type_expr.span = dyn_type_expr_span.to_owned();
+
+                            // TODO: #1343 Temporary solution until we implement scoping in the AST.
+                            // We know it's dynamic. The Dynamic subtype will be
+                            // removed later because it's not supported in the
+                            // AST but we store this information here.
+                            type_expr.is_dynamic_type_def = true;
+
+                            match type_expr.sub_type {
+                                SubType::Class | SubType::Enum => {
+                                    entries.push(TypeBuilderEntry::Dynamic(type_expr))
+                                }
+                                _ => {} // may need to save other somehow for error propagation
+                            }
+                        }
+
+                        _ => parsing_catch_all(nested, "dynamic_type_expression_block"),
+                    }
+                }
+            }
+
             Rule::type_expression_block => {
                 let type_expr =
                     parse_type_expression_block(current, pending_block_comment.take(), diagnostics);
@@ -65,7 +108,6 @@ pub fn parse_type_builder_contents(
                 match type_expr.sub_type {
                     SubType::Class => entries.push(TypeBuilderEntry::Class(type_expr)),
                     SubType::Enum => entries.push(TypeBuilderEntry::Enum(type_expr)),
-                    SubType::Dynamic => entries.push(TypeBuilderEntry::Dynamic(type_expr)),
                     _ => {} // may need to save other somehow for error propagation
                 }
             }

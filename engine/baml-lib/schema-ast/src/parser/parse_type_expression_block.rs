@@ -38,7 +38,20 @@ pub(crate) fn parse_type_expression_block(
                     match current.as_str() {
                         "class" => sub_type = Some(SubType::Class),
                         "enum" => sub_type = Some(SubType::Enum),
-                        "dynamic" => sub_type = Some(SubType::Dynamic),
+
+                        // Since previously this was allowed we will display a
+                        // nice error here for users who have this in their
+                        // codebase.
+                        "dynamic" => {
+                            diagnostics.push_error(DatamodelError::new_validation_error(
+                                &format!(
+                                    "Incomplete 'dynamic' type definition. Use 'dynamic class' or 'dynamic enum' to add properties to types that contain the `@@dynamic` attribute.",
+                                ),
+                                diagnostics.span(current.as_span()),
+                            ));
+
+                            sub_type = Some(SubType::Other("dynamic".to_string()))
+                        }
 
                         // Report this as an error, otherwise the syntax will be
                         // correct but the type will not be registered and the
@@ -80,7 +93,11 @@ pub(crate) fn parse_type_expression_block(
                                 sub_type.clone().map(|st| match st {
                                     SubType::Enum => "Enum",
                                     SubType::Class => "Class",
-                                    SubType::Dynamic => "Dynamic",
+                                    SubType::Dynamic(d) => match *d {
+                                        SubType::Class => "Dynamic Class",
+                                        SubType::Enum => "Dynamic Enum",
+                                        _ => "Dynamic Other"
+                                    },
                                     SubType::Other(_) => "Other",
                                 }).unwrap_or(""),
                                 item,
@@ -123,9 +140,9 @@ pub(crate) fn parse_type_expression_block(
             sub_type: sub_type
                 .clone()
                 .unwrap_or(SubType::Other("Subtype not found".to_string())),
-            is_dynamic_type_def: matches!(sub_type, Some(SubType::Dynamic)),
+            is_dynamic_type_def: matches!(sub_type, Some(SubType::Dynamic(_))),
         },
-        _ => panic!("Encountered impossible type_expression declaration during parsing",),
+        _ => panic!("Encountered impossible type_expression declaration during parsing"),
     }
 }
 
