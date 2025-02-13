@@ -1,0 +1,142 @@
+---
+title: Hook Output Type Reference
+description: Technical reference for the BAML React hook output type
+---
+
+The `HookOutput` type defines the return type for BAML React hooks.
+
+<CodeBlocks>
+```typescript title="Example Usage"
+function Component() {
+  const { data, streamingData, error, isPending, mutate } = useTestAws({
+    stream: true,
+    onPartial: (text) => console.log("Streaming:", text),
+  })
+
+  // Show partial data while streaming, final data when complete
+  const currentResponse = isPending ? streamingData : data
+
+  return (
+    <div>
+      {error && <div>Error: {error.message}</div>}
+      {currentResponse && <div>{currentResponse}</div>}
+      <button onClick={() => mutate("test")}>Submit</button>
+    </div>
+  )
+}
+```
+
+```typescript title="Example Types"
+// Streaming configuration
+const streamingResult: HookOutput<'TestAws', { stream: true }> = {
+  data: undefined,
+  streamingData: "Partial response...",
+  error: undefined,
+  isError: false,
+  isPending: true,
+  isSuccess: false,
+  status: 'pending',
+  mutate: async () => new ReadableStream()
+}
+
+// Non-streaming configuration
+const nonStreamingResult: HookOutput<'TestAws'> = {
+  data: "Final response",
+  error: undefined,
+  isError: false,
+  isPending: false,
+  isSuccess: true,
+  status: 'success',
+  mutate: async () => "Final response"
+}
+```
+
+```typescript title="Type Definition"
+type HookOutput<FunctionName, Options extends { stream?: boolean } = { stream?: false }> = {
+  data?: FinalReturnType<FunctionName>
+  streamingData?: Options['stream'] extends true ? PartialReturnType<FunctionName> : never
+  error?: Error | BamlValidationError | BamlClientFinishReasonError
+  isError: boolean
+  isPending: boolean
+  isSuccess: boolean
+  status: 'idle' | 'pending' | 'success' | 'error'
+  mutate: (...args: InputType) => Options['stream'] extends true
+    ? Promise<ReadableStream<Uint8Array>>
+    : Promise<FinalReturnType<FunctionName>>
+}
+```
+</CodeBlocks>
+
+## Type Parameters
+
+<ParamField
+  path="FunctionName"
+  type="generic"
+>
+  The name of the BAML function being called. Used to infer input and output types.
+</ParamField>
+
+<ParamField
+  path="Options"
+  type="{ stream?: boolean }"
+>
+  Configuration object that determines streaming behavior. Defaults to `{ stream?: false }`.
+</ParamField>
+
+## Properties
+
+<ParamField
+  path="data"
+  type="FinalReturnType<FunctionName> | undefined"
+>
+  The final response data. Only set when the request completes successfully.
+</ParamField>
+
+<ParamField
+  path="streamingData"
+  type="PartialReturnType<FunctionName> | undefined"
+>
+  The latest partial response during streaming. Only available when `Options['stream']` is true.
+</ParamField>
+
+<ParamField
+  path="error"
+  type="Error | BamlValidationError | BamlClientFinishReasonError | undefined"
+>
+  Any error that occurred during the request. See [Error Types](../errors/overview).
+</ParamField>
+
+<ParamField
+  path="isError"
+  type="boolean"
+>
+  True if the request resulted in an error.
+</ParamField>
+
+<ParamField
+  path="isPending"
+  type="boolean"
+>
+  True if the request is in progress.
+</ParamField>
+
+<ParamField
+  path="isSuccess"
+  type="boolean"
+>
+  True if the request completed successfully.
+</ParamField>
+
+<ParamField
+  path="status"
+  type="'idle' | 'pending' | 'success' | 'error'"
+>
+  The current status of the request.
+</ParamField>
+
+<ParamField
+  path="mutate"
+  type="(...args: InputType) => Promise<OutputType>"
+>
+  Function to trigger the BAML action. Return type varies based on streaming mode.
+</ParamField>
