@@ -295,6 +295,8 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
         test_name: &str,
         ctx: &RuntimeContextManager,
     ) -> Result<Option<TypeBuilder>> {
+        use crate::type_builder::WithMeta;
+
         let func = self.get_function(function_name, &ctx.create_ctx(None, None)?)?;
         let test = self.ir().find_test(&func, test_name)?;
 
@@ -314,7 +316,23 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
                             .property(&f.elem.name)
                             .lock()
                             .unwrap()
-                            .r#type(f.elem.r#type.elem.to_owned());
+                            .r#type(f.elem.r#type.elem.to_owned())
+                            .with_meta(
+                                "alias",
+                                f.attributes.get("alias").map_or(BamlValue::Null, |v| {
+                                    v.resolve_string(&EvaluationContext::default())
+                                        .map_or(BamlValue::Null, BamlValue::String)
+                                }),
+                            )
+                            .with_meta(
+                                "description",
+                                f.attributes
+                                    .get("description")
+                                    .map_or(BamlValue::Null, |v| {
+                                        v.resolve_string(&EvaluationContext::default())
+                                            .map_or(BamlValue::Null, BamlValue::String)
+                                    }),
+                            );
                     }
                 }
 
@@ -322,7 +340,37 @@ impl InternalRuntimeInterface for InternalBamlRuntime {
                     let mutex = type_builder.r#enum(&enm.elem.name);
                     let enum_builder = mutex.lock().unwrap();
                     for (variant, _) in &enm.elem.values {
-                        enum_builder.value(&variant.elem.0).lock().unwrap();
+                        enum_builder
+                            .value(&variant.elem.0)
+                            .lock()
+                            .unwrap()
+                            .with_meta(
+                                "alias",
+                                variant
+                                    .attributes
+                                    .get("alias")
+                                    .map_or(BamlValue::Null, |v| {
+                                        v.resolve_string(&EvaluationContext::default())
+                                            .map_or(BamlValue::Null, BamlValue::String)
+                                    }),
+                            )
+                            .with_meta(
+                                "description",
+                                variant.attributes.get("description").map_or(
+                                    BamlValue::Null,
+                                    |v| {
+                                        v.resolve_string(&EvaluationContext::default())
+                                            .map_or(BamlValue::Null, BamlValue::String)
+                                    },
+                                ),
+                            )
+                            .with_meta(
+                                "skip",
+                                variant.attributes.get("skip").map_or(BamlValue::Null, |v| {
+                                    v.resolve_bool(&EvaluationContext::default())
+                                        .map_or(BamlValue::Null, BamlValue::Bool)
+                                }),
+                            );
                     }
                 }
 

@@ -256,6 +256,8 @@ impl TypeBuilder {
             run_validation_pipeline_on_db, validate_type_builder_entries,
         };
 
+        use baml_types::EvaluationContext;
+
         let path = std::path::PathBuf::from("TypeBuilder::add_baml");
         let source = SourceFile::from((path.clone().into(), baml));
 
@@ -299,7 +301,23 @@ impl TypeBuilder {
                     .property(&f.elem.name)
                     .lock()
                     .unwrap()
-                    .r#type(f.elem.r#type.elem.to_owned());
+                    .r#type(f.elem.r#type.elem.to_owned())
+                    .with_meta(
+                        "alias",
+                        f.attributes.get("alias").map_or(BamlValue::Null, |v| {
+                            v.resolve_string(&EvaluationContext::default())
+                                .map_or(BamlValue::Null, BamlValue::String)
+                        }),
+                    )
+                    .with_meta(
+                        "description",
+                        f.attributes
+                            .get("description")
+                            .map_or(BamlValue::Null, |v| {
+                                v.resolve_string(&EvaluationContext::default())
+                                    .map_or(BamlValue::Null, BamlValue::String)
+                            }),
+                    );
             }
         }
 
@@ -307,7 +325,37 @@ impl TypeBuilder {
             let mutex = self.r#enum(&enm.elem.name);
             let enum_builder = mutex.lock().unwrap();
             for (variant, _) in &enm.elem.values {
-                enum_builder.value(&variant.elem.0).lock().unwrap();
+                enum_builder
+                    .value(&variant.elem.0)
+                    .lock()
+                    .unwrap()
+                    .with_meta(
+                        "alias",
+                        variant
+                            .attributes
+                            .get("alias")
+                            .map_or(BamlValue::Null, |v| {
+                                v.resolve_string(&EvaluationContext::default())
+                                    .map_or(BamlValue::Null, BamlValue::String)
+                            }),
+                    )
+                    .with_meta(
+                        "description",
+                        variant
+                            .attributes
+                            .get("description")
+                            .map_or(BamlValue::Null, |v| {
+                                v.resolve_string(&EvaluationContext::default())
+                                    .map_or(BamlValue::Null, BamlValue::String)
+                            }),
+                    )
+                    .with_meta(
+                        "skip",
+                        variant.attributes.get("skip").map_or(BamlValue::Null, |v| {
+                            v.resolve_bool(&EvaluationContext::default())
+                                .map_or(BamlValue::Null, BamlValue::Bool)
+                        }),
+                    );
             }
         }
 

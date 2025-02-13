@@ -155,5 +155,24 @@ describe('Dynamic Type Tests', () => {
         }
       ])
     })
+
+    it('should add baml with attrs', async () => {
+      let tb = new TypeBuilder()
+      tb.addBaml(`
+        class ExtraPersonInfo {
+            height int @description("In centimeters and rounded to the nearest whole number")
+            weight int @description("In kilograms and rounded to the nearest whole number")
+        }
+
+        dynamic class Person {
+            extra ExtraPersonInfo?
+        }
+      `)
+      let res = await b.ExtractPeople(
+        "My name is John Doe. I'm 30 years old. I'm 6 feet tall and weigh 180 pounds. My hair is yellow.",
+        { tb },
+      )
+      expect(res).toEqual([{name: "John Doe", extra: {height: 183, weight: 82}, hair_color: "YELLOW"}])
+    })
   })
 })

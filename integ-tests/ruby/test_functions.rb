@@ -447,6 +447,28 @@ describe "ruby<->baml integration tests" do
     )
   end
 
+  it "tests add baml with attrs" do
+    tb = Baml::TypeBuilder.new
+    tb.add_baml('
+      class ExtraPersonInfo {
+          height int @description("In centimeters and rounded to the nearest whole number")
+          weight int @description("In kilograms and rounded to the nearest whole number")
+      }
+
+      dynamic class Person {
+          extra ExtraPersonInfo?
+      }
+    ')
+    output = b.ExtractPeople(
+      text: "My name is John Doe. I'm 30 years old. I'm 6 feet tall and weigh 180 pounds. My hair is yellow.",
+      baml_options: {tb: tb},
+    )
+    assert_equal(
+      '[{"name":"John Doe","hair_color":"YELLOW","extra":{"height":183,"weight":82}}]',
+      output.to_json
+    )
+  end
+
   it "tests dynamic clients" do
     cb = Baml::Ffi::ClientRegistry.new
     cb.add_llm_client("MyClient", "openai", { model: "gpt-3.5-turbo" })

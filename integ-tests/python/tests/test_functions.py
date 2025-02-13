@@ -1666,6 +1666,26 @@ async def test_add_baml_both_classes_and_enums():
         )
     ]
 
+
+@pytest.mark.asyncio
+async def test_add_baml_with_attrs():
+    tb = TypeBuilder()
+    tb.add_baml("""
+        class ExtraPersonInfo {
+            height int @description("In centimeters and rounded to the nearest whole number")
+            weight int @description("In kilograms and rounded to the nearest whole number")
+        }
+
+        dynamic class Person {
+            extra ExtraPersonInfo?
+        }
+    """)
+    res = await b.ExtractPeople(
+        "My name is John Doe. I'm 30 years old. I'm 6 feet tall and weigh 180 pounds. My hair is yellow.",
+        {"tb": tb},
+    )
+    assert res == [Person(name="John Doe", hair_color=Color.YELLOW, extra={"height": 183, "weight": 82})]
+
 @pytest.mark.asyncio
 async def test_add_baml_error():
     tb = TypeBuilder()

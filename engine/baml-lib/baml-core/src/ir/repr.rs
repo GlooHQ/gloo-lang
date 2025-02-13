@@ -339,6 +339,10 @@ impl NodeAttributes {
         self.meta.get(key)
     }
 
+    pub fn meta(&self) -> &IndexMap<String, UnresolvedValue<()>> {
+        &self.meta
+    }
+
     pub fn streaming_behavior(&self) -> StreamingBehavior {
         fn is_some_true(maybe_value: Option<&UnresolvedValue<()>>) -> bool {
             match maybe_value {
