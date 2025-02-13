@@ -1666,6 +1666,17 @@ async def test_add_baml_both_classes_and_enums():
         )
     ]
 
+@pytest.mark.asyncio
+async def test_add_baml_error():
+    tb = TypeBuilder()
+    with pytest.raises(errors.BamlError):
+        tb.add_baml("""
+            dynamic Hobby {
+                VideoGames
+                BikeRiding
+            }
+        """)
+
 
 @pytest.mark.asyncio
 async def test_return_failing_assert():
