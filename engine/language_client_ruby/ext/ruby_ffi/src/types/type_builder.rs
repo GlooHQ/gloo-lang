@@ -113,6 +113,18 @@ impl TypeBuilder {
         .into())
     }
 
+    pub fn add_baml(
+        ruby: &magnus::Ruby,
+        rb_self: &TypeBuilder,
+        baml: String,
+        runtime: &crate::BamlRuntimeFfi,
+    ) -> Result<()> {
+        rb_self
+            .inner
+            .add_baml(&baml, &runtime.inner)
+            .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))
+    }
+
     pub fn define_in_ruby(module: &RModule) -> Result<()> {
         let cls = module.define_class("TypeBuilder", class::object())?;
 
@@ -132,6 +144,7 @@ impl TypeBuilder {
         cls.define_method("literal_string", method!(TypeBuilder::literal_string, 1))?;
         cls.define_method("literal_int", method!(TypeBuilder::literal_int, 1))?;
         cls.define_method("literal_bool", method!(TypeBuilder::literal_bool, 1))?;
+        cls.define_method("add_baml", method!(TypeBuilder::add_baml, 2))?;
 
         Ok(())
     }

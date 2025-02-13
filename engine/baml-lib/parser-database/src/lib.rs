@@ -71,6 +71,7 @@ use names::Names;
 ///   fields.
 /// - Global validations are then performed on the mostly validated schema.
 ///   Currently only index name collisions.
+#[derive(Clone)]
 pub struct ParserDatabase {
     /// The AST.
     pub ast: ast::SchemaAst,

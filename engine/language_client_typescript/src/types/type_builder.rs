@@ -115,6 +115,13 @@ impl TypeBuilder {
         )
         .into()
     }
+
+    #[napi]
+    pub fn add_baml(&self, baml: String, rt: &crate::BamlRuntime) -> napi::Result<()> {
+        self.inner
+            .add_baml(&baml, &rt.inner)
+            .map_err(crate::errors::from_anyhow_error)
+    }
 }
 
 #[napi]
