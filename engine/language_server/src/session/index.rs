@@ -16,20 +16,16 @@ use super::ClientSettings;
 #[derive(Default, Debug)]
 pub struct Index {
     /// Maps all document file URLs to the associated document controller
-    documents: FxHashMap<Url, DocumentController>,
-
-    /// Maps opaque cell URLs to a notebook URL (document)
-    notebook_cells: FxHashMap<Url, Url>,
+    pub documents: FxHashMap<Url, DocumentController>,
 
     /// Global settings provided by the client.
-    global_settings: ClientSettings,
+    pub global_settings: ClientSettings,
 }
 
 impl Index {
     pub fn new(global_settings: ClientSettings) -> Self {
         Self {
             documents: FxHashMap::default(),
-            notebook_cells: FxHashMap::default(),
             global_settings,
         }
     }
@@ -39,13 +35,6 @@ impl Index {
             .iter()
             .filter_map(|(url, doc)| doc.as_text().and(Some(url)))
     }
-
-    // pub fn notebook_document_urls(&self) -> impl Iterator<Item = &Url> + '_ {
-    //     self.documents
-    //         .iter()
-    //         .filter(|(_, doc)| doc.as_notebook().is_some())
-    //         .map(|(url, _)| url)
-    // }
 
     pub fn update_text_document(
         &mut self,
@@ -70,16 +59,7 @@ impl Index {
     }
 
     pub fn key_from_url(&self, url: Url) -> DocumentKey {
-        if self.notebook_cells.contains_key(&url) {
-            DocumentKey::NotebookCell(url)
-        } else if Path::new(url.path())
-            .extension()
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("ipynb"))
-        {
-            DocumentKey::Notebook(url)
-        } else {
-            DocumentKey::Text(url)
-        }
+        DocumentKey::Text(url)
     }
 
     pub fn num_documents(&self) -> usize {
@@ -98,17 +78,6 @@ impl Index {
     }
 
     pub fn close_document(&mut self, key: &DocumentKey) -> crate::Result<()> {
-        // Notebook cells URIs are removed from the index here, instead of during
-        // `update_notebook_document`. This is because a notebook cell, as a text document,
-        // is requested to be `closed` by VS Code after the notebook gets updated.
-        // This is not documented in the LSP specification explicitly, and this assumption
-        // may need revisiting in the future as we support more editors with notebook support.
-        if let DocumentKey::NotebookCell(uri) = key {
-            if self.notebook_cells.remove(uri).is_none() {
-                tracing::warn!("Tried to remove a notebook cell that does not exist: {uri}",);
-            }
-            return Ok(());
-        }
         let Some(url) = self.url_for_key(key).cloned() else {
             anyhow::bail!("Tried to close unavailable document `{key}`");
         };
@@ -119,7 +88,7 @@ impl Index {
         Ok(())
     }
 
-    fn document_controller_for_key(
+    pub fn document_controller_for_key(
         &mut self,
         key: &DocumentKey,
     ) -> crate::Result<&mut DocumentController> {
@@ -134,17 +103,16 @@ impl Index {
 
     fn url_for_key<'a>(&'a self, key: &'a DocumentKey) -> Option<&'a Url> {
         match key {
-            DocumentKey::Notebook(path) | DocumentKey::Text(path) => Some(path),
-            DocumentKey::NotebookCell(uri) => self.notebook_cells.get(uri),
+            DocumentKey::Text(path) => Some(path),
         }
     }
 }
 
 /// A mutable handler to an underlying document.
+/// TODO: Don't use an enum here.
 #[derive(Debug)]
-enum DocumentController {
+pub enum DocumentController {
     Text(Arc<TextDocument>),
-    // Notebook(Arc<NotebookDocument>),
 }
 
 impl DocumentController {
@@ -176,14 +144,14 @@ impl DocumentController {
     // }
 
     #[allow(dead_code)]
-    pub(crate) fn as_text(&self) -> Option<&TextDocument> {
+    pub fn as_text(&self) -> Option<&TextDocument> {
         match self {
             Self::Text(document) => Some(document),
             // Self::Notebook(_) => None,
         }
     }
 
-    pub(crate) fn as_text_mut(&mut self) -> Option<&mut TextDocument> {
+    pub fn as_text_mut(&mut self) -> Option<&mut TextDocument> {
         Some(match self {
             Self::Text(document) => Arc::make_mut(document),
             // Self::Notebook(_) => return None,

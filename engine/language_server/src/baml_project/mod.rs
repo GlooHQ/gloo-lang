@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use internal_baml_diagnostics::Diagnostics;
+use internal_baml_diagnostics::{DatamodelError, Diagnostics};
 use internal_baml_codegen::GenerateOutput;
 use baml_types::BamlValue;
 use baml_types::{TypeValue, BamlMediaType};

@@ -145,10 +145,12 @@ pub(crate) struct ClientSender {
 // note: additional wrapper functions for senders may be implemented as needed.
 impl ClientSender {
     pub(crate) fn send(&self, msg: lsp::Message) -> crate::Result<()> {
+        eprintln!("ABOUT TO SEND {msg:?}");
         let Some(sender) = self.weak_sender.upgrade() else {
             anyhow::bail!("The connection with the client has been closed");
         };
-
-        Ok(sender.send(msg)?)
+        let res = sender.send(msg)?;
+        eprintln!("FINISHED SENDING IT");
+        Ok(res)
     }
 }

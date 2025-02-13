@@ -25,7 +25,7 @@ pub(crate) use self::settings::AllSettings;
 pub use self::settings::ClientSettings;
 
 mod capabilities;
-pub(crate) mod index;
+pub mod index;
 mod settings;
 
 // TODO(dhruvmanila): In general, the server shouldn't use any salsa queries directly and instead
@@ -151,7 +151,15 @@ impl Session {
     /// Registers a text document at the provided `url`.
     /// If a document is already open here, it will be overwritten.
     pub(crate) fn open_text_document(&mut self, url: Url, document: TextDocument) {
-        self.index_mut().open_text_document(url, document);
+        dbg!(&url);
+        self.index_mut().open_text_document(url.clone(), document.clone());
+        self.projects_by_workspace_folder.iter_mut().for_each(|(folder, project)| {
+            dbg!(&folder);
+            if url.path().starts_with(folder.as_os_str().to_str().expect("TODO: handle error")) {
+                eprintln!("MATCH");
+            }
+            project.baml_project.files.insert(url.as_str().to_string(), document.contents().to_string());
+        });
     }
 
     /// Updates a text document at the associated `key`.

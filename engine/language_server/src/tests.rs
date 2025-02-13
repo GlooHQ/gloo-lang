@@ -4,6 +4,7 @@ use tracing_subscriber::field::debug;
 use std::num::NonZeroUsize;
 use indexmap::IndexMap;
 use serde_json::json;
+use std::sync::Arc;
 use std::thread;
 
 use crate::server::Server;
@@ -14,6 +15,7 @@ use lsp_server::Message;
 pub struct TestServer {
     // pub server: Server,
     pub thread_join_handle: thread::JoinHandle<()>,
+    // pub server: Arc<Server>,
     pub sender: Sender<Message>,
     pub receiver: Receiver<Message>,
 }
@@ -52,10 +54,11 @@ impl TestCase {
             }))?;
 
             // Consume the post-opening notification.
-            eprintln!("Awaiting didOpen notif");
-            let did_open_notification = test_server.receiver.recv();
-            eprintln!("Got didOpen notif");
-            dbg!(&did_open_notification);
+            // eprintln!("Awaiting didOpen notif");
+            // let did_open_notification = test_server.receiver.recv();
+            // eprintln!("Got didOpen notif");
+            // dbg!(&did_open_notification);
+            // eprintln!("Await next notification");
             let next_notification = test_server.receiver.recv();
             eprintln!("Got next notif");
             dbg!(&next_notification);
@@ -161,7 +164,7 @@ class Foo {
 }
 
 function Succ(inp: int) -> Foo {
-  client GPT4
+  client GPT3
   prompt #"
     The successor of {{ inp }}.
     {{ ctx.output_format }}   

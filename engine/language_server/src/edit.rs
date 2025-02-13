@@ -28,8 +28,6 @@ pub enum PositionEncoding {
 /// This document ID can point to either be a standalone Python file, a full notebook, or a cell within a notebook.
 #[derive(Clone, Debug)]
 pub enum DocumentKey {
-    Notebook(Url),
-    NotebookCell(Url),
     Text(Url),
 }
 
@@ -37,9 +35,7 @@ impl DocumentKey {
     /// Returns the URL associated with the key.
     pub(crate) fn url(&self) -> &Url {
         match self {
-            DocumentKey::NotebookCell(url)
-            | DocumentKey::Notebook(url)
-            | DocumentKey::Text(url) => url,
+            DocumentKey::Text(url) => url,
         }
     }
 }
@@ -47,7 +43,7 @@ impl DocumentKey {
 impl std::fmt::Display for DocumentKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::NotebookCell(url) | Self::Notebook(url) | Self::Text(url) => url.fmt(f),
+            Self::Text(url) => url.fmt(f),
         }
     }
 }
