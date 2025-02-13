@@ -1,3 +1,5 @@
+// NOTE: Don't take a dependency on ./native here, it will break the browser code
+
 export class BamlClientFinishReasonError extends Error {
   prompt: string
   raw_output: string
@@ -91,8 +93,57 @@ export class BamlValidationError extends Error {
   }
 }
 
+export class BamlClientHttpError extends Error {
+  client_name: string
+  status_code: number
+
+  constructor(client_name: string, message: string, status_code: number) {
+    super(message)
+    this.name = 'BamlClientHttpError'
+    this.client_name = client_name
+    this.status_code = status_code
+
+    Object.setPrototypeOf(this, BamlClientHttpError.prototype)
+  }
+
+  toJSON(): string {
+    return JSON.stringify({
+      name: this.name,
+      message: this.message,
+      status_code: this.status_code,
+      client_name: this.client_name,
+    })
+  }
+
+  static from(error: Error): BamlClientHttpError | undefined {
+    if (error.message.includes('BamlClientHttpError')) {
+      try {
+        const errorData = JSON.parse(error.message)
+        if (errorData.type === 'BamlClientHttpError') {
+          return new BamlClientHttpError(
+            errorData.client_name || '',
+            errorData.message || error.message,
+            errorData.status_code || -100,
+          )
+        }
+      } catch (parseError) {
+        // If JSON parsing fails, try to extract information from the error message
+        console.warn('Failed to parse BamlClientHttpError:', parseError)
+      }
+    }
+    return undefined
+  }
+}
+
 // Helper function to safely create a BamlValidationError
-export function createBamlValidationError(error: Error): BamlValidationError | BamlClientFinishReasonError | Error {
+function createBamlErrorUnsafe(
+  error: Error,
+): BamlValidationError | BamlClientFinishReasonError | BamlClientHttpError | Error {
+  const bamlClientHttpError = BamlClientHttpError.from(error)
+  if (bamlClientHttpError) {
+    return bamlClientHttpError
+  }
+
   const bamlValidationError = BamlValidationError.from(error)
   if (bamlValidationError) {
     return bamlValidationError
@@ -106,3 +157,13 @@ export function createBamlValidationError(error: Error): BamlValidationError | B
   // otherwise return the original error
   return error
 }
+
+export function toBamlError(error: any) {
+  try {
+    return createBamlErrorUnsafe(error)
+  } catch (error) {
+    return error
+  }
+}
+
+// No need for a separate throwBamlValidationError function in TypeScript

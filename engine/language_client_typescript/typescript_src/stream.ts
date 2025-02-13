@@ -1,4 +1,4 @@
-import { BamlClientFinishReasonError, BamlValidationError, createBamlValidationError } from './errors'
+import { toBamlError } from '.'
 import { FunctionResult, FunctionResultStream, RuntimeContextManager } from './native'
 
 export class BamlStream<PartialOutputType, FinalOutputType> {
@@ -8,8 +8,8 @@ export class BamlStream<PartialOutputType, FinalOutputType> {
 
   constructor(
     private ffiStream: FunctionResultStream,
-    private partialCoerce: (result: FunctionResult) => PartialOutputType,
-    private finalCoerce: (result: FunctionResult) => FinalOutputType,
+    private partialCoerce: (result: any) => PartialOutputType,
+    private finalCoerce: (result: any) => FinalOutputType,
     private ctxManager: RuntimeContextManager,
   ) {}
 
@@ -91,23 +91,8 @@ export class BamlStream<PartialOutputType, FinalOutputType> {
             controller.close()
             return
           } catch (err: unknown) {
-            const bamlError = createBamlValidationError(err instanceof Error ? err : new Error(String(err)))
-            const errorPayload =
-              bamlError instanceof BamlValidationError || bamlError instanceof BamlClientFinishReasonError
-                ? {
-                    type: bamlError.name,
-                    message: bamlError.message,
-                    prompt: bamlError.prompt,
-                    raw_output: bamlError.raw_output,
-                  }
-                : {
-                    type: 'UnknownError',
-                    message: bamlError.message,
-                    prompt: '',
-                    raw_output: '',
-                  }
-
-            controller.enqueue(encoder.encode(JSON.stringify({ error: errorPayload })))
+            const bamlError = toBamlError(err instanceof Error ? err : new Error(String(err)))
+            controller.enqueue(encoder.encode(JSON.stringify({ error: bamlError })))
             controller.close()
             return
           }
