@@ -1677,6 +1677,13 @@ async def test_add_baml_error():
             }
         """)
 
+@pytest.mark.asyncio
+async def test_add_baml_parser_error():
+    tb = TypeBuilder()
+    with pytest.raises(errors.BamlError):
+        tb.add_baml("""
+            syntaxerror
+        """)
 
 @pytest.mark.asyncio
 async def test_return_failing_assert():

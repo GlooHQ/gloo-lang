@@ -132,12 +132,11 @@ pub fn parse_type_builder_contents(
 pub fn parse_type_builder_contents_from_str(
     input: &str,
     diagnostics: &mut Diagnostics,
-) -> Result<Vec<TypeBuilderEntry>, DatamodelError> {
+) -> anyhow::Result<Vec<TypeBuilderEntry>> {
     use internal_baml_diagnostics::{Diagnostics, SourceFile};
     use pest::Parser;
 
-    let pair = crate::parser::BAMLParser::parse(Rule::type_builder_contents, input)
-        .unwrap()
+    let pair = crate::parser::BAMLParser::parse(Rule::type_builder_contents, input)?
         .next()
         .unwrap();
 

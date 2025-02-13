@@ -2,10 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use baml_types::{BamlValue, FieldType};
 use indexmap::IndexMap;
-use internal_baml_core::{
-    internal_baml_parser_database::ParserDatabase, internal_baml_schema_ast,
-    ir::repr::IntermediateRepr,
-};
+use internal_baml_core::internal_baml_parser_database::ParserDatabase;
 
 use crate::runtime_context::{PropertyAttributes, RuntimeClassOverride, RuntimeEnumOverride};
 
@@ -254,7 +251,6 @@ impl TypeBuilder {
     pub fn add_baml(&self, baml: &str, rt: &crate::BamlRuntime) -> anyhow::Result<()> {
         use internal_baml_core::{
             internal_baml_diagnostics::{Diagnostics, SourceFile},
-            internal_baml_parser_database::ParserDatabase,
             internal_baml_schema_ast::parse_type_builder_contents_from_str,
             ir::repr::IntermediateRepr,
             run_validation_pipeline_on_db, validate_type_builder_entries,
@@ -266,8 +262,7 @@ impl TypeBuilder {
         let mut diagnostics = Diagnostics::new(path);
         diagnostics.set_source(&source);
 
-        let type_builder_entries = parse_type_builder_contents_from_str(baml, &mut diagnostics)
-            .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+        let type_builder_entries = parse_type_builder_contents_from_str(baml, &mut diagnostics)?;
 
         if diagnostics.has_errors() {
             anyhow::bail!("{}", diagnostics.to_pretty_string());
