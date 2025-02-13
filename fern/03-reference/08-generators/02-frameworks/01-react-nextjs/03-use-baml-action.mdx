@@ -28,7 +28,7 @@ export async function writeMeAStoryAction(prompt: string) {
 ```typescript title="app/components/story.tsx"
 'use client'
 
-import { useBamlAction } from "@/baml_client/react/client";
+import { useBamlAction } from "@/baml_client/react/hooks";
 import { writeMeAStoryAction } from "../actions/story";
 
 export function StoryComponent() {
@@ -171,7 +171,7 @@ export async function protectedStoryAction(prompt: string) {
 ```typescript title="app/components/protected-story.tsx"
 'use client'
 
-import { useBamlAction } from "@/baml_client/react/client";
+import { useBamlAction } from "@/baml_client/react/hooks";
 import { protectedStoryAction } from "../actions/protected-story";
 
 export function ProtectedStory() {
@@ -227,7 +227,7 @@ export function ProtectedStory() {
 ```typescript title="app/components/error-boundaries.tsx"
 'use client'
 
-import { useBamlAction } from "@/baml_client/react/client";
+import { useBamlAction } from "@/baml_client/react/hooks";
 import { BamlValidationError, BamlClientFinishReasonError } from "@boundaryml/baml/errors";
 
 // For complete error handling details, see Error Types documentation

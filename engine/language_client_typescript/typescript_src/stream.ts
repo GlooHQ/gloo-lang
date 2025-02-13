@@ -90,7 +90,7 @@ export class BamlStream<PartialOutputType, FinalOutputType> {
             controller.enqueue(encoder.encode(JSON.stringify({ final })))
             controller.close()
             return
-          } catch (err: any) {
+          } catch (err: unknown) {
             const bamlError = createBamlValidationError(err instanceof Error ? err : new Error(String(err)))
             const errorPayload =
               bamlError instanceof BamlValidationError || bamlError instanceof BamlClientFinishReasonError

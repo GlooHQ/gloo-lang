@@ -6,7 +6,7 @@ This guide walks you through setting up BAML with React/Next.js, leveraging Serv
 
 ## Example Usage
 
-BAML automatically generates a server action and React hook for your BAML functions, with built-in support for both streaming and non-streaming modes. For details on the generated hooks, see [Generated Hooks](/ref/generators/framework-generators/react-next-js/generated-hooks).
+BAML automatically generates a server action and React hook for your BAML functions, with built-in support for both streaming and non-streaming modes. For details on the generated hooks, see [Generated Hooks](/ref/baml_client/react-next-js/use-function-name-hook).
 
 <CodeBlocks>
 ```baml title="baml_src/prompt.baml"
@@ -27,7 +27,7 @@ baml-cli generate
 
   // ✅ Automatically generates a server action and React hook
 
-import { useWriteMeAStoryAction } from "@/baml_client/react/client";
+import { useWriteMeAStoryAction } from "@/baml_client/react/hooks";
 
 export function StoryForm() {
   const writeMeAStory = useWriteMeAStory({ stream: true });
@@ -138,7 +138,7 @@ module.exports = withBaml()(nextConfig)
 ### Initialize BAML
 
 Create a new BAML project in your Next.js application:
-<Markdown src="../../snippets/baml/cli/install/nodejs.mdx" />
+<Markdown src="../../../snippets/baml/cli/install/nodejs.mdx" />
 
 This will create a `baml_src` directory with starter code.
 
@@ -165,21 +165,21 @@ OPENAI_API_KEY=sk-...
 
 ### Setup BAML Client Provider
 
-<Markdown src="../../snippets/baml/clients/openai.mdx" />
+<Markdown src="../../../snippets/baml/clients/openai.mdx" />
 
 ### Setup BAML Next.js Generator
 
 ```baml title="baml_src/generators.baml"
 generator typescript {
   output_type "typescript/react"
-  output_dir ".."
+  output_dir "./"
   version "0.75.0"
 }
 ```
 
 ### Generate BAML Client
 
-<Markdown src="../../snippets/baml/cli/generate.mdx" />
+<Markdown src="../../../snippets/baml/cli/generate.mdx" />
 
 ### Generated React Hooks
 
@@ -198,7 +198,7 @@ function WriteMeAStory(input: string) {
 ```tsx title="Non-Streaming Example"
 'use client'
 
-import { useWriteMeAStory } from "@/baml_client/react/client";
+import { useWriteMeAStory } from "@/baml_client/react/hooks";
 import type { Story } from "@/baml_client/types";
 
 export function StoryForm() {
@@ -232,13 +232,13 @@ export function StoryForm() {
 ```tsx title="Streaming Example"
 'use client'
 
-import { useWriteMeAStory } from "@/baml_client/react/client";
+import { useWriteMeAStory } from "@/baml_client/react/hooks";
 import type { Story } from "@/baml_client/types";
 
 export function StreamingStoryForm() {
   const {
     data: finalStory,           // Final complete response
-    partialData: streamingStory, // Real-time partial updates
+    streamingData: streamingStory, // Real-time partial updates
     isLoading,
     isError,
     error,
@@ -303,18 +303,13 @@ Update your `package.json` scripts:
 For complete API documentation of the React/Next.js integration, see:
 
 ### Core Concepts
-- [Generated Hooks](/ref/generators/framework-generators/react-next-js/generated-hooks) - Auto-generated hooks for each BAML function
-- [useBamlAction](/ref/generators/framework-generators/react-next-js/use-baml-action) - Generic hook for server actions
-- [Server Action](/ref/generators/framework-generators/react-next-js/server-action) - Server-side integration
+- [Generated Hooks](/ref/baml_client/react-next-js/use-function-name-hook) - Auto-generated hooks for each BAML function
 
 ### Hook Configuration
-- [Hook Props](/ref/generators/framework-generators/react-next-js/hook-props) - Configuration options for hooks
-- [Hook Result](/ref/generators/framework-generators/react-next-js/hook-result) - Return value types and states
-- [Return Types](/ref/generators/framework-generators/react-next-js/return-types) - Type utilities for responses
-- [Stream Response](/ref/generators/framework-generators/react-next-js/stream-response) - Streaming support and types
-- [Error Types](/ref/generators/framework-generators/react-next-js/error-types) - Error handling and types
+- [HookInput](/ref/baml_client/react-next-js/hook-input) - Configuration options for hooks
+- [HookOutput](/ref/baml_client/react-next-js/hook-output) - Return value types and states
+- [Error Types](/ref/baml_client/errors/overview) - Error handling and types
 
 ## Next Steps
 
 - Check out the [BAML Examples](https://github.com/BoundaryML/baml-examples/tree/main/nextjs-starter) for more use cases
-- Learn about [Environment Variables](/guide/development/environment-variables) for configuration

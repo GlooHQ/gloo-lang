@@ -21,7 +21,7 @@ function WriteMeAStory(input: string) {
 
 ```typescript title="Generated Hook Usage"
 // Generated hook is automatically available
-import { useWriteMeAStory } from "@/baml_client/react/client";
+import { useWriteMeAStory } from "@/baml_client/react/hooks";
 
 // Non-streaming usage
 const { data, isLoading, error, mutate } = useWriteMeAStory();
@@ -112,7 +112,7 @@ const { data, partialData, isLoading, error, mutate } = useWriteMeAStory({
 ```tsx title="app/components/story-form.tsx"
 'use client'
 
-import { useWriteMeAStory } from "@/baml_client/react/client";
+import { useWriteMeAStory } from "@/baml_client/react/hooks";
 
 export function StoryForm() {
   // For available hook props, see Hook Props documentation
@@ -151,7 +151,7 @@ export function StoryForm() {
 ```tsx title="app/components/streaming-story.tsx"
 'use client'
 
-import { useWriteMeAStory } from "@/baml_client/react/client";
+import { useWriteMeAStory } from "@/baml_client/react/hooks";
 
 export function StreamingStoryForm() {
   // For complete hook result details, see Hook Result documentation
@@ -206,7 +206,7 @@ export function StreamingStoryForm() {
 ```tsx title="app/components/error-handling.tsx"
 'use client'
 
-import { useWriteMeAStory } from "@/baml_client/react/client";
+import { useWriteMeAStory } from "@/baml_client/react/hooks";
 import { BamlValidationError, BamlClientFinishReasonError } from "@boundaryml/baml/errors";
 
 // For complete error handling details, see Error Types documentation

@@ -71,15 +71,11 @@ struct ReactServerStreamingTypes {
 }
 
 #[derive(askama::Template)]
-#[template(path = "react/client.tsx.j2", escape = "none")]
+#[template(path = "react/hooks.tsx.j2", escape = "none")]
 struct ReactClientHooks {
     funcs: Vec<TypescriptFunction>,
     types: Vec<String>,
 }
-
-#[derive(askama::Template)]
-#[template(path = "react/types.ts.j2", escape = "none")]
-struct ReactTypes {}
 
 #[derive(askama::Template)]
 #[template(path = "async_client.ts.j2", escape = "none")]
@@ -211,7 +207,6 @@ pub(crate) fn generate(
     // Add framework-specific files
     match framework {
         TypescriptFramework::React => {
-            collector.add_template::<ReactTypes>("react/types.ts", (ir, generator))?;
             collector.add_template::<ReactServerActions>("react/server.ts", (ir, generator))?;
             collector.add_template::<ReactServerStreaming>(
                 "react/server_streaming.ts",
@@ -221,7 +216,7 @@ pub(crate) fn generate(
                 "react/server_streaming_types.ts",
                 (ir, generator),
             )?;
-            collector.add_template::<ReactClientHooks>("react/client.tsx", (ir, generator))?;
+            collector.add_template::<ReactClientHooks>("react/hooks.tsx", (ir, generator))?;
         }
         TypescriptFramework::None => {}
     }
@@ -379,14 +374,6 @@ impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for ReactClientHo
     fn try_from(params: (&'_ IntermediateRepr, &'_ crate::GeneratorArgs)) -> Result<Self> {
         let typscript_client = TypescriptClient::try_from(params)?;
         Ok(typscript_client.into())
-    }
-}
-
-impl TryFrom<(&'_ IntermediateRepr, &'_ crate::GeneratorArgs)> for ReactTypes {
-    type Error = anyhow::Error;
-
-    fn try_from(_: (&IntermediateRepr, &crate::GeneratorArgs)) -> Result<Self> {
-        Ok(ReactTypes {})
     }
 }
 

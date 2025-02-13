@@ -1,6 +1,5 @@
 // NOTE: Uncomment this to verify that the types are working
 // @ts-nocheck
-
 'use client'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -10,19 +9,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import * as React from 'react'
-import { useBamlAction, useTestAws } from '../../baml_client/react/client'
-import { TestAws } from '../../baml_client/react/server_streaming'
-import type { HookResult, NonStreamingHookResult, StreamingHookResult } from '../../baml_client/react/types'
+import { useTestAws } from '../../baml_client/react/hooks'
+import type { HookOutput } from '../../baml_client/react/hooks'
 
 type ResponseCardProps = {
-  streamingHookResult: StreamingHookResult<'TestAws'>
-  nonStreamingHookResult: NonStreamingHookResult<'TestAws'>
-  status: HookResult['status']
+  streamingHookResult: HookOutput<'TestAws'>
+  nonStreamingHookResult: HookOutput<'TestAws', { stream: false }>
+  status: HookOutput<'TestAws', { stream: true }>['status']
 }
 
 function ResponseCard({ streamingHookResult, nonStreamingHookResult, status }: ResponseCardProps) {
-  const { isPending, error, isError, data, partialData } = streamingHookResult
-  const response = isPending ? partialData : data
+  const { isPending, error, isError, data, streamingData } = streamingHookResult
+  const response = isPending ? streamingData : data
 
   return (
     <>
@@ -63,18 +61,19 @@ export default function TestClient() {
   })
 
   // // Streaming should not have errors
-  streamingDirectAction satisfies StreamingHookResult<'TestAws'>
+  streamingDirectAction satisfies HookOutput<'TestAws', { stream: true }>
   streamingDirectAction.data satisfies string | undefined
-  streamingDirectAction.partialData satisfies string | null | undefined
+  streamingDirectAction.streamingData satisfies string | undefined
   streamingDirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>
 
   // // Non-Streaming should have errors
-  streamingDirectAction satisfies NonStreamingHookResult<'TestAws'>
+  streamingDirectAction satisfies HookOutput<'TestAws'>
   streamingDirectAction.data satisfies never
-  streamingDirectAction.partialData satisfies never
+  streamingDirectAction.streamingData satisfies never
   streamingDirectAction.mutate satisfies (input: string) => Promise<string>
 
-  const nonStreamingDirectAction = useTestAws({
+  const explicitNonStreamingDirectAction = useTestAws({
+    stream: false,
     onFinal: (response) => {
       console.log('Got final response', response)
     },
@@ -84,43 +83,19 @@ export default function TestClient() {
   })
 
   // Streaming should have errors
-  nonStreamingDirectAction satisfies NonStreamingHookResult<'TestAws'>
-  nonStreamingDirectAction.data satisfies never
-  nonStreamingDirectAction.partialData satisfies never
-  nonStreamingDirectAction.mutate satisfies (input: string) => Promise<string>
+  explicitNonStreamingDirectAction satisfies HookOutput<'TestAws', { stream: true }>
+  explicitNonStreamingDirectAction.data satisfies never
+  explicitNonStreamingDirectAction.streamingData satisfies never
+  explicitNonStreamingDirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>
 
   // Non-Streaming should not have errors
-  nonStreamingDirectAction satisfies NonStreamingHookResult<'TestAws'>
-  nonStreamingDirectAction.data satisfies string | undefined
-  nonStreamingDirectAction.partialData satisfies never | undefined
-  nonStreamingDirectAction.mutate satisfies (input: string) => Promise<string>
+  explicitNonStreamingDirectAction satisfies HookOutput<'TestAws', { stream: false }>
+  explicitNonStreamingDirectAction.data satisfies string | undefined
+  explicitNonStreamingDirectAction.streamingData satisfies undefined
+  explicitNonStreamingDirectAction.mutate satisfies (input: string) => Promise<string>
 
-  const streamingIndirectAction = useBamlAction(TestAws, {
-    stream: true,
-    onPartial: (response) => {
-      console.log('Got partial response', response)
-    },
-    onFinal: (response) => {
-      console.log('Got final response', response)
-    },
-    onError: (error) => {
-      console.error('Got error', error)
-    },
-  })
-
-  // Streaming should not have errors
-  streamingIndirectAction satisfies StreamingHookResult<'TestAws'>
-  streamingIndirectAction.data satisfies string | undefined
-  streamingIndirectAction.partialData satisfies string | null | undefined
-  streamingIndirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>
-
-  // Non-Streaming should have errors
-  streamingIndirectAction satisfies NonStreamingHookResult<'TestAws'>
-  streamingIndirectAction.data satisfies never
-  streamingIndirectAction.partialData satisfies never | undefined
-  streamingIndirectAction.mutate satisfies (input: string) => Promise<string>
-
-  const nonStreamingIndirectAction = useBamlAction(TestAws, {
+  const nonExplicitNonStreamingDirectAction = useTestAws({
+    // stream: undefined,
     onFinal: (response) => {
       console.log('Got final response', response)
     },
@@ -130,20 +105,66 @@ export default function TestClient() {
   })
 
   // Streaming should have errors
-  nonStreamingIndirectAction satisfies StreamingHookResult<'TestAws'>
-  nonStreamingIndirectAction.data satisfies never
-  nonStreamingIndirectAction.partialData satisfies never
-  nonStreamingIndirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>
+  nonExplicitNonStreamingDirectAction satisfies HookOutput<'TestAws', { stream: true }>
+  nonExplicitNonStreamingDirectAction.data satisfies string | undefined
+  nonExplicitNonStreamingDirectAction.streamingData satisfies string | undefined
+  nonExplicitNonStreamingDirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>
 
   // Non-Streaming should not have errors
-  nonStreamingIndirectAction satisfies NonStreamingHookResult<'TestAws'>
-  nonStreamingIndirectAction.data satisfies string | undefined
-  nonStreamingIndirectAction.partialData satisfies never | undefined
-  nonStreamingIndirectAction.mutate satisfies (input: string) => Promise<string>
+  nonExplicitNonStreamingDirectAction satisfies HookOutput<'TestAws', { stream: false }>
+  nonExplicitNonStreamingDirectAction.data satisfies never
+  nonExplicitNonStreamingDirectAction.streamingData satisfies never
+  nonExplicitNonStreamingDirectAction.mutate satisfies (input: string) => Promise<string>
 
-  const { isPending, error, isError, isSuccess, mutate, status, data, partialData } = streamingDirectAction
+  // const streamingIndirectAction = useBamlAction(TestAws, {
+  //   stream: true,
+  //   onPartial: (response) => {
+  //     console.log('Got partial response', response)
+  //   },
+  //   onFinal: (response) => {
+  //     console.log('Got final response', response)
+  //   },
+  //   onError: (error) => {
+  //     console.error('Got error', error)
+  //   },
+  // })
 
-  const response = isPending ? partialData : data
+  // // Streaming should not have errors
+  // streamingIndirectAction satisfies StreamingHookResult<'TestAws'>
+  // streamingIndirectAction.data satisfies string | undefined
+  // streamingIndirectAction.streamingData satisfies string | null | undefined
+  // streamingIndirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>
+
+  // // Non-Streaming should have errors
+  // streamingIndirectAction satisfies NonStreamingHookResult<'TestAws'>
+  // streamingIndirectAction.data satisfies never
+  // streamingIndirectAction.streamingData satisfies never | undefined
+  // streamingIndirectAction.mutate satisfies (input: string) => Promise<string>
+
+  // const nonStreamingIndirectAction = useBamlAction(TestAws, {
+  //   onFinal: (response) => {
+  //     console.log('Got final response', response)
+  //   },
+  //   onError: (error) => {
+  //     console.error('Got error', error)
+  //   },
+  // })
+
+  // // Streaming should have errors
+  // nonStreamingIndirectAction satisfies StreamingHookResult<'TestAws'>
+  // nonStreamingIndirectAction.data satisfies never
+  // nonStreamingIndirectAction.streamingData satisfies never
+  // nonStreamingIndirectAction.mutate satisfies (input: string) => Promise<ReadableStream<Uint8Array>>
+
+  // // Non-Streaming should not have errors
+  // nonStreamingIndirectAction satisfies NonStreamingHookResult<'TestAws'>
+  // nonStreamingIndirectAction.data satisfies string | undefined
+  // nonStreamingIndirectAction.streamingData satisfies never | undefined
+  // nonStreamingIndirectAction.mutate satisfies (input: string) => Promise<string>
+
+  const { isPending, error, isError, isSuccess, mutate, status, data, streamingData } = streamingDirectAction
+
+  const response = isPending ? streamingData : data
   const [prompt, setPrompt] = React.useState('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -183,7 +204,7 @@ export default function TestClient() {
 
         <ResponseCard
           streamingHookResult={streamingDirectAction}
-          nonStreamingHookResult={nonStreamingDirectAction}
+          nonStreamingHookResult={explicitNonStreamingDirectAction}
           status={status}
         />
       </CardContent>

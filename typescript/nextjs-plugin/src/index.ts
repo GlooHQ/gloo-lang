@@ -77,16 +77,13 @@ export function withBaml(bamlConfig: BamlNextConfig = {}) {
             experimental: {
               ...(nextConfig.experimental || {}),
               ...(isTurbo ? { turbo: turboConfig } : {}),
-              // In Turbo mode, we don't add it to serverExternalPackages to avoid the conflict
-              ...(isTurbo
-                ? {}
-                : {
-                    serverExternalPackages: [
-                      ...((nextConfig as any)?.serverExternalPackages || []),
-                      '@boundaryml/baml',
-                    ],
-                  }),
             },
+            // In Turbo mode, we don't add it to serverExternalPackages to avoid the conflict
+            ...(isTurbo
+              ? {}
+              : {
+                  serverExternalPackages: [...(nextConfig?.serverExternalPackages || []), '@boundaryml/baml'],
+                }),
           }
         : {
             experimental: {
@@ -101,9 +98,6 @@ export function withBaml(bamlConfig: BamlNextConfig = {}) {
       webpack: (config: Configuration, context: any) => {
         if (typeof nextConfig.webpack === 'function') {
           config = nextConfig.webpack(config, context)
-        }
-        if (typeof bamlConfig.webpack === 'function') {
-          config = bamlConfig.webpack(config, context)
         }
 
         if (context.isServer) {

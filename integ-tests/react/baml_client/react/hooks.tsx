@@ -18,33 +18,100 @@ $ pnpm add @boundaryml/baml
 'use client'
 
 import { useCallback, useMemo, useReducer, useTransition } from 'react';
-import type {
-  StreamingProps,
-  NonStreamingProps,
-  StreamingHookResult,
-  NonStreamingHookResult,
-  HookProps,
-  PartialReturnType,
-  FinalReturnType,
-  ServerAction,
-  BamlStreamResponse,
-  ActionKey,
-} from './types';
 import { BamlValidationError, BamlClientFinishReasonError } from "@boundaryml/baml/errors";
 import * as Actions from './server';
 import * as StreamingActions from './server_streaming'
+import { StreamingServerTypes } from './server_streaming_types'
+
+/**
+ * Type representing a BAML stream response.
+ *
+ * @template PartialType The type of the partial response.
+ * @template FinalType The type of the final response.
+ */
+type BamlStreamResponse<PartialType, FinalType> = {
+  partial?: PartialType
+  final?: FinalType
+  error?: Error | BamlValidationError | BamlClientFinishReasonError
+}
+
+/**
+ * A server action that returns either a ReadableStream of Uint8Array or a final output.
+ */
+export type ServerAction<Input = any, Output = any> = (
+  ...args: Input extends any[] ? Input : [Input]
+) => Promise<Output> | ReadableStream<Uint8Array>
+
+
+/**
+ * Type representing all function names except 'stream' and 'stream_types'
+ */
+export type FunctionNames = keyof typeof Actions
+
+/**
+ * Helper type to derive the partial return type for an action.
+ */
+type PartialReturnType<FunctionName extends FunctionNames> = StreamingServerTypes[FunctionName]
+
+
+/**
+ * Helper type to derive the final return type for an action.
+ */
+type FinalReturnType<FunctionName extends FunctionNames> = (typeof Actions)[FunctionName] extends (...args: any) => any
+  ? Awaited<ReturnType<(typeof Actions)[FunctionName]>>
+  : never
+
+
+/**
+ * Configuration options for BAML React hooks.
+ */
+export type HookInput<FunctionName extends FunctionNames, Options extends { stream?: boolean } = { stream?: true }> = {
+  stream?: Options['stream']
+  onPartial?: Options['stream'] extends false ? never : (response?: PartialReturnType<FunctionName>) => void
+  onFinal?: (response?: FinalReturnType<FunctionName>) => void
+  onError?: (error: Error | BamlValidationError | BamlClientFinishReasonError) => void
+}
+
+/**
+ * Return type for BAML React hooks.
+ */
+export type HookOutput<FunctionName extends FunctionNames, Options extends { stream?: boolean } = { stream?: true }> = {
+  data?: FinalReturnType<FunctionName>
+  streamingData?: Options['stream'] extends false ? never : PartialReturnType<FunctionName>
+  error?: Error | BamlValidationError | BamlClientFinishReasonError
+  isError: boolean
+  isPending: boolean
+  isSuccess: boolean
+  status: 'idle' | 'pending' | 'success' | 'error'
+  mutate: (
+    ...args: Parameters<(typeof Actions)[FunctionName]>
+  ) => Options['stream'] extends false ? Promise<FinalReturnType<FunctionName>> : Promise<ReadableStream<Uint8Array>>
+}
 
 /**
  * Type guard to check if the hook props are configured for streaming mode.
  *
- * @template TActionKey - The key of the Actions namespace.
+ * @template FunctionName - The name of the BAML function.
  * @param props - The hook props.
  * @returns {boolean} True if the props indicate streaming mode.
  */
-function isStreamingProps<TActionKey extends ActionKey>(
-  props: HookProps<TActionKey>
-): props is StreamingProps<TActionKey> {
-  return props.stream === true;
+function isStreamingProps<FunctionName extends FunctionNames>(
+  props: HookInput<FunctionName, { stream?: boolean }>,
+): props is HookInput<FunctionName, { stream?: true }> {
+  return props.stream !== false
+}
+
+/**
+ * Type guard to check if the hook props are configured for non‑streaming mode.
+ *
+ * @template FunctionName - The name of the BAML function.
+ * @param props - The hook props.
+ * @returns {boolean} True if the props indicate non‑streaming mode.
+ */
+function isNotStreamingProps<FunctionName extends FunctionNames>(
+  props: HookInput<FunctionName, { stream?: boolean }>,
+): props is HookInput<FunctionName, { stream: false }> {
+  return props.stream === false
 }
 
 function isBamlError(error?: Error | BamlValidationError | BamlClientFinishReasonError): error is (BamlValidationError | BamlClientFinishReasonError) & { type: string } {
@@ -56,7 +123,7 @@ interface HookState<TPartial, TFinal> {
   isSuccess: boolean;
   error?: Error | BamlValidationError | BamlClientFinishReasonError;
   data?: TFinal;
-  partialData?: TPartial;
+  streamingData?: TPartial;
 }
 
 type HookStateAction<TPartial, TFinal> =
@@ -86,7 +153,7 @@ function hookReducer<TPartial, TFinal>(
         isSuccess: false,
         error: undefined,
         data: undefined,
-        partialData: undefined,
+        streamingData: undefined,
       };
     case 'SET_ERROR':
       return {
@@ -94,26 +161,26 @@ function hookReducer<TPartial, TFinal>(
         isSuccess: false,
         error: action.payload,
         data: undefined,
-        partialData: undefined,
+        streamingData: undefined,
       };
     case 'SET_PARTIAL':
       return {
         ...state,
-        partialData: action.payload,
+        streamingData: action.payload,
       };
     case 'SET_FINAL':
       return {
         ...state,
         isSuccess: true,
         data: action.payload,
-        partialData: undefined,
+        streamingData: undefined,
       };
     case 'RESET':
       return {
         isSuccess: false,
         error: undefined,
         data: undefined,
-        partialData: undefined,
+        streamingData: undefined,
       };
     default:
       return state;
@@ -127,7 +194,7 @@ function hookReducer<TPartial, TFinal>(
  * and final responses. It is designed to be used directly with any BAML server action.
  *
  * Features:
- * - **Streaming Support:** Real‑time partial updates via `partialData`, progress indicators, and incremental UI updates.
+ * - **Streaming Support:** Real‑time partial updates via `streamingData`, progress indicators, and incremental UI updates.
  * - **State Management:** Manages loading state (`isPending`), success/error flags, and final/partial results.
  * - **Error Handling:** Supports type‑safe error handling for BamlValidationError, BamlClientFinishReasonError, and standard errors.
  *
@@ -140,52 +207,49 @@ function hookReducer<TPartial, TFinal>(
  * const { data, error, isPending, mutate } = useBamlAction(StreamingActions.TestAws, { stream: true });
  * ```
  */
-export function useBamlAction<TActionKey extends ActionKey>(
+function useBamlAction<FunctionName extends FunctionNames>(
   action: ServerAction,
-  props: StreamingProps<TActionKey>
-): StreamingHookResult<TActionKey>;
-
-export function useBamlAction<TActionKey extends ActionKey>(
+  props?: HookInput<FunctionName, { stream?: true }>,
+): HookOutput<FunctionName, { stream: true }>
+function useBamlAction<FunctionName extends FunctionNames>(
   action: ServerAction,
-  props?: NonStreamingProps<TActionKey>
-): NonStreamingHookResult<TActionKey>;
-
-export function useBamlAction<TActionKey extends ActionKey>(
+  props: HookInput<FunctionName, { stream: false }>,
+): HookOutput<FunctionName, { stream: false }>
+function useBamlAction<FunctionName extends FunctionNames>(
   action: ServerAction,
-  props: HookProps<TActionKey> = {}
-): StreamingHookResult<TActionKey> | NonStreamingHookResult<TActionKey> {
-  const { onFinal, onError, onPartial } = props;
-  const isStreaming = isStreamingProps(props);
-  const [isPending, startTransition] = useTransition();
+  props: HookInput<FunctionName, { stream?: boolean }> = {},
+): HookOutput<FunctionName, { stream: true }> | HookOutput<FunctionName, { stream: false }> {
+  const { onFinal, onError } = props
+  const [isPending, startTransition] = useTransition()
 
-  const [state, dispatch] = useReducer(
-    hookReducer<PartialReturnType<TActionKey>, FinalReturnType<TActionKey>>,
-    {
-      isSuccess: false,
-      error: undefined,
-      data: undefined,
-      partialData: undefined,
-    }
-  );
+  const [state, dispatch] = useReducer(hookReducer<PartialReturnType<FunctionName>, FinalReturnType<FunctionName>>, {
+    isSuccess: false,
+    error: undefined,
+    data: undefined,
+    streamingData: undefined,
+  })
 
   const mutate = useCallback(
     async (...input: Parameters<ServerAction>) => {
-      dispatch({ type: 'START_REQUEST' });
+      dispatch({ type: 'START_REQUEST' })
       try {
-        let response: Awaited<ReturnType<ServerAction>>;
+        let response: Awaited<ReturnType<ServerAction>>
         startTransition(async () => {
-          response = await action(...input);
-          if (isStreaming && response instanceof ReadableStream) {
-            const reader = response.getReader();
-            const decoder = new TextDecoder();
+          response = await action(...input)
+          if (isStreamingProps(props) && response instanceof ReadableStream) {
+            const reader = response.getReader()
+            const decoder = new TextDecoder()
             try {
               while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
+                const { value, done } = await reader.read()
+                if (done) break
                 if (value) {
-                  const chunk = decoder.decode(value, { stream: true }).trim();
+                  const chunk = decoder.decode(value, { stream: true }).trim()
                   try {
-                    const parsed: BamlStreamResponse<PartialReturnType<TActionKey>, FinalReturnType<TActionKey>> = JSON.parse(chunk);
+                    const parsed: BamlStreamResponse<
+                      PartialReturnType<FunctionName>,
+                      FinalReturnType<FunctionName>
+                    > = JSON.parse(chunk)
                     if (parsed.error) {
                       let error: Error | BamlValidationError | BamlClientFinishReasonError = new Error('Unknown error')
 
@@ -206,49 +270,54 @@ export function useBamlAction<TActionKey extends ActionKey>(
                       } else {
                         error = new Error(parsed.error.message)
                       }
-                      throw error;
+                      throw error
                     }
                     if (parsed.partial !== undefined) {
-                      dispatch({ type: 'SET_PARTIAL', payload: parsed.partial });
-                      onPartial?.(parsed.partial);
+                      dispatch({ type: 'SET_PARTIAL', payload: parsed.partial })
+                      if (isStreamingProps(props)) {
+                        props.onPartial?.(parsed.partial)
+                      }
                     }
                     if (parsed.final !== undefined) {
-                      dispatch({ type: 'SET_FINAL', payload: parsed.final });
-                      onFinal?.(parsed.final);
-                      return;
+                      dispatch({ type: 'SET_FINAL', payload: parsed.final })
+                      onFinal?.(parsed.final)
+                      return
                     }
                   } catch (err: unknown) {
-                    dispatch({ type: "SET_ERROR", payload: err as Error | BamlValidationError | BamlClientFinishReasonError });
-                    onError?.(err as Error | BamlValidationError | BamlClientFinishReasonError);
-                    break;
+                    dispatch({
+                      type: 'SET_ERROR',
+                      payload: err as Error | BamlValidationError | BamlClientFinishReasonError,
+                    })
+                    onError?.(err as Error | BamlValidationError | BamlClientFinishReasonError)
+                    break
                   }
                 }
               }
             } finally {
-              reader.releaseLock();
+              reader.releaseLock()
             }
-            return;
+            return
           }
           // Non‑streaming case
-          dispatch({ type: 'SET_FINAL', payload: response });
-          onFinal?.(response);
-        });
-        return response;
+          dispatch({ type: 'SET_FINAL', payload: response })
+          onFinal?.(response)
+        })
+        return response
       } catch (error_: unknown) {
-        dispatch({ type: 'SET_ERROR', payload: error_ as Error | BamlValidationError | BamlClientFinishReasonError });
-        onError?.(error_ as Error | BamlValidationError | BamlClientFinishReasonError);
-        throw error_;
+        dispatch({ type: 'SET_ERROR', payload: error_ as Error | BamlValidationError | BamlClientFinishReasonError })
+        onError?.(error_ as Error | BamlValidationError | BamlClientFinishReasonError)
+        throw error_
       }
     },
-    [action, isStreaming, onPartial, onFinal, onError]
-  );
+    [action, props.stream, onFinal, onError],
+  )
 
-  const status = useMemo<"idle" | "pending" | "success" | "error">(() => {
-    if (isPending) return "pending";
-    if (state.error) return "error";
-    if (state.isSuccess) return "success";
-    return "idle";
-  }, [isPending, state.error, state.isSuccess]);
+  const status = useMemo<'idle' | 'pending' | 'success' | 'error'>(() => {
+    if (isPending) return 'pending'
+    if (state.error) return 'error'
+    if (state.isSuccess) return 'success'
+    return 'idle'
+  }, [isPending, state.error, state.isSuccess])
 
   const result = {
     data: state.data,
@@ -258,12 +327,12 @@ export function useBamlAction<TActionKey extends ActionKey>(
     isPending,
     mutate,
     status,
-  };
+  }
 
   return {
     ...result,
-    partialData: isStreaming ? state.partialData : undefined,
-  };
+    streamingData: isStreamingProps(props) ? state.streamingData : undefined,
+  }
 }
 /**
  * A specialized hook for the AaaSamOutputFormat BAML function that supports both streaming and non‑streaming responses.
@@ -291,33 +360,29 @@ export function useBamlAction<TActionKey extends ActionKey>(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAaaSamOutputFormat();
+ * const { data, error, isPending, mutate } = useAaaSamOutputFormat({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAaaSamOutputFormat({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAaaSamOutputFormat({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAaaSamOutputFormat(props?: HookInput<'AaaSamOutputFormat', { stream?: true }>): HookOutput<'AaaSamOutputFormat', { stream: true }>
+export function useAaaSamOutputFormat(props: HookInput<'AaaSamOutputFormat', { stream: false }>): HookOutput<'AaaSamOutputFormat', { stream: false }>
 export function useAaaSamOutputFormat(
-  props: StreamingProps<'AaaSamOutputFormat'>
-): StreamingHookResult<'AaaSamOutputFormat'>;
-
-export function useAaaSamOutputFormat(
-  props?: NonStreamingProps<'AaaSamOutputFormat'>
-): NonStreamingHookResult<'AaaSamOutputFormat'>;
-
-export function useAaaSamOutputFormat(
-  props: HookProps<'AaaSamOutputFormat'> = {}
-): StreamingHookResult<'AaaSamOutputFormat'> | NonStreamingHookResult<'AaaSamOutputFormat'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AaaSamOutputFormat, props);
+  props: HookInput<'AaaSamOutputFormat', { stream?: boolean }> = {},
+): HookOutput<'AaaSamOutputFormat', { stream: true }> | HookOutput<'AaaSamOutputFormat', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AaaSamOutputFormat, props)
   }
-
-  return useBamlAction(Actions.AaaSamOutputFormat, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AaaSamOutputFormat, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the AliasThatPointsToRecursiveType BAML function that supports both streaming and non‑streaming responses.
@@ -345,33 +410,29 @@ export function useAaaSamOutputFormat(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAliasThatPointsToRecursiveType();
+ * const { data, error, isPending, mutate } = useAliasThatPointsToRecursiveType({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAliasThatPointsToRecursiveType({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAliasThatPointsToRecursiveType({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAliasThatPointsToRecursiveType(props?: HookInput<'AliasThatPointsToRecursiveType', { stream?: true }>): HookOutput<'AliasThatPointsToRecursiveType', { stream: true }>
+export function useAliasThatPointsToRecursiveType(props: HookInput<'AliasThatPointsToRecursiveType', { stream: false }>): HookOutput<'AliasThatPointsToRecursiveType', { stream: false }>
 export function useAliasThatPointsToRecursiveType(
-  props: StreamingProps<'AliasThatPointsToRecursiveType'>
-): StreamingHookResult<'AliasThatPointsToRecursiveType'>;
-
-export function useAliasThatPointsToRecursiveType(
-  props?: NonStreamingProps<'AliasThatPointsToRecursiveType'>
-): NonStreamingHookResult<'AliasThatPointsToRecursiveType'>;
-
-export function useAliasThatPointsToRecursiveType(
-  props: HookProps<'AliasThatPointsToRecursiveType'> = {}
-): StreamingHookResult<'AliasThatPointsToRecursiveType'> | NonStreamingHookResult<'AliasThatPointsToRecursiveType'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AliasThatPointsToRecursiveType, props);
+  props: HookInput<'AliasThatPointsToRecursiveType', { stream?: boolean }> = {},
+): HookOutput<'AliasThatPointsToRecursiveType', { stream: true }> | HookOutput<'AliasThatPointsToRecursiveType', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AliasThatPointsToRecursiveType, props)
   }
-
-  return useBamlAction(Actions.AliasThatPointsToRecursiveType, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AliasThatPointsToRecursiveType, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the AliasWithMultipleAttrs BAML function that supports both streaming and non‑streaming responses.
@@ -399,33 +460,29 @@ export function useAliasThatPointsToRecursiveType(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAliasWithMultipleAttrs();
+ * const { data, error, isPending, mutate } = useAliasWithMultipleAttrs({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAliasWithMultipleAttrs({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAliasWithMultipleAttrs({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAliasWithMultipleAttrs(props?: HookInput<'AliasWithMultipleAttrs', { stream?: true }>): HookOutput<'AliasWithMultipleAttrs', { stream: true }>
+export function useAliasWithMultipleAttrs(props: HookInput<'AliasWithMultipleAttrs', { stream: false }>): HookOutput<'AliasWithMultipleAttrs', { stream: false }>
 export function useAliasWithMultipleAttrs(
-  props: StreamingProps<'AliasWithMultipleAttrs'>
-): StreamingHookResult<'AliasWithMultipleAttrs'>;
-
-export function useAliasWithMultipleAttrs(
-  props?: NonStreamingProps<'AliasWithMultipleAttrs'>
-): NonStreamingHookResult<'AliasWithMultipleAttrs'>;
-
-export function useAliasWithMultipleAttrs(
-  props: HookProps<'AliasWithMultipleAttrs'> = {}
-): StreamingHookResult<'AliasWithMultipleAttrs'> | NonStreamingHookResult<'AliasWithMultipleAttrs'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AliasWithMultipleAttrs, props);
+  props: HookInput<'AliasWithMultipleAttrs', { stream?: boolean }> = {},
+): HookOutput<'AliasWithMultipleAttrs', { stream: true }> | HookOutput<'AliasWithMultipleAttrs', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AliasWithMultipleAttrs, props)
   }
-
-  return useBamlAction(Actions.AliasWithMultipleAttrs, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AliasWithMultipleAttrs, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the AliasedInputClass BAML function that supports both streaming and non‑streaming responses.
@@ -453,33 +510,29 @@ export function useAliasWithMultipleAttrs(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAliasedInputClass();
+ * const { data, error, isPending, mutate } = useAliasedInputClass({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAliasedInputClass({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAliasedInputClass({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAliasedInputClass(props?: HookInput<'AliasedInputClass', { stream?: true }>): HookOutput<'AliasedInputClass', { stream: true }>
+export function useAliasedInputClass(props: HookInput<'AliasedInputClass', { stream: false }>): HookOutput<'AliasedInputClass', { stream: false }>
 export function useAliasedInputClass(
-  props: StreamingProps<'AliasedInputClass'>
-): StreamingHookResult<'AliasedInputClass'>;
-
-export function useAliasedInputClass(
-  props?: NonStreamingProps<'AliasedInputClass'>
-): NonStreamingHookResult<'AliasedInputClass'>;
-
-export function useAliasedInputClass(
-  props: HookProps<'AliasedInputClass'> = {}
-): StreamingHookResult<'AliasedInputClass'> | NonStreamingHookResult<'AliasedInputClass'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AliasedInputClass, props);
+  props: HookInput<'AliasedInputClass', { stream?: boolean }> = {},
+): HookOutput<'AliasedInputClass', { stream: true }> | HookOutput<'AliasedInputClass', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AliasedInputClass, props)
   }
-
-  return useBamlAction(Actions.AliasedInputClass, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AliasedInputClass, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the AliasedInputClass2 BAML function that supports both streaming and non‑streaming responses.
@@ -507,33 +560,29 @@ export function useAliasedInputClass(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAliasedInputClass2();
+ * const { data, error, isPending, mutate } = useAliasedInputClass2({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAliasedInputClass2({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAliasedInputClass2({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAliasedInputClass2(props?: HookInput<'AliasedInputClass2', { stream?: true }>): HookOutput<'AliasedInputClass2', { stream: true }>
+export function useAliasedInputClass2(props: HookInput<'AliasedInputClass2', { stream: false }>): HookOutput<'AliasedInputClass2', { stream: false }>
 export function useAliasedInputClass2(
-  props: StreamingProps<'AliasedInputClass2'>
-): StreamingHookResult<'AliasedInputClass2'>;
-
-export function useAliasedInputClass2(
-  props?: NonStreamingProps<'AliasedInputClass2'>
-): NonStreamingHookResult<'AliasedInputClass2'>;
-
-export function useAliasedInputClass2(
-  props: HookProps<'AliasedInputClass2'> = {}
-): StreamingHookResult<'AliasedInputClass2'> | NonStreamingHookResult<'AliasedInputClass2'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AliasedInputClass2, props);
+  props: HookInput<'AliasedInputClass2', { stream?: boolean }> = {},
+): HookOutput<'AliasedInputClass2', { stream: true }> | HookOutput<'AliasedInputClass2', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AliasedInputClass2, props)
   }
-
-  return useBamlAction(Actions.AliasedInputClass2, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AliasedInputClass2, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the AliasedInputClassNested BAML function that supports both streaming and non‑streaming responses.
@@ -561,33 +610,29 @@ export function useAliasedInputClass2(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAliasedInputClassNested();
+ * const { data, error, isPending, mutate } = useAliasedInputClassNested({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAliasedInputClassNested({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAliasedInputClassNested({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAliasedInputClassNested(props?: HookInput<'AliasedInputClassNested', { stream?: true }>): HookOutput<'AliasedInputClassNested', { stream: true }>
+export function useAliasedInputClassNested(props: HookInput<'AliasedInputClassNested', { stream: false }>): HookOutput<'AliasedInputClassNested', { stream: false }>
 export function useAliasedInputClassNested(
-  props: StreamingProps<'AliasedInputClassNested'>
-): StreamingHookResult<'AliasedInputClassNested'>;
-
-export function useAliasedInputClassNested(
-  props?: NonStreamingProps<'AliasedInputClassNested'>
-): NonStreamingHookResult<'AliasedInputClassNested'>;
-
-export function useAliasedInputClassNested(
-  props: HookProps<'AliasedInputClassNested'> = {}
-): StreamingHookResult<'AliasedInputClassNested'> | NonStreamingHookResult<'AliasedInputClassNested'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AliasedInputClassNested, props);
+  props: HookInput<'AliasedInputClassNested', { stream?: boolean }> = {},
+): HookOutput<'AliasedInputClassNested', { stream: true }> | HookOutput<'AliasedInputClassNested', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AliasedInputClassNested, props)
   }
-
-  return useBamlAction(Actions.AliasedInputClassNested, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AliasedInputClassNested, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the AliasedInputEnum BAML function that supports both streaming and non‑streaming responses.
@@ -615,33 +660,29 @@ export function useAliasedInputClassNested(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAliasedInputEnum();
+ * const { data, error, isPending, mutate } = useAliasedInputEnum({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAliasedInputEnum({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAliasedInputEnum({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAliasedInputEnum(props?: HookInput<'AliasedInputEnum', { stream?: true }>): HookOutput<'AliasedInputEnum', { stream: true }>
+export function useAliasedInputEnum(props: HookInput<'AliasedInputEnum', { stream: false }>): HookOutput<'AliasedInputEnum', { stream: false }>
 export function useAliasedInputEnum(
-  props: StreamingProps<'AliasedInputEnum'>
-): StreamingHookResult<'AliasedInputEnum'>;
-
-export function useAliasedInputEnum(
-  props?: NonStreamingProps<'AliasedInputEnum'>
-): NonStreamingHookResult<'AliasedInputEnum'>;
-
-export function useAliasedInputEnum(
-  props: HookProps<'AliasedInputEnum'> = {}
-): StreamingHookResult<'AliasedInputEnum'> | NonStreamingHookResult<'AliasedInputEnum'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AliasedInputEnum, props);
+  props: HookInput<'AliasedInputEnum', { stream?: boolean }> = {},
+): HookOutput<'AliasedInputEnum', { stream: true }> | HookOutput<'AliasedInputEnum', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AliasedInputEnum, props)
   }
-
-  return useBamlAction(Actions.AliasedInputEnum, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AliasedInputEnum, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the AliasedInputList BAML function that supports both streaming and non‑streaming responses.
@@ -669,33 +710,29 @@ export function useAliasedInputEnum(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAliasedInputList();
+ * const { data, error, isPending, mutate } = useAliasedInputList({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAliasedInputList({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAliasedInputList({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAliasedInputList(props?: HookInput<'AliasedInputList', { stream?: true }>): HookOutput<'AliasedInputList', { stream: true }>
+export function useAliasedInputList(props: HookInput<'AliasedInputList', { stream: false }>): HookOutput<'AliasedInputList', { stream: false }>
 export function useAliasedInputList(
-  props: StreamingProps<'AliasedInputList'>
-): StreamingHookResult<'AliasedInputList'>;
-
-export function useAliasedInputList(
-  props?: NonStreamingProps<'AliasedInputList'>
-): NonStreamingHookResult<'AliasedInputList'>;
-
-export function useAliasedInputList(
-  props: HookProps<'AliasedInputList'> = {}
-): StreamingHookResult<'AliasedInputList'> | NonStreamingHookResult<'AliasedInputList'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AliasedInputList, props);
+  props: HookInput<'AliasedInputList', { stream?: boolean }> = {},
+): HookOutput<'AliasedInputList', { stream: true }> | HookOutput<'AliasedInputList', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AliasedInputList, props)
   }
-
-  return useBamlAction(Actions.AliasedInputList, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AliasedInputList, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the AllowedOptionals BAML function that supports both streaming and non‑streaming responses.
@@ -723,33 +760,29 @@ export function useAliasedInputList(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAllowedOptionals();
+ * const { data, error, isPending, mutate } = useAllowedOptionals({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAllowedOptionals({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAllowedOptionals({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAllowedOptionals(props?: HookInput<'AllowedOptionals', { stream?: true }>): HookOutput<'AllowedOptionals', { stream: true }>
+export function useAllowedOptionals(props: HookInput<'AllowedOptionals', { stream: false }>): HookOutput<'AllowedOptionals', { stream: false }>
 export function useAllowedOptionals(
-  props: StreamingProps<'AllowedOptionals'>
-): StreamingHookResult<'AllowedOptionals'>;
-
-export function useAllowedOptionals(
-  props?: NonStreamingProps<'AllowedOptionals'>
-): NonStreamingHookResult<'AllowedOptionals'>;
-
-export function useAllowedOptionals(
-  props: HookProps<'AllowedOptionals'> = {}
-): StreamingHookResult<'AllowedOptionals'> | NonStreamingHookResult<'AllowedOptionals'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AllowedOptionals, props);
+  props: HookInput<'AllowedOptionals', { stream?: boolean }> = {},
+): HookOutput<'AllowedOptionals', { stream: true }> | HookOutput<'AllowedOptionals', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AllowedOptionals, props)
   }
-
-  return useBamlAction(Actions.AllowedOptionals, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AllowedOptionals, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the AssertFn BAML function that supports both streaming and non‑streaming responses.
@@ -777,33 +810,29 @@ export function useAllowedOptionals(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAssertFn();
+ * const { data, error, isPending, mutate } = useAssertFn({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAssertFn({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAssertFn({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAssertFn(props?: HookInput<'AssertFn', { stream?: true }>): HookOutput<'AssertFn', { stream: true }>
+export function useAssertFn(props: HookInput<'AssertFn', { stream: false }>): HookOutput<'AssertFn', { stream: false }>
 export function useAssertFn(
-  props: StreamingProps<'AssertFn'>
-): StreamingHookResult<'AssertFn'>;
-
-export function useAssertFn(
-  props?: NonStreamingProps<'AssertFn'>
-): NonStreamingHookResult<'AssertFn'>;
-
-export function useAssertFn(
-  props: HookProps<'AssertFn'> = {}
-): StreamingHookResult<'AssertFn'> | NonStreamingHookResult<'AssertFn'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AssertFn, props);
+  props: HookInput<'AssertFn', { stream?: boolean }> = {},
+): HookOutput<'AssertFn', { stream: true }> | HookOutput<'AssertFn', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AssertFn, props)
   }
-
-  return useBamlAction(Actions.AssertFn, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AssertFn, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the AudioInput BAML function that supports both streaming and non‑streaming responses.
@@ -831,33 +860,29 @@ export function useAssertFn(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useAudioInput();
+ * const { data, error, isPending, mutate } = useAudioInput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useAudioInput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useAudioInput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useAudioInput(props?: HookInput<'AudioInput', { stream?: true }>): HookOutput<'AudioInput', { stream: true }>
+export function useAudioInput(props: HookInput<'AudioInput', { stream: false }>): HookOutput<'AudioInput', { stream: false }>
 export function useAudioInput(
-  props: StreamingProps<'AudioInput'>
-): StreamingHookResult<'AudioInput'>;
-
-export function useAudioInput(
-  props?: NonStreamingProps<'AudioInput'>
-): NonStreamingHookResult<'AudioInput'>;
-
-export function useAudioInput(
-  props: HookProps<'AudioInput'> = {}
-): StreamingHookResult<'AudioInput'> | NonStreamingHookResult<'AudioInput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.AudioInput, props);
+  props: HookInput<'AudioInput', { stream?: boolean }> = {},
+): HookOutput<'AudioInput', { stream: true }> | HookOutput<'AudioInput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.AudioInput, props)
   }
-
-  return useBamlAction(Actions.AudioInput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.AudioInput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the BuildLinkedList BAML function that supports both streaming and non‑streaming responses.
@@ -885,33 +910,29 @@ export function useAudioInput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useBuildLinkedList();
+ * const { data, error, isPending, mutate } = useBuildLinkedList({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useBuildLinkedList({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useBuildLinkedList({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useBuildLinkedList(props?: HookInput<'BuildLinkedList', { stream?: true }>): HookOutput<'BuildLinkedList', { stream: true }>
+export function useBuildLinkedList(props: HookInput<'BuildLinkedList', { stream: false }>): HookOutput<'BuildLinkedList', { stream: false }>
 export function useBuildLinkedList(
-  props: StreamingProps<'BuildLinkedList'>
-): StreamingHookResult<'BuildLinkedList'>;
-
-export function useBuildLinkedList(
-  props?: NonStreamingProps<'BuildLinkedList'>
-): NonStreamingHookResult<'BuildLinkedList'>;
-
-export function useBuildLinkedList(
-  props: HookProps<'BuildLinkedList'> = {}
-): StreamingHookResult<'BuildLinkedList'> | NonStreamingHookResult<'BuildLinkedList'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.BuildLinkedList, props);
+  props: HookInput<'BuildLinkedList', { stream?: boolean }> = {},
+): HookOutput<'BuildLinkedList', { stream: true }> | HookOutput<'BuildLinkedList', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.BuildLinkedList, props)
   }
-
-  return useBamlAction(Actions.BuildLinkedList, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.BuildLinkedList, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the BuildTree BAML function that supports both streaming and non‑streaming responses.
@@ -939,33 +960,29 @@ export function useBuildLinkedList(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useBuildTree();
+ * const { data, error, isPending, mutate } = useBuildTree({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useBuildTree({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useBuildTree({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useBuildTree(props?: HookInput<'BuildTree', { stream?: true }>): HookOutput<'BuildTree', { stream: true }>
+export function useBuildTree(props: HookInput<'BuildTree', { stream: false }>): HookOutput<'BuildTree', { stream: false }>
 export function useBuildTree(
-  props: StreamingProps<'BuildTree'>
-): StreamingHookResult<'BuildTree'>;
-
-export function useBuildTree(
-  props?: NonStreamingProps<'BuildTree'>
-): NonStreamingHookResult<'BuildTree'>;
-
-export function useBuildTree(
-  props: HookProps<'BuildTree'> = {}
-): StreamingHookResult<'BuildTree'> | NonStreamingHookResult<'BuildTree'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.BuildTree, props);
+  props: HookInput<'BuildTree', { stream?: boolean }> = {},
+): HookOutput<'BuildTree', { stream: true }> | HookOutput<'BuildTree', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.BuildTree, props)
   }
-
-  return useBamlAction(Actions.BuildTree, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.BuildTree, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ClassThatPointsToRecursiveClassThroughAlias BAML function that supports both streaming and non‑streaming responses.
@@ -993,33 +1010,29 @@ export function useBuildTree(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useClassThatPointsToRecursiveClassThroughAlias();
+ * const { data, error, isPending, mutate } = useClassThatPointsToRecursiveClassThroughAlias({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useClassThatPointsToRecursiveClassThroughAlias({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useClassThatPointsToRecursiveClassThroughAlias({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useClassThatPointsToRecursiveClassThroughAlias(props?: HookInput<'ClassThatPointsToRecursiveClassThroughAlias', { stream?: true }>): HookOutput<'ClassThatPointsToRecursiveClassThroughAlias', { stream: true }>
+export function useClassThatPointsToRecursiveClassThroughAlias(props: HookInput<'ClassThatPointsToRecursiveClassThroughAlias', { stream: false }>): HookOutput<'ClassThatPointsToRecursiveClassThroughAlias', { stream: false }>
 export function useClassThatPointsToRecursiveClassThroughAlias(
-  props: StreamingProps<'ClassThatPointsToRecursiveClassThroughAlias'>
-): StreamingHookResult<'ClassThatPointsToRecursiveClassThroughAlias'>;
-
-export function useClassThatPointsToRecursiveClassThroughAlias(
-  props?: NonStreamingProps<'ClassThatPointsToRecursiveClassThroughAlias'>
-): NonStreamingHookResult<'ClassThatPointsToRecursiveClassThroughAlias'>;
-
-export function useClassThatPointsToRecursiveClassThroughAlias(
-  props: HookProps<'ClassThatPointsToRecursiveClassThroughAlias'> = {}
-): StreamingHookResult<'ClassThatPointsToRecursiveClassThroughAlias'> | NonStreamingHookResult<'ClassThatPointsToRecursiveClassThroughAlias'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ClassThatPointsToRecursiveClassThroughAlias, props);
+  props: HookInput<'ClassThatPointsToRecursiveClassThroughAlias', { stream?: boolean }> = {},
+): HookOutput<'ClassThatPointsToRecursiveClassThroughAlias', { stream: true }> | HookOutput<'ClassThatPointsToRecursiveClassThroughAlias', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ClassThatPointsToRecursiveClassThroughAlias, props)
   }
-
-  return useBamlAction(Actions.ClassThatPointsToRecursiveClassThroughAlias, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ClassThatPointsToRecursiveClassThroughAlias, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ClassifyDynEnumTwo BAML function that supports both streaming and non‑streaming responses.
@@ -1047,33 +1060,29 @@ export function useClassThatPointsToRecursiveClassThroughAlias(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useClassifyDynEnumTwo();
+ * const { data, error, isPending, mutate } = useClassifyDynEnumTwo({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useClassifyDynEnumTwo({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useClassifyDynEnumTwo({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useClassifyDynEnumTwo(props?: HookInput<'ClassifyDynEnumTwo', { stream?: true }>): HookOutput<'ClassifyDynEnumTwo', { stream: true }>
+export function useClassifyDynEnumTwo(props: HookInput<'ClassifyDynEnumTwo', { stream: false }>): HookOutput<'ClassifyDynEnumTwo', { stream: false }>
 export function useClassifyDynEnumTwo(
-  props: StreamingProps<'ClassifyDynEnumTwo'>
-): StreamingHookResult<'ClassifyDynEnumTwo'>;
-
-export function useClassifyDynEnumTwo(
-  props?: NonStreamingProps<'ClassifyDynEnumTwo'>
-): NonStreamingHookResult<'ClassifyDynEnumTwo'>;
-
-export function useClassifyDynEnumTwo(
-  props: HookProps<'ClassifyDynEnumTwo'> = {}
-): StreamingHookResult<'ClassifyDynEnumTwo'> | NonStreamingHookResult<'ClassifyDynEnumTwo'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ClassifyDynEnumTwo, props);
+  props: HookInput<'ClassifyDynEnumTwo', { stream?: boolean }> = {},
+): HookOutput<'ClassifyDynEnumTwo', { stream: true }> | HookOutput<'ClassifyDynEnumTwo', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ClassifyDynEnumTwo, props)
   }
-
-  return useBamlAction(Actions.ClassifyDynEnumTwo, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ClassifyDynEnumTwo, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ClassifyMessage BAML function that supports both streaming and non‑streaming responses.
@@ -1101,33 +1110,29 @@ export function useClassifyDynEnumTwo(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useClassifyMessage();
+ * const { data, error, isPending, mutate } = useClassifyMessage({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useClassifyMessage({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useClassifyMessage({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useClassifyMessage(props?: HookInput<'ClassifyMessage', { stream?: true }>): HookOutput<'ClassifyMessage', { stream: true }>
+export function useClassifyMessage(props: HookInput<'ClassifyMessage', { stream: false }>): HookOutput<'ClassifyMessage', { stream: false }>
 export function useClassifyMessage(
-  props: StreamingProps<'ClassifyMessage'>
-): StreamingHookResult<'ClassifyMessage'>;
-
-export function useClassifyMessage(
-  props?: NonStreamingProps<'ClassifyMessage'>
-): NonStreamingHookResult<'ClassifyMessage'>;
-
-export function useClassifyMessage(
-  props: HookProps<'ClassifyMessage'> = {}
-): StreamingHookResult<'ClassifyMessage'> | NonStreamingHookResult<'ClassifyMessage'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ClassifyMessage, props);
+  props: HookInput<'ClassifyMessage', { stream?: boolean }> = {},
+): HookOutput<'ClassifyMessage', { stream: true }> | HookOutput<'ClassifyMessage', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ClassifyMessage, props)
   }
-
-  return useBamlAction(Actions.ClassifyMessage, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ClassifyMessage, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ClassifyMessage2 BAML function that supports both streaming and non‑streaming responses.
@@ -1155,33 +1160,29 @@ export function useClassifyMessage(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useClassifyMessage2();
+ * const { data, error, isPending, mutate } = useClassifyMessage2({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useClassifyMessage2({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useClassifyMessage2({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useClassifyMessage2(props?: HookInput<'ClassifyMessage2', { stream?: true }>): HookOutput<'ClassifyMessage2', { stream: true }>
+export function useClassifyMessage2(props: HookInput<'ClassifyMessage2', { stream: false }>): HookOutput<'ClassifyMessage2', { stream: false }>
 export function useClassifyMessage2(
-  props: StreamingProps<'ClassifyMessage2'>
-): StreamingHookResult<'ClassifyMessage2'>;
-
-export function useClassifyMessage2(
-  props?: NonStreamingProps<'ClassifyMessage2'>
-): NonStreamingHookResult<'ClassifyMessage2'>;
-
-export function useClassifyMessage2(
-  props: HookProps<'ClassifyMessage2'> = {}
-): StreamingHookResult<'ClassifyMessage2'> | NonStreamingHookResult<'ClassifyMessage2'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ClassifyMessage2, props);
+  props: HookInput<'ClassifyMessage2', { stream?: boolean }> = {},
+): HookOutput<'ClassifyMessage2', { stream: true }> | HookOutput<'ClassifyMessage2', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ClassifyMessage2, props)
   }
-
-  return useBamlAction(Actions.ClassifyMessage2, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ClassifyMessage2, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ClassifyMessage3 BAML function that supports both streaming and non‑streaming responses.
@@ -1209,33 +1210,29 @@ export function useClassifyMessage2(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useClassifyMessage3();
+ * const { data, error, isPending, mutate } = useClassifyMessage3({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useClassifyMessage3({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useClassifyMessage3({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useClassifyMessage3(props?: HookInput<'ClassifyMessage3', { stream?: true }>): HookOutput<'ClassifyMessage3', { stream: true }>
+export function useClassifyMessage3(props: HookInput<'ClassifyMessage3', { stream: false }>): HookOutput<'ClassifyMessage3', { stream: false }>
 export function useClassifyMessage3(
-  props: StreamingProps<'ClassifyMessage3'>
-): StreamingHookResult<'ClassifyMessage3'>;
-
-export function useClassifyMessage3(
-  props?: NonStreamingProps<'ClassifyMessage3'>
-): NonStreamingHookResult<'ClassifyMessage3'>;
-
-export function useClassifyMessage3(
-  props: HookProps<'ClassifyMessage3'> = {}
-): StreamingHookResult<'ClassifyMessage3'> | NonStreamingHookResult<'ClassifyMessage3'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ClassifyMessage3, props);
+  props: HookInput<'ClassifyMessage3', { stream?: boolean }> = {},
+): HookOutput<'ClassifyMessage3', { stream: true }> | HookOutput<'ClassifyMessage3', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ClassifyMessage3, props)
   }
-
-  return useBamlAction(Actions.ClassifyMessage3, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ClassifyMessage3, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the Completion BAML function that supports both streaming and non‑streaming responses.
@@ -1267,33 +1264,29 @@ export function useClassifyMessage3(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useCompletion();
+ * const { data, error, isPending, mutate } = useCompletion({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useCompletion({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useCompletion({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useCompletion(props?: HookInput<'Completion', { stream?: true }>): HookOutput<'Completion', { stream: true }>
+export function useCompletion(props: HookInput<'Completion', { stream: false }>): HookOutput<'Completion', { stream: false }>
 export function useCompletion(
-  props: StreamingProps<'Completion'>
-): StreamingHookResult<'Completion'>;
-
-export function useCompletion(
-  props?: NonStreamingProps<'Completion'>
-): NonStreamingHookResult<'Completion'>;
-
-export function useCompletion(
-  props: HookProps<'Completion'> = {}
-): StreamingHookResult<'Completion'> | NonStreamingHookResult<'Completion'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.Completion, props);
+  props: HookInput<'Completion', { stream?: boolean }> = {},
+): HookOutput<'Completion', { stream: true }> | HookOutput<'Completion', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.Completion, props)
   }
-
-  return useBamlAction(Actions.Completion, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.Completion, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the CustomTask BAML function that supports both streaming and non‑streaming responses.
@@ -1321,33 +1314,29 @@ export function useCompletion(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useCustomTask();
+ * const { data, error, isPending, mutate } = useCustomTask({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useCustomTask({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useCustomTask({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useCustomTask(props?: HookInput<'CustomTask', { stream?: true }>): HookOutput<'CustomTask', { stream: true }>
+export function useCustomTask(props: HookInput<'CustomTask', { stream: false }>): HookOutput<'CustomTask', { stream: false }>
 export function useCustomTask(
-  props: StreamingProps<'CustomTask'>
-): StreamingHookResult<'CustomTask'>;
-
-export function useCustomTask(
-  props?: NonStreamingProps<'CustomTask'>
-): NonStreamingHookResult<'CustomTask'>;
-
-export function useCustomTask(
-  props: HookProps<'CustomTask'> = {}
-): StreamingHookResult<'CustomTask'> | NonStreamingHookResult<'CustomTask'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.CustomTask, props);
+  props: HookInput<'CustomTask', { stream?: boolean }> = {},
+): HookOutput<'CustomTask', { stream: true }> | HookOutput<'CustomTask', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.CustomTask, props)
   }
-
-  return useBamlAction(Actions.CustomTask, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.CustomTask, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the DescribeImage BAML function that supports both streaming and non‑streaming responses.
@@ -1375,33 +1364,29 @@ export function useCustomTask(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useDescribeImage();
+ * const { data, error, isPending, mutate } = useDescribeImage({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useDescribeImage({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useDescribeImage({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useDescribeImage(props?: HookInput<'DescribeImage', { stream?: true }>): HookOutput<'DescribeImage', { stream: true }>
+export function useDescribeImage(props: HookInput<'DescribeImage', { stream: false }>): HookOutput<'DescribeImage', { stream: false }>
 export function useDescribeImage(
-  props: StreamingProps<'DescribeImage'>
-): StreamingHookResult<'DescribeImage'>;
-
-export function useDescribeImage(
-  props?: NonStreamingProps<'DescribeImage'>
-): NonStreamingHookResult<'DescribeImage'>;
-
-export function useDescribeImage(
-  props: HookProps<'DescribeImage'> = {}
-): StreamingHookResult<'DescribeImage'> | NonStreamingHookResult<'DescribeImage'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.DescribeImage, props);
+  props: HookInput<'DescribeImage', { stream?: boolean }> = {},
+): HookOutput<'DescribeImage', { stream: true }> | HookOutput<'DescribeImage', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.DescribeImage, props)
   }
-
-  return useBamlAction(Actions.DescribeImage, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.DescribeImage, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the DescribeImage2 BAML function that supports both streaming and non‑streaming responses.
@@ -1431,33 +1416,29 @@ export function useDescribeImage(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useDescribeImage2();
+ * const { data, error, isPending, mutate } = useDescribeImage2({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useDescribeImage2({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useDescribeImage2({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useDescribeImage2(props?: HookInput<'DescribeImage2', { stream?: true }>): HookOutput<'DescribeImage2', { stream: true }>
+export function useDescribeImage2(props: HookInput<'DescribeImage2', { stream: false }>): HookOutput<'DescribeImage2', { stream: false }>
 export function useDescribeImage2(
-  props: StreamingProps<'DescribeImage2'>
-): StreamingHookResult<'DescribeImage2'>;
-
-export function useDescribeImage2(
-  props?: NonStreamingProps<'DescribeImage2'>
-): NonStreamingHookResult<'DescribeImage2'>;
-
-export function useDescribeImage2(
-  props: HookProps<'DescribeImage2'> = {}
-): StreamingHookResult<'DescribeImage2'> | NonStreamingHookResult<'DescribeImage2'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.DescribeImage2, props);
+  props: HookInput<'DescribeImage2', { stream?: boolean }> = {},
+): HookOutput<'DescribeImage2', { stream: true }> | HookOutput<'DescribeImage2', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.DescribeImage2, props)
   }
-
-  return useBamlAction(Actions.DescribeImage2, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.DescribeImage2, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the DescribeImage3 BAML function that supports both streaming and non‑streaming responses.
@@ -1487,33 +1468,29 @@ export function useDescribeImage2(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useDescribeImage3();
+ * const { data, error, isPending, mutate } = useDescribeImage3({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useDescribeImage3({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useDescribeImage3({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useDescribeImage3(props?: HookInput<'DescribeImage3', { stream?: true }>): HookOutput<'DescribeImage3', { stream: true }>
+export function useDescribeImage3(props: HookInput<'DescribeImage3', { stream: false }>): HookOutput<'DescribeImage3', { stream: false }>
 export function useDescribeImage3(
-  props: StreamingProps<'DescribeImage3'>
-): StreamingHookResult<'DescribeImage3'>;
-
-export function useDescribeImage3(
-  props?: NonStreamingProps<'DescribeImage3'>
-): NonStreamingHookResult<'DescribeImage3'>;
-
-export function useDescribeImage3(
-  props: HookProps<'DescribeImage3'> = {}
-): StreamingHookResult<'DescribeImage3'> | NonStreamingHookResult<'DescribeImage3'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.DescribeImage3, props);
+  props: HookInput<'DescribeImage3', { stream?: boolean }> = {},
+): HookOutput<'DescribeImage3', { stream: true }> | HookOutput<'DescribeImage3', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.DescribeImage3, props)
   }
-
-  return useBamlAction(Actions.DescribeImage3, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.DescribeImage3, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the DescribeImage4 BAML function that supports both streaming and non‑streaming responses.
@@ -1543,33 +1520,29 @@ export function useDescribeImage3(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useDescribeImage4();
+ * const { data, error, isPending, mutate } = useDescribeImage4({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useDescribeImage4({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useDescribeImage4({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useDescribeImage4(props?: HookInput<'DescribeImage4', { stream?: true }>): HookOutput<'DescribeImage4', { stream: true }>
+export function useDescribeImage4(props: HookInput<'DescribeImage4', { stream: false }>): HookOutput<'DescribeImage4', { stream: false }>
 export function useDescribeImage4(
-  props: StreamingProps<'DescribeImage4'>
-): StreamingHookResult<'DescribeImage4'>;
-
-export function useDescribeImage4(
-  props?: NonStreamingProps<'DescribeImage4'>
-): NonStreamingHookResult<'DescribeImage4'>;
-
-export function useDescribeImage4(
-  props: HookProps<'DescribeImage4'> = {}
-): StreamingHookResult<'DescribeImage4'> | NonStreamingHookResult<'DescribeImage4'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.DescribeImage4, props);
+  props: HookInput<'DescribeImage4', { stream?: boolean }> = {},
+): HookOutput<'DescribeImage4', { stream: true }> | HookOutput<'DescribeImage4', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.DescribeImage4, props)
   }
-
-  return useBamlAction(Actions.DescribeImage4, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.DescribeImage4, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the DifferentiateUnions BAML function that supports both streaming and non‑streaming responses.
@@ -1595,33 +1568,29 @@ export function useDescribeImage4(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useDifferentiateUnions();
+ * const { data, error, isPending, mutate } = useDifferentiateUnions({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useDifferentiateUnions({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useDifferentiateUnions({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useDifferentiateUnions(props?: HookInput<'DifferentiateUnions', { stream?: true }>): HookOutput<'DifferentiateUnions', { stream: true }>
+export function useDifferentiateUnions(props: HookInput<'DifferentiateUnions', { stream: false }>): HookOutput<'DifferentiateUnions', { stream: false }>
 export function useDifferentiateUnions(
-  props: StreamingProps<'DifferentiateUnions'>
-): StreamingHookResult<'DifferentiateUnions'>;
-
-export function useDifferentiateUnions(
-  props?: NonStreamingProps<'DifferentiateUnions'>
-): NonStreamingHookResult<'DifferentiateUnions'>;
-
-export function useDifferentiateUnions(
-  props: HookProps<'DifferentiateUnions'> = {}
-): StreamingHookResult<'DifferentiateUnions'> | NonStreamingHookResult<'DifferentiateUnions'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.DifferentiateUnions, props);
+  props: HookInput<'DifferentiateUnions', { stream?: boolean }> = {},
+): HookOutput<'DifferentiateUnions', { stream: true }> | HookOutput<'DifferentiateUnions', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.DifferentiateUnions, props)
   }
-
-  return useBamlAction(Actions.DifferentiateUnions, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.DifferentiateUnions, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the DummyOutputFunction BAML function that supports both streaming and non‑streaming responses.
@@ -1649,33 +1618,29 @@ export function useDifferentiateUnions(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useDummyOutputFunction();
+ * const { data, error, isPending, mutate } = useDummyOutputFunction({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useDummyOutputFunction({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useDummyOutputFunction({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useDummyOutputFunction(props?: HookInput<'DummyOutputFunction', { stream?: true }>): HookOutput<'DummyOutputFunction', { stream: true }>
+export function useDummyOutputFunction(props: HookInput<'DummyOutputFunction', { stream: false }>): HookOutput<'DummyOutputFunction', { stream: false }>
 export function useDummyOutputFunction(
-  props: StreamingProps<'DummyOutputFunction'>
-): StreamingHookResult<'DummyOutputFunction'>;
-
-export function useDummyOutputFunction(
-  props?: NonStreamingProps<'DummyOutputFunction'>
-): NonStreamingHookResult<'DummyOutputFunction'>;
-
-export function useDummyOutputFunction(
-  props: HookProps<'DummyOutputFunction'> = {}
-): StreamingHookResult<'DummyOutputFunction'> | NonStreamingHookResult<'DummyOutputFunction'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.DummyOutputFunction, props);
+  props: HookInput<'DummyOutputFunction', { stream?: boolean }> = {},
+): HookOutput<'DummyOutputFunction', { stream: true }> | HookOutput<'DummyOutputFunction', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.DummyOutputFunction, props)
   }
-
-  return useBamlAction(Actions.DummyOutputFunction, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.DummyOutputFunction, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the DynamicFunc BAML function that supports both streaming and non‑streaming responses.
@@ -1703,33 +1668,29 @@ export function useDummyOutputFunction(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useDynamicFunc();
+ * const { data, error, isPending, mutate } = useDynamicFunc({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useDynamicFunc({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useDynamicFunc({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useDynamicFunc(props?: HookInput<'DynamicFunc', { stream?: true }>): HookOutput<'DynamicFunc', { stream: true }>
+export function useDynamicFunc(props: HookInput<'DynamicFunc', { stream: false }>): HookOutput<'DynamicFunc', { stream: false }>
 export function useDynamicFunc(
-  props: StreamingProps<'DynamicFunc'>
-): StreamingHookResult<'DynamicFunc'>;
-
-export function useDynamicFunc(
-  props?: NonStreamingProps<'DynamicFunc'>
-): NonStreamingHookResult<'DynamicFunc'>;
-
-export function useDynamicFunc(
-  props: HookProps<'DynamicFunc'> = {}
-): StreamingHookResult<'DynamicFunc'> | NonStreamingHookResult<'DynamicFunc'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.DynamicFunc, props);
+  props: HookInput<'DynamicFunc', { stream?: boolean }> = {},
+): HookOutput<'DynamicFunc', { stream: true }> | HookOutput<'DynamicFunc', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.DynamicFunc, props)
   }
-
-  return useBamlAction(Actions.DynamicFunc, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.DynamicFunc, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the DynamicInputOutput BAML function that supports both streaming and non‑streaming responses.
@@ -1757,33 +1718,29 @@ export function useDynamicFunc(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useDynamicInputOutput();
+ * const { data, error, isPending, mutate } = useDynamicInputOutput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useDynamicInputOutput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useDynamicInputOutput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useDynamicInputOutput(props?: HookInput<'DynamicInputOutput', { stream?: true }>): HookOutput<'DynamicInputOutput', { stream: true }>
+export function useDynamicInputOutput(props: HookInput<'DynamicInputOutput', { stream: false }>): HookOutput<'DynamicInputOutput', { stream: false }>
 export function useDynamicInputOutput(
-  props: StreamingProps<'DynamicInputOutput'>
-): StreamingHookResult<'DynamicInputOutput'>;
-
-export function useDynamicInputOutput(
-  props?: NonStreamingProps<'DynamicInputOutput'>
-): NonStreamingHookResult<'DynamicInputOutput'>;
-
-export function useDynamicInputOutput(
-  props: HookProps<'DynamicInputOutput'> = {}
-): StreamingHookResult<'DynamicInputOutput'> | NonStreamingHookResult<'DynamicInputOutput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.DynamicInputOutput, props);
+  props: HookInput<'DynamicInputOutput', { stream?: boolean }> = {},
+): HookOutput<'DynamicInputOutput', { stream: true }> | HookOutput<'DynamicInputOutput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.DynamicInputOutput, props)
   }
-
-  return useBamlAction(Actions.DynamicInputOutput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.DynamicInputOutput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the DynamicListInputOutput BAML function that supports both streaming and non‑streaming responses.
@@ -1811,33 +1768,29 @@ export function useDynamicInputOutput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useDynamicListInputOutput();
+ * const { data, error, isPending, mutate } = useDynamicListInputOutput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useDynamicListInputOutput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useDynamicListInputOutput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useDynamicListInputOutput(props?: HookInput<'DynamicListInputOutput', { stream?: true }>): HookOutput<'DynamicListInputOutput', { stream: true }>
+export function useDynamicListInputOutput(props: HookInput<'DynamicListInputOutput', { stream: false }>): HookOutput<'DynamicListInputOutput', { stream: false }>
 export function useDynamicListInputOutput(
-  props: StreamingProps<'DynamicListInputOutput'>
-): StreamingHookResult<'DynamicListInputOutput'>;
-
-export function useDynamicListInputOutput(
-  props?: NonStreamingProps<'DynamicListInputOutput'>
-): NonStreamingHookResult<'DynamicListInputOutput'>;
-
-export function useDynamicListInputOutput(
-  props: HookProps<'DynamicListInputOutput'> = {}
-): StreamingHookResult<'DynamicListInputOutput'> | NonStreamingHookResult<'DynamicListInputOutput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.DynamicListInputOutput, props);
+  props: HookInput<'DynamicListInputOutput', { stream?: boolean }> = {},
+): HookOutput<'DynamicListInputOutput', { stream: true }> | HookOutput<'DynamicListInputOutput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.DynamicListInputOutput, props)
   }
-
-  return useBamlAction(Actions.DynamicListInputOutput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.DynamicListInputOutput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ExpectFailure BAML function that supports both streaming and non‑streaming responses.
@@ -1863,33 +1816,29 @@ export function useDynamicListInputOutput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useExpectFailure();
+ * const { data, error, isPending, mutate } = useExpectFailure({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useExpectFailure({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useExpectFailure({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useExpectFailure(props?: HookInput<'ExpectFailure', { stream?: true }>): HookOutput<'ExpectFailure', { stream: true }>
+export function useExpectFailure(props: HookInput<'ExpectFailure', { stream: false }>): HookOutput<'ExpectFailure', { stream: false }>
 export function useExpectFailure(
-  props: StreamingProps<'ExpectFailure'>
-): StreamingHookResult<'ExpectFailure'>;
-
-export function useExpectFailure(
-  props?: NonStreamingProps<'ExpectFailure'>
-): NonStreamingHookResult<'ExpectFailure'>;
-
-export function useExpectFailure(
-  props: HookProps<'ExpectFailure'> = {}
-): StreamingHookResult<'ExpectFailure'> | NonStreamingHookResult<'ExpectFailure'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ExpectFailure, props);
+  props: HookInput<'ExpectFailure', { stream?: boolean }> = {},
+): HookOutput<'ExpectFailure', { stream: true }> | HookOutput<'ExpectFailure', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ExpectFailure, props)
   }
-
-  return useBamlAction(Actions.ExpectFailure, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ExpectFailure, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ExtractContactInfo BAML function that supports both streaming and non‑streaming responses.
@@ -1917,33 +1866,29 @@ export function useExpectFailure(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useExtractContactInfo();
+ * const { data, error, isPending, mutate } = useExtractContactInfo({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useExtractContactInfo({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useExtractContactInfo({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useExtractContactInfo(props?: HookInput<'ExtractContactInfo', { stream?: true }>): HookOutput<'ExtractContactInfo', { stream: true }>
+export function useExtractContactInfo(props: HookInput<'ExtractContactInfo', { stream: false }>): HookOutput<'ExtractContactInfo', { stream: false }>
 export function useExtractContactInfo(
-  props: StreamingProps<'ExtractContactInfo'>
-): StreamingHookResult<'ExtractContactInfo'>;
-
-export function useExtractContactInfo(
-  props?: NonStreamingProps<'ExtractContactInfo'>
-): NonStreamingHookResult<'ExtractContactInfo'>;
-
-export function useExtractContactInfo(
-  props: HookProps<'ExtractContactInfo'> = {}
-): StreamingHookResult<'ExtractContactInfo'> | NonStreamingHookResult<'ExtractContactInfo'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ExtractContactInfo, props);
+  props: HookInput<'ExtractContactInfo', { stream?: boolean }> = {},
+): HookOutput<'ExtractContactInfo', { stream: true }> | HookOutput<'ExtractContactInfo', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ExtractContactInfo, props)
   }
-
-  return useBamlAction(Actions.ExtractContactInfo, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ExtractContactInfo, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ExtractHobby BAML function that supports both streaming and non‑streaming responses.
@@ -1971,33 +1916,29 @@ export function useExtractContactInfo(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useExtractHobby();
+ * const { data, error, isPending, mutate } = useExtractHobby({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useExtractHobby({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useExtractHobby({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useExtractHobby(props?: HookInput<'ExtractHobby', { stream?: true }>): HookOutput<'ExtractHobby', { stream: true }>
+export function useExtractHobby(props: HookInput<'ExtractHobby', { stream: false }>): HookOutput<'ExtractHobby', { stream: false }>
 export function useExtractHobby(
-  props: StreamingProps<'ExtractHobby'>
-): StreamingHookResult<'ExtractHobby'>;
-
-export function useExtractHobby(
-  props?: NonStreamingProps<'ExtractHobby'>
-): NonStreamingHookResult<'ExtractHobby'>;
-
-export function useExtractHobby(
-  props: HookProps<'ExtractHobby'> = {}
-): StreamingHookResult<'ExtractHobby'> | NonStreamingHookResult<'ExtractHobby'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ExtractHobby, props);
+  props: HookInput<'ExtractHobby', { stream?: boolean }> = {},
+): HookOutput<'ExtractHobby', { stream: true }> | HookOutput<'ExtractHobby', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ExtractHobby, props)
   }
-
-  return useBamlAction(Actions.ExtractHobby, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ExtractHobby, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ExtractNames BAML function that supports both streaming and non‑streaming responses.
@@ -2025,33 +1966,29 @@ export function useExtractHobby(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useExtractNames();
+ * const { data, error, isPending, mutate } = useExtractNames({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useExtractNames({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useExtractNames({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useExtractNames(props?: HookInput<'ExtractNames', { stream?: true }>): HookOutput<'ExtractNames', { stream: true }>
+export function useExtractNames(props: HookInput<'ExtractNames', { stream: false }>): HookOutput<'ExtractNames', { stream: false }>
 export function useExtractNames(
-  props: StreamingProps<'ExtractNames'>
-): StreamingHookResult<'ExtractNames'>;
-
-export function useExtractNames(
-  props?: NonStreamingProps<'ExtractNames'>
-): NonStreamingHookResult<'ExtractNames'>;
-
-export function useExtractNames(
-  props: HookProps<'ExtractNames'> = {}
-): StreamingHookResult<'ExtractNames'> | NonStreamingHookResult<'ExtractNames'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ExtractNames, props);
+  props: HookInput<'ExtractNames', { stream?: boolean }> = {},
+): HookOutput<'ExtractNames', { stream: true }> | HookOutput<'ExtractNames', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ExtractNames, props)
   }
-
-  return useBamlAction(Actions.ExtractNames, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ExtractNames, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ExtractPeople BAML function that supports both streaming and non‑streaming responses.
@@ -2079,33 +2016,29 @@ export function useExtractNames(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useExtractPeople();
+ * const { data, error, isPending, mutate } = useExtractPeople({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useExtractPeople({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useExtractPeople({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useExtractPeople(props?: HookInput<'ExtractPeople', { stream?: true }>): HookOutput<'ExtractPeople', { stream: true }>
+export function useExtractPeople(props: HookInput<'ExtractPeople', { stream: false }>): HookOutput<'ExtractPeople', { stream: false }>
 export function useExtractPeople(
-  props: StreamingProps<'ExtractPeople'>
-): StreamingHookResult<'ExtractPeople'>;
-
-export function useExtractPeople(
-  props?: NonStreamingProps<'ExtractPeople'>
-): NonStreamingHookResult<'ExtractPeople'>;
-
-export function useExtractPeople(
-  props: HookProps<'ExtractPeople'> = {}
-): StreamingHookResult<'ExtractPeople'> | NonStreamingHookResult<'ExtractPeople'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ExtractPeople, props);
+  props: HookInput<'ExtractPeople', { stream?: boolean }> = {},
+): HookOutput<'ExtractPeople', { stream: true }> | HookOutput<'ExtractPeople', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ExtractPeople, props)
   }
-
-  return useBamlAction(Actions.ExtractPeople, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ExtractPeople, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ExtractReceiptInfo BAML function that supports both streaming and non‑streaming responses.
@@ -2135,33 +2068,29 @@ export function useExtractPeople(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useExtractReceiptInfo();
+ * const { data, error, isPending, mutate } = useExtractReceiptInfo({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useExtractReceiptInfo({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useExtractReceiptInfo({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useExtractReceiptInfo(props?: HookInput<'ExtractReceiptInfo', { stream?: true }>): HookOutput<'ExtractReceiptInfo', { stream: true }>
+export function useExtractReceiptInfo(props: HookInput<'ExtractReceiptInfo', { stream: false }>): HookOutput<'ExtractReceiptInfo', { stream: false }>
 export function useExtractReceiptInfo(
-  props: StreamingProps<'ExtractReceiptInfo'>
-): StreamingHookResult<'ExtractReceiptInfo'>;
-
-export function useExtractReceiptInfo(
-  props?: NonStreamingProps<'ExtractReceiptInfo'>
-): NonStreamingHookResult<'ExtractReceiptInfo'>;
-
-export function useExtractReceiptInfo(
-  props: HookProps<'ExtractReceiptInfo'> = {}
-): StreamingHookResult<'ExtractReceiptInfo'> | NonStreamingHookResult<'ExtractReceiptInfo'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ExtractReceiptInfo, props);
+  props: HookInput<'ExtractReceiptInfo', { stream?: boolean }> = {},
+): HookOutput<'ExtractReceiptInfo', { stream: true }> | HookOutput<'ExtractReceiptInfo', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ExtractReceiptInfo, props)
   }
-
-  return useBamlAction(Actions.ExtractReceiptInfo, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ExtractReceiptInfo, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ExtractResume BAML function that supports both streaming and non‑streaming responses.
@@ -2191,33 +2120,29 @@ export function useExtractReceiptInfo(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useExtractResume();
+ * const { data, error, isPending, mutate } = useExtractResume({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useExtractResume({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useExtractResume({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useExtractResume(props?: HookInput<'ExtractResume', { stream?: true }>): HookOutput<'ExtractResume', { stream: true }>
+export function useExtractResume(props: HookInput<'ExtractResume', { stream: false }>): HookOutput<'ExtractResume', { stream: false }>
 export function useExtractResume(
-  props: StreamingProps<'ExtractResume'>
-): StreamingHookResult<'ExtractResume'>;
-
-export function useExtractResume(
-  props?: NonStreamingProps<'ExtractResume'>
-): NonStreamingHookResult<'ExtractResume'>;
-
-export function useExtractResume(
-  props: HookProps<'ExtractResume'> = {}
-): StreamingHookResult<'ExtractResume'> | NonStreamingHookResult<'ExtractResume'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ExtractResume, props);
+  props: HookInput<'ExtractResume', { stream?: boolean }> = {},
+): HookOutput<'ExtractResume', { stream: true }> | HookOutput<'ExtractResume', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ExtractResume, props)
   }
-
-  return useBamlAction(Actions.ExtractResume, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ExtractResume, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ExtractResume2 BAML function that supports both streaming and non‑streaming responses.
@@ -2245,33 +2170,29 @@ export function useExtractResume(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useExtractResume2();
+ * const { data, error, isPending, mutate } = useExtractResume2({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useExtractResume2({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useExtractResume2({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useExtractResume2(props?: HookInput<'ExtractResume2', { stream?: true }>): HookOutput<'ExtractResume2', { stream: true }>
+export function useExtractResume2(props: HookInput<'ExtractResume2', { stream: false }>): HookOutput<'ExtractResume2', { stream: false }>
 export function useExtractResume2(
-  props: StreamingProps<'ExtractResume2'>
-): StreamingHookResult<'ExtractResume2'>;
-
-export function useExtractResume2(
-  props?: NonStreamingProps<'ExtractResume2'>
-): NonStreamingHookResult<'ExtractResume2'>;
-
-export function useExtractResume2(
-  props: HookProps<'ExtractResume2'> = {}
-): StreamingHookResult<'ExtractResume2'> | NonStreamingHookResult<'ExtractResume2'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ExtractResume2, props);
+  props: HookInput<'ExtractResume2', { stream?: boolean }> = {},
+): HookOutput<'ExtractResume2', { stream: true }> | HookOutput<'ExtractResume2', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ExtractResume2, props)
   }
-
-  return useBamlAction(Actions.ExtractResume2, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ExtractResume2, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnClassOptionalOutput BAML function that supports both streaming and non‑streaming responses.
@@ -2299,33 +2220,29 @@ export function useExtractResume2(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnClassOptionalOutput();
+ * const { data, error, isPending, mutate } = useFnClassOptionalOutput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnClassOptionalOutput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnClassOptionalOutput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnClassOptionalOutput(props?: HookInput<'FnClassOptionalOutput', { stream?: true }>): HookOutput<'FnClassOptionalOutput', { stream: true }>
+export function useFnClassOptionalOutput(props: HookInput<'FnClassOptionalOutput', { stream: false }>): HookOutput<'FnClassOptionalOutput', { stream: false }>
 export function useFnClassOptionalOutput(
-  props: StreamingProps<'FnClassOptionalOutput'>
-): StreamingHookResult<'FnClassOptionalOutput'>;
-
-export function useFnClassOptionalOutput(
-  props?: NonStreamingProps<'FnClassOptionalOutput'>
-): NonStreamingHookResult<'FnClassOptionalOutput'>;
-
-export function useFnClassOptionalOutput(
-  props: HookProps<'FnClassOptionalOutput'> = {}
-): StreamingHookResult<'FnClassOptionalOutput'> | NonStreamingHookResult<'FnClassOptionalOutput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnClassOptionalOutput, props);
+  props: HookInput<'FnClassOptionalOutput', { stream?: boolean }> = {},
+): HookOutput<'FnClassOptionalOutput', { stream: true }> | HookOutput<'FnClassOptionalOutput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnClassOptionalOutput, props)
   }
-
-  return useBamlAction(Actions.FnClassOptionalOutput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnClassOptionalOutput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnClassOptionalOutput2 BAML function that supports both streaming and non‑streaming responses.
@@ -2353,33 +2270,29 @@ export function useFnClassOptionalOutput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnClassOptionalOutput2();
+ * const { data, error, isPending, mutate } = useFnClassOptionalOutput2({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnClassOptionalOutput2({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnClassOptionalOutput2({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnClassOptionalOutput2(props?: HookInput<'FnClassOptionalOutput2', { stream?: true }>): HookOutput<'FnClassOptionalOutput2', { stream: true }>
+export function useFnClassOptionalOutput2(props: HookInput<'FnClassOptionalOutput2', { stream: false }>): HookOutput<'FnClassOptionalOutput2', { stream: false }>
 export function useFnClassOptionalOutput2(
-  props: StreamingProps<'FnClassOptionalOutput2'>
-): StreamingHookResult<'FnClassOptionalOutput2'>;
-
-export function useFnClassOptionalOutput2(
-  props?: NonStreamingProps<'FnClassOptionalOutput2'>
-): NonStreamingHookResult<'FnClassOptionalOutput2'>;
-
-export function useFnClassOptionalOutput2(
-  props: HookProps<'FnClassOptionalOutput2'> = {}
-): StreamingHookResult<'FnClassOptionalOutput2'> | NonStreamingHookResult<'FnClassOptionalOutput2'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnClassOptionalOutput2, props);
+  props: HookInput<'FnClassOptionalOutput2', { stream?: boolean }> = {},
+): HookOutput<'FnClassOptionalOutput2', { stream: true }> | HookOutput<'FnClassOptionalOutput2', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnClassOptionalOutput2, props)
   }
-
-  return useBamlAction(Actions.FnClassOptionalOutput2, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnClassOptionalOutput2, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnEnumListOutput BAML function that supports both streaming and non‑streaming responses.
@@ -2407,33 +2320,29 @@ export function useFnClassOptionalOutput2(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnEnumListOutput();
+ * const { data, error, isPending, mutate } = useFnEnumListOutput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnEnumListOutput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnEnumListOutput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnEnumListOutput(props?: HookInput<'FnEnumListOutput', { stream?: true }>): HookOutput<'FnEnumListOutput', { stream: true }>
+export function useFnEnumListOutput(props: HookInput<'FnEnumListOutput', { stream: false }>): HookOutput<'FnEnumListOutput', { stream: false }>
 export function useFnEnumListOutput(
-  props: StreamingProps<'FnEnumListOutput'>
-): StreamingHookResult<'FnEnumListOutput'>;
-
-export function useFnEnumListOutput(
-  props?: NonStreamingProps<'FnEnumListOutput'>
-): NonStreamingHookResult<'FnEnumListOutput'>;
-
-export function useFnEnumListOutput(
-  props: HookProps<'FnEnumListOutput'> = {}
-): StreamingHookResult<'FnEnumListOutput'> | NonStreamingHookResult<'FnEnumListOutput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnEnumListOutput, props);
+  props: HookInput<'FnEnumListOutput', { stream?: boolean }> = {},
+): HookOutput<'FnEnumListOutput', { stream: true }> | HookOutput<'FnEnumListOutput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnEnumListOutput, props)
   }
-
-  return useBamlAction(Actions.FnEnumListOutput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnEnumListOutput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnEnumOutput BAML function that supports both streaming and non‑streaming responses.
@@ -2461,33 +2370,29 @@ export function useFnEnumListOutput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnEnumOutput();
+ * const { data, error, isPending, mutate } = useFnEnumOutput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnEnumOutput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnEnumOutput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnEnumOutput(props?: HookInput<'FnEnumOutput', { stream?: true }>): HookOutput<'FnEnumOutput', { stream: true }>
+export function useFnEnumOutput(props: HookInput<'FnEnumOutput', { stream: false }>): HookOutput<'FnEnumOutput', { stream: false }>
 export function useFnEnumOutput(
-  props: StreamingProps<'FnEnumOutput'>
-): StreamingHookResult<'FnEnumOutput'>;
-
-export function useFnEnumOutput(
-  props?: NonStreamingProps<'FnEnumOutput'>
-): NonStreamingHookResult<'FnEnumOutput'>;
-
-export function useFnEnumOutput(
-  props: HookProps<'FnEnumOutput'> = {}
-): StreamingHookResult<'FnEnumOutput'> | NonStreamingHookResult<'FnEnumOutput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnEnumOutput, props);
+  props: HookInput<'FnEnumOutput', { stream?: boolean }> = {},
+): HookOutput<'FnEnumOutput', { stream: true }> | HookOutput<'FnEnumOutput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnEnumOutput, props)
   }
-
-  return useBamlAction(Actions.FnEnumOutput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnEnumOutput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnLiteralClassInputOutput BAML function that supports both streaming and non‑streaming responses.
@@ -2515,33 +2420,29 @@ export function useFnEnumOutput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnLiteralClassInputOutput();
+ * const { data, error, isPending, mutate } = useFnLiteralClassInputOutput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnLiteralClassInputOutput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnLiteralClassInputOutput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnLiteralClassInputOutput(props?: HookInput<'FnLiteralClassInputOutput', { stream?: true }>): HookOutput<'FnLiteralClassInputOutput', { stream: true }>
+export function useFnLiteralClassInputOutput(props: HookInput<'FnLiteralClassInputOutput', { stream: false }>): HookOutput<'FnLiteralClassInputOutput', { stream: false }>
 export function useFnLiteralClassInputOutput(
-  props: StreamingProps<'FnLiteralClassInputOutput'>
-): StreamingHookResult<'FnLiteralClassInputOutput'>;
-
-export function useFnLiteralClassInputOutput(
-  props?: NonStreamingProps<'FnLiteralClassInputOutput'>
-): NonStreamingHookResult<'FnLiteralClassInputOutput'>;
-
-export function useFnLiteralClassInputOutput(
-  props: HookProps<'FnLiteralClassInputOutput'> = {}
-): StreamingHookResult<'FnLiteralClassInputOutput'> | NonStreamingHookResult<'FnLiteralClassInputOutput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnLiteralClassInputOutput, props);
+  props: HookInput<'FnLiteralClassInputOutput', { stream?: boolean }> = {},
+): HookOutput<'FnLiteralClassInputOutput', { stream: true }> | HookOutput<'FnLiteralClassInputOutput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnLiteralClassInputOutput, props)
   }
-
-  return useBamlAction(Actions.FnLiteralClassInputOutput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnLiteralClassInputOutput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnLiteralUnionClassInputOutput BAML function that supports both streaming and non‑streaming responses.
@@ -2569,33 +2470,29 @@ export function useFnLiteralClassInputOutput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnLiteralUnionClassInputOutput();
+ * const { data, error, isPending, mutate } = useFnLiteralUnionClassInputOutput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnLiteralUnionClassInputOutput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnLiteralUnionClassInputOutput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnLiteralUnionClassInputOutput(props?: HookInput<'FnLiteralUnionClassInputOutput', { stream?: true }>): HookOutput<'FnLiteralUnionClassInputOutput', { stream: true }>
+export function useFnLiteralUnionClassInputOutput(props: HookInput<'FnLiteralUnionClassInputOutput', { stream: false }>): HookOutput<'FnLiteralUnionClassInputOutput', { stream: false }>
 export function useFnLiteralUnionClassInputOutput(
-  props: StreamingProps<'FnLiteralUnionClassInputOutput'>
-): StreamingHookResult<'FnLiteralUnionClassInputOutput'>;
-
-export function useFnLiteralUnionClassInputOutput(
-  props?: NonStreamingProps<'FnLiteralUnionClassInputOutput'>
-): NonStreamingHookResult<'FnLiteralUnionClassInputOutput'>;
-
-export function useFnLiteralUnionClassInputOutput(
-  props: HookProps<'FnLiteralUnionClassInputOutput'> = {}
-): StreamingHookResult<'FnLiteralUnionClassInputOutput'> | NonStreamingHookResult<'FnLiteralUnionClassInputOutput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnLiteralUnionClassInputOutput, props);
+  props: HookInput<'FnLiteralUnionClassInputOutput', { stream?: boolean }> = {},
+): HookOutput<'FnLiteralUnionClassInputOutput', { stream: true }> | HookOutput<'FnLiteralUnionClassInputOutput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnLiteralUnionClassInputOutput, props)
   }
-
-  return useBamlAction(Actions.FnLiteralUnionClassInputOutput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnLiteralUnionClassInputOutput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnNamedArgsSingleStringOptional BAML function that supports both streaming and non‑streaming responses.
@@ -2623,33 +2520,29 @@ export function useFnLiteralUnionClassInputOutput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnNamedArgsSingleStringOptional();
+ * const { data, error, isPending, mutate } = useFnNamedArgsSingleStringOptional({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnNamedArgsSingleStringOptional({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnNamedArgsSingleStringOptional({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnNamedArgsSingleStringOptional(props?: HookInput<'FnNamedArgsSingleStringOptional', { stream?: true }>): HookOutput<'FnNamedArgsSingleStringOptional', { stream: true }>
+export function useFnNamedArgsSingleStringOptional(props: HookInput<'FnNamedArgsSingleStringOptional', { stream: false }>): HookOutput<'FnNamedArgsSingleStringOptional', { stream: false }>
 export function useFnNamedArgsSingleStringOptional(
-  props: StreamingProps<'FnNamedArgsSingleStringOptional'>
-): StreamingHookResult<'FnNamedArgsSingleStringOptional'>;
-
-export function useFnNamedArgsSingleStringOptional(
-  props?: NonStreamingProps<'FnNamedArgsSingleStringOptional'>
-): NonStreamingHookResult<'FnNamedArgsSingleStringOptional'>;
-
-export function useFnNamedArgsSingleStringOptional(
-  props: HookProps<'FnNamedArgsSingleStringOptional'> = {}
-): StreamingHookResult<'FnNamedArgsSingleStringOptional'> | NonStreamingHookResult<'FnNamedArgsSingleStringOptional'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnNamedArgsSingleStringOptional, props);
+  props: HookInput<'FnNamedArgsSingleStringOptional', { stream?: boolean }> = {},
+): HookOutput<'FnNamedArgsSingleStringOptional', { stream: true }> | HookOutput<'FnNamedArgsSingleStringOptional', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnNamedArgsSingleStringOptional, props)
   }
-
-  return useBamlAction(Actions.FnNamedArgsSingleStringOptional, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnNamedArgsSingleStringOptional, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnOutputBool BAML function that supports both streaming and non‑streaming responses.
@@ -2677,33 +2570,29 @@ export function useFnNamedArgsSingleStringOptional(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnOutputBool();
+ * const { data, error, isPending, mutate } = useFnOutputBool({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnOutputBool({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnOutputBool({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnOutputBool(props?: HookInput<'FnOutputBool', { stream?: true }>): HookOutput<'FnOutputBool', { stream: true }>
+export function useFnOutputBool(props: HookInput<'FnOutputBool', { stream: false }>): HookOutput<'FnOutputBool', { stream: false }>
 export function useFnOutputBool(
-  props: StreamingProps<'FnOutputBool'>
-): StreamingHookResult<'FnOutputBool'>;
-
-export function useFnOutputBool(
-  props?: NonStreamingProps<'FnOutputBool'>
-): NonStreamingHookResult<'FnOutputBool'>;
-
-export function useFnOutputBool(
-  props: HookProps<'FnOutputBool'> = {}
-): StreamingHookResult<'FnOutputBool'> | NonStreamingHookResult<'FnOutputBool'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnOutputBool, props);
+  props: HookInput<'FnOutputBool', { stream?: boolean }> = {},
+): HookOutput<'FnOutputBool', { stream: true }> | HookOutput<'FnOutputBool', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnOutputBool, props)
   }
-
-  return useBamlAction(Actions.FnOutputBool, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnOutputBool, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnOutputClass BAML function that supports both streaming and non‑streaming responses.
@@ -2731,33 +2620,29 @@ export function useFnOutputBool(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnOutputClass();
+ * const { data, error, isPending, mutate } = useFnOutputClass({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnOutputClass({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnOutputClass({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnOutputClass(props?: HookInput<'FnOutputClass', { stream?: true }>): HookOutput<'FnOutputClass', { stream: true }>
+export function useFnOutputClass(props: HookInput<'FnOutputClass', { stream: false }>): HookOutput<'FnOutputClass', { stream: false }>
 export function useFnOutputClass(
-  props: StreamingProps<'FnOutputClass'>
-): StreamingHookResult<'FnOutputClass'>;
-
-export function useFnOutputClass(
-  props?: NonStreamingProps<'FnOutputClass'>
-): NonStreamingHookResult<'FnOutputClass'>;
-
-export function useFnOutputClass(
-  props: HookProps<'FnOutputClass'> = {}
-): StreamingHookResult<'FnOutputClass'> | NonStreamingHookResult<'FnOutputClass'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnOutputClass, props);
+  props: HookInput<'FnOutputClass', { stream?: boolean }> = {},
+): HookOutput<'FnOutputClass', { stream: true }> | HookOutput<'FnOutputClass', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnOutputClass, props)
   }
-
-  return useBamlAction(Actions.FnOutputClass, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnOutputClass, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnOutputClassList BAML function that supports both streaming and non‑streaming responses.
@@ -2785,33 +2670,29 @@ export function useFnOutputClass(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnOutputClassList();
+ * const { data, error, isPending, mutate } = useFnOutputClassList({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnOutputClassList({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnOutputClassList({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnOutputClassList(props?: HookInput<'FnOutputClassList', { stream?: true }>): HookOutput<'FnOutputClassList', { stream: true }>
+export function useFnOutputClassList(props: HookInput<'FnOutputClassList', { stream: false }>): HookOutput<'FnOutputClassList', { stream: false }>
 export function useFnOutputClassList(
-  props: StreamingProps<'FnOutputClassList'>
-): StreamingHookResult<'FnOutputClassList'>;
-
-export function useFnOutputClassList(
-  props?: NonStreamingProps<'FnOutputClassList'>
-): NonStreamingHookResult<'FnOutputClassList'>;
-
-export function useFnOutputClassList(
-  props: HookProps<'FnOutputClassList'> = {}
-): StreamingHookResult<'FnOutputClassList'> | NonStreamingHookResult<'FnOutputClassList'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnOutputClassList, props);
+  props: HookInput<'FnOutputClassList', { stream?: boolean }> = {},
+): HookOutput<'FnOutputClassList', { stream: true }> | HookOutput<'FnOutputClassList', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnOutputClassList, props)
   }
-
-  return useBamlAction(Actions.FnOutputClassList, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnOutputClassList, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnOutputClassNested BAML function that supports both streaming and non‑streaming responses.
@@ -2839,33 +2720,29 @@ export function useFnOutputClassList(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnOutputClassNested();
+ * const { data, error, isPending, mutate } = useFnOutputClassNested({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnOutputClassNested({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnOutputClassNested({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnOutputClassNested(props?: HookInput<'FnOutputClassNested', { stream?: true }>): HookOutput<'FnOutputClassNested', { stream: true }>
+export function useFnOutputClassNested(props: HookInput<'FnOutputClassNested', { stream: false }>): HookOutput<'FnOutputClassNested', { stream: false }>
 export function useFnOutputClassNested(
-  props: StreamingProps<'FnOutputClassNested'>
-): StreamingHookResult<'FnOutputClassNested'>;
-
-export function useFnOutputClassNested(
-  props?: NonStreamingProps<'FnOutputClassNested'>
-): NonStreamingHookResult<'FnOutputClassNested'>;
-
-export function useFnOutputClassNested(
-  props: HookProps<'FnOutputClassNested'> = {}
-): StreamingHookResult<'FnOutputClassNested'> | NonStreamingHookResult<'FnOutputClassNested'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnOutputClassNested, props);
+  props: HookInput<'FnOutputClassNested', { stream?: boolean }> = {},
+): HookOutput<'FnOutputClassNested', { stream: true }> | HookOutput<'FnOutputClassNested', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnOutputClassNested, props)
   }
-
-  return useBamlAction(Actions.FnOutputClassNested, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnOutputClassNested, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnOutputClassWithEnum BAML function that supports both streaming and non‑streaming responses.
@@ -2893,33 +2770,29 @@ export function useFnOutputClassNested(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnOutputClassWithEnum();
+ * const { data, error, isPending, mutate } = useFnOutputClassWithEnum({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnOutputClassWithEnum({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnOutputClassWithEnum({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnOutputClassWithEnum(props?: HookInput<'FnOutputClassWithEnum', { stream?: true }>): HookOutput<'FnOutputClassWithEnum', { stream: true }>
+export function useFnOutputClassWithEnum(props: HookInput<'FnOutputClassWithEnum', { stream: false }>): HookOutput<'FnOutputClassWithEnum', { stream: false }>
 export function useFnOutputClassWithEnum(
-  props: StreamingProps<'FnOutputClassWithEnum'>
-): StreamingHookResult<'FnOutputClassWithEnum'>;
-
-export function useFnOutputClassWithEnum(
-  props?: NonStreamingProps<'FnOutputClassWithEnum'>
-): NonStreamingHookResult<'FnOutputClassWithEnum'>;
-
-export function useFnOutputClassWithEnum(
-  props: HookProps<'FnOutputClassWithEnum'> = {}
-): StreamingHookResult<'FnOutputClassWithEnum'> | NonStreamingHookResult<'FnOutputClassWithEnum'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnOutputClassWithEnum, props);
+  props: HookInput<'FnOutputClassWithEnum', { stream?: boolean }> = {},
+): HookOutput<'FnOutputClassWithEnum', { stream: true }> | HookOutput<'FnOutputClassWithEnum', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnOutputClassWithEnum, props)
   }
-
-  return useBamlAction(Actions.FnOutputClassWithEnum, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnOutputClassWithEnum, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnOutputInt BAML function that supports both streaming and non‑streaming responses.
@@ -2947,33 +2820,29 @@ export function useFnOutputClassWithEnum(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnOutputInt();
+ * const { data, error, isPending, mutate } = useFnOutputInt({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnOutputInt({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnOutputInt({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnOutputInt(props?: HookInput<'FnOutputInt', { stream?: true }>): HookOutput<'FnOutputInt', { stream: true }>
+export function useFnOutputInt(props: HookInput<'FnOutputInt', { stream: false }>): HookOutput<'FnOutputInt', { stream: false }>
 export function useFnOutputInt(
-  props: StreamingProps<'FnOutputInt'>
-): StreamingHookResult<'FnOutputInt'>;
-
-export function useFnOutputInt(
-  props?: NonStreamingProps<'FnOutputInt'>
-): NonStreamingHookResult<'FnOutputInt'>;
-
-export function useFnOutputInt(
-  props: HookProps<'FnOutputInt'> = {}
-): StreamingHookResult<'FnOutputInt'> | NonStreamingHookResult<'FnOutputInt'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnOutputInt, props);
+  props: HookInput<'FnOutputInt', { stream?: boolean }> = {},
+): HookOutput<'FnOutputInt', { stream: true }> | HookOutput<'FnOutputInt', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnOutputInt, props)
   }
-
-  return useBamlAction(Actions.FnOutputInt, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnOutputInt, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnOutputLiteralBool BAML function that supports both streaming and non‑streaming responses.
@@ -3001,33 +2870,29 @@ export function useFnOutputInt(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnOutputLiteralBool();
+ * const { data, error, isPending, mutate } = useFnOutputLiteralBool({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnOutputLiteralBool({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnOutputLiteralBool({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnOutputLiteralBool(props?: HookInput<'FnOutputLiteralBool', { stream?: true }>): HookOutput<'FnOutputLiteralBool', { stream: true }>
+export function useFnOutputLiteralBool(props: HookInput<'FnOutputLiteralBool', { stream: false }>): HookOutput<'FnOutputLiteralBool', { stream: false }>
 export function useFnOutputLiteralBool(
-  props: StreamingProps<'FnOutputLiteralBool'>
-): StreamingHookResult<'FnOutputLiteralBool'>;
-
-export function useFnOutputLiteralBool(
-  props?: NonStreamingProps<'FnOutputLiteralBool'>
-): NonStreamingHookResult<'FnOutputLiteralBool'>;
-
-export function useFnOutputLiteralBool(
-  props: HookProps<'FnOutputLiteralBool'> = {}
-): StreamingHookResult<'FnOutputLiteralBool'> | NonStreamingHookResult<'FnOutputLiteralBool'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnOutputLiteralBool, props);
+  props: HookInput<'FnOutputLiteralBool', { stream?: boolean }> = {},
+): HookOutput<'FnOutputLiteralBool', { stream: true }> | HookOutput<'FnOutputLiteralBool', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnOutputLiteralBool, props)
   }
-
-  return useBamlAction(Actions.FnOutputLiteralBool, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnOutputLiteralBool, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnOutputLiteralInt BAML function that supports both streaming and non‑streaming responses.
@@ -3055,33 +2920,29 @@ export function useFnOutputLiteralBool(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnOutputLiteralInt();
+ * const { data, error, isPending, mutate } = useFnOutputLiteralInt({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnOutputLiteralInt({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnOutputLiteralInt({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnOutputLiteralInt(props?: HookInput<'FnOutputLiteralInt', { stream?: true }>): HookOutput<'FnOutputLiteralInt', { stream: true }>
+export function useFnOutputLiteralInt(props: HookInput<'FnOutputLiteralInt', { stream: false }>): HookOutput<'FnOutputLiteralInt', { stream: false }>
 export function useFnOutputLiteralInt(
-  props: StreamingProps<'FnOutputLiteralInt'>
-): StreamingHookResult<'FnOutputLiteralInt'>;
-
-export function useFnOutputLiteralInt(
-  props?: NonStreamingProps<'FnOutputLiteralInt'>
-): NonStreamingHookResult<'FnOutputLiteralInt'>;
-
-export function useFnOutputLiteralInt(
-  props: HookProps<'FnOutputLiteralInt'> = {}
-): StreamingHookResult<'FnOutputLiteralInt'> | NonStreamingHookResult<'FnOutputLiteralInt'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnOutputLiteralInt, props);
+  props: HookInput<'FnOutputLiteralInt', { stream?: boolean }> = {},
+): HookOutput<'FnOutputLiteralInt', { stream: true }> | HookOutput<'FnOutputLiteralInt', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnOutputLiteralInt, props)
   }
-
-  return useBamlAction(Actions.FnOutputLiteralInt, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnOutputLiteralInt, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnOutputLiteralString BAML function that supports both streaming and non‑streaming responses.
@@ -3109,33 +2970,29 @@ export function useFnOutputLiteralInt(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnOutputLiteralString();
+ * const { data, error, isPending, mutate } = useFnOutputLiteralString({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnOutputLiteralString({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnOutputLiteralString({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnOutputLiteralString(props?: HookInput<'FnOutputLiteralString', { stream?: true }>): HookOutput<'FnOutputLiteralString', { stream: true }>
+export function useFnOutputLiteralString(props: HookInput<'FnOutputLiteralString', { stream: false }>): HookOutput<'FnOutputLiteralString', { stream: false }>
 export function useFnOutputLiteralString(
-  props: StreamingProps<'FnOutputLiteralString'>
-): StreamingHookResult<'FnOutputLiteralString'>;
-
-export function useFnOutputLiteralString(
-  props?: NonStreamingProps<'FnOutputLiteralString'>
-): NonStreamingHookResult<'FnOutputLiteralString'>;
-
-export function useFnOutputLiteralString(
-  props: HookProps<'FnOutputLiteralString'> = {}
-): StreamingHookResult<'FnOutputLiteralString'> | NonStreamingHookResult<'FnOutputLiteralString'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnOutputLiteralString, props);
+  props: HookInput<'FnOutputLiteralString', { stream?: boolean }> = {},
+): HookOutput<'FnOutputLiteralString', { stream: true }> | HookOutput<'FnOutputLiteralString', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnOutputLiteralString, props)
   }
-
-  return useBamlAction(Actions.FnOutputLiteralString, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnOutputLiteralString, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnOutputStringList BAML function that supports both streaming and non‑streaming responses.
@@ -3163,33 +3020,29 @@ export function useFnOutputLiteralString(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnOutputStringList();
+ * const { data, error, isPending, mutate } = useFnOutputStringList({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnOutputStringList({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnOutputStringList({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnOutputStringList(props?: HookInput<'FnOutputStringList', { stream?: true }>): HookOutput<'FnOutputStringList', { stream: true }>
+export function useFnOutputStringList(props: HookInput<'FnOutputStringList', { stream: false }>): HookOutput<'FnOutputStringList', { stream: false }>
 export function useFnOutputStringList(
-  props: StreamingProps<'FnOutputStringList'>
-): StreamingHookResult<'FnOutputStringList'>;
-
-export function useFnOutputStringList(
-  props?: NonStreamingProps<'FnOutputStringList'>
-): NonStreamingHookResult<'FnOutputStringList'>;
-
-export function useFnOutputStringList(
-  props: HookProps<'FnOutputStringList'> = {}
-): StreamingHookResult<'FnOutputStringList'> | NonStreamingHookResult<'FnOutputStringList'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnOutputStringList, props);
+  props: HookInput<'FnOutputStringList', { stream?: boolean }> = {},
+): HookOutput<'FnOutputStringList', { stream: true }> | HookOutput<'FnOutputStringList', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnOutputStringList, props)
   }
-
-  return useBamlAction(Actions.FnOutputStringList, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnOutputStringList, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnTestAliasedEnumOutput BAML function that supports both streaming and non‑streaming responses.
@@ -3217,33 +3070,29 @@ export function useFnOutputStringList(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnTestAliasedEnumOutput();
+ * const { data, error, isPending, mutate } = useFnTestAliasedEnumOutput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnTestAliasedEnumOutput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnTestAliasedEnumOutput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnTestAliasedEnumOutput(props?: HookInput<'FnTestAliasedEnumOutput', { stream?: true }>): HookOutput<'FnTestAliasedEnumOutput', { stream: true }>
+export function useFnTestAliasedEnumOutput(props: HookInput<'FnTestAliasedEnumOutput', { stream: false }>): HookOutput<'FnTestAliasedEnumOutput', { stream: false }>
 export function useFnTestAliasedEnumOutput(
-  props: StreamingProps<'FnTestAliasedEnumOutput'>
-): StreamingHookResult<'FnTestAliasedEnumOutput'>;
-
-export function useFnTestAliasedEnumOutput(
-  props?: NonStreamingProps<'FnTestAliasedEnumOutput'>
-): NonStreamingHookResult<'FnTestAliasedEnumOutput'>;
-
-export function useFnTestAliasedEnumOutput(
-  props: HookProps<'FnTestAliasedEnumOutput'> = {}
-): StreamingHookResult<'FnTestAliasedEnumOutput'> | NonStreamingHookResult<'FnTestAliasedEnumOutput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnTestAliasedEnumOutput, props);
+  props: HookInput<'FnTestAliasedEnumOutput', { stream?: boolean }> = {},
+): HookOutput<'FnTestAliasedEnumOutput', { stream: true }> | HookOutput<'FnTestAliasedEnumOutput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnTestAliasedEnumOutput, props)
   }
-
-  return useBamlAction(Actions.FnTestAliasedEnumOutput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnTestAliasedEnumOutput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnTestClassAlias BAML function that supports both streaming and non‑streaming responses.
@@ -3271,33 +3120,29 @@ export function useFnTestAliasedEnumOutput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnTestClassAlias();
+ * const { data, error, isPending, mutate } = useFnTestClassAlias({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnTestClassAlias({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnTestClassAlias({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnTestClassAlias(props?: HookInput<'FnTestClassAlias', { stream?: true }>): HookOutput<'FnTestClassAlias', { stream: true }>
+export function useFnTestClassAlias(props: HookInput<'FnTestClassAlias', { stream: false }>): HookOutput<'FnTestClassAlias', { stream: false }>
 export function useFnTestClassAlias(
-  props: StreamingProps<'FnTestClassAlias'>
-): StreamingHookResult<'FnTestClassAlias'>;
-
-export function useFnTestClassAlias(
-  props?: NonStreamingProps<'FnTestClassAlias'>
-): NonStreamingHookResult<'FnTestClassAlias'>;
-
-export function useFnTestClassAlias(
-  props: HookProps<'FnTestClassAlias'> = {}
-): StreamingHookResult<'FnTestClassAlias'> | NonStreamingHookResult<'FnTestClassAlias'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnTestClassAlias, props);
+  props: HookInput<'FnTestClassAlias', { stream?: boolean }> = {},
+): HookOutput<'FnTestClassAlias', { stream: true }> | HookOutput<'FnTestClassAlias', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnTestClassAlias, props)
   }
-
-  return useBamlAction(Actions.FnTestClassAlias, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnTestClassAlias, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the FnTestNamedArgsSingleEnum BAML function that supports both streaming and non‑streaming responses.
@@ -3325,33 +3170,29 @@ export function useFnTestClassAlias(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useFnTestNamedArgsSingleEnum();
+ * const { data, error, isPending, mutate } = useFnTestNamedArgsSingleEnum({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useFnTestNamedArgsSingleEnum({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useFnTestNamedArgsSingleEnum({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useFnTestNamedArgsSingleEnum(props?: HookInput<'FnTestNamedArgsSingleEnum', { stream?: true }>): HookOutput<'FnTestNamedArgsSingleEnum', { stream: true }>
+export function useFnTestNamedArgsSingleEnum(props: HookInput<'FnTestNamedArgsSingleEnum', { stream: false }>): HookOutput<'FnTestNamedArgsSingleEnum', { stream: false }>
 export function useFnTestNamedArgsSingleEnum(
-  props: StreamingProps<'FnTestNamedArgsSingleEnum'>
-): StreamingHookResult<'FnTestNamedArgsSingleEnum'>;
-
-export function useFnTestNamedArgsSingleEnum(
-  props?: NonStreamingProps<'FnTestNamedArgsSingleEnum'>
-): NonStreamingHookResult<'FnTestNamedArgsSingleEnum'>;
-
-export function useFnTestNamedArgsSingleEnum(
-  props: HookProps<'FnTestNamedArgsSingleEnum'> = {}
-): StreamingHookResult<'FnTestNamedArgsSingleEnum'> | NonStreamingHookResult<'FnTestNamedArgsSingleEnum'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.FnTestNamedArgsSingleEnum, props);
+  props: HookInput<'FnTestNamedArgsSingleEnum', { stream?: boolean }> = {},
+): HookOutput<'FnTestNamedArgsSingleEnum', { stream: true }> | HookOutput<'FnTestNamedArgsSingleEnum', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.FnTestNamedArgsSingleEnum, props)
   }
-
-  return useBamlAction(Actions.FnTestNamedArgsSingleEnum, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.FnTestNamedArgsSingleEnum, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the GetDataType BAML function that supports both streaming and non‑streaming responses.
@@ -3379,33 +3220,29 @@ export function useFnTestNamedArgsSingleEnum(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useGetDataType();
+ * const { data, error, isPending, mutate } = useGetDataType({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useGetDataType({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useGetDataType({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useGetDataType(props?: HookInput<'GetDataType', { stream?: true }>): HookOutput<'GetDataType', { stream: true }>
+export function useGetDataType(props: HookInput<'GetDataType', { stream: false }>): HookOutput<'GetDataType', { stream: false }>
 export function useGetDataType(
-  props: StreamingProps<'GetDataType'>
-): StreamingHookResult<'GetDataType'>;
-
-export function useGetDataType(
-  props?: NonStreamingProps<'GetDataType'>
-): NonStreamingHookResult<'GetDataType'>;
-
-export function useGetDataType(
-  props: HookProps<'GetDataType'> = {}
-): StreamingHookResult<'GetDataType'> | NonStreamingHookResult<'GetDataType'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.GetDataType, props);
+  props: HookInput<'GetDataType', { stream?: boolean }> = {},
+): HookOutput<'GetDataType', { stream: true }> | HookOutput<'GetDataType', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.GetDataType, props)
   }
-
-  return useBamlAction(Actions.GetDataType, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.GetDataType, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the GetOrderInfo BAML function that supports both streaming and non‑streaming responses.
@@ -3433,33 +3270,29 @@ export function useGetDataType(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useGetOrderInfo();
+ * const { data, error, isPending, mutate } = useGetOrderInfo({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useGetOrderInfo({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useGetOrderInfo({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useGetOrderInfo(props?: HookInput<'GetOrderInfo', { stream?: true }>): HookOutput<'GetOrderInfo', { stream: true }>
+export function useGetOrderInfo(props: HookInput<'GetOrderInfo', { stream: false }>): HookOutput<'GetOrderInfo', { stream: false }>
 export function useGetOrderInfo(
-  props: StreamingProps<'GetOrderInfo'>
-): StreamingHookResult<'GetOrderInfo'>;
-
-export function useGetOrderInfo(
-  props?: NonStreamingProps<'GetOrderInfo'>
-): NonStreamingHookResult<'GetOrderInfo'>;
-
-export function useGetOrderInfo(
-  props: HookProps<'GetOrderInfo'> = {}
-): StreamingHookResult<'GetOrderInfo'> | NonStreamingHookResult<'GetOrderInfo'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.GetOrderInfo, props);
+  props: HookInput<'GetOrderInfo', { stream?: boolean }> = {},
+): HookOutput<'GetOrderInfo', { stream: true }> | HookOutput<'GetOrderInfo', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.GetOrderInfo, props)
   }
-
-  return useBamlAction(Actions.GetOrderInfo, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.GetOrderInfo, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the GetQuery BAML function that supports both streaming and non‑streaming responses.
@@ -3487,33 +3320,29 @@ export function useGetOrderInfo(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useGetQuery();
+ * const { data, error, isPending, mutate } = useGetQuery({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useGetQuery({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useGetQuery({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useGetQuery(props?: HookInput<'GetQuery', { stream?: true }>): HookOutput<'GetQuery', { stream: true }>
+export function useGetQuery(props: HookInput<'GetQuery', { stream: false }>): HookOutput<'GetQuery', { stream: false }>
 export function useGetQuery(
-  props: StreamingProps<'GetQuery'>
-): StreamingHookResult<'GetQuery'>;
-
-export function useGetQuery(
-  props?: NonStreamingProps<'GetQuery'>
-): NonStreamingHookResult<'GetQuery'>;
-
-export function useGetQuery(
-  props: HookProps<'GetQuery'> = {}
-): StreamingHookResult<'GetQuery'> | NonStreamingHookResult<'GetQuery'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.GetQuery, props);
+  props: HookInput<'GetQuery', { stream?: boolean }> = {},
+): HookOutput<'GetQuery', { stream: true }> | HookOutput<'GetQuery', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.GetQuery, props)
   }
-
-  return useBamlAction(Actions.GetQuery, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.GetQuery, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the InOutEnumMapKey BAML function that supports both streaming and non‑streaming responses.
@@ -3543,33 +3372,29 @@ export function useGetQuery(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useInOutEnumMapKey();
+ * const { data, error, isPending, mutate } = useInOutEnumMapKey({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useInOutEnumMapKey({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useInOutEnumMapKey({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useInOutEnumMapKey(props?: HookInput<'InOutEnumMapKey', { stream?: true }>): HookOutput<'InOutEnumMapKey', { stream: true }>
+export function useInOutEnumMapKey(props: HookInput<'InOutEnumMapKey', { stream: false }>): HookOutput<'InOutEnumMapKey', { stream: false }>
 export function useInOutEnumMapKey(
-  props: StreamingProps<'InOutEnumMapKey'>
-): StreamingHookResult<'InOutEnumMapKey'>;
-
-export function useInOutEnumMapKey(
-  props?: NonStreamingProps<'InOutEnumMapKey'>
-): NonStreamingHookResult<'InOutEnumMapKey'>;
-
-export function useInOutEnumMapKey(
-  props: HookProps<'InOutEnumMapKey'> = {}
-): StreamingHookResult<'InOutEnumMapKey'> | NonStreamingHookResult<'InOutEnumMapKey'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.InOutEnumMapKey, props);
+  props: HookInput<'InOutEnumMapKey', { stream?: boolean }> = {},
+): HookOutput<'InOutEnumMapKey', { stream: true }> | HookOutput<'InOutEnumMapKey', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.InOutEnumMapKey, props)
   }
-
-  return useBamlAction(Actions.InOutEnumMapKey, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.InOutEnumMapKey, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the InOutLiteralStringUnionMapKey BAML function that supports both streaming and non‑streaming responses.
@@ -3599,33 +3424,29 @@ export function useInOutEnumMapKey(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useInOutLiteralStringUnionMapKey();
+ * const { data, error, isPending, mutate } = useInOutLiteralStringUnionMapKey({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useInOutLiteralStringUnionMapKey({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useInOutLiteralStringUnionMapKey({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useInOutLiteralStringUnionMapKey(props?: HookInput<'InOutLiteralStringUnionMapKey', { stream?: true }>): HookOutput<'InOutLiteralStringUnionMapKey', { stream: true }>
+export function useInOutLiteralStringUnionMapKey(props: HookInput<'InOutLiteralStringUnionMapKey', { stream: false }>): HookOutput<'InOutLiteralStringUnionMapKey', { stream: false }>
 export function useInOutLiteralStringUnionMapKey(
-  props: StreamingProps<'InOutLiteralStringUnionMapKey'>
-): StreamingHookResult<'InOutLiteralStringUnionMapKey'>;
-
-export function useInOutLiteralStringUnionMapKey(
-  props?: NonStreamingProps<'InOutLiteralStringUnionMapKey'>
-): NonStreamingHookResult<'InOutLiteralStringUnionMapKey'>;
-
-export function useInOutLiteralStringUnionMapKey(
-  props: HookProps<'InOutLiteralStringUnionMapKey'> = {}
-): StreamingHookResult<'InOutLiteralStringUnionMapKey'> | NonStreamingHookResult<'InOutLiteralStringUnionMapKey'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.InOutLiteralStringUnionMapKey, props);
+  props: HookInput<'InOutLiteralStringUnionMapKey', { stream?: boolean }> = {},
+): HookOutput<'InOutLiteralStringUnionMapKey', { stream: true }> | HookOutput<'InOutLiteralStringUnionMapKey', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.InOutLiteralStringUnionMapKey, props)
   }
-
-  return useBamlAction(Actions.InOutLiteralStringUnionMapKey, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.InOutLiteralStringUnionMapKey, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the InOutSingleLiteralStringMapKey BAML function that supports both streaming and non‑streaming responses.
@@ -3653,33 +3474,29 @@ export function useInOutLiteralStringUnionMapKey(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useInOutSingleLiteralStringMapKey();
+ * const { data, error, isPending, mutate } = useInOutSingleLiteralStringMapKey({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useInOutSingleLiteralStringMapKey({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useInOutSingleLiteralStringMapKey({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useInOutSingleLiteralStringMapKey(props?: HookInput<'InOutSingleLiteralStringMapKey', { stream?: true }>): HookOutput<'InOutSingleLiteralStringMapKey', { stream: true }>
+export function useInOutSingleLiteralStringMapKey(props: HookInput<'InOutSingleLiteralStringMapKey', { stream: false }>): HookOutput<'InOutSingleLiteralStringMapKey', { stream: false }>
 export function useInOutSingleLiteralStringMapKey(
-  props: StreamingProps<'InOutSingleLiteralStringMapKey'>
-): StreamingHookResult<'InOutSingleLiteralStringMapKey'>;
-
-export function useInOutSingleLiteralStringMapKey(
-  props?: NonStreamingProps<'InOutSingleLiteralStringMapKey'>
-): NonStreamingHookResult<'InOutSingleLiteralStringMapKey'>;
-
-export function useInOutSingleLiteralStringMapKey(
-  props: HookProps<'InOutSingleLiteralStringMapKey'> = {}
-): StreamingHookResult<'InOutSingleLiteralStringMapKey'> | NonStreamingHookResult<'InOutSingleLiteralStringMapKey'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.InOutSingleLiteralStringMapKey, props);
+  props: HookInput<'InOutSingleLiteralStringMapKey', { stream?: boolean }> = {},
+): HookOutput<'InOutSingleLiteralStringMapKey', { stream: true }> | HookOutput<'InOutSingleLiteralStringMapKey', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.InOutSingleLiteralStringMapKey, props)
   }
-
-  return useBamlAction(Actions.InOutSingleLiteralStringMapKey, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.InOutSingleLiteralStringMapKey, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the JsonTypeAliasCycle BAML function that supports both streaming and non‑streaming responses.
@@ -3707,33 +3524,29 @@ export function useInOutSingleLiteralStringMapKey(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useJsonTypeAliasCycle();
+ * const { data, error, isPending, mutate } = useJsonTypeAliasCycle({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useJsonTypeAliasCycle({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useJsonTypeAliasCycle({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useJsonTypeAliasCycle(props?: HookInput<'JsonTypeAliasCycle', { stream?: true }>): HookOutput<'JsonTypeAliasCycle', { stream: true }>
+export function useJsonTypeAliasCycle(props: HookInput<'JsonTypeAliasCycle', { stream: false }>): HookOutput<'JsonTypeAliasCycle', { stream: false }>
 export function useJsonTypeAliasCycle(
-  props: StreamingProps<'JsonTypeAliasCycle'>
-): StreamingHookResult<'JsonTypeAliasCycle'>;
-
-export function useJsonTypeAliasCycle(
-  props?: NonStreamingProps<'JsonTypeAliasCycle'>
-): NonStreamingHookResult<'JsonTypeAliasCycle'>;
-
-export function useJsonTypeAliasCycle(
-  props: HookProps<'JsonTypeAliasCycle'> = {}
-): StreamingHookResult<'JsonTypeAliasCycle'> | NonStreamingHookResult<'JsonTypeAliasCycle'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.JsonTypeAliasCycle, props);
+  props: HookInput<'JsonTypeAliasCycle', { stream?: boolean }> = {},
+): HookOutput<'JsonTypeAliasCycle', { stream: true }> | HookOutput<'JsonTypeAliasCycle', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.JsonTypeAliasCycle, props)
   }
-
-  return useBamlAction(Actions.JsonTypeAliasCycle, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.JsonTypeAliasCycle, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the LiteralUnionsTest BAML function that supports both streaming and non‑streaming responses.
@@ -3761,33 +3574,29 @@ export function useJsonTypeAliasCycle(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useLiteralUnionsTest();
+ * const { data, error, isPending, mutate } = useLiteralUnionsTest({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useLiteralUnionsTest({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useLiteralUnionsTest({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useLiteralUnionsTest(props?: HookInput<'LiteralUnionsTest', { stream?: true }>): HookOutput<'LiteralUnionsTest', { stream: true }>
+export function useLiteralUnionsTest(props: HookInput<'LiteralUnionsTest', { stream: false }>): HookOutput<'LiteralUnionsTest', { stream: false }>
 export function useLiteralUnionsTest(
-  props: StreamingProps<'LiteralUnionsTest'>
-): StreamingHookResult<'LiteralUnionsTest'>;
-
-export function useLiteralUnionsTest(
-  props?: NonStreamingProps<'LiteralUnionsTest'>
-): NonStreamingHookResult<'LiteralUnionsTest'>;
-
-export function useLiteralUnionsTest(
-  props: HookProps<'LiteralUnionsTest'> = {}
-): StreamingHookResult<'LiteralUnionsTest'> | NonStreamingHookResult<'LiteralUnionsTest'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.LiteralUnionsTest, props);
+  props: HookInput<'LiteralUnionsTest', { stream?: boolean }> = {},
+): HookOutput<'LiteralUnionsTest', { stream: true }> | HookOutput<'LiteralUnionsTest', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.LiteralUnionsTest, props)
   }
-
-  return useBamlAction(Actions.LiteralUnionsTest, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.LiteralUnionsTest, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the MakeBlockConstraint BAML function that supports both streaming and non‑streaming responses.
@@ -3813,33 +3622,29 @@ export function useLiteralUnionsTest(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useMakeBlockConstraint();
+ * const { data, error, isPending, mutate } = useMakeBlockConstraint({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useMakeBlockConstraint({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useMakeBlockConstraint({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useMakeBlockConstraint(props?: HookInput<'MakeBlockConstraint', { stream?: true }>): HookOutput<'MakeBlockConstraint', { stream: true }>
+export function useMakeBlockConstraint(props: HookInput<'MakeBlockConstraint', { stream: false }>): HookOutput<'MakeBlockConstraint', { stream: false }>
 export function useMakeBlockConstraint(
-  props: StreamingProps<'MakeBlockConstraint'>
-): StreamingHookResult<'MakeBlockConstraint'>;
-
-export function useMakeBlockConstraint(
-  props?: NonStreamingProps<'MakeBlockConstraint'>
-): NonStreamingHookResult<'MakeBlockConstraint'>;
-
-export function useMakeBlockConstraint(
-  props: HookProps<'MakeBlockConstraint'> = {}
-): StreamingHookResult<'MakeBlockConstraint'> | NonStreamingHookResult<'MakeBlockConstraint'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.MakeBlockConstraint, props);
+  props: HookInput<'MakeBlockConstraint', { stream?: boolean }> = {},
+): HookOutput<'MakeBlockConstraint', { stream: true }> | HookOutput<'MakeBlockConstraint', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.MakeBlockConstraint, props)
   }
-
-  return useBamlAction(Actions.MakeBlockConstraint, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.MakeBlockConstraint, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the MakeNestedBlockConstraint BAML function that supports both streaming and non‑streaming responses.
@@ -3865,33 +3670,29 @@ export function useMakeBlockConstraint(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useMakeNestedBlockConstraint();
+ * const { data, error, isPending, mutate } = useMakeNestedBlockConstraint({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useMakeNestedBlockConstraint({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useMakeNestedBlockConstraint({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useMakeNestedBlockConstraint(props?: HookInput<'MakeNestedBlockConstraint', { stream?: true }>): HookOutput<'MakeNestedBlockConstraint', { stream: true }>
+export function useMakeNestedBlockConstraint(props: HookInput<'MakeNestedBlockConstraint', { stream: false }>): HookOutput<'MakeNestedBlockConstraint', { stream: false }>
 export function useMakeNestedBlockConstraint(
-  props: StreamingProps<'MakeNestedBlockConstraint'>
-): StreamingHookResult<'MakeNestedBlockConstraint'>;
-
-export function useMakeNestedBlockConstraint(
-  props?: NonStreamingProps<'MakeNestedBlockConstraint'>
-): NonStreamingHookResult<'MakeNestedBlockConstraint'>;
-
-export function useMakeNestedBlockConstraint(
-  props: HookProps<'MakeNestedBlockConstraint'> = {}
-): StreamingHookResult<'MakeNestedBlockConstraint'> | NonStreamingHookResult<'MakeNestedBlockConstraint'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.MakeNestedBlockConstraint, props);
+  props: HookInput<'MakeNestedBlockConstraint', { stream?: boolean }> = {},
+): HookOutput<'MakeNestedBlockConstraint', { stream: true }> | HookOutput<'MakeNestedBlockConstraint', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.MakeNestedBlockConstraint, props)
   }
-
-  return useBamlAction(Actions.MakeNestedBlockConstraint, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.MakeNestedBlockConstraint, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the MakeSemanticContainer BAML function that supports both streaming and non‑streaming responses.
@@ -3917,33 +3718,29 @@ export function useMakeNestedBlockConstraint(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useMakeSemanticContainer();
+ * const { data, error, isPending, mutate } = useMakeSemanticContainer({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useMakeSemanticContainer({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useMakeSemanticContainer({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useMakeSemanticContainer(props?: HookInput<'MakeSemanticContainer', { stream?: true }>): HookOutput<'MakeSemanticContainer', { stream: true }>
+export function useMakeSemanticContainer(props: HookInput<'MakeSemanticContainer', { stream: false }>): HookOutput<'MakeSemanticContainer', { stream: false }>
 export function useMakeSemanticContainer(
-  props: StreamingProps<'MakeSemanticContainer'>
-): StreamingHookResult<'MakeSemanticContainer'>;
-
-export function useMakeSemanticContainer(
-  props?: NonStreamingProps<'MakeSemanticContainer'>
-): NonStreamingHookResult<'MakeSemanticContainer'>;
-
-export function useMakeSemanticContainer(
-  props: HookProps<'MakeSemanticContainer'> = {}
-): StreamingHookResult<'MakeSemanticContainer'> | NonStreamingHookResult<'MakeSemanticContainer'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.MakeSemanticContainer, props);
+  props: HookInput<'MakeSemanticContainer', { stream?: boolean }> = {},
+): HookOutput<'MakeSemanticContainer', { stream: true }> | HookOutput<'MakeSemanticContainer', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.MakeSemanticContainer, props)
   }
-
-  return useBamlAction(Actions.MakeSemanticContainer, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.MakeSemanticContainer, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the MapAlias BAML function that supports both streaming and non‑streaming responses.
@@ -3971,33 +3768,29 @@ export function useMakeSemanticContainer(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useMapAlias();
+ * const { data, error, isPending, mutate } = useMapAlias({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useMapAlias({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useMapAlias({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useMapAlias(props?: HookInput<'MapAlias', { stream?: true }>): HookOutput<'MapAlias', { stream: true }>
+export function useMapAlias(props: HookInput<'MapAlias', { stream: false }>): HookOutput<'MapAlias', { stream: false }>
 export function useMapAlias(
-  props: StreamingProps<'MapAlias'>
-): StreamingHookResult<'MapAlias'>;
-
-export function useMapAlias(
-  props?: NonStreamingProps<'MapAlias'>
-): NonStreamingHookResult<'MapAlias'>;
-
-export function useMapAlias(
-  props: HookProps<'MapAlias'> = {}
-): StreamingHookResult<'MapAlias'> | NonStreamingHookResult<'MapAlias'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.MapAlias, props);
+  props: HookInput<'MapAlias', { stream?: boolean }> = {},
+): HookOutput<'MapAlias', { stream: true }> | HookOutput<'MapAlias', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.MapAlias, props)
   }
-
-  return useBamlAction(Actions.MapAlias, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.MapAlias, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the MergeAliasAttributes BAML function that supports both streaming and non‑streaming responses.
@@ -4025,33 +3818,29 @@ export function useMapAlias(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useMergeAliasAttributes();
+ * const { data, error, isPending, mutate } = useMergeAliasAttributes({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useMergeAliasAttributes({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useMergeAliasAttributes({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useMergeAliasAttributes(props?: HookInput<'MergeAliasAttributes', { stream?: true }>): HookOutput<'MergeAliasAttributes', { stream: true }>
+export function useMergeAliasAttributes(props: HookInput<'MergeAliasAttributes', { stream: false }>): HookOutput<'MergeAliasAttributes', { stream: false }>
 export function useMergeAliasAttributes(
-  props: StreamingProps<'MergeAliasAttributes'>
-): StreamingHookResult<'MergeAliasAttributes'>;
-
-export function useMergeAliasAttributes(
-  props?: NonStreamingProps<'MergeAliasAttributes'>
-): NonStreamingHookResult<'MergeAliasAttributes'>;
-
-export function useMergeAliasAttributes(
-  props: HookProps<'MergeAliasAttributes'> = {}
-): StreamingHookResult<'MergeAliasAttributes'> | NonStreamingHookResult<'MergeAliasAttributes'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.MergeAliasAttributes, props);
+  props: HookInput<'MergeAliasAttributes', { stream?: boolean }> = {},
+): HookOutput<'MergeAliasAttributes', { stream: true }> | HookOutput<'MergeAliasAttributes', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.MergeAliasAttributes, props)
   }
-
-  return useBamlAction(Actions.MergeAliasAttributes, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.MergeAliasAttributes, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the MyFunc BAML function that supports both streaming and non‑streaming responses.
@@ -4079,33 +3868,29 @@ export function useMergeAliasAttributes(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useMyFunc();
+ * const { data, error, isPending, mutate } = useMyFunc({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useMyFunc({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useMyFunc({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useMyFunc(props?: HookInput<'MyFunc', { stream?: true }>): HookOutput<'MyFunc', { stream: true }>
+export function useMyFunc(props: HookInput<'MyFunc', { stream: false }>): HookOutput<'MyFunc', { stream: false }>
 export function useMyFunc(
-  props: StreamingProps<'MyFunc'>
-): StreamingHookResult<'MyFunc'>;
-
-export function useMyFunc(
-  props?: NonStreamingProps<'MyFunc'>
-): NonStreamingHookResult<'MyFunc'>;
-
-export function useMyFunc(
-  props: HookProps<'MyFunc'> = {}
-): StreamingHookResult<'MyFunc'> | NonStreamingHookResult<'MyFunc'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.MyFunc, props);
+  props: HookInput<'MyFunc', { stream?: boolean }> = {},
+): HookOutput<'MyFunc', { stream: true }> | HookOutput<'MyFunc', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.MyFunc, props)
   }
-
-  return useBamlAction(Actions.MyFunc, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.MyFunc, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the NestedAlias BAML function that supports both streaming and non‑streaming responses.
@@ -4133,33 +3918,29 @@ export function useMyFunc(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useNestedAlias();
+ * const { data, error, isPending, mutate } = useNestedAlias({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useNestedAlias({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useNestedAlias({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useNestedAlias(props?: HookInput<'NestedAlias', { stream?: true }>): HookOutput<'NestedAlias', { stream: true }>
+export function useNestedAlias(props: HookInput<'NestedAlias', { stream: false }>): HookOutput<'NestedAlias', { stream: false }>
 export function useNestedAlias(
-  props: StreamingProps<'NestedAlias'>
-): StreamingHookResult<'NestedAlias'>;
-
-export function useNestedAlias(
-  props?: NonStreamingProps<'NestedAlias'>
-): NonStreamingHookResult<'NestedAlias'>;
-
-export function useNestedAlias(
-  props: HookProps<'NestedAlias'> = {}
-): StreamingHookResult<'NestedAlias'> | NonStreamingHookResult<'NestedAlias'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.NestedAlias, props);
+  props: HookInput<'NestedAlias', { stream?: boolean }> = {},
+): HookOutput<'NestedAlias', { stream: true }> | HookOutput<'NestedAlias', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.NestedAlias, props)
   }
-
-  return useBamlAction(Actions.NestedAlias, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.NestedAlias, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the NullLiteralClassHello BAML function that supports both streaming and non‑streaming responses.
@@ -4187,33 +3968,29 @@ export function useNestedAlias(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useNullLiteralClassHello();
+ * const { data, error, isPending, mutate } = useNullLiteralClassHello({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useNullLiteralClassHello({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useNullLiteralClassHello({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useNullLiteralClassHello(props?: HookInput<'NullLiteralClassHello', { stream?: true }>): HookOutput<'NullLiteralClassHello', { stream: true }>
+export function useNullLiteralClassHello(props: HookInput<'NullLiteralClassHello', { stream: false }>): HookOutput<'NullLiteralClassHello', { stream: false }>
 export function useNullLiteralClassHello(
-  props: StreamingProps<'NullLiteralClassHello'>
-): StreamingHookResult<'NullLiteralClassHello'>;
-
-export function useNullLiteralClassHello(
-  props?: NonStreamingProps<'NullLiteralClassHello'>
-): NonStreamingHookResult<'NullLiteralClassHello'>;
-
-export function useNullLiteralClassHello(
-  props: HookProps<'NullLiteralClassHello'> = {}
-): StreamingHookResult<'NullLiteralClassHello'> | NonStreamingHookResult<'NullLiteralClassHello'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.NullLiteralClassHello, props);
+  props: HookInput<'NullLiteralClassHello', { stream?: boolean }> = {},
+): HookOutput<'NullLiteralClassHello', { stream: true }> | HookOutput<'NullLiteralClassHello', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.NullLiteralClassHello, props)
   }
-
-  return useBamlAction(Actions.NullLiteralClassHello, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.NullLiteralClassHello, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the OptionalTest_Function BAML function that supports both streaming and non‑streaming responses.
@@ -4241,33 +4018,29 @@ export function useNullLiteralClassHello(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useOptionalTest_Function();
+ * const { data, error, isPending, mutate } = useOptionalTest_Function({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useOptionalTest_Function({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useOptionalTest_Function({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useOptionalTest_Function(props?: HookInput<'OptionalTest_Function', { stream?: true }>): HookOutput<'OptionalTest_Function', { stream: true }>
+export function useOptionalTest_Function(props: HookInput<'OptionalTest_Function', { stream: false }>): HookOutput<'OptionalTest_Function', { stream: false }>
 export function useOptionalTest_Function(
-  props: StreamingProps<'OptionalTest_Function'>
-): StreamingHookResult<'OptionalTest_Function'>;
-
-export function useOptionalTest_Function(
-  props?: NonStreamingProps<'OptionalTest_Function'>
-): NonStreamingHookResult<'OptionalTest_Function'>;
-
-export function useOptionalTest_Function(
-  props: HookProps<'OptionalTest_Function'> = {}
-): StreamingHookResult<'OptionalTest_Function'> | NonStreamingHookResult<'OptionalTest_Function'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.OptionalTest_Function, props);
+  props: HookInput<'OptionalTest_Function', { stream?: boolean }> = {},
+): HookOutput<'OptionalTest_Function', { stream: true }> | HookOutput<'OptionalTest_Function', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.OptionalTest_Function, props)
   }
-
-  return useBamlAction(Actions.OptionalTest_Function, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.OptionalTest_Function, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the PredictAge BAML function that supports both streaming and non‑streaming responses.
@@ -4295,33 +4068,29 @@ export function useOptionalTest_Function(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = usePredictAge();
+ * const { data, error, isPending, mutate } = usePredictAge({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = usePredictAge({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = usePredictAge({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function usePredictAge(props?: HookInput<'PredictAge', { stream?: true }>): HookOutput<'PredictAge', { stream: true }>
+export function usePredictAge(props: HookInput<'PredictAge', { stream: false }>): HookOutput<'PredictAge', { stream: false }>
 export function usePredictAge(
-  props: StreamingProps<'PredictAge'>
-): StreamingHookResult<'PredictAge'>;
-
-export function usePredictAge(
-  props?: NonStreamingProps<'PredictAge'>
-): NonStreamingHookResult<'PredictAge'>;
-
-export function usePredictAge(
-  props: HookProps<'PredictAge'> = {}
-): StreamingHookResult<'PredictAge'> | NonStreamingHookResult<'PredictAge'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.PredictAge, props);
+  props: HookInput<'PredictAge', { stream?: boolean }> = {},
+): HookOutput<'PredictAge', { stream: true }> | HookOutput<'PredictAge', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.PredictAge, props)
   }
-
-  return useBamlAction(Actions.PredictAge, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.PredictAge, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the PredictAgeBare BAML function that supports both streaming and non‑streaming responses.
@@ -4349,33 +4118,29 @@ export function usePredictAge(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = usePredictAgeBare();
+ * const { data, error, isPending, mutate } = usePredictAgeBare({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = usePredictAgeBare({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = usePredictAgeBare({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function usePredictAgeBare(props?: HookInput<'PredictAgeBare', { stream?: true }>): HookOutput<'PredictAgeBare', { stream: true }>
+export function usePredictAgeBare(props: HookInput<'PredictAgeBare', { stream: false }>): HookOutput<'PredictAgeBare', { stream: false }>
 export function usePredictAgeBare(
-  props: StreamingProps<'PredictAgeBare'>
-): StreamingHookResult<'PredictAgeBare'>;
-
-export function usePredictAgeBare(
-  props?: NonStreamingProps<'PredictAgeBare'>
-): NonStreamingHookResult<'PredictAgeBare'>;
-
-export function usePredictAgeBare(
-  props: HookProps<'PredictAgeBare'> = {}
-): StreamingHookResult<'PredictAgeBare'> | NonStreamingHookResult<'PredictAgeBare'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.PredictAgeBare, props);
+  props: HookInput<'PredictAgeBare', { stream?: boolean }> = {},
+): HookOutput<'PredictAgeBare', { stream: true }> | HookOutput<'PredictAgeBare', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.PredictAgeBare, props)
   }
-
-  return useBamlAction(Actions.PredictAgeBare, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.PredictAgeBare, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the PrimitiveAlias BAML function that supports both streaming and non‑streaming responses.
@@ -4403,33 +4168,29 @@ export function usePredictAgeBare(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = usePrimitiveAlias();
+ * const { data, error, isPending, mutate } = usePrimitiveAlias({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = usePrimitiveAlias({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = usePrimitiveAlias({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function usePrimitiveAlias(props?: HookInput<'PrimitiveAlias', { stream?: true }>): HookOutput<'PrimitiveAlias', { stream: true }>
+export function usePrimitiveAlias(props: HookInput<'PrimitiveAlias', { stream: false }>): HookOutput<'PrimitiveAlias', { stream: false }>
 export function usePrimitiveAlias(
-  props: StreamingProps<'PrimitiveAlias'>
-): StreamingHookResult<'PrimitiveAlias'>;
-
-export function usePrimitiveAlias(
-  props?: NonStreamingProps<'PrimitiveAlias'>
-): NonStreamingHookResult<'PrimitiveAlias'>;
-
-export function usePrimitiveAlias(
-  props: HookProps<'PrimitiveAlias'> = {}
-): StreamingHookResult<'PrimitiveAlias'> | NonStreamingHookResult<'PrimitiveAlias'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.PrimitiveAlias, props);
+  props: HookInput<'PrimitiveAlias', { stream?: boolean }> = {},
+): HookOutput<'PrimitiveAlias', { stream: true }> | HookOutput<'PrimitiveAlias', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.PrimitiveAlias, props)
   }
-
-  return useBamlAction(Actions.PrimitiveAlias, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.PrimitiveAlias, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the PromptTestClaude BAML function that supports both streaming and non‑streaming responses.
@@ -4457,33 +4218,29 @@ export function usePrimitiveAlias(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = usePromptTestClaude();
+ * const { data, error, isPending, mutate } = usePromptTestClaude({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = usePromptTestClaude({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = usePromptTestClaude({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function usePromptTestClaude(props?: HookInput<'PromptTestClaude', { stream?: true }>): HookOutput<'PromptTestClaude', { stream: true }>
+export function usePromptTestClaude(props: HookInput<'PromptTestClaude', { stream: false }>): HookOutput<'PromptTestClaude', { stream: false }>
 export function usePromptTestClaude(
-  props: StreamingProps<'PromptTestClaude'>
-): StreamingHookResult<'PromptTestClaude'>;
-
-export function usePromptTestClaude(
-  props?: NonStreamingProps<'PromptTestClaude'>
-): NonStreamingHookResult<'PromptTestClaude'>;
-
-export function usePromptTestClaude(
-  props: HookProps<'PromptTestClaude'> = {}
-): StreamingHookResult<'PromptTestClaude'> | NonStreamingHookResult<'PromptTestClaude'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.PromptTestClaude, props);
+  props: HookInput<'PromptTestClaude', { stream?: boolean }> = {},
+): HookOutput<'PromptTestClaude', { stream: true }> | HookOutput<'PromptTestClaude', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.PromptTestClaude, props)
   }
-
-  return useBamlAction(Actions.PromptTestClaude, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.PromptTestClaude, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the PromptTestClaudeChat BAML function that supports both streaming and non‑streaming responses.
@@ -4511,33 +4268,29 @@ export function usePromptTestClaude(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = usePromptTestClaudeChat();
+ * const { data, error, isPending, mutate } = usePromptTestClaudeChat({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = usePromptTestClaudeChat({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = usePromptTestClaudeChat({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function usePromptTestClaudeChat(props?: HookInput<'PromptTestClaudeChat', { stream?: true }>): HookOutput<'PromptTestClaudeChat', { stream: true }>
+export function usePromptTestClaudeChat(props: HookInput<'PromptTestClaudeChat', { stream: false }>): HookOutput<'PromptTestClaudeChat', { stream: false }>
 export function usePromptTestClaudeChat(
-  props: StreamingProps<'PromptTestClaudeChat'>
-): StreamingHookResult<'PromptTestClaudeChat'>;
-
-export function usePromptTestClaudeChat(
-  props?: NonStreamingProps<'PromptTestClaudeChat'>
-): NonStreamingHookResult<'PromptTestClaudeChat'>;
-
-export function usePromptTestClaudeChat(
-  props: HookProps<'PromptTestClaudeChat'> = {}
-): StreamingHookResult<'PromptTestClaudeChat'> | NonStreamingHookResult<'PromptTestClaudeChat'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.PromptTestClaudeChat, props);
+  props: HookInput<'PromptTestClaudeChat', { stream?: boolean }> = {},
+): HookOutput<'PromptTestClaudeChat', { stream: true }> | HookOutput<'PromptTestClaudeChat', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.PromptTestClaudeChat, props)
   }
-
-  return useBamlAction(Actions.PromptTestClaudeChat, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.PromptTestClaudeChat, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the PromptTestClaudeChatNoSystem BAML function that supports both streaming and non‑streaming responses.
@@ -4565,33 +4318,29 @@ export function usePromptTestClaudeChat(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = usePromptTestClaudeChatNoSystem();
+ * const { data, error, isPending, mutate } = usePromptTestClaudeChatNoSystem({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = usePromptTestClaudeChatNoSystem({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = usePromptTestClaudeChatNoSystem({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function usePromptTestClaudeChatNoSystem(props?: HookInput<'PromptTestClaudeChatNoSystem', { stream?: true }>): HookOutput<'PromptTestClaudeChatNoSystem', { stream: true }>
+export function usePromptTestClaudeChatNoSystem(props: HookInput<'PromptTestClaudeChatNoSystem', { stream: false }>): HookOutput<'PromptTestClaudeChatNoSystem', { stream: false }>
 export function usePromptTestClaudeChatNoSystem(
-  props: StreamingProps<'PromptTestClaudeChatNoSystem'>
-): StreamingHookResult<'PromptTestClaudeChatNoSystem'>;
-
-export function usePromptTestClaudeChatNoSystem(
-  props?: NonStreamingProps<'PromptTestClaudeChatNoSystem'>
-): NonStreamingHookResult<'PromptTestClaudeChatNoSystem'>;
-
-export function usePromptTestClaudeChatNoSystem(
-  props: HookProps<'PromptTestClaudeChatNoSystem'> = {}
-): StreamingHookResult<'PromptTestClaudeChatNoSystem'> | NonStreamingHookResult<'PromptTestClaudeChatNoSystem'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.PromptTestClaudeChatNoSystem, props);
+  props: HookInput<'PromptTestClaudeChatNoSystem', { stream?: boolean }> = {},
+): HookOutput<'PromptTestClaudeChatNoSystem', { stream: true }> | HookOutput<'PromptTestClaudeChatNoSystem', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.PromptTestClaudeChatNoSystem, props)
   }
-
-  return useBamlAction(Actions.PromptTestClaudeChatNoSystem, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.PromptTestClaudeChatNoSystem, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the PromptTestOpenAI BAML function that supports both streaming and non‑streaming responses.
@@ -4619,33 +4368,29 @@ export function usePromptTestClaudeChatNoSystem(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = usePromptTestOpenAI();
+ * const { data, error, isPending, mutate } = usePromptTestOpenAI({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = usePromptTestOpenAI({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = usePromptTestOpenAI({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function usePromptTestOpenAI(props?: HookInput<'PromptTestOpenAI', { stream?: true }>): HookOutput<'PromptTestOpenAI', { stream: true }>
+export function usePromptTestOpenAI(props: HookInput<'PromptTestOpenAI', { stream: false }>): HookOutput<'PromptTestOpenAI', { stream: false }>
 export function usePromptTestOpenAI(
-  props: StreamingProps<'PromptTestOpenAI'>
-): StreamingHookResult<'PromptTestOpenAI'>;
-
-export function usePromptTestOpenAI(
-  props?: NonStreamingProps<'PromptTestOpenAI'>
-): NonStreamingHookResult<'PromptTestOpenAI'>;
-
-export function usePromptTestOpenAI(
-  props: HookProps<'PromptTestOpenAI'> = {}
-): StreamingHookResult<'PromptTestOpenAI'> | NonStreamingHookResult<'PromptTestOpenAI'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.PromptTestOpenAI, props);
+  props: HookInput<'PromptTestOpenAI', { stream?: boolean }> = {},
+): HookOutput<'PromptTestOpenAI', { stream: true }> | HookOutput<'PromptTestOpenAI', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.PromptTestOpenAI, props)
   }
-
-  return useBamlAction(Actions.PromptTestOpenAI, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.PromptTestOpenAI, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the PromptTestOpenAIChat BAML function that supports both streaming and non‑streaming responses.
@@ -4673,33 +4418,29 @@ export function usePromptTestOpenAI(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = usePromptTestOpenAIChat();
+ * const { data, error, isPending, mutate } = usePromptTestOpenAIChat({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = usePromptTestOpenAIChat({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = usePromptTestOpenAIChat({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function usePromptTestOpenAIChat(props?: HookInput<'PromptTestOpenAIChat', { stream?: true }>): HookOutput<'PromptTestOpenAIChat', { stream: true }>
+export function usePromptTestOpenAIChat(props: HookInput<'PromptTestOpenAIChat', { stream: false }>): HookOutput<'PromptTestOpenAIChat', { stream: false }>
 export function usePromptTestOpenAIChat(
-  props: StreamingProps<'PromptTestOpenAIChat'>
-): StreamingHookResult<'PromptTestOpenAIChat'>;
-
-export function usePromptTestOpenAIChat(
-  props?: NonStreamingProps<'PromptTestOpenAIChat'>
-): NonStreamingHookResult<'PromptTestOpenAIChat'>;
-
-export function usePromptTestOpenAIChat(
-  props: HookProps<'PromptTestOpenAIChat'> = {}
-): StreamingHookResult<'PromptTestOpenAIChat'> | NonStreamingHookResult<'PromptTestOpenAIChat'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.PromptTestOpenAIChat, props);
+  props: HookInput<'PromptTestOpenAIChat', { stream?: boolean }> = {},
+): HookOutput<'PromptTestOpenAIChat', { stream: true }> | HookOutput<'PromptTestOpenAIChat', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.PromptTestOpenAIChat, props)
   }
-
-  return useBamlAction(Actions.PromptTestOpenAIChat, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.PromptTestOpenAIChat, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the PromptTestOpenAIChatNoSystem BAML function that supports both streaming and non‑streaming responses.
@@ -4727,33 +4468,29 @@ export function usePromptTestOpenAIChat(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = usePromptTestOpenAIChatNoSystem();
+ * const { data, error, isPending, mutate } = usePromptTestOpenAIChatNoSystem({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = usePromptTestOpenAIChatNoSystem({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = usePromptTestOpenAIChatNoSystem({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function usePromptTestOpenAIChatNoSystem(props?: HookInput<'PromptTestOpenAIChatNoSystem', { stream?: true }>): HookOutput<'PromptTestOpenAIChatNoSystem', { stream: true }>
+export function usePromptTestOpenAIChatNoSystem(props: HookInput<'PromptTestOpenAIChatNoSystem', { stream: false }>): HookOutput<'PromptTestOpenAIChatNoSystem', { stream: false }>
 export function usePromptTestOpenAIChatNoSystem(
-  props: StreamingProps<'PromptTestOpenAIChatNoSystem'>
-): StreamingHookResult<'PromptTestOpenAIChatNoSystem'>;
-
-export function usePromptTestOpenAIChatNoSystem(
-  props?: NonStreamingProps<'PromptTestOpenAIChatNoSystem'>
-): NonStreamingHookResult<'PromptTestOpenAIChatNoSystem'>;
-
-export function usePromptTestOpenAIChatNoSystem(
-  props: HookProps<'PromptTestOpenAIChatNoSystem'> = {}
-): StreamingHookResult<'PromptTestOpenAIChatNoSystem'> | NonStreamingHookResult<'PromptTestOpenAIChatNoSystem'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.PromptTestOpenAIChatNoSystem, props);
+  props: HookInput<'PromptTestOpenAIChatNoSystem', { stream?: boolean }> = {},
+): HookOutput<'PromptTestOpenAIChatNoSystem', { stream: true }> | HookOutput<'PromptTestOpenAIChatNoSystem', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.PromptTestOpenAIChatNoSystem, props)
   }
-
-  return useBamlAction(Actions.PromptTestOpenAIChatNoSystem, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.PromptTestOpenAIChatNoSystem, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the PromptTestStreaming BAML function that supports both streaming and non‑streaming responses.
@@ -4781,33 +4518,29 @@ export function usePromptTestOpenAIChatNoSystem(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = usePromptTestStreaming();
+ * const { data, error, isPending, mutate } = usePromptTestStreaming({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = usePromptTestStreaming({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = usePromptTestStreaming({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function usePromptTestStreaming(props?: HookInput<'PromptTestStreaming', { stream?: true }>): HookOutput<'PromptTestStreaming', { stream: true }>
+export function usePromptTestStreaming(props: HookInput<'PromptTestStreaming', { stream: false }>): HookOutput<'PromptTestStreaming', { stream: false }>
 export function usePromptTestStreaming(
-  props: StreamingProps<'PromptTestStreaming'>
-): StreamingHookResult<'PromptTestStreaming'>;
-
-export function usePromptTestStreaming(
-  props?: NonStreamingProps<'PromptTestStreaming'>
-): NonStreamingHookResult<'PromptTestStreaming'>;
-
-export function usePromptTestStreaming(
-  props: HookProps<'PromptTestStreaming'> = {}
-): StreamingHookResult<'PromptTestStreaming'> | NonStreamingHookResult<'PromptTestStreaming'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.PromptTestStreaming, props);
+  props: HookInput<'PromptTestStreaming', { stream?: boolean }> = {},
+): HookOutput<'PromptTestStreaming', { stream: true }> | HookOutput<'PromptTestStreaming', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.PromptTestStreaming, props)
   }
-
-  return useBamlAction(Actions.PromptTestStreaming, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.PromptTestStreaming, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the RecursiveAliasCycle BAML function that supports both streaming and non‑streaming responses.
@@ -4835,33 +4568,29 @@ export function usePromptTestStreaming(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useRecursiveAliasCycle();
+ * const { data, error, isPending, mutate } = useRecursiveAliasCycle({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useRecursiveAliasCycle({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useRecursiveAliasCycle({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useRecursiveAliasCycle(props?: HookInput<'RecursiveAliasCycle', { stream?: true }>): HookOutput<'RecursiveAliasCycle', { stream: true }>
+export function useRecursiveAliasCycle(props: HookInput<'RecursiveAliasCycle', { stream: false }>): HookOutput<'RecursiveAliasCycle', { stream: false }>
 export function useRecursiveAliasCycle(
-  props: StreamingProps<'RecursiveAliasCycle'>
-): StreamingHookResult<'RecursiveAliasCycle'>;
-
-export function useRecursiveAliasCycle(
-  props?: NonStreamingProps<'RecursiveAliasCycle'>
-): NonStreamingHookResult<'RecursiveAliasCycle'>;
-
-export function useRecursiveAliasCycle(
-  props: HookProps<'RecursiveAliasCycle'> = {}
-): StreamingHookResult<'RecursiveAliasCycle'> | NonStreamingHookResult<'RecursiveAliasCycle'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.RecursiveAliasCycle, props);
+  props: HookInput<'RecursiveAliasCycle', { stream?: boolean }> = {},
+): HookOutput<'RecursiveAliasCycle', { stream: true }> | HookOutput<'RecursiveAliasCycle', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.RecursiveAliasCycle, props)
   }
-
-  return useBamlAction(Actions.RecursiveAliasCycle, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.RecursiveAliasCycle, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the RecursiveClassWithAliasIndirection BAML function that supports both streaming and non‑streaming responses.
@@ -4889,33 +4618,29 @@ export function useRecursiveAliasCycle(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useRecursiveClassWithAliasIndirection();
+ * const { data, error, isPending, mutate } = useRecursiveClassWithAliasIndirection({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useRecursiveClassWithAliasIndirection({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useRecursiveClassWithAliasIndirection({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useRecursiveClassWithAliasIndirection(props?: HookInput<'RecursiveClassWithAliasIndirection', { stream?: true }>): HookOutput<'RecursiveClassWithAliasIndirection', { stream: true }>
+export function useRecursiveClassWithAliasIndirection(props: HookInput<'RecursiveClassWithAliasIndirection', { stream: false }>): HookOutput<'RecursiveClassWithAliasIndirection', { stream: false }>
 export function useRecursiveClassWithAliasIndirection(
-  props: StreamingProps<'RecursiveClassWithAliasIndirection'>
-): StreamingHookResult<'RecursiveClassWithAliasIndirection'>;
-
-export function useRecursiveClassWithAliasIndirection(
-  props?: NonStreamingProps<'RecursiveClassWithAliasIndirection'>
-): NonStreamingHookResult<'RecursiveClassWithAliasIndirection'>;
-
-export function useRecursiveClassWithAliasIndirection(
-  props: HookProps<'RecursiveClassWithAliasIndirection'> = {}
-): StreamingHookResult<'RecursiveClassWithAliasIndirection'> | NonStreamingHookResult<'RecursiveClassWithAliasIndirection'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.RecursiveClassWithAliasIndirection, props);
+  props: HookInput<'RecursiveClassWithAliasIndirection', { stream?: boolean }> = {},
+): HookOutput<'RecursiveClassWithAliasIndirection', { stream: true }> | HookOutput<'RecursiveClassWithAliasIndirection', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.RecursiveClassWithAliasIndirection, props)
   }
-
-  return useBamlAction(Actions.RecursiveClassWithAliasIndirection, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.RecursiveClassWithAliasIndirection, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ReturnAliasWithMergedAttributes BAML function that supports both streaming and non‑streaming responses.
@@ -4943,33 +4668,29 @@ export function useRecursiveClassWithAliasIndirection(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useReturnAliasWithMergedAttributes();
+ * const { data, error, isPending, mutate } = useReturnAliasWithMergedAttributes({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useReturnAliasWithMergedAttributes({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useReturnAliasWithMergedAttributes({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useReturnAliasWithMergedAttributes(props?: HookInput<'ReturnAliasWithMergedAttributes', { stream?: true }>): HookOutput<'ReturnAliasWithMergedAttributes', { stream: true }>
+export function useReturnAliasWithMergedAttributes(props: HookInput<'ReturnAliasWithMergedAttributes', { stream: false }>): HookOutput<'ReturnAliasWithMergedAttributes', { stream: false }>
 export function useReturnAliasWithMergedAttributes(
-  props: StreamingProps<'ReturnAliasWithMergedAttributes'>
-): StreamingHookResult<'ReturnAliasWithMergedAttributes'>;
-
-export function useReturnAliasWithMergedAttributes(
-  props?: NonStreamingProps<'ReturnAliasWithMergedAttributes'>
-): NonStreamingHookResult<'ReturnAliasWithMergedAttributes'>;
-
-export function useReturnAliasWithMergedAttributes(
-  props: HookProps<'ReturnAliasWithMergedAttributes'> = {}
-): StreamingHookResult<'ReturnAliasWithMergedAttributes'> | NonStreamingHookResult<'ReturnAliasWithMergedAttributes'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ReturnAliasWithMergedAttributes, props);
+  props: HookInput<'ReturnAliasWithMergedAttributes', { stream?: boolean }> = {},
+): HookOutput<'ReturnAliasWithMergedAttributes', { stream: true }> | HookOutput<'ReturnAliasWithMergedAttributes', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ReturnAliasWithMergedAttributes, props)
   }
-
-  return useBamlAction(Actions.ReturnAliasWithMergedAttributes, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ReturnAliasWithMergedAttributes, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ReturnFailingAssert BAML function that supports both streaming and non‑streaming responses.
@@ -4997,33 +4718,29 @@ export function useReturnAliasWithMergedAttributes(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useReturnFailingAssert();
+ * const { data, error, isPending, mutate } = useReturnFailingAssert({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useReturnFailingAssert({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useReturnFailingAssert({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useReturnFailingAssert(props?: HookInput<'ReturnFailingAssert', { stream?: true }>): HookOutput<'ReturnFailingAssert', { stream: true }>
+export function useReturnFailingAssert(props: HookInput<'ReturnFailingAssert', { stream: false }>): HookOutput<'ReturnFailingAssert', { stream: false }>
 export function useReturnFailingAssert(
-  props: StreamingProps<'ReturnFailingAssert'>
-): StreamingHookResult<'ReturnFailingAssert'>;
-
-export function useReturnFailingAssert(
-  props?: NonStreamingProps<'ReturnFailingAssert'>
-): NonStreamingHookResult<'ReturnFailingAssert'>;
-
-export function useReturnFailingAssert(
-  props: HookProps<'ReturnFailingAssert'> = {}
-): StreamingHookResult<'ReturnFailingAssert'> | NonStreamingHookResult<'ReturnFailingAssert'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ReturnFailingAssert, props);
+  props: HookInput<'ReturnFailingAssert', { stream?: boolean }> = {},
+): HookOutput<'ReturnFailingAssert', { stream: true }> | HookOutput<'ReturnFailingAssert', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ReturnFailingAssert, props)
   }
-
-  return useBamlAction(Actions.ReturnFailingAssert, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ReturnFailingAssert, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ReturnJsonEntry BAML function that supports both streaming and non‑streaming responses.
@@ -5051,33 +4768,29 @@ export function useReturnFailingAssert(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useReturnJsonEntry();
+ * const { data, error, isPending, mutate } = useReturnJsonEntry({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useReturnJsonEntry({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useReturnJsonEntry({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useReturnJsonEntry(props?: HookInput<'ReturnJsonEntry', { stream?: true }>): HookOutput<'ReturnJsonEntry', { stream: true }>
+export function useReturnJsonEntry(props: HookInput<'ReturnJsonEntry', { stream: false }>): HookOutput<'ReturnJsonEntry', { stream: false }>
 export function useReturnJsonEntry(
-  props: StreamingProps<'ReturnJsonEntry'>
-): StreamingHookResult<'ReturnJsonEntry'>;
-
-export function useReturnJsonEntry(
-  props?: NonStreamingProps<'ReturnJsonEntry'>
-): NonStreamingHookResult<'ReturnJsonEntry'>;
-
-export function useReturnJsonEntry(
-  props: HookProps<'ReturnJsonEntry'> = {}
-): StreamingHookResult<'ReturnJsonEntry'> | NonStreamingHookResult<'ReturnJsonEntry'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ReturnJsonEntry, props);
+  props: HookInput<'ReturnJsonEntry', { stream?: boolean }> = {},
+): HookOutput<'ReturnJsonEntry', { stream: true }> | HookOutput<'ReturnJsonEntry', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ReturnJsonEntry, props)
   }
-
-  return useBamlAction(Actions.ReturnJsonEntry, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ReturnJsonEntry, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the ReturnMalformedConstraints BAML function that supports both streaming and non‑streaming responses.
@@ -5105,33 +4818,29 @@ export function useReturnJsonEntry(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useReturnMalformedConstraints();
+ * const { data, error, isPending, mutate } = useReturnMalformedConstraints({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useReturnMalformedConstraints({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useReturnMalformedConstraints({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useReturnMalformedConstraints(props?: HookInput<'ReturnMalformedConstraints', { stream?: true }>): HookOutput<'ReturnMalformedConstraints', { stream: true }>
+export function useReturnMalformedConstraints(props: HookInput<'ReturnMalformedConstraints', { stream: false }>): HookOutput<'ReturnMalformedConstraints', { stream: false }>
 export function useReturnMalformedConstraints(
-  props: StreamingProps<'ReturnMalformedConstraints'>
-): StreamingHookResult<'ReturnMalformedConstraints'>;
-
-export function useReturnMalformedConstraints(
-  props?: NonStreamingProps<'ReturnMalformedConstraints'>
-): NonStreamingHookResult<'ReturnMalformedConstraints'>;
-
-export function useReturnMalformedConstraints(
-  props: HookProps<'ReturnMalformedConstraints'> = {}
-): StreamingHookResult<'ReturnMalformedConstraints'> | NonStreamingHookResult<'ReturnMalformedConstraints'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.ReturnMalformedConstraints, props);
+  props: HookInput<'ReturnMalformedConstraints', { stream?: boolean }> = {},
+): HookOutput<'ReturnMalformedConstraints', { stream: true }> | HookOutput<'ReturnMalformedConstraints', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.ReturnMalformedConstraints, props)
   }
-
-  return useBamlAction(Actions.ReturnMalformedConstraints, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.ReturnMalformedConstraints, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the SchemaDescriptions BAML function that supports both streaming and non‑streaming responses.
@@ -5159,33 +4868,29 @@ export function useReturnMalformedConstraints(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useSchemaDescriptions();
+ * const { data, error, isPending, mutate } = useSchemaDescriptions({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useSchemaDescriptions({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useSchemaDescriptions({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useSchemaDescriptions(props?: HookInput<'SchemaDescriptions', { stream?: true }>): HookOutput<'SchemaDescriptions', { stream: true }>
+export function useSchemaDescriptions(props: HookInput<'SchemaDescriptions', { stream: false }>): HookOutput<'SchemaDescriptions', { stream: false }>
 export function useSchemaDescriptions(
-  props: StreamingProps<'SchemaDescriptions'>
-): StreamingHookResult<'SchemaDescriptions'>;
-
-export function useSchemaDescriptions(
-  props?: NonStreamingProps<'SchemaDescriptions'>
-): NonStreamingHookResult<'SchemaDescriptions'>;
-
-export function useSchemaDescriptions(
-  props: HookProps<'SchemaDescriptions'> = {}
-): StreamingHookResult<'SchemaDescriptions'> | NonStreamingHookResult<'SchemaDescriptions'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.SchemaDescriptions, props);
+  props: HookInput<'SchemaDescriptions', { stream?: boolean }> = {},
+): HookOutput<'SchemaDescriptions', { stream: true }> | HookOutput<'SchemaDescriptions', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.SchemaDescriptions, props)
   }
-
-  return useBamlAction(Actions.SchemaDescriptions, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.SchemaDescriptions, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the SimpleRecursiveListAlias BAML function that supports both streaming and non‑streaming responses.
@@ -5213,33 +4918,29 @@ export function useSchemaDescriptions(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useSimpleRecursiveListAlias();
+ * const { data, error, isPending, mutate } = useSimpleRecursiveListAlias({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useSimpleRecursiveListAlias({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useSimpleRecursiveListAlias({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useSimpleRecursiveListAlias(props?: HookInput<'SimpleRecursiveListAlias', { stream?: true }>): HookOutput<'SimpleRecursiveListAlias', { stream: true }>
+export function useSimpleRecursiveListAlias(props: HookInput<'SimpleRecursiveListAlias', { stream: false }>): HookOutput<'SimpleRecursiveListAlias', { stream: false }>
 export function useSimpleRecursiveListAlias(
-  props: StreamingProps<'SimpleRecursiveListAlias'>
-): StreamingHookResult<'SimpleRecursiveListAlias'>;
-
-export function useSimpleRecursiveListAlias(
-  props?: NonStreamingProps<'SimpleRecursiveListAlias'>
-): NonStreamingHookResult<'SimpleRecursiveListAlias'>;
-
-export function useSimpleRecursiveListAlias(
-  props: HookProps<'SimpleRecursiveListAlias'> = {}
-): StreamingHookResult<'SimpleRecursiveListAlias'> | NonStreamingHookResult<'SimpleRecursiveListAlias'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.SimpleRecursiveListAlias, props);
+  props: HookInput<'SimpleRecursiveListAlias', { stream?: boolean }> = {},
+): HookOutput<'SimpleRecursiveListAlias', { stream: true }> | HookOutput<'SimpleRecursiveListAlias', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.SimpleRecursiveListAlias, props)
   }
-
-  return useBamlAction(Actions.SimpleRecursiveListAlias, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.SimpleRecursiveListAlias, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the SimpleRecursiveMapAlias BAML function that supports both streaming and non‑streaming responses.
@@ -5267,33 +4968,29 @@ export function useSimpleRecursiveListAlias(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useSimpleRecursiveMapAlias();
+ * const { data, error, isPending, mutate } = useSimpleRecursiveMapAlias({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useSimpleRecursiveMapAlias({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useSimpleRecursiveMapAlias({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useSimpleRecursiveMapAlias(props?: HookInput<'SimpleRecursiveMapAlias', { stream?: true }>): HookOutput<'SimpleRecursiveMapAlias', { stream: true }>
+export function useSimpleRecursiveMapAlias(props: HookInput<'SimpleRecursiveMapAlias', { stream: false }>): HookOutput<'SimpleRecursiveMapAlias', { stream: false }>
 export function useSimpleRecursiveMapAlias(
-  props: StreamingProps<'SimpleRecursiveMapAlias'>
-): StreamingHookResult<'SimpleRecursiveMapAlias'>;
-
-export function useSimpleRecursiveMapAlias(
-  props?: NonStreamingProps<'SimpleRecursiveMapAlias'>
-): NonStreamingHookResult<'SimpleRecursiveMapAlias'>;
-
-export function useSimpleRecursiveMapAlias(
-  props: HookProps<'SimpleRecursiveMapAlias'> = {}
-): StreamingHookResult<'SimpleRecursiveMapAlias'> | NonStreamingHookResult<'SimpleRecursiveMapAlias'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.SimpleRecursiveMapAlias, props);
+  props: HookInput<'SimpleRecursiveMapAlias', { stream?: boolean }> = {},
+): HookOutput<'SimpleRecursiveMapAlias', { stream: true }> | HookOutput<'SimpleRecursiveMapAlias', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.SimpleRecursiveMapAlias, props)
   }
-
-  return useBamlAction(Actions.SimpleRecursiveMapAlias, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.SimpleRecursiveMapAlias, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the StreamBigNumbers BAML function that supports both streaming and non‑streaming responses.
@@ -5321,33 +5018,29 @@ export function useSimpleRecursiveMapAlias(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useStreamBigNumbers();
+ * const { data, error, isPending, mutate } = useStreamBigNumbers({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useStreamBigNumbers({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useStreamBigNumbers({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useStreamBigNumbers(props?: HookInput<'StreamBigNumbers', { stream?: true }>): HookOutput<'StreamBigNumbers', { stream: true }>
+export function useStreamBigNumbers(props: HookInput<'StreamBigNumbers', { stream: false }>): HookOutput<'StreamBigNumbers', { stream: false }>
 export function useStreamBigNumbers(
-  props: StreamingProps<'StreamBigNumbers'>
-): StreamingHookResult<'StreamBigNumbers'>;
-
-export function useStreamBigNumbers(
-  props?: NonStreamingProps<'StreamBigNumbers'>
-): NonStreamingHookResult<'StreamBigNumbers'>;
-
-export function useStreamBigNumbers(
-  props: HookProps<'StreamBigNumbers'> = {}
-): StreamingHookResult<'StreamBigNumbers'> | NonStreamingHookResult<'StreamBigNumbers'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.StreamBigNumbers, props);
+  props: HookInput<'StreamBigNumbers', { stream?: boolean }> = {},
+): HookOutput<'StreamBigNumbers', { stream: true }> | HookOutput<'StreamBigNumbers', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.StreamBigNumbers, props)
   }
-
-  return useBamlAction(Actions.StreamBigNumbers, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.StreamBigNumbers, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the StreamFailingAssertion BAML function that supports both streaming and non‑streaming responses.
@@ -5377,33 +5070,29 @@ export function useStreamBigNumbers(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useStreamFailingAssertion();
+ * const { data, error, isPending, mutate } = useStreamFailingAssertion({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useStreamFailingAssertion({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useStreamFailingAssertion({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useStreamFailingAssertion(props?: HookInput<'StreamFailingAssertion', { stream?: true }>): HookOutput<'StreamFailingAssertion', { stream: true }>
+export function useStreamFailingAssertion(props: HookInput<'StreamFailingAssertion', { stream: false }>): HookOutput<'StreamFailingAssertion', { stream: false }>
 export function useStreamFailingAssertion(
-  props: StreamingProps<'StreamFailingAssertion'>
-): StreamingHookResult<'StreamFailingAssertion'>;
-
-export function useStreamFailingAssertion(
-  props?: NonStreamingProps<'StreamFailingAssertion'>
-): NonStreamingHookResult<'StreamFailingAssertion'>;
-
-export function useStreamFailingAssertion(
-  props: HookProps<'StreamFailingAssertion'> = {}
-): StreamingHookResult<'StreamFailingAssertion'> | NonStreamingHookResult<'StreamFailingAssertion'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.StreamFailingAssertion, props);
+  props: HookInput<'StreamFailingAssertion', { stream?: boolean }> = {},
+): HookOutput<'StreamFailingAssertion', { stream: true }> | HookOutput<'StreamFailingAssertion', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.StreamFailingAssertion, props)
   }
-
-  return useBamlAction(Actions.StreamFailingAssertion, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.StreamFailingAssertion, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the StreamOneBigNumber BAML function that supports both streaming and non‑streaming responses.
@@ -5431,33 +5120,29 @@ export function useStreamFailingAssertion(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useStreamOneBigNumber();
+ * const { data, error, isPending, mutate } = useStreamOneBigNumber({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useStreamOneBigNumber({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useStreamOneBigNumber({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useStreamOneBigNumber(props?: HookInput<'StreamOneBigNumber', { stream?: true }>): HookOutput<'StreamOneBigNumber', { stream: true }>
+export function useStreamOneBigNumber(props: HookInput<'StreamOneBigNumber', { stream: false }>): HookOutput<'StreamOneBigNumber', { stream: false }>
 export function useStreamOneBigNumber(
-  props: StreamingProps<'StreamOneBigNumber'>
-): StreamingHookResult<'StreamOneBigNumber'>;
-
-export function useStreamOneBigNumber(
-  props?: NonStreamingProps<'StreamOneBigNumber'>
-): NonStreamingHookResult<'StreamOneBigNumber'>;
-
-export function useStreamOneBigNumber(
-  props: HookProps<'StreamOneBigNumber'> = {}
-): StreamingHookResult<'StreamOneBigNumber'> | NonStreamingHookResult<'StreamOneBigNumber'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.StreamOneBigNumber, props);
+  props: HookInput<'StreamOneBigNumber', { stream?: boolean }> = {},
+): HookOutput<'StreamOneBigNumber', { stream: true }> | HookOutput<'StreamOneBigNumber', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.StreamOneBigNumber, props)
   }
-
-  return useBamlAction(Actions.StreamOneBigNumber, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.StreamOneBigNumber, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the StreamUnionIntegers BAML function that supports both streaming and non‑streaming responses.
@@ -5485,33 +5170,29 @@ export function useStreamOneBigNumber(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useStreamUnionIntegers();
+ * const { data, error, isPending, mutate } = useStreamUnionIntegers({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useStreamUnionIntegers({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useStreamUnionIntegers({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useStreamUnionIntegers(props?: HookInput<'StreamUnionIntegers', { stream?: true }>): HookOutput<'StreamUnionIntegers', { stream: true }>
+export function useStreamUnionIntegers(props: HookInput<'StreamUnionIntegers', { stream: false }>): HookOutput<'StreamUnionIntegers', { stream: false }>
 export function useStreamUnionIntegers(
-  props: StreamingProps<'StreamUnionIntegers'>
-): StreamingHookResult<'StreamUnionIntegers'>;
-
-export function useStreamUnionIntegers(
-  props?: NonStreamingProps<'StreamUnionIntegers'>
-): NonStreamingHookResult<'StreamUnionIntegers'>;
-
-export function useStreamUnionIntegers(
-  props: HookProps<'StreamUnionIntegers'> = {}
-): StreamingHookResult<'StreamUnionIntegers'> | NonStreamingHookResult<'StreamUnionIntegers'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.StreamUnionIntegers, props);
+  props: HookInput<'StreamUnionIntegers', { stream?: boolean }> = {},
+): HookOutput<'StreamUnionIntegers', { stream: true }> | HookOutput<'StreamUnionIntegers', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.StreamUnionIntegers, props)
   }
-
-  return useBamlAction(Actions.StreamUnionIntegers, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.StreamUnionIntegers, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the StreamingCompoundNumbers BAML function that supports both streaming and non‑streaming responses.
@@ -5541,33 +5222,29 @@ export function useStreamUnionIntegers(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useStreamingCompoundNumbers();
+ * const { data, error, isPending, mutate } = useStreamingCompoundNumbers({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useStreamingCompoundNumbers({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useStreamingCompoundNumbers({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useStreamingCompoundNumbers(props?: HookInput<'StreamingCompoundNumbers', { stream?: true }>): HookOutput<'StreamingCompoundNumbers', { stream: true }>
+export function useStreamingCompoundNumbers(props: HookInput<'StreamingCompoundNumbers', { stream: false }>): HookOutput<'StreamingCompoundNumbers', { stream: false }>
 export function useStreamingCompoundNumbers(
-  props: StreamingProps<'StreamingCompoundNumbers'>
-): StreamingHookResult<'StreamingCompoundNumbers'>;
-
-export function useStreamingCompoundNumbers(
-  props?: NonStreamingProps<'StreamingCompoundNumbers'>
-): NonStreamingHookResult<'StreamingCompoundNumbers'>;
-
-export function useStreamingCompoundNumbers(
-  props: HookProps<'StreamingCompoundNumbers'> = {}
-): StreamingHookResult<'StreamingCompoundNumbers'> | NonStreamingHookResult<'StreamingCompoundNumbers'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.StreamingCompoundNumbers, props);
+  props: HookInput<'StreamingCompoundNumbers', { stream?: boolean }> = {},
+): HookOutput<'StreamingCompoundNumbers', { stream: true }> | HookOutput<'StreamingCompoundNumbers', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.StreamingCompoundNumbers, props)
   }
-
-  return useBamlAction(Actions.StreamingCompoundNumbers, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.StreamingCompoundNumbers, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TakeRecAliasDep BAML function that supports both streaming and non‑streaming responses.
@@ -5595,33 +5272,29 @@ export function useStreamingCompoundNumbers(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTakeRecAliasDep();
+ * const { data, error, isPending, mutate } = useTakeRecAliasDep({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTakeRecAliasDep({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTakeRecAliasDep({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTakeRecAliasDep(props?: HookInput<'TakeRecAliasDep', { stream?: true }>): HookOutput<'TakeRecAliasDep', { stream: true }>
+export function useTakeRecAliasDep(props: HookInput<'TakeRecAliasDep', { stream: false }>): HookOutput<'TakeRecAliasDep', { stream: false }>
 export function useTakeRecAliasDep(
-  props: StreamingProps<'TakeRecAliasDep'>
-): StreamingHookResult<'TakeRecAliasDep'>;
-
-export function useTakeRecAliasDep(
-  props?: NonStreamingProps<'TakeRecAliasDep'>
-): NonStreamingHookResult<'TakeRecAliasDep'>;
-
-export function useTakeRecAliasDep(
-  props: HookProps<'TakeRecAliasDep'> = {}
-): StreamingHookResult<'TakeRecAliasDep'> | NonStreamingHookResult<'TakeRecAliasDep'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TakeRecAliasDep, props);
+  props: HookInput<'TakeRecAliasDep', { stream?: boolean }> = {},
+): HookOutput<'TakeRecAliasDep', { stream: true }> | HookOutput<'TakeRecAliasDep', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TakeRecAliasDep, props)
   }
-
-  return useBamlAction(Actions.TakeRecAliasDep, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TakeRecAliasDep, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAnthropic BAML function that supports both streaming and non‑streaming responses.
@@ -5649,33 +5322,29 @@ export function useTakeRecAliasDep(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAnthropic();
+ * const { data, error, isPending, mutate } = useTestAnthropic({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAnthropic({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAnthropic({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAnthropic(props?: HookInput<'TestAnthropic', { stream?: true }>): HookOutput<'TestAnthropic', { stream: true }>
+export function useTestAnthropic(props: HookInput<'TestAnthropic', { stream: false }>): HookOutput<'TestAnthropic', { stream: false }>
 export function useTestAnthropic(
-  props: StreamingProps<'TestAnthropic'>
-): StreamingHookResult<'TestAnthropic'>;
-
-export function useTestAnthropic(
-  props?: NonStreamingProps<'TestAnthropic'>
-): NonStreamingHookResult<'TestAnthropic'>;
-
-export function useTestAnthropic(
-  props: HookProps<'TestAnthropic'> = {}
-): StreamingHookResult<'TestAnthropic'> | NonStreamingHookResult<'TestAnthropic'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAnthropic, props);
+  props: HookInput<'TestAnthropic', { stream?: boolean }> = {},
+): HookOutput<'TestAnthropic', { stream: true }> | HookOutput<'TestAnthropic', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAnthropic, props)
   }
-
-  return useBamlAction(Actions.TestAnthropic, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAnthropic, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAnthropicShorthand BAML function that supports both streaming and non‑streaming responses.
@@ -5703,33 +5372,29 @@ export function useTestAnthropic(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAnthropicShorthand();
+ * const { data, error, isPending, mutate } = useTestAnthropicShorthand({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAnthropicShorthand({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAnthropicShorthand({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAnthropicShorthand(props?: HookInput<'TestAnthropicShorthand', { stream?: true }>): HookOutput<'TestAnthropicShorthand', { stream: true }>
+export function useTestAnthropicShorthand(props: HookInput<'TestAnthropicShorthand', { stream: false }>): HookOutput<'TestAnthropicShorthand', { stream: false }>
 export function useTestAnthropicShorthand(
-  props: StreamingProps<'TestAnthropicShorthand'>
-): StreamingHookResult<'TestAnthropicShorthand'>;
-
-export function useTestAnthropicShorthand(
-  props?: NonStreamingProps<'TestAnthropicShorthand'>
-): NonStreamingHookResult<'TestAnthropicShorthand'>;
-
-export function useTestAnthropicShorthand(
-  props: HookProps<'TestAnthropicShorthand'> = {}
-): StreamingHookResult<'TestAnthropicShorthand'> | NonStreamingHookResult<'TestAnthropicShorthand'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAnthropicShorthand, props);
+  props: HookInput<'TestAnthropicShorthand', { stream?: boolean }> = {},
+): HookOutput<'TestAnthropicShorthand', { stream: true }> | HookOutput<'TestAnthropicShorthand', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAnthropicShorthand, props)
   }
-
-  return useBamlAction(Actions.TestAnthropicShorthand, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAnthropicShorthand, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAws BAML function that supports both streaming and non‑streaming responses.
@@ -5757,33 +5422,29 @@ export function useTestAnthropicShorthand(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAws();
+ * const { data, error, isPending, mutate } = useTestAws({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAws({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAws({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAws(props?: HookInput<'TestAws', { stream?: true }>): HookOutput<'TestAws', { stream: true }>
+export function useTestAws(props: HookInput<'TestAws', { stream: false }>): HookOutput<'TestAws', { stream: false }>
 export function useTestAws(
-  props: StreamingProps<'TestAws'>
-): StreamingHookResult<'TestAws'>;
-
-export function useTestAws(
-  props?: NonStreamingProps<'TestAws'>
-): NonStreamingHookResult<'TestAws'>;
-
-export function useTestAws(
-  props: HookProps<'TestAws'> = {}
-): StreamingHookResult<'TestAws'> | NonStreamingHookResult<'TestAws'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAws, props);
+  props: HookInput<'TestAws', { stream?: boolean }> = {},
+): HookOutput<'TestAws', { stream: true }> | HookOutput<'TestAws', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAws, props)
   }
-
-  return useBamlAction(Actions.TestAws, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAws, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAwsInvalidAccessKey BAML function that supports both streaming and non‑streaming responses.
@@ -5811,33 +5472,29 @@ export function useTestAws(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAwsInvalidAccessKey();
+ * const { data, error, isPending, mutate } = useTestAwsInvalidAccessKey({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAwsInvalidAccessKey({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAwsInvalidAccessKey({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAwsInvalidAccessKey(props?: HookInput<'TestAwsInvalidAccessKey', { stream?: true }>): HookOutput<'TestAwsInvalidAccessKey', { stream: true }>
+export function useTestAwsInvalidAccessKey(props: HookInput<'TestAwsInvalidAccessKey', { stream: false }>): HookOutput<'TestAwsInvalidAccessKey', { stream: false }>
 export function useTestAwsInvalidAccessKey(
-  props: StreamingProps<'TestAwsInvalidAccessKey'>
-): StreamingHookResult<'TestAwsInvalidAccessKey'>;
-
-export function useTestAwsInvalidAccessKey(
-  props?: NonStreamingProps<'TestAwsInvalidAccessKey'>
-): NonStreamingHookResult<'TestAwsInvalidAccessKey'>;
-
-export function useTestAwsInvalidAccessKey(
-  props: HookProps<'TestAwsInvalidAccessKey'> = {}
-): StreamingHookResult<'TestAwsInvalidAccessKey'> | NonStreamingHookResult<'TestAwsInvalidAccessKey'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAwsInvalidAccessKey, props);
+  props: HookInput<'TestAwsInvalidAccessKey', { stream?: boolean }> = {},
+): HookOutput<'TestAwsInvalidAccessKey', { stream: true }> | HookOutput<'TestAwsInvalidAccessKey', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAwsInvalidAccessKey, props)
   }
-
-  return useBamlAction(Actions.TestAwsInvalidAccessKey, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAwsInvalidAccessKey, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAwsInvalidProfile BAML function that supports both streaming and non‑streaming responses.
@@ -5865,33 +5522,29 @@ export function useTestAwsInvalidAccessKey(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAwsInvalidProfile();
+ * const { data, error, isPending, mutate } = useTestAwsInvalidProfile({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAwsInvalidProfile({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAwsInvalidProfile({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAwsInvalidProfile(props?: HookInput<'TestAwsInvalidProfile', { stream?: true }>): HookOutput<'TestAwsInvalidProfile', { stream: true }>
+export function useTestAwsInvalidProfile(props: HookInput<'TestAwsInvalidProfile', { stream: false }>): HookOutput<'TestAwsInvalidProfile', { stream: false }>
 export function useTestAwsInvalidProfile(
-  props: StreamingProps<'TestAwsInvalidProfile'>
-): StreamingHookResult<'TestAwsInvalidProfile'>;
-
-export function useTestAwsInvalidProfile(
-  props?: NonStreamingProps<'TestAwsInvalidProfile'>
-): NonStreamingHookResult<'TestAwsInvalidProfile'>;
-
-export function useTestAwsInvalidProfile(
-  props: HookProps<'TestAwsInvalidProfile'> = {}
-): StreamingHookResult<'TestAwsInvalidProfile'> | NonStreamingHookResult<'TestAwsInvalidProfile'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAwsInvalidProfile, props);
+  props: HookInput<'TestAwsInvalidProfile', { stream?: boolean }> = {},
+): HookOutput<'TestAwsInvalidProfile', { stream: true }> | HookOutput<'TestAwsInvalidProfile', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAwsInvalidProfile, props)
   }
-
-  return useBamlAction(Actions.TestAwsInvalidProfile, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAwsInvalidProfile, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAwsInvalidRegion BAML function that supports both streaming and non‑streaming responses.
@@ -5919,33 +5572,29 @@ export function useTestAwsInvalidProfile(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAwsInvalidRegion();
+ * const { data, error, isPending, mutate } = useTestAwsInvalidRegion({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAwsInvalidRegion({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAwsInvalidRegion({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAwsInvalidRegion(props?: HookInput<'TestAwsInvalidRegion', { stream?: true }>): HookOutput<'TestAwsInvalidRegion', { stream: true }>
+export function useTestAwsInvalidRegion(props: HookInput<'TestAwsInvalidRegion', { stream: false }>): HookOutput<'TestAwsInvalidRegion', { stream: false }>
 export function useTestAwsInvalidRegion(
-  props: StreamingProps<'TestAwsInvalidRegion'>
-): StreamingHookResult<'TestAwsInvalidRegion'>;
-
-export function useTestAwsInvalidRegion(
-  props?: NonStreamingProps<'TestAwsInvalidRegion'>
-): NonStreamingHookResult<'TestAwsInvalidRegion'>;
-
-export function useTestAwsInvalidRegion(
-  props: HookProps<'TestAwsInvalidRegion'> = {}
-): StreamingHookResult<'TestAwsInvalidRegion'> | NonStreamingHookResult<'TestAwsInvalidRegion'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAwsInvalidRegion, props);
+  props: HookInput<'TestAwsInvalidRegion', { stream?: boolean }> = {},
+): HookOutput<'TestAwsInvalidRegion', { stream: true }> | HookOutput<'TestAwsInvalidRegion', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAwsInvalidRegion, props)
   }
-
-  return useBamlAction(Actions.TestAwsInvalidRegion, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAwsInvalidRegion, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAwsInvalidSessionToken BAML function that supports both streaming and non‑streaming responses.
@@ -5973,33 +5622,29 @@ export function useTestAwsInvalidRegion(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAwsInvalidSessionToken();
+ * const { data, error, isPending, mutate } = useTestAwsInvalidSessionToken({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAwsInvalidSessionToken({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAwsInvalidSessionToken({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAwsInvalidSessionToken(props?: HookInput<'TestAwsInvalidSessionToken', { stream?: true }>): HookOutput<'TestAwsInvalidSessionToken', { stream: true }>
+export function useTestAwsInvalidSessionToken(props: HookInput<'TestAwsInvalidSessionToken', { stream: false }>): HookOutput<'TestAwsInvalidSessionToken', { stream: false }>
 export function useTestAwsInvalidSessionToken(
-  props: StreamingProps<'TestAwsInvalidSessionToken'>
-): StreamingHookResult<'TestAwsInvalidSessionToken'>;
-
-export function useTestAwsInvalidSessionToken(
-  props?: NonStreamingProps<'TestAwsInvalidSessionToken'>
-): NonStreamingHookResult<'TestAwsInvalidSessionToken'>;
-
-export function useTestAwsInvalidSessionToken(
-  props: HookProps<'TestAwsInvalidSessionToken'> = {}
-): StreamingHookResult<'TestAwsInvalidSessionToken'> | NonStreamingHookResult<'TestAwsInvalidSessionToken'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAwsInvalidSessionToken, props);
+  props: HookInput<'TestAwsInvalidSessionToken', { stream?: boolean }> = {},
+): HookOutput<'TestAwsInvalidSessionToken', { stream: true }> | HookOutput<'TestAwsInvalidSessionToken', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAwsInvalidSessionToken, props)
   }
-
-  return useBamlAction(Actions.TestAwsInvalidSessionToken, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAwsInvalidSessionToken, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAzure BAML function that supports both streaming and non‑streaming responses.
@@ -6027,33 +5672,29 @@ export function useTestAwsInvalidSessionToken(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAzure();
+ * const { data, error, isPending, mutate } = useTestAzure({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAzure({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAzure({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAzure(props?: HookInput<'TestAzure', { stream?: true }>): HookOutput<'TestAzure', { stream: true }>
+export function useTestAzure(props: HookInput<'TestAzure', { stream: false }>): HookOutput<'TestAzure', { stream: false }>
 export function useTestAzure(
-  props: StreamingProps<'TestAzure'>
-): StreamingHookResult<'TestAzure'>;
-
-export function useTestAzure(
-  props?: NonStreamingProps<'TestAzure'>
-): NonStreamingHookResult<'TestAzure'>;
-
-export function useTestAzure(
-  props: HookProps<'TestAzure'> = {}
-): StreamingHookResult<'TestAzure'> | NonStreamingHookResult<'TestAzure'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAzure, props);
+  props: HookInput<'TestAzure', { stream?: boolean }> = {},
+): HookOutput<'TestAzure', { stream: true }> | HookOutput<'TestAzure', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAzure, props)
   }
-
-  return useBamlAction(Actions.TestAzure, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAzure, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAzureFailure BAML function that supports both streaming and non‑streaming responses.
@@ -6081,33 +5722,29 @@ export function useTestAzure(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAzureFailure();
+ * const { data, error, isPending, mutate } = useTestAzureFailure({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAzureFailure({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAzureFailure({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAzureFailure(props?: HookInput<'TestAzureFailure', { stream?: true }>): HookOutput<'TestAzureFailure', { stream: true }>
+export function useTestAzureFailure(props: HookInput<'TestAzureFailure', { stream: false }>): HookOutput<'TestAzureFailure', { stream: false }>
 export function useTestAzureFailure(
-  props: StreamingProps<'TestAzureFailure'>
-): StreamingHookResult<'TestAzureFailure'>;
-
-export function useTestAzureFailure(
-  props?: NonStreamingProps<'TestAzureFailure'>
-): NonStreamingHookResult<'TestAzureFailure'>;
-
-export function useTestAzureFailure(
-  props: HookProps<'TestAzureFailure'> = {}
-): StreamingHookResult<'TestAzureFailure'> | NonStreamingHookResult<'TestAzureFailure'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAzureFailure, props);
+  props: HookInput<'TestAzureFailure', { stream?: boolean }> = {},
+): HookOutput<'TestAzureFailure', { stream: true }> | HookOutput<'TestAzureFailure', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAzureFailure, props)
   }
-
-  return useBamlAction(Actions.TestAzureFailure, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAzureFailure, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAzureO1NoMaxTokens BAML function that supports both streaming and non‑streaming responses.
@@ -6135,33 +5772,29 @@ export function useTestAzureFailure(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAzureO1NoMaxTokens();
+ * const { data, error, isPending, mutate } = useTestAzureO1NoMaxTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAzureO1NoMaxTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAzureO1NoMaxTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAzureO1NoMaxTokens(props?: HookInput<'TestAzureO1NoMaxTokens', { stream?: true }>): HookOutput<'TestAzureO1NoMaxTokens', { stream: true }>
+export function useTestAzureO1NoMaxTokens(props: HookInput<'TestAzureO1NoMaxTokens', { stream: false }>): HookOutput<'TestAzureO1NoMaxTokens', { stream: false }>
 export function useTestAzureO1NoMaxTokens(
-  props: StreamingProps<'TestAzureO1NoMaxTokens'>
-): StreamingHookResult<'TestAzureO1NoMaxTokens'>;
-
-export function useTestAzureO1NoMaxTokens(
-  props?: NonStreamingProps<'TestAzureO1NoMaxTokens'>
-): NonStreamingHookResult<'TestAzureO1NoMaxTokens'>;
-
-export function useTestAzureO1NoMaxTokens(
-  props: HookProps<'TestAzureO1NoMaxTokens'> = {}
-): StreamingHookResult<'TestAzureO1NoMaxTokens'> | NonStreamingHookResult<'TestAzureO1NoMaxTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAzureO1NoMaxTokens, props);
+  props: HookInput<'TestAzureO1NoMaxTokens', { stream?: boolean }> = {},
+): HookOutput<'TestAzureO1NoMaxTokens', { stream: true }> | HookOutput<'TestAzureO1NoMaxTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAzureO1NoMaxTokens, props)
   }
-
-  return useBamlAction(Actions.TestAzureO1NoMaxTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAzureO1NoMaxTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAzureO1WithMaxCompletionTokens BAML function that supports both streaming and non‑streaming responses.
@@ -6189,33 +5822,29 @@ export function useTestAzureO1NoMaxTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAzureO1WithMaxCompletionTokens();
+ * const { data, error, isPending, mutate } = useTestAzureO1WithMaxCompletionTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAzureO1WithMaxCompletionTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAzureO1WithMaxCompletionTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAzureO1WithMaxCompletionTokens(props?: HookInput<'TestAzureO1WithMaxCompletionTokens', { stream?: true }>): HookOutput<'TestAzureO1WithMaxCompletionTokens', { stream: true }>
+export function useTestAzureO1WithMaxCompletionTokens(props: HookInput<'TestAzureO1WithMaxCompletionTokens', { stream: false }>): HookOutput<'TestAzureO1WithMaxCompletionTokens', { stream: false }>
 export function useTestAzureO1WithMaxCompletionTokens(
-  props: StreamingProps<'TestAzureO1WithMaxCompletionTokens'>
-): StreamingHookResult<'TestAzureO1WithMaxCompletionTokens'>;
-
-export function useTestAzureO1WithMaxCompletionTokens(
-  props?: NonStreamingProps<'TestAzureO1WithMaxCompletionTokens'>
-): NonStreamingHookResult<'TestAzureO1WithMaxCompletionTokens'>;
-
-export function useTestAzureO1WithMaxCompletionTokens(
-  props: HookProps<'TestAzureO1WithMaxCompletionTokens'> = {}
-): StreamingHookResult<'TestAzureO1WithMaxCompletionTokens'> | NonStreamingHookResult<'TestAzureO1WithMaxCompletionTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAzureO1WithMaxCompletionTokens, props);
+  props: HookInput<'TestAzureO1WithMaxCompletionTokens', { stream?: boolean }> = {},
+): HookOutput<'TestAzureO1WithMaxCompletionTokens', { stream: true }> | HookOutput<'TestAzureO1WithMaxCompletionTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAzureO1WithMaxCompletionTokens, props)
   }
-
-  return useBamlAction(Actions.TestAzureO1WithMaxCompletionTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAzureO1WithMaxCompletionTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAzureO1WithMaxTokens BAML function that supports both streaming and non‑streaming responses.
@@ -6243,33 +5872,29 @@ export function useTestAzureO1WithMaxCompletionTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAzureO1WithMaxTokens();
+ * const { data, error, isPending, mutate } = useTestAzureO1WithMaxTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAzureO1WithMaxTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAzureO1WithMaxTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAzureO1WithMaxTokens(props?: HookInput<'TestAzureO1WithMaxTokens', { stream?: true }>): HookOutput<'TestAzureO1WithMaxTokens', { stream: true }>
+export function useTestAzureO1WithMaxTokens(props: HookInput<'TestAzureO1WithMaxTokens', { stream: false }>): HookOutput<'TestAzureO1WithMaxTokens', { stream: false }>
 export function useTestAzureO1WithMaxTokens(
-  props: StreamingProps<'TestAzureO1WithMaxTokens'>
-): StreamingHookResult<'TestAzureO1WithMaxTokens'>;
-
-export function useTestAzureO1WithMaxTokens(
-  props?: NonStreamingProps<'TestAzureO1WithMaxTokens'>
-): NonStreamingHookResult<'TestAzureO1WithMaxTokens'>;
-
-export function useTestAzureO1WithMaxTokens(
-  props: HookProps<'TestAzureO1WithMaxTokens'> = {}
-): StreamingHookResult<'TestAzureO1WithMaxTokens'> | NonStreamingHookResult<'TestAzureO1WithMaxTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAzureO1WithMaxTokens, props);
+  props: HookInput<'TestAzureO1WithMaxTokens', { stream?: boolean }> = {},
+): HookOutput<'TestAzureO1WithMaxTokens', { stream: true }> | HookOutput<'TestAzureO1WithMaxTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAzureO1WithMaxTokens, props)
   }
-
-  return useBamlAction(Actions.TestAzureO1WithMaxTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAzureO1WithMaxTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAzureO3NoMaxTokens BAML function that supports both streaming and non‑streaming responses.
@@ -6297,33 +5922,29 @@ export function useTestAzureO1WithMaxTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAzureO3NoMaxTokens();
+ * const { data, error, isPending, mutate } = useTestAzureO3NoMaxTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAzureO3NoMaxTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAzureO3NoMaxTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAzureO3NoMaxTokens(props?: HookInput<'TestAzureO3NoMaxTokens', { stream?: true }>): HookOutput<'TestAzureO3NoMaxTokens', { stream: true }>
+export function useTestAzureO3NoMaxTokens(props: HookInput<'TestAzureO3NoMaxTokens', { stream: false }>): HookOutput<'TestAzureO3NoMaxTokens', { stream: false }>
 export function useTestAzureO3NoMaxTokens(
-  props: StreamingProps<'TestAzureO3NoMaxTokens'>
-): StreamingHookResult<'TestAzureO3NoMaxTokens'>;
-
-export function useTestAzureO3NoMaxTokens(
-  props?: NonStreamingProps<'TestAzureO3NoMaxTokens'>
-): NonStreamingHookResult<'TestAzureO3NoMaxTokens'>;
-
-export function useTestAzureO3NoMaxTokens(
-  props: HookProps<'TestAzureO3NoMaxTokens'> = {}
-): StreamingHookResult<'TestAzureO3NoMaxTokens'> | NonStreamingHookResult<'TestAzureO3NoMaxTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAzureO3NoMaxTokens, props);
+  props: HookInput<'TestAzureO3NoMaxTokens', { stream?: boolean }> = {},
+): HookOutput<'TestAzureO3NoMaxTokens', { stream: true }> | HookOutput<'TestAzureO3NoMaxTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAzureO3NoMaxTokens, props)
   }
-
-  return useBamlAction(Actions.TestAzureO3NoMaxTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAzureO3NoMaxTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAzureO3WithMaxCompletionTokens BAML function that supports both streaming and non‑streaming responses.
@@ -6351,33 +5972,29 @@ export function useTestAzureO3NoMaxTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAzureO3WithMaxCompletionTokens();
+ * const { data, error, isPending, mutate } = useTestAzureO3WithMaxCompletionTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAzureO3WithMaxCompletionTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAzureO3WithMaxCompletionTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAzureO3WithMaxCompletionTokens(props?: HookInput<'TestAzureO3WithMaxCompletionTokens', { stream?: true }>): HookOutput<'TestAzureO3WithMaxCompletionTokens', { stream: true }>
+export function useTestAzureO3WithMaxCompletionTokens(props: HookInput<'TestAzureO3WithMaxCompletionTokens', { stream: false }>): HookOutput<'TestAzureO3WithMaxCompletionTokens', { stream: false }>
 export function useTestAzureO3WithMaxCompletionTokens(
-  props: StreamingProps<'TestAzureO3WithMaxCompletionTokens'>
-): StreamingHookResult<'TestAzureO3WithMaxCompletionTokens'>;
-
-export function useTestAzureO3WithMaxCompletionTokens(
-  props?: NonStreamingProps<'TestAzureO3WithMaxCompletionTokens'>
-): NonStreamingHookResult<'TestAzureO3WithMaxCompletionTokens'>;
-
-export function useTestAzureO3WithMaxCompletionTokens(
-  props: HookProps<'TestAzureO3WithMaxCompletionTokens'> = {}
-): StreamingHookResult<'TestAzureO3WithMaxCompletionTokens'> | NonStreamingHookResult<'TestAzureO3WithMaxCompletionTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAzureO3WithMaxCompletionTokens, props);
+  props: HookInput<'TestAzureO3WithMaxCompletionTokens', { stream?: boolean }> = {},
+): HookOutput<'TestAzureO3WithMaxCompletionTokens', { stream: true }> | HookOutput<'TestAzureO3WithMaxCompletionTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAzureO3WithMaxCompletionTokens, props)
   }
-
-  return useBamlAction(Actions.TestAzureO3WithMaxCompletionTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAzureO3WithMaxCompletionTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestAzureWithMaxTokens BAML function that supports both streaming and non‑streaming responses.
@@ -6405,33 +6022,29 @@ export function useTestAzureO3WithMaxCompletionTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestAzureWithMaxTokens();
+ * const { data, error, isPending, mutate } = useTestAzureWithMaxTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestAzureWithMaxTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestAzureWithMaxTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestAzureWithMaxTokens(props?: HookInput<'TestAzureWithMaxTokens', { stream?: true }>): HookOutput<'TestAzureWithMaxTokens', { stream: true }>
+export function useTestAzureWithMaxTokens(props: HookInput<'TestAzureWithMaxTokens', { stream: false }>): HookOutput<'TestAzureWithMaxTokens', { stream: false }>
 export function useTestAzureWithMaxTokens(
-  props: StreamingProps<'TestAzureWithMaxTokens'>
-): StreamingHookResult<'TestAzureWithMaxTokens'>;
-
-export function useTestAzureWithMaxTokens(
-  props?: NonStreamingProps<'TestAzureWithMaxTokens'>
-): NonStreamingHookResult<'TestAzureWithMaxTokens'>;
-
-export function useTestAzureWithMaxTokens(
-  props: HookProps<'TestAzureWithMaxTokens'> = {}
-): StreamingHookResult<'TestAzureWithMaxTokens'> | NonStreamingHookResult<'TestAzureWithMaxTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestAzureWithMaxTokens, props);
+  props: HookInput<'TestAzureWithMaxTokens', { stream?: boolean }> = {},
+): HookOutput<'TestAzureWithMaxTokens', { stream: true }> | HookOutput<'TestAzureWithMaxTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestAzureWithMaxTokens, props)
   }
-
-  return useBamlAction(Actions.TestAzureWithMaxTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestAzureWithMaxTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestCaching BAML function that supports both streaming and non‑streaming responses.
@@ -6461,33 +6074,29 @@ export function useTestAzureWithMaxTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestCaching();
+ * const { data, error, isPending, mutate } = useTestCaching({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestCaching({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestCaching({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestCaching(props?: HookInput<'TestCaching', { stream?: true }>): HookOutput<'TestCaching', { stream: true }>
+export function useTestCaching(props: HookInput<'TestCaching', { stream: false }>): HookOutput<'TestCaching', { stream: false }>
 export function useTestCaching(
-  props: StreamingProps<'TestCaching'>
-): StreamingHookResult<'TestCaching'>;
-
-export function useTestCaching(
-  props?: NonStreamingProps<'TestCaching'>
-): NonStreamingHookResult<'TestCaching'>;
-
-export function useTestCaching(
-  props: HookProps<'TestCaching'> = {}
-): StreamingHookResult<'TestCaching'> | NonStreamingHookResult<'TestCaching'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestCaching, props);
+  props: HookInput<'TestCaching', { stream?: boolean }> = {},
+): HookOutput<'TestCaching', { stream: true }> | HookOutput<'TestCaching', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestCaching, props)
   }
-
-  return useBamlAction(Actions.TestCaching, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestCaching, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFallbackClient BAML function that supports both streaming and non‑streaming responses.
@@ -6513,33 +6122,29 @@ export function useTestCaching(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFallbackClient();
+ * const { data, error, isPending, mutate } = useTestFallbackClient({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFallbackClient({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFallbackClient({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFallbackClient(props?: HookInput<'TestFallbackClient', { stream?: true }>): HookOutput<'TestFallbackClient', { stream: true }>
+export function useTestFallbackClient(props: HookInput<'TestFallbackClient', { stream: false }>): HookOutput<'TestFallbackClient', { stream: false }>
 export function useTestFallbackClient(
-  props: StreamingProps<'TestFallbackClient'>
-): StreamingHookResult<'TestFallbackClient'>;
-
-export function useTestFallbackClient(
-  props?: NonStreamingProps<'TestFallbackClient'>
-): NonStreamingHookResult<'TestFallbackClient'>;
-
-export function useTestFallbackClient(
-  props: HookProps<'TestFallbackClient'> = {}
-): StreamingHookResult<'TestFallbackClient'> | NonStreamingHookResult<'TestFallbackClient'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFallbackClient, props);
+  props: HookInput<'TestFallbackClient', { stream?: boolean }> = {},
+): HookOutput<'TestFallbackClient', { stream: true }> | HookOutput<'TestFallbackClient', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFallbackClient, props)
   }
-
-  return useBamlAction(Actions.TestFallbackClient, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFallbackClient, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFallbackToShorthand BAML function that supports both streaming and non‑streaming responses.
@@ -6567,33 +6172,29 @@ export function useTestFallbackClient(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFallbackToShorthand();
+ * const { data, error, isPending, mutate } = useTestFallbackToShorthand({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFallbackToShorthand({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFallbackToShorthand({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFallbackToShorthand(props?: HookInput<'TestFallbackToShorthand', { stream?: true }>): HookOutput<'TestFallbackToShorthand', { stream: true }>
+export function useTestFallbackToShorthand(props: HookInput<'TestFallbackToShorthand', { stream: false }>): HookOutput<'TestFallbackToShorthand', { stream: false }>
 export function useTestFallbackToShorthand(
-  props: StreamingProps<'TestFallbackToShorthand'>
-): StreamingHookResult<'TestFallbackToShorthand'>;
-
-export function useTestFallbackToShorthand(
-  props?: NonStreamingProps<'TestFallbackToShorthand'>
-): NonStreamingHookResult<'TestFallbackToShorthand'>;
-
-export function useTestFallbackToShorthand(
-  props: HookProps<'TestFallbackToShorthand'> = {}
-): StreamingHookResult<'TestFallbackToShorthand'> | NonStreamingHookResult<'TestFallbackToShorthand'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFallbackToShorthand, props);
+  props: HookInput<'TestFallbackToShorthand', { stream?: boolean }> = {},
+): HookOutput<'TestFallbackToShorthand', { stream: true }> | HookOutput<'TestFallbackToShorthand', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFallbackToShorthand, props)
   }
-
-  return useBamlAction(Actions.TestFallbackToShorthand, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFallbackToShorthand, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleBool BAML function that supports both streaming and non‑streaming responses.
@@ -6621,33 +6222,29 @@ export function useTestFallbackToShorthand(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleBool();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleBool({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleBool({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleBool({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleBool(props?: HookInput<'TestFnNamedArgsSingleBool', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleBool', { stream: true }>
+export function useTestFnNamedArgsSingleBool(props: HookInput<'TestFnNamedArgsSingleBool', { stream: false }>): HookOutput<'TestFnNamedArgsSingleBool', { stream: false }>
 export function useTestFnNamedArgsSingleBool(
-  props: StreamingProps<'TestFnNamedArgsSingleBool'>
-): StreamingHookResult<'TestFnNamedArgsSingleBool'>;
-
-export function useTestFnNamedArgsSingleBool(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleBool'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleBool'>;
-
-export function useTestFnNamedArgsSingleBool(
-  props: HookProps<'TestFnNamedArgsSingleBool'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleBool'> | NonStreamingHookResult<'TestFnNamedArgsSingleBool'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleBool, props);
+  props: HookInput<'TestFnNamedArgsSingleBool', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleBool', { stream: true }> | HookOutput<'TestFnNamedArgsSingleBool', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleBool, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleBool, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleBool, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleClass BAML function that supports both streaming and non‑streaming responses.
@@ -6675,33 +6272,29 @@ export function useTestFnNamedArgsSingleBool(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleClass();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleClass({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleClass({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleClass({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleClass(props?: HookInput<'TestFnNamedArgsSingleClass', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleClass', { stream: true }>
+export function useTestFnNamedArgsSingleClass(props: HookInput<'TestFnNamedArgsSingleClass', { stream: false }>): HookOutput<'TestFnNamedArgsSingleClass', { stream: false }>
 export function useTestFnNamedArgsSingleClass(
-  props: StreamingProps<'TestFnNamedArgsSingleClass'>
-): StreamingHookResult<'TestFnNamedArgsSingleClass'>;
-
-export function useTestFnNamedArgsSingleClass(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleClass'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleClass'>;
-
-export function useTestFnNamedArgsSingleClass(
-  props: HookProps<'TestFnNamedArgsSingleClass'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleClass'> | NonStreamingHookResult<'TestFnNamedArgsSingleClass'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleClass, props);
+  props: HookInput<'TestFnNamedArgsSingleClass', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleClass', { stream: true }> | HookOutput<'TestFnNamedArgsSingleClass', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleClass, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleClass, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleClass, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleEnumList BAML function that supports both streaming and non‑streaming responses.
@@ -6729,33 +6322,29 @@ export function useTestFnNamedArgsSingleClass(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleEnumList();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleEnumList({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleEnumList({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleEnumList({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleEnumList(props?: HookInput<'TestFnNamedArgsSingleEnumList', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleEnumList', { stream: true }>
+export function useTestFnNamedArgsSingleEnumList(props: HookInput<'TestFnNamedArgsSingleEnumList', { stream: false }>): HookOutput<'TestFnNamedArgsSingleEnumList', { stream: false }>
 export function useTestFnNamedArgsSingleEnumList(
-  props: StreamingProps<'TestFnNamedArgsSingleEnumList'>
-): StreamingHookResult<'TestFnNamedArgsSingleEnumList'>;
-
-export function useTestFnNamedArgsSingleEnumList(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleEnumList'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleEnumList'>;
-
-export function useTestFnNamedArgsSingleEnumList(
-  props: HookProps<'TestFnNamedArgsSingleEnumList'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleEnumList'> | NonStreamingHookResult<'TestFnNamedArgsSingleEnumList'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleEnumList, props);
+  props: HookInput<'TestFnNamedArgsSingleEnumList', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleEnumList', { stream: true }> | HookOutput<'TestFnNamedArgsSingleEnumList', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleEnumList, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleEnumList, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleEnumList, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleFloat BAML function that supports both streaming and non‑streaming responses.
@@ -6783,33 +6372,29 @@ export function useTestFnNamedArgsSingleEnumList(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleFloat();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleFloat({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleFloat({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleFloat({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleFloat(props?: HookInput<'TestFnNamedArgsSingleFloat', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleFloat', { stream: true }>
+export function useTestFnNamedArgsSingleFloat(props: HookInput<'TestFnNamedArgsSingleFloat', { stream: false }>): HookOutput<'TestFnNamedArgsSingleFloat', { stream: false }>
 export function useTestFnNamedArgsSingleFloat(
-  props: StreamingProps<'TestFnNamedArgsSingleFloat'>
-): StreamingHookResult<'TestFnNamedArgsSingleFloat'>;
-
-export function useTestFnNamedArgsSingleFloat(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleFloat'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleFloat'>;
-
-export function useTestFnNamedArgsSingleFloat(
-  props: HookProps<'TestFnNamedArgsSingleFloat'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleFloat'> | NonStreamingHookResult<'TestFnNamedArgsSingleFloat'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleFloat, props);
+  props: HookInput<'TestFnNamedArgsSingleFloat', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleFloat', { stream: true }> | HookOutput<'TestFnNamedArgsSingleFloat', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleFloat, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleFloat, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleFloat, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleInt BAML function that supports both streaming and non‑streaming responses.
@@ -6837,33 +6422,29 @@ export function useTestFnNamedArgsSingleFloat(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleInt();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleInt({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleInt({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleInt({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleInt(props?: HookInput<'TestFnNamedArgsSingleInt', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleInt', { stream: true }>
+export function useTestFnNamedArgsSingleInt(props: HookInput<'TestFnNamedArgsSingleInt', { stream: false }>): HookOutput<'TestFnNamedArgsSingleInt', { stream: false }>
 export function useTestFnNamedArgsSingleInt(
-  props: StreamingProps<'TestFnNamedArgsSingleInt'>
-): StreamingHookResult<'TestFnNamedArgsSingleInt'>;
-
-export function useTestFnNamedArgsSingleInt(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleInt'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleInt'>;
-
-export function useTestFnNamedArgsSingleInt(
-  props: HookProps<'TestFnNamedArgsSingleInt'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleInt'> | NonStreamingHookResult<'TestFnNamedArgsSingleInt'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleInt, props);
+  props: HookInput<'TestFnNamedArgsSingleInt', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleInt', { stream: true }> | HookOutput<'TestFnNamedArgsSingleInt', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleInt, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleInt, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleInt, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleMapStringToClass BAML function that supports both streaming and non‑streaming responses.
@@ -6891,33 +6472,29 @@ export function useTestFnNamedArgsSingleInt(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleMapStringToClass();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleMapStringToClass({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleMapStringToClass({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleMapStringToClass({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleMapStringToClass(props?: HookInput<'TestFnNamedArgsSingleMapStringToClass', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleMapStringToClass', { stream: true }>
+export function useTestFnNamedArgsSingleMapStringToClass(props: HookInput<'TestFnNamedArgsSingleMapStringToClass', { stream: false }>): HookOutput<'TestFnNamedArgsSingleMapStringToClass', { stream: false }>
 export function useTestFnNamedArgsSingleMapStringToClass(
-  props: StreamingProps<'TestFnNamedArgsSingleMapStringToClass'>
-): StreamingHookResult<'TestFnNamedArgsSingleMapStringToClass'>;
-
-export function useTestFnNamedArgsSingleMapStringToClass(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleMapStringToClass'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleMapStringToClass'>;
-
-export function useTestFnNamedArgsSingleMapStringToClass(
-  props: HookProps<'TestFnNamedArgsSingleMapStringToClass'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleMapStringToClass'> | NonStreamingHookResult<'TestFnNamedArgsSingleMapStringToClass'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleMapStringToClass, props);
+  props: HookInput<'TestFnNamedArgsSingleMapStringToClass', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleMapStringToClass', { stream: true }> | HookOutput<'TestFnNamedArgsSingleMapStringToClass', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleMapStringToClass, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleMapStringToClass, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleMapStringToClass, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleMapStringToMap BAML function that supports both streaming and non‑streaming responses.
@@ -6945,33 +6522,29 @@ export function useTestFnNamedArgsSingleMapStringToClass(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleMapStringToMap();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleMapStringToMap({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleMapStringToMap({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleMapStringToMap({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleMapStringToMap(props?: HookInput<'TestFnNamedArgsSingleMapStringToMap', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleMapStringToMap', { stream: true }>
+export function useTestFnNamedArgsSingleMapStringToMap(props: HookInput<'TestFnNamedArgsSingleMapStringToMap', { stream: false }>): HookOutput<'TestFnNamedArgsSingleMapStringToMap', { stream: false }>
 export function useTestFnNamedArgsSingleMapStringToMap(
-  props: StreamingProps<'TestFnNamedArgsSingleMapStringToMap'>
-): StreamingHookResult<'TestFnNamedArgsSingleMapStringToMap'>;
-
-export function useTestFnNamedArgsSingleMapStringToMap(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleMapStringToMap'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleMapStringToMap'>;
-
-export function useTestFnNamedArgsSingleMapStringToMap(
-  props: HookProps<'TestFnNamedArgsSingleMapStringToMap'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleMapStringToMap'> | NonStreamingHookResult<'TestFnNamedArgsSingleMapStringToMap'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleMapStringToMap, props);
+  props: HookInput<'TestFnNamedArgsSingleMapStringToMap', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleMapStringToMap', { stream: true }> | HookOutput<'TestFnNamedArgsSingleMapStringToMap', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleMapStringToMap, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleMapStringToMap, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleMapStringToMap, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleMapStringToString BAML function that supports both streaming and non‑streaming responses.
@@ -6999,33 +6572,29 @@ export function useTestFnNamedArgsSingleMapStringToMap(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleMapStringToString();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleMapStringToString({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleMapStringToString({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleMapStringToString({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleMapStringToString(props?: HookInput<'TestFnNamedArgsSingleMapStringToString', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleMapStringToString', { stream: true }>
+export function useTestFnNamedArgsSingleMapStringToString(props: HookInput<'TestFnNamedArgsSingleMapStringToString', { stream: false }>): HookOutput<'TestFnNamedArgsSingleMapStringToString', { stream: false }>
 export function useTestFnNamedArgsSingleMapStringToString(
-  props: StreamingProps<'TestFnNamedArgsSingleMapStringToString'>
-): StreamingHookResult<'TestFnNamedArgsSingleMapStringToString'>;
-
-export function useTestFnNamedArgsSingleMapStringToString(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleMapStringToString'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleMapStringToString'>;
-
-export function useTestFnNamedArgsSingleMapStringToString(
-  props: HookProps<'TestFnNamedArgsSingleMapStringToString'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleMapStringToString'> | NonStreamingHookResult<'TestFnNamedArgsSingleMapStringToString'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleMapStringToString, props);
+  props: HookInput<'TestFnNamedArgsSingleMapStringToString', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleMapStringToString', { stream: true }> | HookOutput<'TestFnNamedArgsSingleMapStringToString', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleMapStringToString, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleMapStringToString, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleMapStringToString, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleString BAML function that supports both streaming and non‑streaming responses.
@@ -7053,33 +6622,29 @@ export function useTestFnNamedArgsSingleMapStringToString(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleString();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleString({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleString({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleString({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleString(props?: HookInput<'TestFnNamedArgsSingleString', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleString', { stream: true }>
+export function useTestFnNamedArgsSingleString(props: HookInput<'TestFnNamedArgsSingleString', { stream: false }>): HookOutput<'TestFnNamedArgsSingleString', { stream: false }>
 export function useTestFnNamedArgsSingleString(
-  props: StreamingProps<'TestFnNamedArgsSingleString'>
-): StreamingHookResult<'TestFnNamedArgsSingleString'>;
-
-export function useTestFnNamedArgsSingleString(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleString'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleString'>;
-
-export function useTestFnNamedArgsSingleString(
-  props: HookProps<'TestFnNamedArgsSingleString'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleString'> | NonStreamingHookResult<'TestFnNamedArgsSingleString'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleString, props);
+  props: HookInput<'TestFnNamedArgsSingleString', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleString', { stream: true }> | HookOutput<'TestFnNamedArgsSingleString', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleString, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleString, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleString, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleStringArray BAML function that supports both streaming and non‑streaming responses.
@@ -7107,33 +6672,29 @@ export function useTestFnNamedArgsSingleString(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleStringArray();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleStringArray({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleStringArray({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleStringArray({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleStringArray(props?: HookInput<'TestFnNamedArgsSingleStringArray', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleStringArray', { stream: true }>
+export function useTestFnNamedArgsSingleStringArray(props: HookInput<'TestFnNamedArgsSingleStringArray', { stream: false }>): HookOutput<'TestFnNamedArgsSingleStringArray', { stream: false }>
 export function useTestFnNamedArgsSingleStringArray(
-  props: StreamingProps<'TestFnNamedArgsSingleStringArray'>
-): StreamingHookResult<'TestFnNamedArgsSingleStringArray'>;
-
-export function useTestFnNamedArgsSingleStringArray(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleStringArray'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleStringArray'>;
-
-export function useTestFnNamedArgsSingleStringArray(
-  props: HookProps<'TestFnNamedArgsSingleStringArray'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleStringArray'> | NonStreamingHookResult<'TestFnNamedArgsSingleStringArray'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleStringArray, props);
+  props: HookInput<'TestFnNamedArgsSingleStringArray', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleStringArray', { stream: true }> | HookOutput<'TestFnNamedArgsSingleStringArray', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleStringArray, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleStringArray, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleStringArray, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestFnNamedArgsSingleStringList BAML function that supports both streaming and non‑streaming responses.
@@ -7161,33 +6722,29 @@ export function useTestFnNamedArgsSingleStringArray(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleStringList();
+ * const { data, error, isPending, mutate } = useTestFnNamedArgsSingleStringList({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestFnNamedArgsSingleStringList({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestFnNamedArgsSingleStringList({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestFnNamedArgsSingleStringList(props?: HookInput<'TestFnNamedArgsSingleStringList', { stream?: true }>): HookOutput<'TestFnNamedArgsSingleStringList', { stream: true }>
+export function useTestFnNamedArgsSingleStringList(props: HookInput<'TestFnNamedArgsSingleStringList', { stream: false }>): HookOutput<'TestFnNamedArgsSingleStringList', { stream: false }>
 export function useTestFnNamedArgsSingleStringList(
-  props: StreamingProps<'TestFnNamedArgsSingleStringList'>
-): StreamingHookResult<'TestFnNamedArgsSingleStringList'>;
-
-export function useTestFnNamedArgsSingleStringList(
-  props?: NonStreamingProps<'TestFnNamedArgsSingleStringList'>
-): NonStreamingHookResult<'TestFnNamedArgsSingleStringList'>;
-
-export function useTestFnNamedArgsSingleStringList(
-  props: HookProps<'TestFnNamedArgsSingleStringList'> = {}
-): StreamingHookResult<'TestFnNamedArgsSingleStringList'> | NonStreamingHookResult<'TestFnNamedArgsSingleStringList'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestFnNamedArgsSingleStringList, props);
+  props: HookInput<'TestFnNamedArgsSingleStringList', { stream?: boolean }> = {},
+): HookOutput<'TestFnNamedArgsSingleStringList', { stream: true }> | HookOutput<'TestFnNamedArgsSingleStringList', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestFnNamedArgsSingleStringList, props)
   }
-
-  return useBamlAction(Actions.TestFnNamedArgsSingleStringList, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestFnNamedArgsSingleStringList, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestGemini BAML function that supports both streaming and non‑streaming responses.
@@ -7215,33 +6772,29 @@ export function useTestFnNamedArgsSingleStringList(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestGemini();
+ * const { data, error, isPending, mutate } = useTestGemini({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestGemini({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestGemini({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestGemini(props?: HookInput<'TestGemini', { stream?: true }>): HookOutput<'TestGemini', { stream: true }>
+export function useTestGemini(props: HookInput<'TestGemini', { stream: false }>): HookOutput<'TestGemini', { stream: false }>
 export function useTestGemini(
-  props: StreamingProps<'TestGemini'>
-): StreamingHookResult<'TestGemini'>;
-
-export function useTestGemini(
-  props?: NonStreamingProps<'TestGemini'>
-): NonStreamingHookResult<'TestGemini'>;
-
-export function useTestGemini(
-  props: HookProps<'TestGemini'> = {}
-): StreamingHookResult<'TestGemini'> | NonStreamingHookResult<'TestGemini'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestGemini, props);
+  props: HookInput<'TestGemini', { stream?: boolean }> = {},
+): HookOutput<'TestGemini', { stream: true }> | HookOutput<'TestGemini', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestGemini, props)
   }
-
-  return useBamlAction(Actions.TestGemini, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestGemini, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestGeminiOpenAiGeneric BAML function that supports both streaming and non‑streaming responses.
@@ -7267,33 +6820,29 @@ export function useTestGemini(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestGeminiOpenAiGeneric();
+ * const { data, error, isPending, mutate } = useTestGeminiOpenAiGeneric({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestGeminiOpenAiGeneric({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestGeminiOpenAiGeneric({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestGeminiOpenAiGeneric(props?: HookInput<'TestGeminiOpenAiGeneric', { stream?: true }>): HookOutput<'TestGeminiOpenAiGeneric', { stream: true }>
+export function useTestGeminiOpenAiGeneric(props: HookInput<'TestGeminiOpenAiGeneric', { stream: false }>): HookOutput<'TestGeminiOpenAiGeneric', { stream: false }>
 export function useTestGeminiOpenAiGeneric(
-  props: StreamingProps<'TestGeminiOpenAiGeneric'>
-): StreamingHookResult<'TestGeminiOpenAiGeneric'>;
-
-export function useTestGeminiOpenAiGeneric(
-  props?: NonStreamingProps<'TestGeminiOpenAiGeneric'>
-): NonStreamingHookResult<'TestGeminiOpenAiGeneric'>;
-
-export function useTestGeminiOpenAiGeneric(
-  props: HookProps<'TestGeminiOpenAiGeneric'> = {}
-): StreamingHookResult<'TestGeminiOpenAiGeneric'> | NonStreamingHookResult<'TestGeminiOpenAiGeneric'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestGeminiOpenAiGeneric, props);
+  props: HookInput<'TestGeminiOpenAiGeneric', { stream?: boolean }> = {},
+): HookOutput<'TestGeminiOpenAiGeneric', { stream: true }> | HookOutput<'TestGeminiOpenAiGeneric', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestGeminiOpenAiGeneric, props)
   }
-
-  return useBamlAction(Actions.TestGeminiOpenAiGeneric, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestGeminiOpenAiGeneric, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestGeminiSystem BAML function that supports both streaming and non‑streaming responses.
@@ -7321,33 +6870,29 @@ export function useTestGeminiOpenAiGeneric(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestGeminiSystem();
+ * const { data, error, isPending, mutate } = useTestGeminiSystem({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestGeminiSystem({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestGeminiSystem({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestGeminiSystem(props?: HookInput<'TestGeminiSystem', { stream?: true }>): HookOutput<'TestGeminiSystem', { stream: true }>
+export function useTestGeminiSystem(props: HookInput<'TestGeminiSystem', { stream: false }>): HookOutput<'TestGeminiSystem', { stream: false }>
 export function useTestGeminiSystem(
-  props: StreamingProps<'TestGeminiSystem'>
-): StreamingHookResult<'TestGeminiSystem'>;
-
-export function useTestGeminiSystem(
-  props?: NonStreamingProps<'TestGeminiSystem'>
-): NonStreamingHookResult<'TestGeminiSystem'>;
-
-export function useTestGeminiSystem(
-  props: HookProps<'TestGeminiSystem'> = {}
-): StreamingHookResult<'TestGeminiSystem'> | NonStreamingHookResult<'TestGeminiSystem'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestGeminiSystem, props);
+  props: HookInput<'TestGeminiSystem', { stream?: boolean }> = {},
+): HookOutput<'TestGeminiSystem', { stream: true }> | HookOutput<'TestGeminiSystem', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestGeminiSystem, props)
   }
-
-  return useBamlAction(Actions.TestGeminiSystem, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestGeminiSystem, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestGeminiSystemAsChat BAML function that supports both streaming and non‑streaming responses.
@@ -7375,33 +6920,29 @@ export function useTestGeminiSystem(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestGeminiSystemAsChat();
+ * const { data, error, isPending, mutate } = useTestGeminiSystemAsChat({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestGeminiSystemAsChat({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestGeminiSystemAsChat({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestGeminiSystemAsChat(props?: HookInput<'TestGeminiSystemAsChat', { stream?: true }>): HookOutput<'TestGeminiSystemAsChat', { stream: true }>
+export function useTestGeminiSystemAsChat(props: HookInput<'TestGeminiSystemAsChat', { stream: false }>): HookOutput<'TestGeminiSystemAsChat', { stream: false }>
 export function useTestGeminiSystemAsChat(
-  props: StreamingProps<'TestGeminiSystemAsChat'>
-): StreamingHookResult<'TestGeminiSystemAsChat'>;
-
-export function useTestGeminiSystemAsChat(
-  props?: NonStreamingProps<'TestGeminiSystemAsChat'>
-): NonStreamingHookResult<'TestGeminiSystemAsChat'>;
-
-export function useTestGeminiSystemAsChat(
-  props: HookProps<'TestGeminiSystemAsChat'> = {}
-): StreamingHookResult<'TestGeminiSystemAsChat'> | NonStreamingHookResult<'TestGeminiSystemAsChat'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestGeminiSystemAsChat, props);
+  props: HookInput<'TestGeminiSystemAsChat', { stream?: boolean }> = {},
+): HookOutput<'TestGeminiSystemAsChat', { stream: true }> | HookOutput<'TestGeminiSystemAsChat', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestGeminiSystemAsChat, props)
   }
-
-  return useBamlAction(Actions.TestGeminiSystemAsChat, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestGeminiSystemAsChat, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestImageInput BAML function that supports both streaming and non‑streaming responses.
@@ -7429,33 +6970,29 @@ export function useTestGeminiSystemAsChat(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestImageInput();
+ * const { data, error, isPending, mutate } = useTestImageInput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestImageInput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestImageInput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestImageInput(props?: HookInput<'TestImageInput', { stream?: true }>): HookOutput<'TestImageInput', { stream: true }>
+export function useTestImageInput(props: HookInput<'TestImageInput', { stream: false }>): HookOutput<'TestImageInput', { stream: false }>
 export function useTestImageInput(
-  props: StreamingProps<'TestImageInput'>
-): StreamingHookResult<'TestImageInput'>;
-
-export function useTestImageInput(
-  props?: NonStreamingProps<'TestImageInput'>
-): NonStreamingHookResult<'TestImageInput'>;
-
-export function useTestImageInput(
-  props: HookProps<'TestImageInput'> = {}
-): StreamingHookResult<'TestImageInput'> | NonStreamingHookResult<'TestImageInput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestImageInput, props);
+  props: HookInput<'TestImageInput', { stream?: boolean }> = {},
+): HookOutput<'TestImageInput', { stream: true }> | HookOutput<'TestImageInput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestImageInput, props)
   }
-
-  return useBamlAction(Actions.TestImageInput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestImageInput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestImageInputAnthropic BAML function that supports both streaming and non‑streaming responses.
@@ -7483,33 +7020,29 @@ export function useTestImageInput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestImageInputAnthropic();
+ * const { data, error, isPending, mutate } = useTestImageInputAnthropic({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestImageInputAnthropic({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestImageInputAnthropic({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestImageInputAnthropic(props?: HookInput<'TestImageInputAnthropic', { stream?: true }>): HookOutput<'TestImageInputAnthropic', { stream: true }>
+export function useTestImageInputAnthropic(props: HookInput<'TestImageInputAnthropic', { stream: false }>): HookOutput<'TestImageInputAnthropic', { stream: false }>
 export function useTestImageInputAnthropic(
-  props: StreamingProps<'TestImageInputAnthropic'>
-): StreamingHookResult<'TestImageInputAnthropic'>;
-
-export function useTestImageInputAnthropic(
-  props?: NonStreamingProps<'TestImageInputAnthropic'>
-): NonStreamingHookResult<'TestImageInputAnthropic'>;
-
-export function useTestImageInputAnthropic(
-  props: HookProps<'TestImageInputAnthropic'> = {}
-): StreamingHookResult<'TestImageInputAnthropic'> | NonStreamingHookResult<'TestImageInputAnthropic'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestImageInputAnthropic, props);
+  props: HookInput<'TestImageInputAnthropic', { stream?: boolean }> = {},
+): HookOutput<'TestImageInputAnthropic', { stream: true }> | HookOutput<'TestImageInputAnthropic', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestImageInputAnthropic, props)
   }
-
-  return useBamlAction(Actions.TestImageInputAnthropic, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestImageInputAnthropic, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestImageListInput BAML function that supports both streaming and non‑streaming responses.
@@ -7537,33 +7070,29 @@ export function useTestImageInputAnthropic(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestImageListInput();
+ * const { data, error, isPending, mutate } = useTestImageListInput({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestImageListInput({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestImageListInput({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestImageListInput(props?: HookInput<'TestImageListInput', { stream?: true }>): HookOutput<'TestImageListInput', { stream: true }>
+export function useTestImageListInput(props: HookInput<'TestImageListInput', { stream: false }>): HookOutput<'TestImageListInput', { stream: false }>
 export function useTestImageListInput(
-  props: StreamingProps<'TestImageListInput'>
-): StreamingHookResult<'TestImageListInput'>;
-
-export function useTestImageListInput(
-  props?: NonStreamingProps<'TestImageListInput'>
-): NonStreamingHookResult<'TestImageListInput'>;
-
-export function useTestImageListInput(
-  props: HookProps<'TestImageListInput'> = {}
-): StreamingHookResult<'TestImageListInput'> | NonStreamingHookResult<'TestImageListInput'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestImageListInput, props);
+  props: HookInput<'TestImageListInput', { stream?: boolean }> = {},
+): HookOutput<'TestImageListInput', { stream: true }> | HookOutput<'TestImageListInput', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestImageListInput, props)
   }
-
-  return useBamlAction(Actions.TestImageListInput, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestImageListInput, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestMemory BAML function that supports both streaming and non‑streaming responses.
@@ -7591,33 +7120,29 @@ export function useTestImageListInput(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestMemory();
+ * const { data, error, isPending, mutate } = useTestMemory({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestMemory({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestMemory({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestMemory(props?: HookInput<'TestMemory', { stream?: true }>): HookOutput<'TestMemory', { stream: true }>
+export function useTestMemory(props: HookInput<'TestMemory', { stream: false }>): HookOutput<'TestMemory', { stream: false }>
 export function useTestMemory(
-  props: StreamingProps<'TestMemory'>
-): StreamingHookResult<'TestMemory'>;
-
-export function useTestMemory(
-  props?: NonStreamingProps<'TestMemory'>
-): NonStreamingHookResult<'TestMemory'>;
-
-export function useTestMemory(
-  props: HookProps<'TestMemory'> = {}
-): StreamingHookResult<'TestMemory'> | NonStreamingHookResult<'TestMemory'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestMemory, props);
+  props: HookInput<'TestMemory', { stream?: boolean }> = {},
+): HookOutput<'TestMemory', { stream: true }> | HookOutput<'TestMemory', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestMemory, props)
   }
-
-  return useBamlAction(Actions.TestMemory, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestMemory, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestMulticlassNamedArgs BAML function that supports both streaming and non‑streaming responses.
@@ -7647,33 +7172,29 @@ export function useTestMemory(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestMulticlassNamedArgs();
+ * const { data, error, isPending, mutate } = useTestMulticlassNamedArgs({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestMulticlassNamedArgs({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestMulticlassNamedArgs({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestMulticlassNamedArgs(props?: HookInput<'TestMulticlassNamedArgs', { stream?: true }>): HookOutput<'TestMulticlassNamedArgs', { stream: true }>
+export function useTestMulticlassNamedArgs(props: HookInput<'TestMulticlassNamedArgs', { stream: false }>): HookOutput<'TestMulticlassNamedArgs', { stream: false }>
 export function useTestMulticlassNamedArgs(
-  props: StreamingProps<'TestMulticlassNamedArgs'>
-): StreamingHookResult<'TestMulticlassNamedArgs'>;
-
-export function useTestMulticlassNamedArgs(
-  props?: NonStreamingProps<'TestMulticlassNamedArgs'>
-): NonStreamingHookResult<'TestMulticlassNamedArgs'>;
-
-export function useTestMulticlassNamedArgs(
-  props: HookProps<'TestMulticlassNamedArgs'> = {}
-): StreamingHookResult<'TestMulticlassNamedArgs'> | NonStreamingHookResult<'TestMulticlassNamedArgs'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestMulticlassNamedArgs, props);
+  props: HookInput<'TestMulticlassNamedArgs', { stream?: boolean }> = {},
+): HookOutput<'TestMulticlassNamedArgs', { stream: true }> | HookOutput<'TestMulticlassNamedArgs', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestMulticlassNamedArgs, props)
   }
-
-  return useBamlAction(Actions.TestMulticlassNamedArgs, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestMulticlassNamedArgs, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestNamedArgsLiteralBool BAML function that supports both streaming and non‑streaming responses.
@@ -7701,33 +7222,29 @@ export function useTestMulticlassNamedArgs(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestNamedArgsLiteralBool();
+ * const { data, error, isPending, mutate } = useTestNamedArgsLiteralBool({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestNamedArgsLiteralBool({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestNamedArgsLiteralBool({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestNamedArgsLiteralBool(props?: HookInput<'TestNamedArgsLiteralBool', { stream?: true }>): HookOutput<'TestNamedArgsLiteralBool', { stream: true }>
+export function useTestNamedArgsLiteralBool(props: HookInput<'TestNamedArgsLiteralBool', { stream: false }>): HookOutput<'TestNamedArgsLiteralBool', { stream: false }>
 export function useTestNamedArgsLiteralBool(
-  props: StreamingProps<'TestNamedArgsLiteralBool'>
-): StreamingHookResult<'TestNamedArgsLiteralBool'>;
-
-export function useTestNamedArgsLiteralBool(
-  props?: NonStreamingProps<'TestNamedArgsLiteralBool'>
-): NonStreamingHookResult<'TestNamedArgsLiteralBool'>;
-
-export function useTestNamedArgsLiteralBool(
-  props: HookProps<'TestNamedArgsLiteralBool'> = {}
-): StreamingHookResult<'TestNamedArgsLiteralBool'> | NonStreamingHookResult<'TestNamedArgsLiteralBool'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestNamedArgsLiteralBool, props);
+  props: HookInput<'TestNamedArgsLiteralBool', { stream?: boolean }> = {},
+): HookOutput<'TestNamedArgsLiteralBool', { stream: true }> | HookOutput<'TestNamedArgsLiteralBool', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestNamedArgsLiteralBool, props)
   }
-
-  return useBamlAction(Actions.TestNamedArgsLiteralBool, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestNamedArgsLiteralBool, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestNamedArgsLiteralInt BAML function that supports both streaming and non‑streaming responses.
@@ -7755,33 +7272,29 @@ export function useTestNamedArgsLiteralBool(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestNamedArgsLiteralInt();
+ * const { data, error, isPending, mutate } = useTestNamedArgsLiteralInt({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestNamedArgsLiteralInt({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestNamedArgsLiteralInt({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestNamedArgsLiteralInt(props?: HookInput<'TestNamedArgsLiteralInt', { stream?: true }>): HookOutput<'TestNamedArgsLiteralInt', { stream: true }>
+export function useTestNamedArgsLiteralInt(props: HookInput<'TestNamedArgsLiteralInt', { stream: false }>): HookOutput<'TestNamedArgsLiteralInt', { stream: false }>
 export function useTestNamedArgsLiteralInt(
-  props: StreamingProps<'TestNamedArgsLiteralInt'>
-): StreamingHookResult<'TestNamedArgsLiteralInt'>;
-
-export function useTestNamedArgsLiteralInt(
-  props?: NonStreamingProps<'TestNamedArgsLiteralInt'>
-): NonStreamingHookResult<'TestNamedArgsLiteralInt'>;
-
-export function useTestNamedArgsLiteralInt(
-  props: HookProps<'TestNamedArgsLiteralInt'> = {}
-): StreamingHookResult<'TestNamedArgsLiteralInt'> | NonStreamingHookResult<'TestNamedArgsLiteralInt'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestNamedArgsLiteralInt, props);
+  props: HookInput<'TestNamedArgsLiteralInt', { stream?: boolean }> = {},
+): HookOutput<'TestNamedArgsLiteralInt', { stream: true }> | HookOutput<'TestNamedArgsLiteralInt', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestNamedArgsLiteralInt, props)
   }
-
-  return useBamlAction(Actions.TestNamedArgsLiteralInt, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestNamedArgsLiteralInt, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestNamedArgsLiteralString BAML function that supports both streaming and non‑streaming responses.
@@ -7809,33 +7322,29 @@ export function useTestNamedArgsLiteralInt(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestNamedArgsLiteralString();
+ * const { data, error, isPending, mutate } = useTestNamedArgsLiteralString({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestNamedArgsLiteralString({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestNamedArgsLiteralString({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestNamedArgsLiteralString(props?: HookInput<'TestNamedArgsLiteralString', { stream?: true }>): HookOutput<'TestNamedArgsLiteralString', { stream: true }>
+export function useTestNamedArgsLiteralString(props: HookInput<'TestNamedArgsLiteralString', { stream: false }>): HookOutput<'TestNamedArgsLiteralString', { stream: false }>
 export function useTestNamedArgsLiteralString(
-  props: StreamingProps<'TestNamedArgsLiteralString'>
-): StreamingHookResult<'TestNamedArgsLiteralString'>;
-
-export function useTestNamedArgsLiteralString(
-  props?: NonStreamingProps<'TestNamedArgsLiteralString'>
-): NonStreamingHookResult<'TestNamedArgsLiteralString'>;
-
-export function useTestNamedArgsLiteralString(
-  props: HookProps<'TestNamedArgsLiteralString'> = {}
-): StreamingHookResult<'TestNamedArgsLiteralString'> | NonStreamingHookResult<'TestNamedArgsLiteralString'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestNamedArgsLiteralString, props);
+  props: HookInput<'TestNamedArgsLiteralString', { stream?: boolean }> = {},
+): HookOutput<'TestNamedArgsLiteralString', { stream: true }> | HookOutput<'TestNamedArgsLiteralString', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestNamedArgsLiteralString, props)
   }
-
-  return useBamlAction(Actions.TestNamedArgsLiteralString, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestNamedArgsLiteralString, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestOllama BAML function that supports both streaming and non‑streaming responses.
@@ -7863,33 +7372,29 @@ export function useTestNamedArgsLiteralString(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestOllama();
+ * const { data, error, isPending, mutate } = useTestOllama({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestOllama({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestOllama({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestOllama(props?: HookInput<'TestOllama', { stream?: true }>): HookOutput<'TestOllama', { stream: true }>
+export function useTestOllama(props: HookInput<'TestOllama', { stream: false }>): HookOutput<'TestOllama', { stream: false }>
 export function useTestOllama(
-  props: StreamingProps<'TestOllama'>
-): StreamingHookResult<'TestOllama'>;
-
-export function useTestOllama(
-  props?: NonStreamingProps<'TestOllama'>
-): NonStreamingHookResult<'TestOllama'>;
-
-export function useTestOllama(
-  props: HookProps<'TestOllama'> = {}
-): StreamingHookResult<'TestOllama'> | NonStreamingHookResult<'TestOllama'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestOllama, props);
+  props: HookInput<'TestOllama', { stream?: boolean }> = {},
+): HookOutput<'TestOllama', { stream: true }> | HookOutput<'TestOllama', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestOllama, props)
   }
-
-  return useBamlAction(Actions.TestOllama, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestOllama, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestOpenAI BAML function that supports both streaming and non‑streaming responses.
@@ -7917,33 +7422,29 @@ export function useTestOllama(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestOpenAI();
+ * const { data, error, isPending, mutate } = useTestOpenAI({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestOpenAI({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestOpenAI({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestOpenAI(props?: HookInput<'TestOpenAI', { stream?: true }>): HookOutput<'TestOpenAI', { stream: true }>
+export function useTestOpenAI(props: HookInput<'TestOpenAI', { stream: false }>): HookOutput<'TestOpenAI', { stream: false }>
 export function useTestOpenAI(
-  props: StreamingProps<'TestOpenAI'>
-): StreamingHookResult<'TestOpenAI'>;
-
-export function useTestOpenAI(
-  props?: NonStreamingProps<'TestOpenAI'>
-): NonStreamingHookResult<'TestOpenAI'>;
-
-export function useTestOpenAI(
-  props: HookProps<'TestOpenAI'> = {}
-): StreamingHookResult<'TestOpenAI'> | NonStreamingHookResult<'TestOpenAI'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestOpenAI, props);
+  props: HookInput<'TestOpenAI', { stream?: boolean }> = {},
+): HookOutput<'TestOpenAI', { stream: true }> | HookOutput<'TestOpenAI', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestOpenAI, props)
   }
-
-  return useBamlAction(Actions.TestOpenAI, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestOpenAI, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestOpenAILegacyProvider BAML function that supports both streaming and non‑streaming responses.
@@ -7971,33 +7472,29 @@ export function useTestOpenAI(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestOpenAILegacyProvider();
+ * const { data, error, isPending, mutate } = useTestOpenAILegacyProvider({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestOpenAILegacyProvider({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestOpenAILegacyProvider({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestOpenAILegacyProvider(props?: HookInput<'TestOpenAILegacyProvider', { stream?: true }>): HookOutput<'TestOpenAILegacyProvider', { stream: true }>
+export function useTestOpenAILegacyProvider(props: HookInput<'TestOpenAILegacyProvider', { stream: false }>): HookOutput<'TestOpenAILegacyProvider', { stream: false }>
 export function useTestOpenAILegacyProvider(
-  props: StreamingProps<'TestOpenAILegacyProvider'>
-): StreamingHookResult<'TestOpenAILegacyProvider'>;
-
-export function useTestOpenAILegacyProvider(
-  props?: NonStreamingProps<'TestOpenAILegacyProvider'>
-): NonStreamingHookResult<'TestOpenAILegacyProvider'>;
-
-export function useTestOpenAILegacyProvider(
-  props: HookProps<'TestOpenAILegacyProvider'> = {}
-): StreamingHookResult<'TestOpenAILegacyProvider'> | NonStreamingHookResult<'TestOpenAILegacyProvider'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestOpenAILegacyProvider, props);
+  props: HookInput<'TestOpenAILegacyProvider', { stream?: boolean }> = {},
+): HookOutput<'TestOpenAILegacyProvider', { stream: true }> | HookOutput<'TestOpenAILegacyProvider', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestOpenAILegacyProvider, props)
   }
-
-  return useBamlAction(Actions.TestOpenAILegacyProvider, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestOpenAILegacyProvider, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestOpenAIO1NoMaxTokens BAML function that supports both streaming and non‑streaming responses.
@@ -8025,33 +7522,29 @@ export function useTestOpenAILegacyProvider(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestOpenAIO1NoMaxTokens();
+ * const { data, error, isPending, mutate } = useTestOpenAIO1NoMaxTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestOpenAIO1NoMaxTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestOpenAIO1NoMaxTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestOpenAIO1NoMaxTokens(props?: HookInput<'TestOpenAIO1NoMaxTokens', { stream?: true }>): HookOutput<'TestOpenAIO1NoMaxTokens', { stream: true }>
+export function useTestOpenAIO1NoMaxTokens(props: HookInput<'TestOpenAIO1NoMaxTokens', { stream: false }>): HookOutput<'TestOpenAIO1NoMaxTokens', { stream: false }>
 export function useTestOpenAIO1NoMaxTokens(
-  props: StreamingProps<'TestOpenAIO1NoMaxTokens'>
-): StreamingHookResult<'TestOpenAIO1NoMaxTokens'>;
-
-export function useTestOpenAIO1NoMaxTokens(
-  props?: NonStreamingProps<'TestOpenAIO1NoMaxTokens'>
-): NonStreamingHookResult<'TestOpenAIO1NoMaxTokens'>;
-
-export function useTestOpenAIO1NoMaxTokens(
-  props: HookProps<'TestOpenAIO1NoMaxTokens'> = {}
-): StreamingHookResult<'TestOpenAIO1NoMaxTokens'> | NonStreamingHookResult<'TestOpenAIO1NoMaxTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestOpenAIO1NoMaxTokens, props);
+  props: HookInput<'TestOpenAIO1NoMaxTokens', { stream?: boolean }> = {},
+): HookOutput<'TestOpenAIO1NoMaxTokens', { stream: true }> | HookOutput<'TestOpenAIO1NoMaxTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestOpenAIO1NoMaxTokens, props)
   }
-
-  return useBamlAction(Actions.TestOpenAIO1NoMaxTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestOpenAIO1NoMaxTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestOpenAIO1WithMaxCompletionTokens BAML function that supports both streaming and non‑streaming responses.
@@ -8079,33 +7572,29 @@ export function useTestOpenAIO1NoMaxTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestOpenAIO1WithMaxCompletionTokens();
+ * const { data, error, isPending, mutate } = useTestOpenAIO1WithMaxCompletionTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestOpenAIO1WithMaxCompletionTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestOpenAIO1WithMaxCompletionTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestOpenAIO1WithMaxCompletionTokens(props?: HookInput<'TestOpenAIO1WithMaxCompletionTokens', { stream?: true }>): HookOutput<'TestOpenAIO1WithMaxCompletionTokens', { stream: true }>
+export function useTestOpenAIO1WithMaxCompletionTokens(props: HookInput<'TestOpenAIO1WithMaxCompletionTokens', { stream: false }>): HookOutput<'TestOpenAIO1WithMaxCompletionTokens', { stream: false }>
 export function useTestOpenAIO1WithMaxCompletionTokens(
-  props: StreamingProps<'TestOpenAIO1WithMaxCompletionTokens'>
-): StreamingHookResult<'TestOpenAIO1WithMaxCompletionTokens'>;
-
-export function useTestOpenAIO1WithMaxCompletionTokens(
-  props?: NonStreamingProps<'TestOpenAIO1WithMaxCompletionTokens'>
-): NonStreamingHookResult<'TestOpenAIO1WithMaxCompletionTokens'>;
-
-export function useTestOpenAIO1WithMaxCompletionTokens(
-  props: HookProps<'TestOpenAIO1WithMaxCompletionTokens'> = {}
-): StreamingHookResult<'TestOpenAIO1WithMaxCompletionTokens'> | NonStreamingHookResult<'TestOpenAIO1WithMaxCompletionTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestOpenAIO1WithMaxCompletionTokens, props);
+  props: HookInput<'TestOpenAIO1WithMaxCompletionTokens', { stream?: boolean }> = {},
+): HookOutput<'TestOpenAIO1WithMaxCompletionTokens', { stream: true }> | HookOutput<'TestOpenAIO1WithMaxCompletionTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestOpenAIO1WithMaxCompletionTokens, props)
   }
-
-  return useBamlAction(Actions.TestOpenAIO1WithMaxCompletionTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestOpenAIO1WithMaxCompletionTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestOpenAIO1WithMaxTokens BAML function that supports both streaming and non‑streaming responses.
@@ -8133,33 +7622,29 @@ export function useTestOpenAIO1WithMaxCompletionTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestOpenAIO1WithMaxTokens();
+ * const { data, error, isPending, mutate } = useTestOpenAIO1WithMaxTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestOpenAIO1WithMaxTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestOpenAIO1WithMaxTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestOpenAIO1WithMaxTokens(props?: HookInput<'TestOpenAIO1WithMaxTokens', { stream?: true }>): HookOutput<'TestOpenAIO1WithMaxTokens', { stream: true }>
+export function useTestOpenAIO1WithMaxTokens(props: HookInput<'TestOpenAIO1WithMaxTokens', { stream: false }>): HookOutput<'TestOpenAIO1WithMaxTokens', { stream: false }>
 export function useTestOpenAIO1WithMaxTokens(
-  props: StreamingProps<'TestOpenAIO1WithMaxTokens'>
-): StreamingHookResult<'TestOpenAIO1WithMaxTokens'>;
-
-export function useTestOpenAIO1WithMaxTokens(
-  props?: NonStreamingProps<'TestOpenAIO1WithMaxTokens'>
-): NonStreamingHookResult<'TestOpenAIO1WithMaxTokens'>;
-
-export function useTestOpenAIO1WithMaxTokens(
-  props: HookProps<'TestOpenAIO1WithMaxTokens'> = {}
-): StreamingHookResult<'TestOpenAIO1WithMaxTokens'> | NonStreamingHookResult<'TestOpenAIO1WithMaxTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestOpenAIO1WithMaxTokens, props);
+  props: HookInput<'TestOpenAIO1WithMaxTokens', { stream?: boolean }> = {},
+): HookOutput<'TestOpenAIO1WithMaxTokens', { stream: true }> | HookOutput<'TestOpenAIO1WithMaxTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestOpenAIO1WithMaxTokens, props)
   }
-
-  return useBamlAction(Actions.TestOpenAIO1WithMaxTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestOpenAIO1WithMaxTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestOpenAIShorthand BAML function that supports both streaming and non‑streaming responses.
@@ -8187,33 +7672,29 @@ export function useTestOpenAIO1WithMaxTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestOpenAIShorthand();
+ * const { data, error, isPending, mutate } = useTestOpenAIShorthand({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestOpenAIShorthand({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestOpenAIShorthand({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestOpenAIShorthand(props?: HookInput<'TestOpenAIShorthand', { stream?: true }>): HookOutput<'TestOpenAIShorthand', { stream: true }>
+export function useTestOpenAIShorthand(props: HookInput<'TestOpenAIShorthand', { stream: false }>): HookOutput<'TestOpenAIShorthand', { stream: false }>
 export function useTestOpenAIShorthand(
-  props: StreamingProps<'TestOpenAIShorthand'>
-): StreamingHookResult<'TestOpenAIShorthand'>;
-
-export function useTestOpenAIShorthand(
-  props?: NonStreamingProps<'TestOpenAIShorthand'>
-): NonStreamingHookResult<'TestOpenAIShorthand'>;
-
-export function useTestOpenAIShorthand(
-  props: HookProps<'TestOpenAIShorthand'> = {}
-): StreamingHookResult<'TestOpenAIShorthand'> | NonStreamingHookResult<'TestOpenAIShorthand'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestOpenAIShorthand, props);
+  props: HookInput<'TestOpenAIShorthand', { stream?: boolean }> = {},
+): HookOutput<'TestOpenAIShorthand', { stream: true }> | HookOutput<'TestOpenAIShorthand', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestOpenAIShorthand, props)
   }
-
-  return useBamlAction(Actions.TestOpenAIShorthand, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestOpenAIShorthand, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestOpenAIWithMaxTokens BAML function that supports both streaming and non‑streaming responses.
@@ -8241,33 +7722,29 @@ export function useTestOpenAIShorthand(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestOpenAIWithMaxTokens();
+ * const { data, error, isPending, mutate } = useTestOpenAIWithMaxTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestOpenAIWithMaxTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestOpenAIWithMaxTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestOpenAIWithMaxTokens(props?: HookInput<'TestOpenAIWithMaxTokens', { stream?: true }>): HookOutput<'TestOpenAIWithMaxTokens', { stream: true }>
+export function useTestOpenAIWithMaxTokens(props: HookInput<'TestOpenAIWithMaxTokens', { stream: false }>): HookOutput<'TestOpenAIWithMaxTokens', { stream: false }>
 export function useTestOpenAIWithMaxTokens(
-  props: StreamingProps<'TestOpenAIWithMaxTokens'>
-): StreamingHookResult<'TestOpenAIWithMaxTokens'>;
-
-export function useTestOpenAIWithMaxTokens(
-  props?: NonStreamingProps<'TestOpenAIWithMaxTokens'>
-): NonStreamingHookResult<'TestOpenAIWithMaxTokens'>;
-
-export function useTestOpenAIWithMaxTokens(
-  props: HookProps<'TestOpenAIWithMaxTokens'> = {}
-): StreamingHookResult<'TestOpenAIWithMaxTokens'> | NonStreamingHookResult<'TestOpenAIWithMaxTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestOpenAIWithMaxTokens, props);
+  props: HookInput<'TestOpenAIWithMaxTokens', { stream?: boolean }> = {},
+): HookOutput<'TestOpenAIWithMaxTokens', { stream: true }> | HookOutput<'TestOpenAIWithMaxTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestOpenAIWithMaxTokens, props)
   }
-
-  return useBamlAction(Actions.TestOpenAIWithMaxTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestOpenAIWithMaxTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestOpenAIWithNullMaxTokens BAML function that supports both streaming and non‑streaming responses.
@@ -8295,33 +7772,29 @@ export function useTestOpenAIWithMaxTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestOpenAIWithNullMaxTokens();
+ * const { data, error, isPending, mutate } = useTestOpenAIWithNullMaxTokens({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestOpenAIWithNullMaxTokens({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestOpenAIWithNullMaxTokens({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestOpenAIWithNullMaxTokens(props?: HookInput<'TestOpenAIWithNullMaxTokens', { stream?: true }>): HookOutput<'TestOpenAIWithNullMaxTokens', { stream: true }>
+export function useTestOpenAIWithNullMaxTokens(props: HookInput<'TestOpenAIWithNullMaxTokens', { stream: false }>): HookOutput<'TestOpenAIWithNullMaxTokens', { stream: false }>
 export function useTestOpenAIWithNullMaxTokens(
-  props: StreamingProps<'TestOpenAIWithNullMaxTokens'>
-): StreamingHookResult<'TestOpenAIWithNullMaxTokens'>;
-
-export function useTestOpenAIWithNullMaxTokens(
-  props?: NonStreamingProps<'TestOpenAIWithNullMaxTokens'>
-): NonStreamingHookResult<'TestOpenAIWithNullMaxTokens'>;
-
-export function useTestOpenAIWithNullMaxTokens(
-  props: HookProps<'TestOpenAIWithNullMaxTokens'> = {}
-): StreamingHookResult<'TestOpenAIWithNullMaxTokens'> | NonStreamingHookResult<'TestOpenAIWithNullMaxTokens'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestOpenAIWithNullMaxTokens, props);
+  props: HookInput<'TestOpenAIWithNullMaxTokens', { stream?: boolean }> = {},
+): HookOutput<'TestOpenAIWithNullMaxTokens', { stream: true }> | HookOutput<'TestOpenAIWithNullMaxTokens', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestOpenAIWithNullMaxTokens, props)
   }
-
-  return useBamlAction(Actions.TestOpenAIWithNullMaxTokens, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestOpenAIWithNullMaxTokens, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestRetryConstant BAML function that supports both streaming and non‑streaming responses.
@@ -8347,33 +7820,29 @@ export function useTestOpenAIWithNullMaxTokens(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestRetryConstant();
+ * const { data, error, isPending, mutate } = useTestRetryConstant({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestRetryConstant({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestRetryConstant({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestRetryConstant(props?: HookInput<'TestRetryConstant', { stream?: true }>): HookOutput<'TestRetryConstant', { stream: true }>
+export function useTestRetryConstant(props: HookInput<'TestRetryConstant', { stream: false }>): HookOutput<'TestRetryConstant', { stream: false }>
 export function useTestRetryConstant(
-  props: StreamingProps<'TestRetryConstant'>
-): StreamingHookResult<'TestRetryConstant'>;
-
-export function useTestRetryConstant(
-  props?: NonStreamingProps<'TestRetryConstant'>
-): NonStreamingHookResult<'TestRetryConstant'>;
-
-export function useTestRetryConstant(
-  props: HookProps<'TestRetryConstant'> = {}
-): StreamingHookResult<'TestRetryConstant'> | NonStreamingHookResult<'TestRetryConstant'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestRetryConstant, props);
+  props: HookInput<'TestRetryConstant', { stream?: boolean }> = {},
+): HookOutput<'TestRetryConstant', { stream: true }> | HookOutput<'TestRetryConstant', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestRetryConstant, props)
   }
-
-  return useBamlAction(Actions.TestRetryConstant, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestRetryConstant, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestRetryExponential BAML function that supports both streaming and non‑streaming responses.
@@ -8399,33 +7868,29 @@ export function useTestRetryConstant(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestRetryExponential();
+ * const { data, error, isPending, mutate } = useTestRetryExponential({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestRetryExponential({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestRetryExponential({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestRetryExponential(props?: HookInput<'TestRetryExponential', { stream?: true }>): HookOutput<'TestRetryExponential', { stream: true }>
+export function useTestRetryExponential(props: HookInput<'TestRetryExponential', { stream: false }>): HookOutput<'TestRetryExponential', { stream: false }>
 export function useTestRetryExponential(
-  props: StreamingProps<'TestRetryExponential'>
-): StreamingHookResult<'TestRetryExponential'>;
-
-export function useTestRetryExponential(
-  props?: NonStreamingProps<'TestRetryExponential'>
-): NonStreamingHookResult<'TestRetryExponential'>;
-
-export function useTestRetryExponential(
-  props: HookProps<'TestRetryExponential'> = {}
-): StreamingHookResult<'TestRetryExponential'> | NonStreamingHookResult<'TestRetryExponential'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestRetryExponential, props);
+  props: HookInput<'TestRetryExponential', { stream?: boolean }> = {},
+): HookOutput<'TestRetryExponential', { stream: true }> | HookOutput<'TestRetryExponential', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestRetryExponential, props)
   }
-
-  return useBamlAction(Actions.TestRetryExponential, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestRetryExponential, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestSingleFallbackClient BAML function that supports both streaming and non‑streaming responses.
@@ -8451,33 +7916,29 @@ export function useTestRetryExponential(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestSingleFallbackClient();
+ * const { data, error, isPending, mutate } = useTestSingleFallbackClient({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestSingleFallbackClient({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestSingleFallbackClient({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestSingleFallbackClient(props?: HookInput<'TestSingleFallbackClient', { stream?: true }>): HookOutput<'TestSingleFallbackClient', { stream: true }>
+export function useTestSingleFallbackClient(props: HookInput<'TestSingleFallbackClient', { stream: false }>): HookOutput<'TestSingleFallbackClient', { stream: false }>
 export function useTestSingleFallbackClient(
-  props: StreamingProps<'TestSingleFallbackClient'>
-): StreamingHookResult<'TestSingleFallbackClient'>;
-
-export function useTestSingleFallbackClient(
-  props?: NonStreamingProps<'TestSingleFallbackClient'>
-): NonStreamingHookResult<'TestSingleFallbackClient'>;
-
-export function useTestSingleFallbackClient(
-  props: HookProps<'TestSingleFallbackClient'> = {}
-): StreamingHookResult<'TestSingleFallbackClient'> | NonStreamingHookResult<'TestSingleFallbackClient'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestSingleFallbackClient, props);
+  props: HookInput<'TestSingleFallbackClient', { stream?: boolean }> = {},
+): HookOutput<'TestSingleFallbackClient', { stream: true }> | HookOutput<'TestSingleFallbackClient', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestSingleFallbackClient, props)
   }
-
-  return useBamlAction(Actions.TestSingleFallbackClient, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestSingleFallbackClient, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestUniverseQuestion BAML function that supports both streaming and non‑streaming responses.
@@ -8505,33 +7966,29 @@ export function useTestSingleFallbackClient(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestUniverseQuestion();
+ * const { data, error, isPending, mutate } = useTestUniverseQuestion({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestUniverseQuestion({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestUniverseQuestion({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestUniverseQuestion(props?: HookInput<'TestUniverseQuestion', { stream?: true }>): HookOutput<'TestUniverseQuestion', { stream: true }>
+export function useTestUniverseQuestion(props: HookInput<'TestUniverseQuestion', { stream: false }>): HookOutput<'TestUniverseQuestion', { stream: false }>
 export function useTestUniverseQuestion(
-  props: StreamingProps<'TestUniverseQuestion'>
-): StreamingHookResult<'TestUniverseQuestion'>;
-
-export function useTestUniverseQuestion(
-  props?: NonStreamingProps<'TestUniverseQuestion'>
-): NonStreamingHookResult<'TestUniverseQuestion'>;
-
-export function useTestUniverseQuestion(
-  props: HookProps<'TestUniverseQuestion'> = {}
-): StreamingHookResult<'TestUniverseQuestion'> | NonStreamingHookResult<'TestUniverseQuestion'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestUniverseQuestion, props);
+  props: HookInput<'TestUniverseQuestion', { stream?: boolean }> = {},
+): HookOutput<'TestUniverseQuestion', { stream: true }> | HookOutput<'TestUniverseQuestion', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestUniverseQuestion, props)
   }
-
-  return useBamlAction(Actions.TestUniverseQuestion, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestUniverseQuestion, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestVertex BAML function that supports both streaming and non‑streaming responses.
@@ -8559,33 +8016,29 @@ export function useTestUniverseQuestion(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestVertex();
+ * const { data, error, isPending, mutate } = useTestVertex({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestVertex({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestVertex({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestVertex(props?: HookInput<'TestVertex', { stream?: true }>): HookOutput<'TestVertex', { stream: true }>
+export function useTestVertex(props: HookInput<'TestVertex', { stream: false }>): HookOutput<'TestVertex', { stream: false }>
 export function useTestVertex(
-  props: StreamingProps<'TestVertex'>
-): StreamingHookResult<'TestVertex'>;
-
-export function useTestVertex(
-  props?: NonStreamingProps<'TestVertex'>
-): NonStreamingHookResult<'TestVertex'>;
-
-export function useTestVertex(
-  props: HookProps<'TestVertex'> = {}
-): StreamingHookResult<'TestVertex'> | NonStreamingHookResult<'TestVertex'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestVertex, props);
+  props: HookInput<'TestVertex', { stream?: boolean }> = {},
+): HookOutput<'TestVertex', { stream: true }> | HookOutput<'TestVertex', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestVertex, props)
   }
-
-  return useBamlAction(Actions.TestVertex, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestVertex, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the TestVertexWithSystemInstructions BAML function that supports both streaming and non‑streaming responses.
@@ -8611,33 +8064,29 @@ export function useTestVertex(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useTestVertexWithSystemInstructions();
+ * const { data, error, isPending, mutate } = useTestVertexWithSystemInstructions({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useTestVertexWithSystemInstructions({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useTestVertexWithSystemInstructions({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useTestVertexWithSystemInstructions(props?: HookInput<'TestVertexWithSystemInstructions', { stream?: true }>): HookOutput<'TestVertexWithSystemInstructions', { stream: true }>
+export function useTestVertexWithSystemInstructions(props: HookInput<'TestVertexWithSystemInstructions', { stream: false }>): HookOutput<'TestVertexWithSystemInstructions', { stream: false }>
 export function useTestVertexWithSystemInstructions(
-  props: StreamingProps<'TestVertexWithSystemInstructions'>
-): StreamingHookResult<'TestVertexWithSystemInstructions'>;
-
-export function useTestVertexWithSystemInstructions(
-  props?: NonStreamingProps<'TestVertexWithSystemInstructions'>
-): NonStreamingHookResult<'TestVertexWithSystemInstructions'>;
-
-export function useTestVertexWithSystemInstructions(
-  props: HookProps<'TestVertexWithSystemInstructions'> = {}
-): StreamingHookResult<'TestVertexWithSystemInstructions'> | NonStreamingHookResult<'TestVertexWithSystemInstructions'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.TestVertexWithSystemInstructions, props);
+  props: HookInput<'TestVertexWithSystemInstructions', { stream?: boolean }> = {},
+): HookOutput<'TestVertexWithSystemInstructions', { stream: true }> | HookOutput<'TestVertexWithSystemInstructions', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.TestVertexWithSystemInstructions, props)
   }
-
-  return useBamlAction(Actions.TestVertexWithSystemInstructions, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.TestVertexWithSystemInstructions, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the UnionTest_Function BAML function that supports both streaming and non‑streaming responses.
@@ -8665,33 +8114,29 @@ export function useTestVertexWithSystemInstructions(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useUnionTest_Function();
+ * const { data, error, isPending, mutate } = useUnionTest_Function({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useUnionTest_Function({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useUnionTest_Function({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useUnionTest_Function(props?: HookInput<'UnionTest_Function', { stream?: true }>): HookOutput<'UnionTest_Function', { stream: true }>
+export function useUnionTest_Function(props: HookInput<'UnionTest_Function', { stream: false }>): HookOutput<'UnionTest_Function', { stream: false }>
 export function useUnionTest_Function(
-  props: StreamingProps<'UnionTest_Function'>
-): StreamingHookResult<'UnionTest_Function'>;
-
-export function useUnionTest_Function(
-  props?: NonStreamingProps<'UnionTest_Function'>
-): NonStreamingHookResult<'UnionTest_Function'>;
-
-export function useUnionTest_Function(
-  props: HookProps<'UnionTest_Function'> = {}
-): StreamingHookResult<'UnionTest_Function'> | NonStreamingHookResult<'UnionTest_Function'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.UnionTest_Function, props);
+  props: HookInput<'UnionTest_Function', { stream?: boolean }> = {},
+): HookOutput<'UnionTest_Function', { stream: true }> | HookOutput<'UnionTest_Function', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.UnionTest_Function, props)
   }
-
-  return useBamlAction(Actions.UnionTest_Function, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.UnionTest_Function, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the UseBlockConstraint BAML function that supports both streaming and non‑streaming responses.
@@ -8719,33 +8164,29 @@ export function useUnionTest_Function(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useUseBlockConstraint();
+ * const { data, error, isPending, mutate } = useUseBlockConstraint({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useUseBlockConstraint({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useUseBlockConstraint({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useUseBlockConstraint(props?: HookInput<'UseBlockConstraint', { stream?: true }>): HookOutput<'UseBlockConstraint', { stream: true }>
+export function useUseBlockConstraint(props: HookInput<'UseBlockConstraint', { stream: false }>): HookOutput<'UseBlockConstraint', { stream: false }>
 export function useUseBlockConstraint(
-  props: StreamingProps<'UseBlockConstraint'>
-): StreamingHookResult<'UseBlockConstraint'>;
-
-export function useUseBlockConstraint(
-  props?: NonStreamingProps<'UseBlockConstraint'>
-): NonStreamingHookResult<'UseBlockConstraint'>;
-
-export function useUseBlockConstraint(
-  props: HookProps<'UseBlockConstraint'> = {}
-): StreamingHookResult<'UseBlockConstraint'> | NonStreamingHookResult<'UseBlockConstraint'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.UseBlockConstraint, props);
+  props: HookInput<'UseBlockConstraint', { stream?: boolean }> = {},
+): HookOutput<'UseBlockConstraint', { stream: true }> | HookOutput<'UseBlockConstraint', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.UseBlockConstraint, props)
   }
-
-  return useBamlAction(Actions.UseBlockConstraint, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.UseBlockConstraint, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the UseMalformedConstraints BAML function that supports both streaming and non‑streaming responses.
@@ -8773,33 +8214,29 @@ export function useUseBlockConstraint(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useUseMalformedConstraints();
+ * const { data, error, isPending, mutate } = useUseMalformedConstraints({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useUseMalformedConstraints({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useUseMalformedConstraints({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useUseMalformedConstraints(props?: HookInput<'UseMalformedConstraints', { stream?: true }>): HookOutput<'UseMalformedConstraints', { stream: true }>
+export function useUseMalformedConstraints(props: HookInput<'UseMalformedConstraints', { stream: false }>): HookOutput<'UseMalformedConstraints', { stream: false }>
 export function useUseMalformedConstraints(
-  props: StreamingProps<'UseMalformedConstraints'>
-): StreamingHookResult<'UseMalformedConstraints'>;
-
-export function useUseMalformedConstraints(
-  props?: NonStreamingProps<'UseMalformedConstraints'>
-): NonStreamingHookResult<'UseMalformedConstraints'>;
-
-export function useUseMalformedConstraints(
-  props: HookProps<'UseMalformedConstraints'> = {}
-): StreamingHookResult<'UseMalformedConstraints'> | NonStreamingHookResult<'UseMalformedConstraints'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.UseMalformedConstraints, props);
+  props: HookInput<'UseMalformedConstraints', { stream?: boolean }> = {},
+): HookOutput<'UseMalformedConstraints', { stream: true }> | HookOutput<'UseMalformedConstraints', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.UseMalformedConstraints, props)
   }
-
-  return useBamlAction(Actions.UseMalformedConstraints, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.UseMalformedConstraints, props)
+  }
+  throw new Error('Invalid props')
 }
 /**
  * A specialized hook for the UseNestedBlockConstraint BAML function that supports both streaming and non‑streaming responses.
@@ -8827,31 +8264,27 @@ export function useUseMalformedConstraints(
  * @example
  * ```tsx
  * // Basic non‑streaming usage:
- * const { data, error, isPending, mutate } = useUseNestedBlockConstraint();
+ * const { data, error, isPending, mutate } = useUseNestedBlockConstraint({ stream: false});
  *
  * // Streaming usage:
- * const { data, partialData, isPending, error, mutate } = useUseNestedBlockConstraint({
- *   stream: true,
+ * const { data, streamingData, isPending, error, mutate } = useUseNestedBlockConstraint({
+ *   stream: true | undefined,
  *   onPartial: (partial) => console.log('Partial update:', partial),
  *   onFinal: (final) => console.log('Final result:', final),
  *   onError: (err) => console.error('Error:', err),
  * });
  * ```
  */
+export function useUseNestedBlockConstraint(props?: HookInput<'UseNestedBlockConstraint', { stream?: true }>): HookOutput<'UseNestedBlockConstraint', { stream: true }>
+export function useUseNestedBlockConstraint(props: HookInput<'UseNestedBlockConstraint', { stream: false }>): HookOutput<'UseNestedBlockConstraint', { stream: false }>
 export function useUseNestedBlockConstraint(
-  props: StreamingProps<'UseNestedBlockConstraint'>
-): StreamingHookResult<'UseNestedBlockConstraint'>;
-
-export function useUseNestedBlockConstraint(
-  props?: NonStreamingProps<'UseNestedBlockConstraint'>
-): NonStreamingHookResult<'UseNestedBlockConstraint'>;
-
-export function useUseNestedBlockConstraint(
-  props: HookProps<'UseNestedBlockConstraint'> = {}
-): StreamingHookResult<'UseNestedBlockConstraint'> | NonStreamingHookResult<'UseNestedBlockConstraint'> {
-  if (props.stream) {
-    return useBamlAction(StreamingActions.UseNestedBlockConstraint, props);
+  props: HookInput<'UseNestedBlockConstraint', { stream?: boolean }> = {},
+): HookOutput<'UseNestedBlockConstraint', { stream: true }> | HookOutput<'UseNestedBlockConstraint', { stream: false }> {
+  if (isNotStreamingProps(props)) {
+    return useBamlAction(Actions.UseNestedBlockConstraint, props)
   }
-
-  return useBamlAction(Actions.UseNestedBlockConstraint, props);
+  if (isStreamingProps(props)) {
+    return useBamlAction(StreamingActions.UseNestedBlockConstraint, props)
+  }
+  throw new Error('Invalid props')
 }

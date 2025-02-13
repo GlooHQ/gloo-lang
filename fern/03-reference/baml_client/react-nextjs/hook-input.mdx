@@ -1,0 +1,92 @@
+---
+title: Hook Input Type Reference
+description: Technical reference for the BAML React hook input type
+---
+
+The `HookInput` type defines the configuration options for BAML React hooks.
+
+<CodeBlocks>
+```typescript title="Example Usage"
+function Component() {
+  const { data, streamingData } = useTestAws({
+    stream: true,
+    onPartial: (text) => console.log("Streaming:", text),
+    onFinal: (text) => console.log("Complete:", text),
+    onError: (error) => console.error("Error:", error)
+  })
+
+  return <div>{streamingData ?? data}</div>
+}
+```
+
+```typescript title="Example Types"
+// Streaming configuration
+const streamingInput: HookInput<'TestAws', { stream: true }> = {
+  stream: true,
+  onPartial: (text) => console.log("Partial:", text),
+  onFinal: (text) => console.log("Final:", text),
+  onError: (error) => console.error(error),
+}
+
+// Non-streaming configuration
+const nonStreamingInput: HookInput<'TestAws'> = {
+  onFinal: (text) => console.log("Result:", text),
+  onError: (error) => console.error(error)
+}
+```
+
+```typescript title="Type Definition"
+type HookInput<FunctionName, Options extends { stream?: boolean } = { stream?: false }> = {
+  stream?: Options['stream']
+  onPartial?: Options['stream'] extends true ? (response?: PartialReturnType<FunctionName>) => void : never
+  onFinal?: (response?: FinalReturnType<FunctionName>) => void
+  onError?: (error: Error) => void
+}
+```
+</CodeBlocks>
+
+## Type Parameters
+
+<ParamField
+  path="FunctionName"
+  type="generic"
+>
+  The name of the BAML function being called. Used to infer the correct types for responses.
+</ParamField>
+
+<ParamField
+  path="Options"
+  type="{ stream?: boolean }"
+>
+  Configuration object that determines streaming behavior. Defaults to `{ stream?: false }`.
+</ParamField>
+
+## Properties
+
+<ParamField
+  path="stream"
+  type="boolean | undefined"
+>
+  Flag to enable or disable streaming mode. When true, enables streaming responses.
+</ParamField>
+
+<ParamField
+  path="onPartial"
+  type="(response?: PartialReturnType<FunctionName>) => void"
+>
+  Callback function for partial responses. Only available when `Options['stream']` is true.
+</ParamField>
+
+<ParamField
+  path="onFinal"
+  type="(response?: FinalReturnType<FunctionName>) => void"
+>
+  Callback function for the final response.
+</ParamField>
+
+<ParamField
+  path="onError"
+  type="(error: Error) => void"
+>
+  Callback function for error handling. See [Error Types](../errors/overview).
+</ParamField>
